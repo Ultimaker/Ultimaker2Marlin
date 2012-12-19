@@ -60,6 +60,7 @@
 	#define MSG_FAN_SPEED "Fan speed"
 	#define MSG_FLOW "Flow"
 	#define MSG_CONTROL "Control"
+	#define MSG_VERSION "Firmware version"
 	#define MSG_MIN " \002 Min"
 	#define MSG_MAX " \002 Max"
 	#define MSG_FACTOR " \002 Fact"

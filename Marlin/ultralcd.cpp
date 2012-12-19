@@ -39,6 +39,7 @@ static void lcd_control_temperature_preheat_pla_settings_menu();
 static void lcd_control_temperature_preheat_abs_settings_menu();
 static void lcd_control_motion_menu();
 static void lcd_control_retract_menu();
+static void lcd_control_version_menu();
 static void lcd_sdcard_menu();
 
 static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audiable feedback that something has happend
@@ -430,6 +431,7 @@ static void lcd_control_menu()
     MENU_ITEM(function, MSG_LOAD_EPROM, Config_RetrieveSettings);
 #endif
     MENU_ITEM(function, MSG_RESTORE_FAILSAFE, Config_ResetDefault);
+    MENU_ITEM(submenu, MSG_VERSION, lcd_control_version_menu);
     END_MENU();
 }
 
@@ -536,6 +538,23 @@ static void lcd_control_retract_menu()
     END_MENU();
 }
 #endif
+
+static void lcd_control_version_menu()
+{
+    if (lcdDrawUpdate)
+    {
+        lcd_implementation_draw_line(0, PSTR(MSG_VERSION));
+        lcd_implementation_draw_line(1, PSTR(VERSION_BASE));
+        lcd_implementation_draw_line(2, PSTR(VERSION_PROFILE));
+        lcd_implementation_draw_line(3, PSTR(STRING_VERSION_CONFIG_H));
+    }
+    if (LCD_CLICKED)
+    {
+        lcd_quick_feedback();
+        currentMenu = lcd_control_menu;
+        encoderPosition = 0;
+    }
+}
 
 #if SDCARDDETECT == -1
 static void lcd_sd_refresh()

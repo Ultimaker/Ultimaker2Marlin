@@ -9,7 +9,13 @@
 //Implementation of an idea by Prof Braino to inform user that any changes made
 //to this build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
-#define STRING_CONFIG_H_AUTHOR "(none, default config)" //Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "(David Braam)" //Who made the changes.
+
+//                   |01234567890123456789|
+#define VERSION_BASE "Ultimaker: 12.12 RC1"
+#define VERSION_PROFILE "Github checkout"
+
+#define VERSION_STRING  VERSION_BASE " (" VERSION_PROFILE ")"
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
 // This allows the connection of wireless adapters (for instance) to non-default port pins.

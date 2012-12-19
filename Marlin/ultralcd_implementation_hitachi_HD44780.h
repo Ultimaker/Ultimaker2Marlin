@@ -460,6 +460,12 @@ static void lcd_implementation_drawmenu_sddirectory(uint8_t row, const char* pst
 #define lcd_implementation_drawmenu_function_selected(row, pstr, data) lcd_implementation_drawmenu_generic(row, pstr, '>', ' ')
 #define lcd_implementation_drawmenu_function(row, pstr, data) lcd_implementation_drawmenu_generic(row, pstr, ' ', ' ')
 
+static void lcd_implementation_draw_line(uint8_t row, const char* line)
+{
+    lcd.setCursor(0, row);
+    lcd_printPGM(line);
+}
+
 static void lcd_implementation_quick_feedback()
 {
 #if BEEPER > -1
