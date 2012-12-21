@@ -12,7 +12,7 @@
 #define STRING_CONFIG_H_AUTHOR "(David Braam)" //Who made the changes.
 
 //                   |01234567890123456789|
-#define VERSION_BASE "Ultimaker: 12.12 RC1"
+#define VERSION_BASE "Ultimaker: 12.12 RC2"
 #define VERSION_PROFILE "Github checkout"
 
 #define VERSION_STRING  VERSION_BASE " (" VERSION_PROFILE ")"
