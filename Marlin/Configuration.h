@@ -12,8 +12,10 @@
 #define STRING_CONFIG_H_AUTHOR "(David Braam)" //Who made the changes.
 
 //                      |01234567890123456789|
-#define VERSION_BASE    "Ultimaker: 13.01 RC1"
+#define VERSION_BASE    "Ultimaker: 13.03"
+#ifndef VERSION_PROFILE
 #define VERSION_PROFILE "Github checkout"
+#endif
 
 #define VERSION_STRING  VERSION_BASE " (" VERSION_PROFILE ")"
 
@@ -23,8 +25,10 @@
 #define SERIAL_PORT 0
 
 // This determines the communication speed of the printer
+#ifndef BAUDRATE
 #define BAUDRATE 250000
 //#define BAUDRATE 115200
+#endif
 
 //// The following define selects which electronics board you have. Please choose the one that matches your setup
 // 10 = Gen7 custom (Alfons3 Version) "https://github.com/Alfons3/Generation_7_Electronics"
@@ -89,7 +93,9 @@
 // 55 is 100k thermistor - ATC Semitec 104GT-2 (Used in ParCan) (1k pullup)
 
 #define TEMP_SENSOR_0 -1
+#ifndef TEMP_SENSOR_1
 #define TEMP_SENSOR_1 0
+#endif
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_BED 0
 
