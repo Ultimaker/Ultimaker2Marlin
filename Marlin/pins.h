@@ -683,7 +683,7 @@
 #endif
 
 #ifdef MELZI
-#define LED_PIN            28
+#define LED_PIN            27 /* On some broken versions of the Sanguino libraries the pin definitions are wrong, which then needs LED_PIN as pin 28. But you better upgrade your Sanguino libraries! See #368. */
 #define FAN_PIN            4
 #endif
 
@@ -719,10 +719,42 @@
 #define SDPOWER            -1
 #define SDSS               31
 
-#ifdef MELZI
-#define SDSS               24
-#endif
+/* On some broken versions of the Sanguino libraries the pin definitions are wrong, which then needs SDSS as pin 24. But you better upgrade your Sanguino libraries! See #368. */
+//#define SDSS               24
 
+ #ifdef ULTRA_LCD
+   #ifdef NEWPANEL
+     //we have no buzzer installed
+     #define BEEPER -1
+     //LCD Pins
+     #define LCD_PINS_RS        4
+     #define LCD_PINS_ENABLE    17
+     #define LCD_PINS_D4        30
+     #define LCD_PINS_D5        29
+     #define LCD_PINS_D6        28
+     #define LCD_PINS_D7        27
+     
+     //The encoder and click button
+     #define BTN_EN1 11  //must be a hardware interrupt pin
+     #define BTN_EN2 10 //must be hardware interrupt pin
+     #define BTN_ENC 16  //the switch
+     //not connected to a pin
+     #define SDCARDDETECT -1
+     
+     //from the same bit in the RAMPS Newpanel define
+     //encoder rotation values
+     #define encrot0 0
+     #define encrot1 2
+     #define encrot2 3
+     #define encrot3 1
+     
+     #define BLEN_C 2
+     #define BLEN_B 1
+     #define BLEN_A 0
+     
+   #endif //Newpanel
+ #endif //Ultipanel
+ 
 #endif
 
 
