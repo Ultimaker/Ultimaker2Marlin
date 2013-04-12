@@ -1008,6 +1008,8 @@ void digipot_init() //Initialize Digipot Motor Current
     digipot_current(0, motor_current_setting[0]);
     digipot_current(1, motor_current_setting[1]);
     digipot_current(2, motor_current_setting[2]);
+    //Set timer5 to 31khz so the PWM of the motor power is as constant as possible. 
+    TCCR5B = (TCCR5B & ~(_BV(CS50) | _BV(CS51) | _BV(CS52))) | _BV(CS50);
   #endif
 }
 
