@@ -323,6 +323,7 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 //#define SDSUPPORT // Enable SD Card Support in Hardware Console
 
 //#define ULTIMAKERCONTROLLER //as available from the ultimaker online store.
+//#define ULTIBOARD_V2_CONTROLLER //128x64 pixel Ultimaker OLED LCD panel
 //#define ULTIPANEL  //the ultipanel as on thingiverse
 
 // The RepRapDiscount Smart Controller (white PCB)
@@ -334,7 +335,7 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 //#define G3D_PANEL
 
 //automatic expansion
-#if defined(ULTIMAKERCONTROLLER) || defined(REPRAP_DISCOUNT_SMART_CONTROLLER) || defined(G3D_PANEL)
+#if defined(ULTIMAKERCONTROLLER) || defined(REPRAP_DISCOUNT_SMART_CONTROLLER) || defined(G3D_PANEL) || defined(ULTIBOARD_V2_CONTROLLER)
  #define ULTIPANEL
  #define NEWPANEL
 #endif 
@@ -356,6 +357,9 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 	#ifdef DOGLCD	// Change number of lines to match the DOG graphic display
 		#define LCD_WIDTH 20
 		#define LCD_HEIGHT 5
+    #elif defined(ULTIBOARD_V2_CONTROLLER)
+		#define LCD_WIDTH 21
+		#define LCD_HEIGHT 8
 	#else
 		#define LCD_WIDTH 20
 		#define LCD_HEIGHT 4

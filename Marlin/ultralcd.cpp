@@ -26,6 +26,8 @@ char lcd_status_message[LCD_WIDTH+1] = WELCOME_MSG;
 
 #ifdef DOGLCD
 #include "dogm_lcd_implementation.h"
+#elif defined(ULTIBOARD_V2_CONTROLLER)
+#include "ultralcd_implementation_ultiboard_v2.h"
 #else
 #include "ultralcd_implementation_hitachi_HD44780.h"
 #endif
