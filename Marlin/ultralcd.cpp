@@ -61,6 +61,7 @@ static void menu_action_sdfile(const char* filename, char* longFilename);
 static void menu_action_sddirectory(const char* filename, char* longFilename);
 static void menu_action_setting_edit_bool(const char* pstr, bool* ptr);
 static void menu_action_setting_edit_int3(const char* pstr, int* ptr, int minValue, int maxValue);
+static void menu_action_setting_edit_int4(const char* pstr, int* ptr, int minValue, int maxValue);
 static void menu_action_setting_edit_float3(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float32(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_float5(const char* pstr, float* ptr, float minValue, float maxValue);
@@ -69,6 +70,7 @@ static void menu_action_setting_edit_float52(const char* pstr, float* ptr, float
 static void menu_action_setting_edit_long5(const char* pstr, unsigned long* ptr, unsigned long minValue, unsigned long maxValue);
 static void menu_action_setting_edit_callback_bool(const char* pstr, bool* ptr, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_int3(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
+static void menu_action_setting_edit_callback_int4(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float3(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float32(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float5(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
@@ -526,6 +528,13 @@ static void lcd_control_temperature_preheat_abs_settings_menu()
     END_MENU();
 }
 
+static void update_motor_power()
+{
+    digipot_current(0, motor_current_setting[0]);
+    digipot_current(1, motor_current_setting[1]);
+    digipot_current(2, motor_current_setting[2]);
+}
+
 static void lcd_control_motion_menu()
 {
     START_MENU();
@@ -551,6 +560,11 @@ static void lcd_control_motion_menu()
     MENU_ITEM_EDIT(float51, MSG_ESTEPS, &axis_steps_per_unit[E_AXIS], 5, 9999);    
 #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
     MENU_ITEM_EDIT(bool, "Endstop abort", &abort_on_endstop_hit);
+#endif
+#if MOTOR_CURRENT_PWM_XY_PIN > -1
+    MENU_ITEM_EDIT_CALLBACK(int4, "PowerXY", &motor_current_setting[0], 0, MOTOR_CURRENT_PWM_RANGE, update_motor_power);
+    MENU_ITEM_EDIT_CALLBACK(int4, "PowerZ", &motor_current_setting[1], 0, MOTOR_CURRENT_PWM_RANGE, update_motor_power);
+    MENU_ITEM_EDIT_CALLBACK(int4, "PowerE", &motor_current_setting[2], 0, MOTOR_CURRENT_PWM_RANGE, update_motor_power);
 #endif
     END_MENU();
 }
@@ -680,6 +694,7 @@ void lcd_sdcard_menu()
         callbackFunc = callback;\
     }
 menu_edit_type(int, int3, itostr3, 1)
+menu_edit_type(int, int4, itostr4, 1)
 menu_edit_type(float, float3, ftostr3, 1)
 menu_edit_type(float, float32, ftostr32, 100)
 menu_edit_type(float, float5, ftostr5, 0.01)
