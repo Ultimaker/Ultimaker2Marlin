@@ -37,6 +37,10 @@
   #define REV_E_DIR() WRITE(E0_DIR_PIN, INVERT_E0_DIR)
 #endif
 
+#if MOTOR_CURRENT_PWM_XY_PIN > -1
+extern int motor_current_setting[3];
+#endif
+
 #ifdef ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED
 extern bool abort_on_endstop_hit;
 #endif

@@ -193,6 +193,8 @@
 // Motor Current setting (Only functional when motor driver current ref pins are connected to a digital trimpot on supported boards)
 #define DIGIPOT_MOTOR_CURRENT {135,135,135,135,135} // Values 0-255 (RAMBO 135 = ~0.75A, 185 = ~1A)
 
+// Default motor current for XY,Z,E in mA
+#define DEFAULT_PWM_MOTOR_CURRENT {1100, 1100, 1100}
 
 //===========================================================================
 //=============================Additional Features===========================

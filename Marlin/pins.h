@@ -12,6 +12,9 @@
 #define E1_MS1_PIN -1
 #define E1_MS2_PIN -1
 #define DIGIPOTSS_PIN -1
+#define MOTOR_CURRENT_PWM_XY_PIN -1
+#define MOTOR_CURRENT_PWM_Z_PIN -1
+#define MOTOR_CURRENT_PWM_E_PIN -1
 
 #if MOTHERBOARD == 99
 #define	KNOWN_BOARD 1
@@ -1044,6 +1047,8 @@
 #define MOTOR_CURRENT_PWM_XY_PIN 44
 #define MOTOR_CURRENT_PWM_Z_PIN 45
 #define MOTOR_CURRENT_PWM_E_PIN 46
+//Motor current PWM conversion, PWM value = MotorCurrentSetting * Range / 255
+#define MOTOR_CURRENT_PWM_RANGE 2000
 
 #ifdef ULTRA_LCD
 
