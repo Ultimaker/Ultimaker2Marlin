@@ -611,6 +611,7 @@ static void lcd_implementation_status_screen()
     lcd_draw_char('0' + tTarget / 10 % 10);
     lcd_draw_char('0' + tTarget % 10);
 
+#if EXTRUDERS > 1
     tHotend = int(degHotend(1) + 0.5);
     tTarget = int(degTargetHotend(1) + 0.5);
 
@@ -620,14 +621,31 @@ static void lcd_implementation_status_screen()
     lcd_draw_char('0' + tTarget / 100);
     lcd_draw_char('0' + tTarget / 10 % 10);
     lcd_draw_char('0' + tTarget % 10);
+#endif
+
+#if TEMP_SENSOR_BED != 0
+    tHotend = int(degBed() + 0.5);
+    tTarget = int(degTargetBed() + 0.5);
+
+    lcd_draw_large_number16( 0, 2, tHotend / 100);
+    lcd_draw_large_number16(10, 2, (tHotend / 10) % 10);
+    lcd_draw_large_number16(20, 2, (tHotend) % 10);
+    lcd_draw_char('0' + tTarget / 100);
+    lcd_draw_char('0' + tTarget / 10 % 10);
+    lcd_draw_char('0' + tTarget % 10);
+#endif
     
     lcd_draw_large_number16( 0, 4, feedmultiply / 100);
     lcd_draw_large_number16(10, 4, (feedmultiply / 10) % 10);
     lcd_draw_large_number16(20, 4, (feedmultiply) % 10);
 
-    lcd_draw_large_number24(64+ 0, 3, 0);
-    lcd_draw_large_number24(64+16, 3, 0);
-    lcd_draw_large_number24(64+32, 3, 0);
+    if (IS_SD_PRINTING)
+    {
+        uint8_t n = card.percentDone();
+        lcd_draw_large_number24(64+ 0, 3, n / 100);
+        lcd_draw_large_number24(64+16, 3, (n / 10) % 10);
+        lcd_draw_large_number24(64+32, 3, n % 10);
+    }
     
     lcd_set_pos(0, LCD_HEIGHT - 1);
     i2c_start_data();
