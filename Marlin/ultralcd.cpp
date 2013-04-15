@@ -154,8 +154,8 @@ static void lcd_status_screen()
         lcdDrawUpdate = 1;
     if (lcdDrawUpdate)
     {
-        lcd_implementation_status_screen();
         lcd_status_update_delay = 10;   /* redraw the main screen every second. This is easier then trying keep track of all things that change on the screen */
+        lcd_implementation_status_screen();
     }
 #ifdef ULTIPANEL
     if (LCD_CLICKED)
@@ -530,12 +530,14 @@ static void lcd_control_temperature_preheat_abs_settings_menu()
     END_MENU();
 }
 
+#if MOTOR_CURRENT_PWM_XY_PIN > -1
 static void update_motor_power()
 {
     digipot_current(0, motor_current_setting[0]);
     digipot_current(1, motor_current_setting[1]);
     digipot_current(2, motor_current_setting[2]);
 }
+#endif
 
 static void lcd_control_motion_menu()
 {
