@@ -18,6 +18,8 @@
 //#define LCD_STR_CLOCK       "\x07"
 #define LCD_STR_ARROW_RIGHT "\x7E"  /* from the default character set */
 
+#define LED_ADDRESS 0b1100000
+
 #define LCD_ADDRESS 0b0111100
 #define LCD_WRITE   0x00
 #define LCD_READ    0x01
@@ -263,7 +265,7 @@ static inline void i2c_send_raw(uint8_t data)
 //    MSerial.print('|');
     while (!(TWCR & (1<<TWINT))) {}
 //    MSerial.println(int(TWSR), HEX);
-    if ((TWSR & 0xF8) == 0x38)
+/*    if ((TWSR & 0xF8) == 0x38)
     {
         WRITE(54, 0);
         while(1) {}
@@ -272,6 +274,16 @@ static inline void i2c_send_raw(uint8_t data)
 //        lcd_implementation_init();
 //        i2c_start();
     }
+*/
+}
+
+static inline void i2c_start_led()
+{
+    TWCR = (1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
+//    MSerial.print('=');
+    while (!(TWCR & (1<<TWINT))) {}
+//    MSerial.println(int(TWSR), HEX);
+    i2c_send_raw(LED_ADDRESS << 1);
 }
 
 static inline void i2c_start()
@@ -299,6 +311,14 @@ static inline void i2c_end()
 //    MSerial.println('X');
 }
 
+static void led_write(uint8_t addr, uint8_t data)
+{
+    i2c_start_led();
+    i2c_send_raw(addr);
+    i2c_send_raw(data);
+    i2c_end();
+}
+
 static void lcd_implementation_clear()
 {
     i2c_start_data();
@@ -309,7 +329,12 @@ static void lcd_implementation_clear()
     i2c_send_raw(0xDF);
     lcd_contrast = 0xDF;
     i2c_end();
+
+    led_write(2, lcd_contrast / 2);//PWM0
+    led_write(3, lcd_contrast / 2);//PWM1
+    led_write(4, lcd_contrast / 2);//PWM2
 }
+
 static void lcd_implementation_init()
 {
     SET_OUTPUT(LCD_CS_PIN);
@@ -317,6 +342,7 @@ static void lcd_implementation_init()
     SET_OUTPUT(20);
     SET_OUTPUT(21);
     SET_OUTPUT(54);
+    
     WRITE(54, 1);
     WRITE(LCD_CS_PIN, 0);
     WRITE(20, 1);
@@ -334,7 +360,17 @@ static void lcd_implementation_init()
     //TWBR = ((F_CPU / ClockFreq) - 16)/2*4^TWPS
     TWBR = ((F_CPU / LCD_I2C_FREQ) - 16)/2*1;
     TWSR = 0x00;
-    
+
+    led_write(0, 0x80);//MODE1
+    led_write(1, 0x1C);//MODE2
+    led_write(2, 0x20);//PWM0
+    led_write(3, 0x20);//PWM1
+    led_write(4, 0x20);//PWM2
+    led_write(5, 0x20);//PWM3
+    led_write(6, 0xFF);//GRPPWM
+    led_write(7, 0x00);//GRPFREQ
+    led_write(8, 0xAA);//LEDOUT
+
     i2c_start_command();
     
     i2c_send_raw(LCD_COMMAND_LOCK_COMMANDS);
@@ -597,6 +633,11 @@ static void lcd_implementation_status_screen()
         lcd_contrast -= 0x08;
     else
         lcd_contrast = 0;
+
+    led_write(2, lcd_contrast / 2);//PWM0
+    led_write(3, lcd_contrast / 2);//PWM1
+    led_write(4, lcd_contrast / 2);//PWM2
+
     i2c_start_command();
     i2c_send_raw(LCD_COMMAND_CONTRAST);
     i2c_send_raw(lcd_contrast);
@@ -1030,6 +1071,7 @@ static void lcd_implementation_draw_gfx_from_card(uint8_t itemNr, uint8_t totalI
 
 static void lcd_implementation_quick_feedback()
 {
+    led_write(8, 0x55);//LEDOUT
 #if BEEPER > -1
     SET_OUTPUT(BEEPER);
     for(int8_t i=0;i<10;i++)
@@ -1040,6 +1082,7 @@ static void lcd_implementation_quick_feedback()
 		delay(3);
     }
 #endif
+    led_write(8, 0xAA);//LEDOUT
 }
 #endif//ULTRA_LCD_IMPLEMENTATION_ULTIBOARD_V2_H
 
