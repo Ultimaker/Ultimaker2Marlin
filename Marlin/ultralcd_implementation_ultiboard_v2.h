@@ -1074,15 +1074,22 @@ static void lcd_implementation_quick_feedback()
     led_write(8, 0x55);//LEDOUT
 #if BEEPER > -1
     SET_OUTPUT(BEEPER);
-    for(int8_t i=0;i<10;i++)
+    for(int8_t i=0;i<30;i++)
     {
 		WRITE(BEEPER,HIGH);
-		delay(3);
+		_delay_us(366);
 		WRITE(BEEPER,LOW);
-		delay(3);
+		_delay_us(366);
+    }
+    delay(100);
+    for(int8_t i=0;i<30;i++)
+    {
+		WRITE(BEEPER,HIGH);
+		_delay_us(150);
+		WRITE(BEEPER,LOW);
+		_delay_us(150);
     }
 #endif
     led_write(8, 0xAA);//LEDOUT
 }
 #endif//ULTRA_LCD_IMPLEMENTATION_ULTIBOARD_V2_H
-
