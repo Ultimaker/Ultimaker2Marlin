@@ -7,6 +7,17 @@
 #define LCD_GFX_WIDTH 128
 #define LCD_GFX_HEIGHT 64
 
+// All Ultipanels might have an encoder - so this is always be mapped onto first two bits
+#define BLEN_C 2 
+#define BLEN_B 1
+#define BLEN_A 0
+
+#define EN_C (1<<BLEN_C) 
+#define EN_B (1<<BLEN_B) // The two encoder pins are connected through BTN_EN1 and BTN_EN2
+#define EN_A (1<<BLEN_A)
+
+#define LCD_CLICKED (buttons&EN_C)
+
 /* Custom characters defined in the first 8 characters of the LCD */
 //#define LCD_STR_BEDTEMP     "\x00"
 //#define LCD_STR_DEGREE      "\x01"
