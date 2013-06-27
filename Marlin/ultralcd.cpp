@@ -246,7 +246,7 @@ static void tmp_set_led()
 }
 static void tmp_z_zero()
 {
-    add_homeing[Z_AXIS] = -(current_position[Z_AXIS] + add_homeing[Z_AXIS]);
+    add_homeing[Z_AXIS] -= current_position[Z_AXIS];
     current_position[Z_AXIS] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     Config_StoreSettings();
