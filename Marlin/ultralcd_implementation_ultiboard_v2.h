@@ -330,9 +330,9 @@ static void lcd_implementation_clear()
     lcd_contrast = 0xDF;
     i2c_end();
 
-    led_write(2, lcd_contrast / 2);//PWM0
-    led_write(3, lcd_contrast / 2);//PWM1
-    led_write(4, lcd_contrast / 2);//PWM2
+    led_write(2, lcd_contrast);//PWM0
+    led_write(3, lcd_contrast);//PWM1
+    led_write(4, lcd_contrast);//PWM2
 }
 
 static void lcd_implementation_init()
@@ -634,9 +634,9 @@ static void lcd_implementation_status_screen()
     else
         lcd_contrast = 0;
 
-    led_write(2, lcd_contrast / 2);//PWM0
-    led_write(3, lcd_contrast / 2);//PWM1
-    led_write(4, lcd_contrast / 2);//PWM2
+    led_write(2, lcd_contrast);//PWM0
+    led_write(3, lcd_contrast);//PWM1
+    led_write(4, lcd_contrast);//PWM2
 
     i2c_start_command();
     i2c_send_raw(LCD_COMMAND_CONTRAST);
