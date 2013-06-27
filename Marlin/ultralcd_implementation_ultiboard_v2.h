@@ -1084,7 +1084,7 @@ static void lcd_implementation_quick_feedback()
 		WRITE(BEEPER,LOW);
 		_delay_us(366);
     }
-    delay(100);
+    //delay(100);
     for(int8_t i=0;i<30;i++)
     {
 		WRITE(BEEPER,HIGH);

@@ -244,6 +244,13 @@ static void tmp_set_led()
     led_write(3, led_1);//PWM1
     led_write(4, led_2);//PWM2
 }
+static void tmp_z_zero()
+{
+    add_homeing[Z_AXIS] = -(current_position[Z_AXIS] + add_homeing[Z_AXIS]);
+    current_position[Z_AXIS] = 0;
+    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+    Config_StoreSettings();
+}
 
 /* Menu implementation */
 static void lcd_main_menu()
@@ -261,6 +268,7 @@ static void lcd_main_menu()
     MENU_ITEM_EDIT_CALLBACK(int3, "LED0", &led_0, 0, 255, tmp_set_led);
     MENU_ITEM_EDIT_CALLBACK(int3, "LED1", &led_1, 0, 255, tmp_set_led);
     MENU_ITEM_EDIT_CALLBACK(int3, "LED2", &led_2, 0, 255, tmp_set_led);
+    MENU_ITEM(function, "Set Z as ZERO", tmp_z_zero);
 
 #ifdef SDSUPPORT
     if (card.cardOK)
