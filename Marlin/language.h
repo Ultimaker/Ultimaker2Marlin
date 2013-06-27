@@ -3,13 +3,13 @@
 
 // NOTE: IF YOU CHANGE THIS FILE / MERGE THIS FILE WITH CHANGES
 //
-//   ==&gt; ALWAYS TRY TO COMPILE MARLIN WITH/WITHOUT "ULTIPANEL" / "ULTRALCD" / "SDSUPPORT" #define IN "Configuration.h" 
-//   ==&gt; ALSO TRY ALL AVAILABLE "LANGUAGE_CHOICE" OPTIONS
+//   ==> ALWAYS TRY TO COMPILE MARLIN WITH/WITHOUT "ULTIPANEL" / "ULTRALCD" / "SDSUPPORT" #define IN "Configuration.h" 
+//   ==> ALSO TRY ALL AVAILABLE "LANGUAGE_CHOICE" OPTIONS
 
 // Languages
 // 1  English
 // 2  Polish
-// 3  French	(awaiting translation!)
+// 3  French
 // 4  German
 // 5  Spanish
 // 6  Russian
@@ -29,8 +29,15 @@
 #elif MOTHERBOARD == 80
 	#define MACHINE_NAME "Rumba"
 	#define FIRMWARE_URL "https://github.com/ErikZalm/Marlin/"
+#elif MOTHERBOARD == 77
+	#define MACHINE_NAME "3Drag"
+	#define FIRMWARE_URL "http://3dprint.elettronicain.it/"
 #else
-	#define MACHINE_NAME "Mendel"
+	#ifdef CUSTOM_MENDEL_NAME
+		#define MACHINE_NAME CUSTOM_MENDEL_NAME
+	#else
+		#define MACHINE_NAME "Mendel"
+	#endif
 	#define FIRMWARE_URL "http://www.mendel-parts.com"
 #endif
 
@@ -188,7 +195,7 @@
 	#define MSG_SD_ERR_WRITE_TO_FILE "error writing to file"
 	#define MSG_SD_CANT_ENTER_SUBDIR "Cannot enter subdir: "
 
-	#define MSG_STEPPER_TO_HIGH "Steprate to high: "
+	#define MSG_STEPPER_TOO_HIGH "Steprate too high: "
 	#define MSG_ENDSTOPS_HIT "endstops hit: "
 	#define MSG_ERR_COLD_EXTRUDE_STOP " cold extrusion prevented"
 	#define MSG_ERR_LONG_EXTRUDE_STOP " too long extrusion prevented"
@@ -348,7 +355,7 @@
 	#define MSG_SD_ERR_WRITE_TO_FILE "blad podczas zapisu do pliku"
 	#define MSG_SD_CANT_ENTER_SUBDIR "Nie mozna odczytac podkatalogu: "
 
-	#define MSG_STEPPER_TO_HIGH "Za duza czestotliwosc krokow: "
+	#define MSG_STEPPER_TOO_HIGH "Za duza czestotliwosc krokow: "
 	#define MSG_ENDSTOPS_HIT "Wylacznik krancowy zostal wyzwolony na pozycji: "
 	#define MSG_ERR_COLD_EXTRUDE_STOP " uniemozliwiono zimna ekstruzje"
 	#define MSG_ERR_LONG_EXTRUDE_STOP " uniemozliwiono zbyt dluga ekstruzje"
@@ -512,7 +519,7 @@
 #define MSG_SD_ERR_WRITE_TO_FILE "Erreur d'ecriture dans le fichier"
 #define MSG_SD_CANT_ENTER_SUBDIR "Impossible d'entrer dans le sous-repertoire: "
 
-#define MSG_STEPPER_TO_HIGH "Steprate trop eleve: "
+#define MSG_STEPPER_TOO_HIGH "Steprate trop eleve: "
 #define MSG_ENDSTOPS_HIT "Fin de course atteint: "
 #define MSG_ERR_COLD_EXTRUDE_STOP " Extrusion a froid evitee"
 #define MSG_ERR_LONG_EXTRUDE_STOP " Extrusion longue evitee"
@@ -674,7 +681,7 @@
 	#define MSG_SD_ERR_WRITE_TO_FILE "error writing to file"
 	#define MSG_SD_CANT_ENTER_SUBDIR "Cannot enter subdir:"
 
-	#define MSG_STEPPER_TO_HIGH "Steprate to high : "
+	#define MSG_STEPPER_TOO_HIGH "Steprate too high : "
 	#define MSG_ENDSTOPS_HIT "endstops hit: "
 	#define MSG_ERR_COLD_EXTRUDE_STOP " cold extrusion prevented"
 	#define MSG_ERR_LONG_EXTRUDE_STOP " too long extrusion prevented"
@@ -702,9 +709,9 @@
 #define MSG_PREHEAT_ABS_SETTINGS " Ajustar temp. ABS"
 #define MSG_MOVE_AXIS " Mover Ejes      \x7E"
 #define MSG_SPEED " Velocidad:"
-#define MSG_NOZZLE " \002Nozzle:"
-#define MSG_NOZZLE1 " \002Nozzle2:"
-#define MSG_NOZZLE2 " \002Nozzle3:"
+#define MSG_NOZZLE " \002Fusor:"
+#define MSG_NOZZLE1 " \002Fusor2:"
+#define MSG_NOZZLE2 " \002Fusor3:"
 #define MSG_BED " \002Base:"
 #define MSG_FAN_SPEED " Ventilador:"
 #define MSG_FLOW " Flujo:"
@@ -720,9 +727,9 @@
 #define MSG_PID_D " PID-D: "
 #define MSG_PID_C " PID-C: "
 #define MSG_ACC  " Acc:"
-#define MSG_VXY_JERK " Vxy-jerk: "
-#define MSG_VZ_JERK "Vz-jerk"
-#define MSG_VE_JERK "Ve-jerk"
+#define MSG_VXY_JERK " Vxy-agit: "
+#define MSG_VZ_JERK "Vz-agit"
+#define MSG_VE_JERK "Ve-agit"
 #define MSG_VMAX " Vmax "
 #define MSG_X "x:"
 #define MSG_Y "y:"
@@ -817,7 +824,7 @@
 #define MSG_M119_REPORT "Comprobando fines de carrera."
 #define MSG_ENDSTOP_HIT "PULSADO"
 #define MSG_ENDSTOP_OPEN "abierto"
-#define MSG_HOTEND_OFFSET "Hotend offsets:"
+#define MSG_HOTEND_OFFSET "Despl. Hotend:"
         
 #define MSG_SD_CANT_OPEN_SUBDIR "No se pudo abrir la subcarpeta."
 #define MSG_SD_INIT_FAIL "Fallo al iniciar la SD"
@@ -835,7 +842,7 @@
 #define MSG_SD_ERR_WRITE_TO_FILE "Error al escribir en el archivo"
 #define MSG_SD_CANT_ENTER_SUBDIR "No se puede abrir la carpeta:"
 
-#define MSG_STEPPER_TO_HIGH "Steprate demasiado alto : "
+#define MSG_STEPPER_TOO_HIGH "Steprate demasiado alto : "
 #define MSG_ENDSTOPS_HIT "Se ha tocado el fin de carril: "
 #define MSG_ERR_COLD_EXTRUDE_STOP " extrusion fria evitada"
 #define MSG_ERR_LONG_EXTRUDE_STOP " extrusion demasiado larga evitada"
@@ -989,7 +996,7 @@
 #define MSG_SD_NOT_PRINTING					"нет SD печати"
 #define MSG_SD_ERR_WRITE_TO_FILE			"ошибка записи в файл"
 #define MSG_SD_CANT_ENTER_SUBDIR			"Не зайти в папку:"
-#define MSG_STEPPER_TO_HIGH					"Частота шагов очень высока : "
+#define MSG_STEPPER_TOO_HIGH				"Частота шагов очень высока : "
 #define MSG_ENDSTOPS_HIT					"концевик сработал: "
 #define MSG_ERR_COLD_EXTRUDE_STOP			" защита холодной экструзии"
 #define MSG_ERR_LONG_EXTRUDE_STOP			" защита превышения длинны экструзии"
@@ -1000,7 +1007,7 @@
 #if LANGUAGE_CHOICE == 7
 
 	// LCD Menu Messages
-	#define WELCOME_MSG MACHINE_NAME " Pronto."
+	#define WELCOME_MSG MACHINE_NAME " Pronta"
 	#define MSG_SD_INSERTED          "SD Card inserita"
 	#define MSG_SD_REMOVED           "SD Card rimossa"
 	#define MSG_MAIN                 "Menu principale"
@@ -1012,7 +1019,7 @@
 	#define MSG_PREHEAT_PLA_SETTINGS "Preris. PLA Conf"
 	#define MSG_PREHEAT_ABS          "Preriscalda ABS"
 	#define MSG_PREHEAT_ABS_SETTINGS "Preris. ABS Conf"
-	#define MSG_COOLDOWN             "Rafredda"
+	#define MSG_COOLDOWN             "Raffredda"
 	#define MSG_EXTRUDE              "Estrudi"
 	#define MSG_RETRACT              "Ritrai"
 	#define MSG_MOVE_AXIS            "Muovi Asse"
@@ -1149,7 +1156,7 @@
 	#define MSG_SD_ERR_WRITE_TO_FILE "Errore nella scrittura su file"
 	#define MSG_SD_CANT_ENTER_SUBDIR "Impossibile entrare nella sottocartella: "
 
-	#define MSG_STEPPER_TO_HIGH      "Steprate troppo alto: "
+	#define MSG_STEPPER_TOO_HIGH     "Steprate troppo alto: "
 	#define MSG_ENDSTOPS_HIT         "Raggiunto il fondo carrello: "
 	#define MSG_ERR_COLD_EXTRUDE_STOP " prevenuta estrusione fredda"
 	#define MSG_ERR_LONG_EXTRUDE_STOP " prevenuta estrusione troppo lunga"
@@ -1246,8 +1253,8 @@
 	#define MSG_CONTROL_RETRACT_RECOVER " DesRet +mm:"
 	#define MSG_CONTROL_RETRACT_RECOVERF " DesRet  F:"
 	#define MSG_AUTORETRACT " AutoRetr.:"
-        #define MSG_SERIAL_ERROR_MENU_STRUCTURE "Algo esta errado na estrutura do Menu."
-        #define MSG_FILAMENTCHANGE "Change filament"
+	#define MSG_SERIAL_ERROR_MENU_STRUCTURE "Algo esta errado na estrutura do Menu."
+	#define MSG_FILAMENTCHANGE "Change filament"
 
 // Serial Console Messages
 
@@ -1315,7 +1322,7 @@
 	#define MSG_SD_ERR_WRITE_TO_FILE "Erro ao escrever no arquivo"
 	#define MSG_SD_CANT_ENTER_SUBDIR "Nao pode abrir o sub diretorio:"
 
-	#define MSG_STEPPER_TO_HIGH "Steprate muito alto : "
+	#define MSG_STEPPER_TOO_HIGH "Steprate muito alto : "
 	#define MSG_ENDSTOPS_HIT "O ponto final foi tocado: "
 	#define MSG_ERR_COLD_EXTRUDE_STOP " Extrusao a frio evitada"
 	#define MSG_ERR_LONG_EXTRUDE_STOP " Extrusao muito larga evitada"
@@ -1476,7 +1483,7 @@
 	#define MSG_SD_ERR_WRITE_TO_FILE "virhe kirjoitettaessa tiedostoon"
 	#define MSG_SD_CANT_ENTER_SUBDIR "Alihakemistoon ei voitu siirtya: "
 
-	#define MSG_STEPPER_TO_HIGH "Askellustaajuus liian suuri: "
+	#define MSG_STEPPER_TOO_HIGH "Askellustaajuus liian suuri: "
 	#define MSG_ENDSTOPS_HIT "paatyrajat aktivoitu: "
 	#define MSG_ERR_COLD_EXTRUDE_STOP " kylmana pursotus estetty"
 	#define MSG_ERR_LONG_EXTRUDE_STOP " liian pitka pursotus estetty"

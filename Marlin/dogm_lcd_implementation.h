@@ -19,11 +19,25 @@
 * Implementation of the LCD display routines for a DOGM128 graphic display. These are common LCD 128x64 pixel graphic displays.
 **/
 
+#ifdef ULTIPANEL
+#define BLEN_A 0
+#define BLEN_B 1
+#define BLEN_C 2
+#define EN_A (1<<BLEN_A)
+#define EN_B (1<<BLEN_B)
+#define EN_C (1<<BLEN_C)
+#define encrot0 0
+#define encrot1 2
+#define encrot2 3
+#define encrot3 1
+#define LCD_CLICKED (buttons&EN_C)
+#endif
 
-// CHANGE_DE begin ***
-#include <U8glib.h>	// DE_U8glib
+#include <U8glib.h>
 #include "DOGMbitmaps.h"
+#include "dogm_font_data_marlin.h"
 #include "ultralcd.h"
+#include "ultralcd_st7920_u8glib_rrd.h"
 
 
 /* Russian language not supported yet, needs custom font
@@ -60,9 +74,13 @@
 
 #define FONT_STATUSMENU	u8g_font_6x9
 
-
 // LCD selection
+#ifdef U8GLIB_ST7920
+//U8GLIB_ST7920_128X64_RRD u8g(0,0,0);
+U8GLIB_ST7920_128X64_RRD u8g(0);
+#else
 U8GLIB_DOGM128 u8g(DOGLCD_CS, DOGLCD_A0);	// HW-SPI Com: CS, A0
+#endif
 
 static void lcd_implementation_init()
 {
@@ -82,11 +100,11 @@ static void lcd_implementation_init()
 	u8g.setRot90();	// Rotate screen by 90°
 #endif
 
-#ifdef LCD_SCREEN_ROT_180;
+#ifdef LCD_SCREEN_ROT_180
 	u8g.setRot180();	// Rotate screen by 180°
 #endif
 
-#ifdef LCD_SCREEN_ROT_270;
+#ifdef LCD_SCREEN_ROT_270
 	u8g.setRot270();	// Rotate screen by 270°
 #endif
 
@@ -115,12 +133,16 @@ static void lcd_implementation_init()
 
 static void lcd_implementation_clear()
 {
-	u8g.firstPage();
-	do {	
-			u8g.setColorIndex(0);
-			u8g.drawBox (0, 0, u8g.getWidth(), u8g.getHeight());
-			u8g.setColorIndex(1);
-		} while( u8g.nextPage() );
+// NO NEED TO IMPLEMENT LIKE SO. Picture loop automatically clears the display.
+//
+// Check this article: http://arduino.cc/forum/index.php?topic=91395.25;wap2
+//
+//	u8g.firstPage();
+//	do {	
+//			u8g.setColorIndex(0);
+//			u8g.drawBox (0, 0, u8g.getWidth(), u8g.getHeight());
+//			u8g.setColorIndex(1);
+//		} while( u8g.nextPage() );
 }
 
 /* Arduino < 1.0.0 is missing a function to print PROGMEM strings, so we need to implement our own */
@@ -256,7 +278,7 @@ static void lcd_implementation_status_screen()
  // Fan
  u8g.setFont(FONT_STATUSMENU);
  u8g.setPrintPos(104,27);
- #if FAN_PIN > 0
+ #if defined(FAN_PIN) && FAN_PIN > -1
  u8g.print(itostr3(int((fanSpeed*100)/256 + 1)));
  u8g.print("%");
  #else
@@ -405,6 +427,24 @@ static void lcd_implementation_drawmenu_setting_edit_generic_P(uint8_t row, cons
 #define lcd_implementation_drawmenu_setting_edit_long5(row, pstr, pstr2, data, minValue, maxValue) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', ftostr5(*(data)))
 #define lcd_implementation_drawmenu_setting_edit_bool_selected(row, pstr, pstr2, data) lcd_implementation_drawmenu_setting_edit_generic_P(row, pstr, '>', (*(data))?PSTR(MSG_ON):PSTR(MSG_OFF))
 #define lcd_implementation_drawmenu_setting_edit_bool(row, pstr, pstr2, data) lcd_implementation_drawmenu_setting_edit_generic_P(row, pstr, ' ', (*(data))?PSTR(MSG_ON):PSTR(MSG_OFF))
+
+//Add version for callback functions
+#define lcd_implementation_drawmenu_setting_edit_callback_int3_selected(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, '>', itostr3(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_int3(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', itostr3(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float3_selected(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, '>', ftostr3(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float3(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', ftostr3(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float32_selected(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, '>', ftostr32(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float32(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', ftostr32(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float5_selected(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, '>', ftostr5(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float5(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', ftostr5(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float52_selected(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, '>', ftostr52(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float52(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', ftostr52(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float51_selected(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, '>', ftostr51(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_float51(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', ftostr51(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_long5_selected(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, '>', ftostr5(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_long5(row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, ' ', ftostr5(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_callback_bool_selected(row, pstr, pstr2, data, callback) lcd_implementation_drawmenu_setting_edit_generic_P(row, pstr, '>', (*(data))?PSTR(MSG_ON):PSTR(MSG_OFF))
+#define lcd_implementation_drawmenu_setting_edit_callback_bool(row, pstr, pstr2, data, callback) lcd_implementation_drawmenu_setting_edit_generic_P(row, pstr, ' ', (*(data))?PSTR(MSG_ON):PSTR(MSG_OFF))
 
 void lcd_implementation_drawedit(const char* pstr, char* value)
 {
