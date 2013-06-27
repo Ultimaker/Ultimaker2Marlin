@@ -235,6 +235,16 @@ static void lcd_sdcard_stop()
     autotempShutdown();
 }
 
+static int led_0 = 0x20;
+static int led_1 = 0x20;
+static int led_2 = 0x20;
+static void tmp_set_led()
+{
+    led_write(2, led_0);//PWM0
+    led_write(3, led_1);//PWM1
+    led_write(4, led_2);//PWM2
+}
+
 /* Menu implementation */
 static void lcd_main_menu()
 {
@@ -247,6 +257,11 @@ static void lcd_main_menu()
         MENU_ITEM(submenu, MSG_PREPARE, lcd_prepare_menu);
     }
     MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
+
+    MENU_ITEM_EDIT_CALLBACK(int3, "LED0", &led_0, 0, 255, tmp_set_led);
+    MENU_ITEM_EDIT_CALLBACK(int3, "LED1", &led_1, 0, 255, tmp_set_led);
+    MENU_ITEM_EDIT_CALLBACK(int3, "LED2", &led_2, 0, 255, tmp_set_led);
+
 #ifdef SDSUPPORT
     if (card.cardOK)
     {
@@ -430,22 +445,18 @@ static void lcd_move_z()
 }
 static void lcd_move_e()
 {
-    if (encoderPosition != 0)
+    if (blocking_enc>=millis() || LCD_CLICKED)
     {
-        current_position[E_AXIS] += float((int)encoderPosition) * move_menu_scale;
-        encoderPosition = 0;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 20, active_extruder);
-        lcdDrawUpdate = 1;
-    }
-    if (lcdDrawUpdate)
-    {
-        lcd_implementation_drawedit(PSTR("Extruder"), ftostr31(current_position[E_AXIS]));
-    }
-    if (LCD_CLICKED)
-    {
+        while (movesplanned() < 3)
+        {
+            current_position[E_AXIS] += 0.5;
+            lcd_implementation_drawedit(PSTR("Extruder"), ftostr31(current_position[E_AXIS]));
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 3, active_extruder);
+        }
+    }else{
         lcd_quick_feedback();
         currentMenu = lcd_move_menu_axis;
-        encoderPosition = 0;
+        encoderPosition = prevEncoderPosition;
     }
 }
 
@@ -790,6 +801,7 @@ static void menu_action_back(menuFunc_t data)
 static void menu_action_submenu(menuFunc_t data)
 {
     currentMenu = data;
+    prevEncoderPosition = encoderPosition;
     encoderPosition = 0;
 }
 static void menu_action_gcode(const char* pgcode)
