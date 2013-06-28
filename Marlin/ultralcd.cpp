@@ -649,6 +649,7 @@ static void update_motor_power()
     digipot_current(0, motor_current_setting[0]);
     digipot_current(1, motor_current_setting[1]);
     digipot_current(2, motor_current_setting[2]);
+    Config_StoreSettings();
 }
 #endif
 

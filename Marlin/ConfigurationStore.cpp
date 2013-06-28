@@ -37,7 +37,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
-#define EEPROM_VERSION "V07"
+#define EEPROM_VERSION "V08"
 
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings() 
@@ -78,6 +78,7 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,dummy);
     EEPROM_WRITE_VAR(i,dummy);
   #endif
+  EEPROM_WRITE_VAR(i,motor_current_setting);
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
@@ -198,6 +199,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,Kp);
         EEPROM_READ_VAR(i,Ki);
         EEPROM_READ_VAR(i,Kd);
+        EEPROM_READ_VAR(i,motor_current_setting);
 
 		// Call updatePID (similar to when we have processed M301)
 		updatePID();
@@ -256,6 +258,10 @@ void Config_ResetDefault()
     Kc = DEFAULT_Kc;
 #endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
+    float tmp_motor_current_setting[]=DEFAULT_PWM_MOTOR_CURRENT;
+    motor_current_setting[0] = tmp_motor_current_setting[0];
+    motor_current_setting[1] = tmp_motor_current_setting[1];
+    motor_current_setting[2] = tmp_motor_current_setting[2];
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
