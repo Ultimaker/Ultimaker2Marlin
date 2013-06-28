@@ -894,6 +894,7 @@ void lcd_implementation_drawedit(const char* pstr, char* value)
 }
 static void lcd_implementation_drawmenu_sdfile_selected(uint8_t row, const char* pstr, const char* filename, char* longFilename)
 {
+    (void)pstr;
     if (longFilename[0] != '\0')
     {
         filename = longFilename;
@@ -920,6 +921,7 @@ static void lcd_implementation_drawmenu_sdfile_selected(uint8_t row, const char*
 }
 static void lcd_implementation_drawmenu_sdfile(uint8_t row, const char* pstr, const char* filename, char* longFilename)
 {
+    (void)pstr;
     if (longFilename[0] != '\0')
     {
         filename = longFilename;
@@ -946,6 +948,7 @@ static void lcd_implementation_drawmenu_sdfile(uint8_t row, const char* pstr, co
 }
 static void lcd_implementation_drawmenu_sddirectory_selected(uint8_t row, const char* pstr, const char* filename, char* longFilename)
 {
+    (void)pstr;
     if (longFilename[0] != '\0')
     {
         filename = longFilename;
@@ -973,6 +976,7 @@ static void lcd_implementation_drawmenu_sddirectory_selected(uint8_t row, const 
 }
 static void lcd_implementation_drawmenu_sddirectory(uint8_t row, const char* pstr, const char* filename, char* longFilename)
 {
+    (void)pstr;
     if (longFilename[0] != '\0')
     {
         filename = longFilename;
@@ -1072,26 +1076,23 @@ static void lcd_implementation_draw_gfx_from_card(uint8_t itemNr, uint8_t totalI
     i2c_end();
 }
 
+#define _BEEP(c, n) for(int8_t _i=0;_i<c;_i++) { WRITE(BEEPER,HIGH); _delay_us(n); WRITE(BEEPER,LOW); _delay_us(n); }
 static void lcd_implementation_quick_feedback()
 {
     led_write(8, 0x55);//LEDOUT
 #if BEEPER > -1
     SET_OUTPUT(BEEPER);
-    for(int8_t i=0;i<30;i++)
-    {
-		WRITE(BEEPER,HIGH);
-		_delay_us(366);
-		WRITE(BEEPER,LOW);
-		_delay_us(366);
-    }
+    _BEEP(20, 366);
+    _BEEP(10, 150);
     //delay(100);
+    /*
     for(int8_t i=0;i<30;i++)
     {
 		WRITE(BEEPER,HIGH);
 		_delay_us(150);
 		WRITE(BEEPER,LOW);
 		_delay_us(150);
-    }
+    }*/
 #endif
     led_write(8, 0xAA);//LEDOUT
 }

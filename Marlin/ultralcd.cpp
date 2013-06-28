@@ -1,5 +1,7 @@
 #include "temperature.h"
 #include "ultralcd.h"
+#define ULTRA_LCD
+#define ULTIPANEL
 #ifdef ULTRA_LCD
 #include "Marlin.h"
 #include "language.h"
@@ -244,12 +246,56 @@ static void tmp_set_led()
     led_write(3, led_1);//PWM1
     led_write(4, led_2);//PWM2
 }
-static void tmp_z_zero()
+
+static void tmp_tune_start_z_manual()
 {
-    add_homeing[Z_AXIS] -= current_position[Z_AXIS];
-    current_position[Z_AXIS] = 0;
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-    Config_StoreSettings();
+    if (encoderPosition != 0)
+    {
+        current_position[Z_AXIS] += float((int)encoderPosition) * 0.05;
+        //if (current_position[Z_AXIS] < Z_MIN_POS)
+        //    current_position[Z_AXIS] = Z_MIN_POS;
+        //if (current_position[Z_AXIS] > Z_MAX_POS)
+        //    current_position[Z_AXIS] = Z_MAX_POS;
+        encoderPosition = 0;
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, active_extruder);
+        lcdDrawUpdate = 1;
+    }
+    if (lcdDrawUpdate)
+    {
+        lcd_implementation_drawedit(PSTR("Z"), ftostr32(current_position[Z_AXIS]));
+    }
+    if (LCD_CLICKED)
+    {
+        add_homeing[Z_AXIS] = -current_position[Z_AXIS];
+        lcd_quick_feedback();
+        currentMenu = lcd_main_menu;
+        encoderPosition = 0;
+    }
+}
+
+static void tmp_tune_start_z_homing()
+{
+    if (lcdDrawUpdate)
+    {
+        lcd_implementation_draw_line(1, PSTR("Homing..."));
+    }
+    encoderDiff++;//increase the encoderDiff to trick the timeout to status menu.
+    if (!is_command_queued() && !blocks_queued())
+    {
+        currentMenu = tmp_tune_start_z_manual;
+        encoderDiff = 0;
+        encoderPosition = 0;
+        lcdDrawUpdate = 2;
+    }
+}
+
+static void tmp_tune_start_z()
+{
+    add_homeing[Z_AXIS] = 0;
+    enquecommand_P(PSTR("G28"));
+    enquecommand_P(PSTR("G1 Z60"));
+    currentMenu = tmp_tune_start_z_homing;
+    lcdDrawUpdate = 2;
 }
 
 /* Menu implementation */
@@ -268,7 +314,7 @@ static void lcd_main_menu()
     MENU_ITEM_EDIT_CALLBACK(int3, "LED0", &led_0, 0, 255, tmp_set_led);
     MENU_ITEM_EDIT_CALLBACK(int3, "LED1", &led_1, 0, 255, tmp_set_led);
     MENU_ITEM_EDIT_CALLBACK(int3, "LED2", &led_2, 0, 255, tmp_set_led);
-    MENU_ITEM(function, "Set Z as ZERO", tmp_z_zero);
+    MENU_ITEM(submenu, "Tune start height", tmp_tune_start_z);
 
 #ifdef SDSUPPORT
     if (card.cardOK)

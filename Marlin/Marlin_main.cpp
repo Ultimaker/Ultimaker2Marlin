@@ -305,6 +305,11 @@ void enquecommand_P(const char *cmd)
   }
 }
 
+bool is_command_queued()
+{
+    return buflen > 0;
+}
+
 void setup_killpin()
 {
   #if defined(KILL_PIN) && KILL_PIN > -1
