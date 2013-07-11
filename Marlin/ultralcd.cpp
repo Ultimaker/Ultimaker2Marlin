@@ -1,7 +1,5 @@
 #include "temperature.h"
 #include "ultralcd.h"
-#define ULTRA_LCD
-#define ULTIPANEL
 #ifdef ULTRA_LCD
 #include "Marlin.h"
 #include "language.h"
