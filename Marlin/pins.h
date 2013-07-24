@@ -1204,7 +1204,9 @@
 #define FAN_PIN            7
 #define PS_ON_PIN          12
 #define KILL_PIN           -1
-#define SUICIDE_PIN        54  //PIN that has to be turned on right after start, to keep power flowing.
+#define SUICIDE_PIN        -1  //PIN that has to be turned on right after start, to keep power flowing.
+#define SAFETY_TRIGGERED_PIN     28 //PIN to detect the safety circuit has triggered
+#define MAIN_VOLTAGE_MEASURE_PIN 14 //Analogue PIN to measure the main voltage, with a 100k - 4k7 resitor divider.
 
 #undef MOTOR_CURRENT_PWM_XY_PIN
 #undef MOTOR_CURRENT_PWM_Z_PIN
@@ -1215,35 +1217,32 @@
 //Motor current PWM conversion, PWM value = MotorCurrentSetting * Range / 255
 #define MOTOR_CURRENT_PWM_RANGE 2000
 
-#ifdef ULTRA_LCD
+//arduino pin witch triggers an piezzo beeper
+#define BEEPER 18
 
-  //arduino pin witch triggers an piezzo beeper
-    #define BEEPER 18
+#define LCD_PINS_RS 20 
+#define LCD_PINS_ENABLE 15
+#define LCD_PINS_D4 14
+#define LCD_PINS_D5 21 
+#define LCD_PINS_D6 5
+#define LCD_PINS_D7 6
 
-    #define LCD_PINS_RS 20 
-    #define LCD_PINS_ENABLE 15
-    #define LCD_PINS_D4 14
-    #define LCD_PINS_D5 21 
-    #define LCD_PINS_D6 5
-    #define LCD_PINS_D7 6
-    
-    //buttons are directly attached
-    #define BTN_EN1 40
-    #define BTN_EN2 41
-    #define BTN_ENC 19  //the click
-    
-    #define BLEN_C 2
-    #define BLEN_B 1
-    #define BLEN_A 0
-    
-    #define SDCARDDETECT 39
-    
-    //encoder rotation values
-    #define encrot0 0
-    #define encrot1 1
-    #define encrot2 3
-    #define encrot3 2
-#endif //ULTRA_LCD
+//buttons are directly attached
+#define BTN_EN1 40
+#define BTN_EN2 41
+#define BTN_ENC 19  //the click
+
+#define BLEN_C 2
+#define BLEN_B 1
+#define BLEN_A 0
+
+#define SDCARDDETECT 39
+
+//encoder rotation values
+#define encrot0 0
+#define encrot1 1
+#define encrot2 3
+#define encrot3 2
 
 #endif//MOTHERBOARD == 72
 

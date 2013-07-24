@@ -31,6 +31,7 @@
 
 #include "Marlin.h"
 #include "ultralcd.h"
+#include "UltiLCD2.h"
 #include "temperature.h"
 #include "watchdog.h"
 
@@ -786,9 +787,6 @@ void tp_init()
   // Interleave temperature interrupt with millies interrupt
   OCR0B = 128;
   TIMSK0 |= (1<<OCIE0B);  
-  
-  // Wait for temperature measurement to settle
-  delay(250);
 
 #ifdef HEATER_0_MINTEMP
   minttemp[0] = HEATER_0_MINTEMP;
@@ -937,7 +935,7 @@ void max_temp_error(uint8_t e) {
     LCD_ALERTMESSAGEPGM("Err: MAXTEMP");
   }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
-  Stop();
+  Stop(STOP_REASON_MAXTEMP);
   #endif
 }
 
@@ -950,7 +948,7 @@ void min_temp_error(uint8_t e) {
     LCD_ALERTMESSAGEPGM("Err: MINTEMP");
   }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
-  Stop();
+  Stop(STOP_REASON_MINTEMP);
   #endif
 }
 
@@ -964,7 +962,7 @@ void bed_max_temp_error(void) {
     LCD_ALERTMESSAGEPGM("Err: MAXTEMP BED");
   }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
-  Stop();
+  Stop(STOP_REASON_MAXTEMP_BED);
   #endif
 }
 

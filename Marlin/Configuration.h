@@ -185,7 +185,7 @@
 
 // If you are using a preconfigured hotend then you can use one of the value sets by uncommenting it
 // Ultimaker
-    #define  DEFAULT_Kp 22.2
+    #define  DEFAULT_Kp 52.2
     #define  DEFAULT_Ki 1.08
     #define  DEFAULT_Kd 114
 
@@ -223,7 +223,7 @@
 #ifdef PIDTEMPBED
 //120v 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
 //from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
-    #define  DEFAULT_bedKp 10.00
+    #define  DEFAULT_bedKp 50.00
     #define  DEFAULT_bedKi .023
     #define  DEFAULT_bedKd 305.4
 
@@ -389,11 +389,12 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 //LCD and SD support
 //#define ULTRA_LCD  //general lcd support, also 16x2
 //#define DOGLCD  // Support for SPI LCD 128x64 (Controller ST7565R graphic Display Family)
-//#define SDSUPPORT // Enable SD Card Support in Hardware Console
+#define SDSUPPORT // Enable SD Card Support in Hardware Console
 //#define SDSLOW // Use slower SD transfer mode (not normally needed - uncomment if you're getting volume init error)
 
 //#define ULTIMAKERCONTROLLER //as available from the ultimaker online store.
 #define ULTIBOARD_V2_CONTROLLER //128x64 pixel Ultimaker OLED LCD panel
+//#define ENABLE_ULTILCD2 //128x64 pixel display in the Ultimaker 2, with new menus.
 //#define ULTIPANEL  //the ultipanel as on thingiverse
 
 // The RepRapDiscount Smart Controller (white PCB)

@@ -1,6 +1,7 @@
 #include "Marlin.h"
 #include "cardreader.h"
 #include "ultralcd.h"
+#include "UltiLCD2.h"
 #include "stepper.h"
 #include "temperature.h"
 #include "language.h"
@@ -123,7 +124,7 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
       } 
       else if(lsAction==LS_GetFilename)
       {
-        if(cnt==nrFiles)
+        if(cnt==fileNr)
           return;
         cnt++;
         
@@ -176,6 +177,8 @@ void CardReader::initsd()
   }
   workDir=root;
   curDir=&root;
+  nrFiles = -1;
+  fileNr = 255;
   /*
   if(!workDir.openRoot(&volume))
   {
@@ -440,7 +443,7 @@ void CardReader::checkautostart(bool force)
   autostart_stilltocheck=false;
   if(!cardOK)
   {
-    initsd();
+    if (IS_SD_INSERTED) initsd();
     if(!cardOK) //fail
       return;
   }
@@ -488,22 +491,27 @@ void CardReader::closefile()
 
 void CardReader::getfilename(const uint8_t nr)
 {
+  if (card.errorCode()) { cardOK = false; return; }
   curDir=&workDir;
   lsAction=LS_GetFilename;
-  nrFiles=nr;
-  curDir->rewind();
+  if (nr < fileNr)
+    curDir->rewind();
+  fileNr=nr;
   lsDive("",*curDir);
-  
 }
 
 uint16_t CardReader::getnrfilenames()
 {
-  curDir=&workDir;
-  lsAction=LS_Count;
-  nrFiles=0;
-  curDir->rewind();
-  lsDive("",*curDir);
-  //SERIAL_ECHOLN(nrFiles);
+  if (card.errorCode()) { cardOK = false; return 0; }
+  if (nrFiles == -1)
+  {
+    curDir=&workDir;
+    lsAction=LS_Count;
+    nrFiles=0;
+    curDir->rewind();
+    lsDive("",*curDir);
+    //SERIAL_ECHOLN(nrFiles);
+  }
   return nrFiles;
 }
 
@@ -512,6 +520,8 @@ void CardReader::chdir(const char * relpath)
   SdFile newfile;
   SdFile *parent=&root;
   
+  nrFiles = -1;
+  fileNr = 255;
   if(workDir.isOpen())
     parent=&workDir;
   
@@ -536,6 +546,8 @@ void CardReader::updir()
 {
   if(workDirDepth > 0)
   {
+    nrFiles = -1;
+    fileNr = 255;
     --workDirDepth;
     workDir = workDirParents[0];
     for (int d = 0; d < workDirDepth; d++)

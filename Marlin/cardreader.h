@@ -44,6 +44,7 @@ public:
   FORCE_INLINE void setIndex(long index) {sdpos = index;file.seekSet(index);};
   FORCE_INLINE uint8_t percentDone(){if(!isFileOpen()) return 0; if(filesize) return sdpos/((filesize+99)/100); else return 0;};
   FORCE_INLINE char* getWorkDirName(){workDir.getFilename(filename);return filename;};
+  FORCE_INLINE bool atRoot() { return workDirDepth == 0; }
 
 public:
   bool saving;
@@ -68,7 +69,8 @@ private:
   bool autostart_stilltocheck; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
   
   LsAction lsAction; //stored for recursion.
-  int16_t nrFiles; //counter for the files in the current directory and recycled as position counter for getting the nrFiles'th name in the directory.
+  int16_t fileNr;  //position counter for getting the fileNr'th name in the directory.
+  int16_t nrFiles; //counter for the files in the current directory
   char* diveDirName;
   void lsDive(const char *prepend,SdFile parent);
 };

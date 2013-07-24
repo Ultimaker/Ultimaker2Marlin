@@ -37,7 +37,7 @@
   void lcd_buzz(long duration,uint16_t freq);
   bool lcd_clicked();
 
-#else //no lcd
+#elif !defined(ENABLE_ULTILCD2) //no lcd
   FORCE_INLINE void lcd_update() {}
   FORCE_INLINE void lcd_init() {}
   FORCE_INLINE void lcd_setstatus(const char* message) {}

@@ -56,6 +56,7 @@
 #include "stepper.h"
 #include "temperature.h"
 #include "ultralcd.h"
+#include "UltiLCD2.h"
 #include "language.h"
 
 //===========================================================================

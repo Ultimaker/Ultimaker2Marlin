@@ -162,9 +162,14 @@ void calculate_delta(float cartesian[3]);
 #endif
 void prepare_move();
 void kill();
-void Stop();
+#define STOP_REASON_MAXTEMP        1
+#define STOP_REASON_MINTEMP        2
+#define STOP_REASON_MAXTEMP_BED    3
+#define STOP_REASON_SAFETY_TRIGGER 10
+void Stop(uint8_t reasonNr);
 
 bool IsStopped();
+uint8_t StoppedReason();
 
 void enquecommand(const char *cmd); //put an ascii command at the end of the current buffer.
 void enquecommand_P(const char *cmd); //put an ascii command at the end of the current buffer, read from flash

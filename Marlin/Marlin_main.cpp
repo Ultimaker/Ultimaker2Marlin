@@ -30,6 +30,7 @@
 #include "Marlin.h"
 
 #include "ultralcd.h"
+#include "UltiLCD2.h"
 #include "planner.h"
 #include "stepper.h"
 #include "temperature.h"
@@ -235,7 +236,7 @@ unsigned long stoptime=0;
 static uint8_t tmp_extruder;
 
 
-bool Stopped=false;
+uint8_t Stopped = false;
 
 #if NUM_SERVOS > 0
   Servo servos[NUM_SERVOS];
@@ -417,7 +418,6 @@ void setup()
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
-
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
   watchdog_init();
@@ -692,8 +692,8 @@ static void homeaxis(int axis) {
       0) {
 
     // Engage Servo endstop if enabled
-    #ifdef SERVO_ENDSTOPS[axis] > -1
-      servos[servo_endstops[axis]].write(servo_endstop_angles[axis * 2]);
+    #ifdef SERVO_ENDSTOPS
+      if (servo_endstops[axis] > -1) servos[servo_endstops[axis]].write(servo_endstop_angles[axis * 2]);
     #endif
 
     current_position[axis] = 0;
@@ -720,8 +720,8 @@ static void homeaxis(int axis) {
     endstops_hit_on_purpose();
 
     // Retract Servo endstop if enabled
-    #ifdef SERVO_ENDSTOPS[axis] > -1
-      servos[servo_endstops[axis]].write(servo_endstop_angles[axis * 2 + 1]);
+    #ifdef SERVO_ENDSTOPS
+      if (servo_endstops[axis] > -1) servos[servo_endstops[axis]].write(servo_endstop_angles[axis * 2 + 1]);
     #endif
   }
 }
@@ -2241,18 +2241,24 @@ void manage_inactivity()
     if( (millis() - previous_millis_cmd) >  stepper_inactive_time )
     {
       if(blocks_queued() == false) {
-        disable_x();
-        disable_y();
-        disable_z();
-        disable_e0();
-        disable_e1();
-        disable_e2();
+        if(DISABLE_X) disable_x();
+        if(DISABLE_Y) disable_y();
+        if(DISABLE_Z) disable_z();
+        if(DISABLE_E) {
+            disable_e0();
+            disable_e1();
+            disable_e2();
+        }
       }
     }
   }
   #if defined(KILL_PIN) && KILL_PIN > -1
     if( 0 == READ(KILL_PIN) )
       kill();
+  #endif
+  #if defined(SAFETY_TRIGGERED_PIN) && SAFETY_TRIGGERED_PIN > -1
+  if (READ(SAFETY_TRIGGERED_PIN))
+    Stop(STOP_REASON_SAFETY_TRIGGER);
   #endif
   #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
     controllerFan(); //Check if fan should be turned on to cool stepper drivers down
@@ -2301,11 +2307,11 @@ void kill()
   while(1) { /* Intentionally left empty */ } // Wait for reset
 }
 
-void Stop()
+void Stop(uint8_t reasonNr)
 {
   disable_heater();
   if(Stopped == false) {
-    Stopped = true;
+    Stopped = reasonNr;
     Stopped_gcode_LastN = gcode_LastN; // Save last g_code for restart
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
@@ -2314,6 +2320,7 @@ void Stop()
 }
 
 bool IsStopped() { return Stopped; };
+uint8_t StoppedReason() { return Stopped; };
 
 #ifdef FAST_PWM_FAN
 void setPwmFrequency(uint8_t pin, int val)

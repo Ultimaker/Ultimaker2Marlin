@@ -257,7 +257,7 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 // be commented out otherwise
 #define SDCARDDETECTINVERTED 
 
-#ifdef ULTIPANEL
+#if defined(ULTIPANEL) || defined(ENABLE_ULTILCD2)
  #undef SDCARDDETECTINVERTED
 #endif
 

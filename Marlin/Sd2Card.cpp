@@ -391,6 +391,7 @@ bool Sd2Card::readBlock(uint32_t blockNumber, uint8_t* dst) {
   return true;
  retry:
    chipSelectHigh();
+   errorCode_ = 0;
    goto retry2;
 
  fail:
