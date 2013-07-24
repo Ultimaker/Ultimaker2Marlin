@@ -2,6 +2,7 @@
 #include "pins.h"
 #include "UltiLCD2_lib.h"
 
+#ifdef ENABLE_ULTILCD2
 /**
  * Implementation of the LCD display routines for a SSD1309 OLED graphical display connected with i2c.
  **/
@@ -680,3 +681,4 @@ void lcd_lib_buttons_update()
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);
     lcd_lib_button_down = buttonState;
 }
+#endif//ENABLE_ULTILCD2

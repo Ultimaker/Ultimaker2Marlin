@@ -8,7 +8,7 @@
 #define FILAMENT_REVERSAL_SPEED  25
 #define FILAMENT_INSERT_SPEED    5
 
-#ifdef ENABLE_ULTILCD2
+//#ifdef ENABLE_ULTILCD2
 typedef void (*menuFunc_t)();
 
 static void lcd_menu_startup();
@@ -513,4 +513,4 @@ void lcd_buttons_update()
     lcd_lib_buttons_update_interrupt();
 }
 
-#endif//ENABLE_ULTILCD2
+//#endif//ENABLE_ULTILCD2

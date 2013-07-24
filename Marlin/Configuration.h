@@ -137,7 +137,7 @@
 #define TEMP_SENSOR_0 20
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 20
+#define TEMP_SENSOR_BED 0
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
@@ -393,8 +393,8 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 //#define SDSLOW // Use slower SD transfer mode (not normally needed - uncomment if you're getting volume init error)
 
 //#define ULTIMAKERCONTROLLER //as available from the ultimaker online store.
-#define ULTIBOARD_V2_CONTROLLER //128x64 pixel Ultimaker OLED LCD panel
-//#define ENABLE_ULTILCD2 //128x64 pixel display in the Ultimaker 2, with new menus.
+//#define ULTIBOARD_V2_CONTROLLER //128x64 pixel Ultimaker OLED LCD panel
+#define ENABLE_ULTILCD2 //128x64 pixel display in the Ultimaker 2, with new menus.
 //#define ULTIPANEL  //the ultipanel as on thingiverse
 
 // The RepRapDiscount Smart Controller (white PCB)
