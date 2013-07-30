@@ -13,6 +13,10 @@
 #define FILAMENT_INSERT_FAST_SPEED    50    //Speed during the forward length
 #define FILAMENT_INSERT_EXTRUDE_SPEED 0.5     //Final speed when extruding
 
+#define EEPROM_FIRST_RUN_DONE_OFFSET 0x400
+#define IS_FIRST_RUN_DONE() (eeprom_read_byte((const uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET) == 'U')
+#define SET_FIRST_RUN_DONE() do { eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 'U'); } while(0)
+
 //#ifdef ENABLE_ULTILCD2
 typedef void (*menuFunc_t)();
 
@@ -34,9 +38,13 @@ static void lcd_menu_change_material_insert_forward();
 static void lcd_menu_change_material_insert();
 static void lcd_menu_material_settings();
 static void lcd_menu_maintenance();
-static void lcd_menu_maintenance_first_run();
+static void lcd_menu_maintenance_first_run_initial();
+static void lcd_menu_maintenance_first_run_select();
+static void lcd_menu_maintenance_first_run_bed_level_start();
 static void lcd_menu_maintenance_first_run_bed_level();
 static void lcd_menu_maintenance_first_run_bed_level_adjust();
+static void lcd_menu_maintenance_advanced();
+static void lcd_menu_advanced_factory_reset();
 static void lcd_menu_breakout();
 static void lcd_menu_TODO();
 
@@ -131,11 +139,11 @@ void lcd_menu_startup()
     
     lcd_lib_led_color(32,32,40);
     if (lcd_lib_button_pressed)
-    {
         lcd_lib_beep();
+    if (!IS_FIRST_RUN_DONE())
+        currentMenu = lcd_menu_maintenance_first_run_initial;
+    else
         currentMenu = lcd_menu_main;
-    }
-    currentMenu = lcd_menu_main;
 }
 
 void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos = ENCODER_NO_SELECTION)
@@ -338,9 +346,9 @@ static void lcd_menu_edit_setting()
     lcd_lib_draw_string_centerP(20, lcd_setting_name);
     char buffer[16];
     if (lcd_setting_type == 3)
-        sprintf(buffer, "%.2f", float(lcd_encoder_pos) / 100.0);
+        float_to_string(float(lcd_encoder_pos) / 100.0, buffer);
     else
-        sprintf(buffer, "%d", lcd_encoder_pos);
+        int_to_string(lcd_encoder_pos, buffer);
     strcat_P(buffer, lcd_setting_postfix);
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
@@ -471,16 +479,26 @@ static void lcd_material_settings_details_callback(uint8_t nr)
     if (nr == 0)
         return;
     else if (nr == 1)
-        sprintf_P(buffer, PSTR("%iC"), material.temperature);
-    else if (nr == 2)
-        sprintf_P(buffer, PSTR("%iC"), material.bed_temperature);
-    else if (nr == 3)
-        sprintf_P(buffer, PSTR("%.2fmm"), material.diameter);
-    else if (nr == 4)
-        sprintf_P(buffer, PSTR("%i%%"), material.fan_speed);
-    else if (nr == 5)
-        sprintf_P(buffer, PSTR("%i%%"), material.flow);
-    
+    {
+        int_to_string(material.temperature, buffer);
+        strcat_P(buffer, PSTR("C"));
+    }else if (nr == 2)
+    {
+        int_to_string(material.bed_temperature, buffer);
+        strcat_P(buffer, PSTR("C"));
+    }else if (nr == 3)
+    {
+        float_to_string(material.diameter, buffer);
+        strcat_P(buffer, PSTR("mm"));
+    }else if (nr == 4)
+    {
+        int_to_string(material.fan_speed, buffer);
+        strcat_P(buffer, PSTR("%"));
+    }else if (nr == 5)
+    {
+        int_to_string(material.flow, buffer);
+        strcat_P(buffer, PSTR("%"));
+    }
     lcd_lib_draw_string(70, 25, buffer);
 }
 
@@ -511,9 +529,9 @@ static void lcd_menu_maintenance()
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
-            lcd_change_to_menu(lcd_menu_maintenance_first_run);
+            lcd_change_to_menu(lcd_menu_maintenance_first_run_select);
         else if (IS_SELECTED(1))
-            lcd_change_to_menu(lcd_menu_TODO);
+            lcd_change_to_menu(lcd_menu_maintenance_advanced);
         else if (IS_SELECTED(2))
             lcd_change_to_menu(lcd_menu_main);
     }
@@ -521,7 +539,7 @@ static void lcd_menu_maintenance()
     lcd_lib_update_screen();
 }
 
-static void lcd_menu_maintenance_first_run()
+static void lcd_menu_maintenance_first_run_select()
 {
     lcd_tripple_menu(PSTR("BED HEIGHT"), PSTR("..."), PSTR("RETURN"));
 
@@ -529,12 +547,7 @@ static void lcd_menu_maintenance_first_run()
     {
         if (IS_SELECTED(0))
         {
-            add_homeing[Z_AXIS] = 0;
-            enquecommand_P(PSTR("G28"));
-            char buffer[32];
-            sprintf_P(buffer, PSTR("G1 Z%i X%i Y%i"), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH / 2);
-            enquecommand(buffer);
-            lcd_change_to_menu(lcd_menu_maintenance_first_run_bed_level);
+            lcd_change_to_menu(lcd_menu_maintenance_first_run_bed_level_start);
         }else if (IS_SELECTED(1))
             lcd_change_to_menu(lcd_menu_TODO);
         else if (IS_SELECTED(2))
@@ -542,6 +555,26 @@ static void lcd_menu_maintenance_first_run()
     }
 
     lcd_lib_update_screen();
+}
+
+static void lcd_menu_maintenance_first_run_initial()
+{
+    lcd_info_screen(lcd_menu_maintenance_first_run_bed_level_start, NULL, PSTR("OK"));
+    lcd_lib_draw_string_centerP(10, PSTR("Ultimaker ready"));
+    lcd_lib_draw_string_centerP(20, PSTR("Blabla bla bla"));
+    lcd_lib_draw_string_centerP(30, PSTR("This is first bla"));
+    lcd_lib_draw_string_centerP(40, PSTR("Not enough room"));
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_maintenance_first_run_bed_level_start()
+{
+    add_homeing[Z_AXIS] = 0;
+    enquecommand_P(PSTR("G28"));
+    char buffer[32];
+    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH / 2);
+    enquecommand(buffer);
+    currentMenu = lcd_menu_maintenance_first_run_bed_level;
 }
 
 static void lcd_menu_maintenance_first_run_bed_level()
@@ -552,6 +585,7 @@ static void lcd_menu_maintenance_first_run_bed_level()
     if (!is_command_queued() && !blocks_queued())
     {
         lcd_change_to_menu(lcd_menu_maintenance_first_run_bed_level_adjust);
+        lcd_encoder_pos = 0;
     }
     lcd_lib_update_screen();
 }
@@ -571,7 +605,13 @@ static void lcd_menu_maintenance_first_run_bed_level_adjust()
         add_homeing[Z_AXIS] = -current_position[Z_AXIS];
         Config_StoreSettings();
         doCancelPrint();
-        lcd_change_to_menu(lcd_menu_maintenance);
+        if (IS_FIRST_RUN_DONE())
+        {
+            lcd_change_to_menu(lcd_menu_maintenance);
+        }else{
+            lcd_change_to_menu(lcd_menu_main);
+            SET_FIRST_RUN_DONE();
+        }
     }
 
     lcd_lib_clear();
@@ -583,9 +623,67 @@ static void lcd_menu_maintenance_first_run_bed_level_adjust()
     lcd_lib_update_screen();
 }
 
+static char* lcd_advanced_item(uint8_t nr)
+{
+    if (nr == 0)
+        strcpy_P(card.longFilename, PSTR("<- RETURN"));
+    else if (nr == 1)
+        strcpy_P(card.longFilename, PSTR("Factory reset"));
+    else
+        strcpy_P(card.longFilename, PSTR("???"));
+    return card.longFilename;
+}
+
+static void lcd_advanced_details(uint8_t nr)
+{
+}
+
+static void lcd_menu_maintenance_advanced()
+{
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED(0))
+            lcd_change_to_menu(lcd_menu_maintenance);
+        else if (IS_SELECTED(1))
+            lcd_change_to_menu(lcd_menu_advanced_factory_reset);
+    }
+    lcd_scroll_menu("ADVANCED", 5, lcd_advanced_item, lcd_advanced_details);
+}
+
+static void lcd_menu_advanced_factory_reset()
+{
+    lcd_info_screen(previousMenu, NULL, PSTR("NO"));
+    
+    lcd_lib_draw_string_centerP(10, PSTR("Reset everything"));
+    lcd_lib_draw_string_centerP(20, PSTR("to default?"));
+    if (lcd_info_second_button(PSTR("YES")))
+    {
+        eeprom_write_byte((uint8_t*)100, 0);
+        eeprom_write_byte((uint8_t*)101, 0);
+        eeprom_write_byte((uint8_t*)102, 0);
+        eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
+        
+        cli();
+        //NOTE: Jumping to address 0 is not a fully proper way to reset.
+        // Letting the watchdog timeout is a better reset, but the bootloader does not continue on a watchdog timeout.
+        // So we disable interrupts and hope for the best!
+        //Jump to address 0x0000
+#ifdef __AVR__
+        asm volatile(
+                "clr	r30		\n\t"
+                "clr	r31		\n\t"
+                "ijmp	\n\t"
+                );
+#else
+        exit(0);
+#endif
+    }
+    lcd_lib_update_screen();
+}
+
 static void lcd_menu_change_material_preheat()
 {
-    setTargetHotend(230, 0);
+    setTargetHotend(material.temperature + 10, 0);
     int16_t temp = degHotend(0) - 20;
     int16_t target = degTargetHotend(0) - 10 - 20;
     if (temp < 0) temp = 0;
@@ -1028,8 +1126,8 @@ static void lcd_menu_print_ready()
             minProgress = progress;
             
         lcd_progressbar(progress);
-        char buffer[10];
-        sprintf(buffer, "%d", int(current_temperature[0]));
+        char buffer[8];
+        int_to_string(current_temperature[0], buffer);
         lcd_lib_draw_string_center(25, buffer);
     }else{
         lcd_lib_draw_string_centerP(15, PSTR("Print finished"));

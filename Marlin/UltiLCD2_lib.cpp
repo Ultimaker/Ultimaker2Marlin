@@ -701,4 +701,43 @@ void lcd_lib_buttons_update()
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);
     lcd_lib_button_down = buttonState;
 }
+
+void int_to_string(int i, char* temp_buffer)
+{
+    char* c = temp_buffer;
+    if (i < 0)
+    {
+        *c++ = '-'; 
+        i = -i;
+    }
+    if (i >= 1000)
+        *c++ = ((i/1000)%10)+'0';
+    if (i >= 100)
+        *c++ = ((i/100)%10)+'0';
+    if (i >= 10)
+        *c++ = ((i/10)%10)+'0';
+    *c++ = ((i)%10)+'0';
+    *c = '\0';
+}
+
+void float_to_string(float f, char* temp_buffer)
+{
+    int i = f * 100.0 + 0.5;
+    char* c = temp_buffer;
+    if (i < 0)
+    {
+        *c++ = '-'; 
+        i = -i;
+    }
+    if (i >= 1000)
+        *c++ = ((i/1000)%10)+'0';
+    if (i >= 100)
+        *c++ = ((i/100)%10)+'0';
+    *c++ = '.';
+    if (i >= 10)
+        *c++ = ((i/10)%10)+'0';
+    *c++ = ((i)%10)+'0';
+    *c = '\0';
+}
+
 //#endif//ENABLE_ULTILCD2

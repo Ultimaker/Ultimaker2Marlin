@@ -1,5 +1,6 @@
 #include "Marlin.h"
 #include "cardreader.h"
+#include "UltiLCD2.h"
 #include "ultralcd.h"
 #include "stepper.h"
 #include "temperature.h"
@@ -18,6 +19,8 @@ CardReader::CardReader()
    saving = false;
    logging = false;
    autostart_atmillis=0;
+   workDirDepth = 0;
+   memset(workDirParents, 0, sizeof(workDirParents));
 
    autostart_stilltocheck=true; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
    lastnr=0;
@@ -146,7 +149,11 @@ void CardReader::initsd()
   cardOK = false;
   if(root.isOpen())
     root.close();
+#ifdef SDSLOW
+  if (!card.init(SPI_HALF_SPEED,SDSS))
+#else
   if (!card.init(SPI_FULL_SPEED,SDSS))
+#endif
   {
     //if (!card.init(SPI_HALF_SPEED,SDSS))
     SERIAL_ECHO_START;
@@ -200,7 +207,6 @@ void CardReader::startFileprint()
   if(cardOK)
   {
     sdprinting = true;
-    
   }
 }
 
@@ -517,19 +523,24 @@ void CardReader::chdir(const char * relpath)
   }
   else
   {
-    workDirParentParent=workDirParent;
-    workDirParent=*parent;
-    
+    if (workDirDepth < MAX_DIR_DEPTH) {
+      for (int d = ++workDirDepth; d--;)
+        workDirParents[d+1] = workDirParents[d];
+      workDirParents[0]=*parent;
+    }
     workDir=newfile;
   }
 }
 
 void CardReader::updir()
 {
-  if(!workDir.isRoot())
+  if(workDirDepth > 0)
   {
-    workDir=workDirParent;
-    workDirParent=workDirParentParent;
+    --workDirDepth;
+    workDir = workDirParents[0];
+    int d;
+    for (int d = 0; d < workDirDepth; d++)
+      workDirParents[d] = workDirParents[d+1];
   }
 }
 
