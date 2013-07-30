@@ -41,10 +41,13 @@ public:
   FORCE_INLINE bool isFileOpen() { return file.isOpen(); }
   FORCE_INLINE bool eof() { return sdpos>=filesize ;};
   FORCE_INLINE int16_t get() {  sdpos = file.curPosition();return (int16_t)file.read();};
+  FORCE_INLINE int16_t fgets(char* str, int16_t num) { return file.fgets(str, num, NULL); }
   FORCE_INLINE void setIndex(long index) {sdpos = index;file.seekSet(index);};
   FORCE_INLINE uint8_t percentDone(){if(!isFileOpen()) return 0; if(filesize) return sdpos/((filesize+99)/100); else return 0;};
   FORCE_INLINE char* getWorkDirName(){workDir.getFilename(filename);return filename;};
-  FORCE_INLINE bool atRoot() { return workDirDepth == 0; }
+  FORCE_INLINE bool atRoot() { return workDirDepth==0; }
+  FORCE_INLINE uint32_t getFilePos() { return sdpos; }
+  FORCE_INLINE uint32_t getFileSize() { return filesize; }
 
 public:
   bool saving;
@@ -57,7 +60,7 @@ public:
   int lastnr; //last number of the autostart;
 private:
   SdFile root,*curDir,workDir,workDirParents[MAX_DIR_DEPTH];
-  uint16_t workDirDepth;
+  uint8_t workDirDepth;
   Sd2Card card;
   SdVolume volume;
   SdFile file;
@@ -69,8 +72,7 @@ private:
   bool autostart_stilltocheck; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
   
   LsAction lsAction; //stored for recursion.
-  int16_t fileNr;  //position counter for getting the fileNr'th name in the directory.
-  int16_t nrFiles; //counter for the files in the current directory
+  int16_t nrFiles; //counter for the files in the current directory and recycled as position counter for getting the nrFiles'th name in the directory.
   char* diveDirName;
   void lsDive(const char *prepend,SdFile parent);
 };

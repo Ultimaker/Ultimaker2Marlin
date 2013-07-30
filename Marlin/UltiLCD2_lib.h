@@ -7,8 +7,12 @@ bool lcd_lib_update_ready();
 
 void lcd_lib_draw_string(uint8_t x, uint8_t y, const char* str);
 void lcd_lib_clear_string(uint8_t x, uint8_t y, const char* str);
+void lcd_lib_draw_string_center(uint8_t y, const char* str);
+void lcd_lib_clear_string_center(uint8_t y, const char* str);
 void lcd_lib_draw_stringP(uint8_t x, uint8_t y, const char* pstr);
 void lcd_lib_clear_stringP(uint8_t x, uint8_t y, const char* pstr);
+void lcd_lib_draw_string_centerP(uint8_t y, const char* pstr);
+void lcd_lib_clear_string_centerP(uint8_t y, const char* pstr);
 void lcd_lib_draw_vline(uint8_t x, uint8_t y0, uint8_t y1);
 void lcd_lib_draw_hline(uint8_t x0, uint8_t x1, uint8_t y);
 void lcd_lib_draw_box(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
@@ -25,6 +29,6 @@ void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b);
 
 extern int16_t lcd_encoder_pos;
 extern bool lcd_lib_button_pressed;
-extern bool lcd_lib_buttonState;
+extern bool lcd_lib_button_down;
 
 #endif//ULTI_LCD2_LIB_H

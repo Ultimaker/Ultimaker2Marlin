@@ -86,6 +86,7 @@ uint8_t movesplanned(); //return the nr of buffered moves
 extern unsigned long minsegmenttime;
 extern float max_feedrate[4]; // set the max speeds
 extern float axis_steps_per_unit[4];
+extern float volume_to_filament_length;
 extern unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
 extern float minimumfeedrate;
 extern float acceleration;         // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX

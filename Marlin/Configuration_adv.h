@@ -204,7 +204,7 @@
 #define DIGIPOT_MOTOR_CURRENT {135,135,135,135,135} // Values 0-255 (RAMBO 135 = ~0.75A, 185 = ~1A)
 
 // Default motor current for XY,Z,E in mA
-#define DEFAULT_PWM_MOTOR_CURRENT {1300, 1300, 1100}
+#define DEFAULT_PWM_MOTOR_CURRENT {1300, 1300, 1250}
 
 //===========================================================================
 //=============================Additional Features===========================

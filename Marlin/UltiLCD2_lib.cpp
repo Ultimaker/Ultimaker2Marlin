@@ -2,7 +2,7 @@
 #include "pins.h"
 #include "UltiLCD2_lib.h"
 
-#ifdef ENABLE_ULTILCD2
+//#ifdef ENABLE_ULTILCD2
 /**
  * Implementation of the LCD display routines for a SSD1309 OLED graphical display connected with i2c.
  **/
@@ -394,6 +394,16 @@ void lcd_lib_clear_string(uint8_t x, uint8_t y, const char* str)
     }
 }
 
+void lcd_lib_draw_string_center(uint8_t y, const char* str)
+{
+    lcd_lib_draw_string(64 - strlen(str) * 3, y, str);
+}
+
+void lcd_lib_clear_string_center(uint8_t y, const char* str)
+{
+    lcd_lib_clear_string(64 - strlen(str) * 3, y, str);
+}
+
 void lcd_lib_draw_stringP(uint8_t x, uint8_t y, const char* pstr)
 {
     uint8_t* dst = lcd_buffer + x + (y / 8) * LCD_GFX_WIDTH;
@@ -454,6 +464,16 @@ void lcd_lib_clear_stringP(uint8_t x, uint8_t y, const char* pstr)
             dst2++;
         }
     }
+}
+
+void lcd_lib_draw_string_centerP(uint8_t y, const char* pstr)
+{
+    lcd_lib_draw_stringP(64 - strlen_P(pstr) * 3, y, pstr);
+}
+
+void lcd_lib_clear_string_centerP(uint8_t y, const char* pstr)
+{
+    lcd_lib_clear_stringP(64 - strlen_P(pstr) * 3, y, pstr);
 }
 
 void lcd_lib_draw_hline(uint8_t x0, uint8_t x1, uint8_t y)
@@ -681,4 +701,4 @@ void lcd_lib_buttons_update()
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);
     lcd_lib_button_down = buttonState;
 }
-#endif//ENABLE_ULTILCD2
+//#endif//ENABLE_ULTILCD2
