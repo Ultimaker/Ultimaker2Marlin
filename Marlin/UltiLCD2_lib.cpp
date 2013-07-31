@@ -548,6 +548,11 @@ void lcd_lib_clear()
     memset(lcd_buffer, 0, sizeof(lcd_buffer));
 }
 
+void lcd_lib_set()
+{
+    memset(lcd_buffer, 0xFF, sizeof(lcd_buffer));
+}
+
 void lcd_lib_clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
     uint8_t* dst0 = lcd_buffer + x0 + (y0 / 8) * LCD_GFX_WIDTH;
@@ -632,6 +637,56 @@ void lcd_lib_set(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
         mask = 0xFF >> (7 - (y1 % 8));
         for(uint8_t x=x0; x<=x1; x++)
             *dst++ |= mask;
+    }
+}
+
+void lcd_lib_draw_gfx(uint8_t x, uint8_t y, const uint8_t* gfx)
+{
+    uint8_t w = pgm_read_byte(gfx++);
+    uint8_t h = (pgm_read_byte(gfx++) + 7) / 8;
+    uint8_t shift = y % 8;
+    uint8_t shift2 = 8 - shift;
+    y /= 8;
+    
+    for(; h; h--)
+    {
+        if (y >= LCD_GFX_HEIGHT / 8) break;
+        
+        uint8_t* dst0 = lcd_buffer + x + y * LCD_GFX_WIDTH;
+        uint8_t* dst1 = lcd_buffer + x + y * LCD_GFX_WIDTH + LCD_GFX_WIDTH;
+        for(uint8_t _w = w; _w; _w--)
+        {
+            uint8_t c = pgm_read_byte(gfx++);
+            *dst0++ |= c << shift;
+            if (shift && y < 7)
+                *dst1++ |= c >> shift2;
+        }
+        y++;
+    }
+}
+
+void lcd_lib_clear_gfx(uint8_t x, uint8_t y, const uint8_t* gfx)
+{
+    uint8_t w = pgm_read_byte(gfx++);
+    uint8_t h = (pgm_read_byte(gfx++) + 7) / 8;
+    uint8_t shift = y % 8;
+    uint8_t shift2 = 8 - shift;
+    y /= 8;
+    
+    for(; h; h--)
+    {
+        if (y >= LCD_GFX_HEIGHT / 8) break;
+        
+        uint8_t* dst0 = lcd_buffer + x + y * LCD_GFX_WIDTH;
+        uint8_t* dst1 = lcd_buffer + x + y * LCD_GFX_WIDTH + LCD_GFX_WIDTH;
+        for(uint8_t _w = w; _w; _w--)
+        {
+            uint8_t c = pgm_read_byte(gfx++);
+            *dst0++ &=~(c << shift);
+            if (shift && y < 7)
+                *dst1++ &=~(c >> shift2);
+        }
+        y++;
     }
 }
 

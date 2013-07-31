@@ -20,7 +20,10 @@ void lcd_lib_draw_shade(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 void lcd_lib_clear();
 void lcd_lib_clear(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 void lcd_lib_invert(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+void lcd_lib_set();
 void lcd_lib_set(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+void lcd_lib_draw_gfx(uint8_t x, uint8_t y, const uint8_t* gfx);
+void lcd_lib_clear_gfx(uint8_t x, uint8_t y, const uint8_t* gfx);
 
 void lcd_lib_beep();
 void lcd_lib_buttons_update();

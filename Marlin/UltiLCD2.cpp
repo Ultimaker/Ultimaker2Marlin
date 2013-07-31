@@ -6,11 +6,12 @@
 #include "pins.h"
 
 #define FILAMENT_REVERSAL_LENGTH      750
-#define FILAMENT_REVERSAL_SPEED       50
+#define FILAMENT_REVERSAL_SPEED       200
+#define FILAMENT_LONG_MOVE_ACCELERATION 30
 
 #define FILAMENT_FORWARD_LENGTH       600
 #define FILAMENT_INSERT_SPEED         5     //Initial insert speed to grab the filament.
-#define FILAMENT_INSERT_FAST_SPEED    50    //Speed during the forward length
+#define FILAMENT_INSERT_FAST_SPEED    200    //Speed during the forward length
 #define FILAMENT_INSERT_EXTRUDE_SPEED 0.5     //Final speed when extruding
 
 #define EEPROM_FIRST_RUN_DONE_OFFSET 0x400
@@ -43,6 +44,7 @@ static void lcd_menu_maintenance_first_run_select();
 static void lcd_menu_maintenance_first_run_bed_level_start();
 static void lcd_menu_maintenance_first_run_bed_level();
 static void lcd_menu_maintenance_first_run_bed_level_adjust();
+static void lcd_menu_maintenance_first_run_done();
 static void lcd_menu_maintenance_advanced();
 static void lcd_menu_advanced_factory_reset();
 static void lcd_menu_breakout();
@@ -85,6 +87,102 @@ void lcd_init()
 {
     lcd_lib_init();
 }
+
+const uint8_t ultimakerTextGfx[] PROGMEM = {
+    128, 21, //size
+    0x6,0x6,0x6,0x6,0xfe,0xfe,0xfe,0xfe,0xfc,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+    0xfc,0xfe,0xfe,0xfe,0xfc,0x0,0x0,0x0,0xe,0xfe,0xfe,0xfe,0xfe,0x0,0x0,0xe0,
+    0xfc,0xfe,0xfe,0xfc,0xe0,0xe0,0x0,0x0,0x0,0xce,0xce,0xce,0x0,0x0,0x0,0xc0,
+    0xc0,0xc0,0xc0,0xc0,0xc0,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x80,0xc0,0xc0,0x80,
+    0x0,0x0,0x0,0x0,0x0,0x0,0x80,0x80,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0x80,
+    0x80,0x0,0x0,0x0,0x0,0x6,0xfe,0xfe,0xfe,0xfe,0x0,0x0,0x0,0x0,0x80,0xc0,
+    0xc0,0xc0,0x0,0x0,0x0,0x0,0x0,0x0,0x80,0x80,0xc0,0xc0,0xc0,0x80,0x80,0x80,
+    0x0,0x0,0x0,0x0,0xc0,0xc0,0xc0,0xc0,0x0,0x80,0xc0,0xc0,0xc0,0xc0,0x80,0x0,
+    
+    0x0,0x0,0x0,0x0,0x7f,0xff,0xff,0xff,0xff,0x80,0x0,0x0,0x0,0x0,0x0,0x80,
+    0xff,0xff,0xff,0xff,0xff,0x0,0x0,0x0,0x0,0xff,0xff,0xff,0xff,0x0,0x0,0x0,
+    0xff,0xff,0xff,0xff,0x0,0x0,0x0,0x0,0x0,0xff,0xff,0xff,0x0,0x0,0x0,0x81,
+    0xf1,0xff,0xff,0x3f,0xf,0x3f,0xff,0xfc,0xf0,0xf0,0xfc,0xff,0x3f,0xf,0x3f,0xff,
+    0xfe,0xf8,0x80,0x0,0x0,0x0,0xc1,0xe1,0xf1,0xf1,0x71,0x31,0x1,0x1,0x83,0xff,
+    0xff,0xff,0xfc,0x0,0x0,0x0,0xff,0xff,0xff,0xff,0x0,0xc,0x3e,0xff,0xff,0xf7,
+    0xc3,0x1,0x0,0x0,0x0,0xfc,0xfe,0xff,0x87,0x3,0x11,0x31,0x31,0x33,0x3f,0x3f,
+    0x3f,0x1e,0x0,0x0,0x1,0xff,0xff,0xff,0xff,0x7,0x3,0x1,0x1,0x1,0x1,0x0,
+
+    0x0,0x0,0x0,0x0,0x0,0x1,0x3,0x7,0x7,0xf,0xf,0xf,0xf,0xf,0xf,0xf,
+    0x7,0x7,0x7,0xf,0xf,0x6,0x0,0x0,0x0,0x7,0xf,0xf,0x7,0x0,0x0,0x0,
+    0x7,0xf,0xf,0x7,0x0,0x0,0x0,0x0,0x0,0xf,0xf,0xf,0x0,0x0,0x6,0xf,
+    0xf,0x7,0x1,0x0,0x0,0x0,0x1,0x7,0xf,0xf,0x7,0x1,0x0,0x0,0x0,0x1,
+    0x7,0xf,0xf,0x6,0x0,0x0,0x3,0x7,0xf,0xf,0xe,0xe,0x6,0x7,0x3,0x7,
+    0xf,0xf,0x7,0x0,0x0,0x0,0x7,0xf,0xf,0x7,0x0,0x0,0x0,0x0,0x3,0xf,
+    0xf,0xf,0x6,0x0,0x0,0x0,0x3,0x7,0x7,0xf,0xe,0xe,0xe,0xe,0xe,0xe,
+    0x6,0x0,0x0,0x0,0x0,0xf,0xf,0xf,0xf,0x0,0x0,0x0,0x0,0x0,0x0,0x0
+};
+
+const uint8_t ultimakerTextOutlineGfx[] PROGMEM = {
+    128, 21,//size
+
+    0x9,0x9,0x9,0xf9,0x1,0x1,0x1,0x1,0x3,0xfe,0x0,0x0,0x0,0x0,0x0,0xfe,
+    0x3,0x1,0x1,0x1,0x3,0xfe,0x0,0x1f,0xf1,0x1,0x1,0x1,0x1,0xff,0xf0,0x1e,
+    0x3,0x1,0x1,0x3,0x1e,0x10,0xf0,0x0,0xff,0x31,0x31,0x31,0xff,0x0,0xe0,0x20,
+    0x20,0x20,0x20,0x20,0x20,0x60,0xc0,0x80,0x0,0x0,0x80,0xc0,0x60,0x20,0x20,0x60,
+    0xc0,0x0,0x0,0x0,0x0,0xc0,0x40,0x60,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x60,
+    0x40,0xc0,0x80,0x0,0xf,0xf9,0x1,0x1,0x1,0x1,0xff,0x0,0x80,0xc0,0x60,0x20,
+    0x20,0x20,0xe0,0x0,0x0,0x0,0x80,0xc0,0x40,0x60,0x20,0x20,0x20,0x60,0x40,0x40,
+    0xc0,0x80,0x0,0xe0,0x20,0x20,0x20,0x20,0xe0,0x60,0x20,0x20,0x20,0x20,0x60,0xc0,
+
+    0x0,0x0,0x0,0xff,0x80,0x0,0x0,0x0,0x0,0x7f,0xc0,0x80,0x80,0x80,0xc0,0x7f,
+    0x0,0x0,0x0,0x0,0x0,0xff,0x0,0x0,0xff,0x0,0x0,0x0,0x0,0xff,0x1,0xff,
+    0x0,0x0,0x0,0x0,0xff,0x1,0x1,0x0,0xff,0x0,0x0,0x0,0xff,0x0,0xc3,0x7a,
+    0xe,0x0,0x0,0xc0,0x70,0xc0,0x0,0x3,0xe,0xe,0x3,0x0,0xc0,0x70,0xc0,0x0,
+    0x1,0x7,0x7c,0xc0,0x0,0xe3,0x32,0x1a,0xa,0xa,0x8a,0xca,0xfa,0xc6,0x7c,0x0,
+    0x0,0x0,0x3,0xfe,0x0,0xff,0x0,0x0,0x0,0x0,0xff,0x73,0xc1,0x0,0x0,0x8,
+    0x3c,0xe6,0x83,0x0,0xfe,0x3,0x1,0x0,0x78,0xfc,0xee,0x4a,0x4e,0x4c,0x40,0x40,
+    0x40,0x61,0x3f,0x3,0xfe,0x0,0x0,0x0,0x0,0xf8,0xc,0x6,0x2,0x2,0x2,0x3,
+
+    0x0,0x0,0x0,0x0,0x3,0x6,0xc,0x8,0x18,0x10,0x10,0x10,0x10,0x10,0x10,0x10,
+    0x18,0x8,0x18,0x10,0x10,0x19,0xf,0x0,0xf,0x18,0x10,0x10,0x18,0xf,0x0,0xf,
+    0x18,0x10,0x10,0x18,0xf,0x0,0x0,0x0,0x1f,0x10,0x10,0x10,0x1f,0xf,0x19,0x10,
+    0x10,0x18,0xe,0x3,0x0,0x3,0xe,0x18,0x10,0x10,0x18,0xe,0x3,0x0,0x3,0xe,
+    0x18,0x10,0x10,0x19,0xf,0x7,0xc,0x18,0x10,0x10,0x11,0x11,0x19,0x8,0xc,0x18,
+    0x10,0x10,0x18,0xf,0x0,0xf,0x18,0x10,0x10,0x18,0xf,0x0,0x1,0x7,0x1c,0x10,
+    0x10,0x10,0x19,0xf,0x1,0x7,0xc,0x8,0x18,0x10,0x11,0x11,0x11,0x11,0x11,0x11,
+    0x19,0xf,0x0,0x0,0x1f,0x10,0x10,0x10,0x10,0x1f,0x0,0x0,0x0,0x0,0x0,0x0,
+};
+
+const uint8_t ultimakerRobotGfx[] PROGMEM = {
+    47, 64, //Size
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x80,0x80,0x80,0xc0,
+    0xe0,0xfe,0xff,0x19,0x1e,0x98,0x98,0x98,0x18,0x18,0x18,0x18,0x18,0x18,0x9e,0x9f,
+    0x99,0x1e,0x38,0xf0,0xe0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3c,0xfe,0xff,0xff,0x99,0xf1,0xe1,
+    0xc3,0xff,0xff,0x0,0x0,0x63,0x63,0x63,0x60,0x60,0x60,0x60,0x60,0x60,0x63,0x63,
+    0x63,0x0,0x0,0xff,0xff,0x7c,0x38,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+
+    0x0,0x0,0x0,0x80,0xc0,0x60,0xb0,0xd8,0xd8,0x1c,0xfc,0xff,0x3f,0xf,0x8f,0xcf,
+    0xc7,0xc7,0xc7,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,0xc6,
+    0xc6,0xc6,0xc6,0xc7,0xc7,0xc4,0xcc,0xc,0x1c,0xf8,0xf8,0x70,0xc0,0x0,0x0,
+
+    0x0,0xe,0xff,0xf9,0x2a,0x2b,0x2b,0x28,0x28,0xfc,0xff,0xff,0x0,0x0,0xff,0xff,
+    0xff,0xff,0xff,0xff,0xff,0xbf,0xb7,0x17,0xb5,0xbd,0xb5,0x0,0xb5,0xb5,0xf7,0x17,
+    0xff,0xbf,0xbf,0xff,0xff,0xff,0xff,0x0,0x0,0xff,0xff,0xfc,0xff,0x7,0x0,
+
+    0xc0,0xf0,0xff,0xff,0xfd,0xdd,0x1d,0x19,0x19,0x3f,0xff,0xff,0x0,0x0,0xff,0xff,
+    0xff,0xff,0xff,0xff,0xff,0xfb,0xf1,0xfb,0xfb,0xea,0xee,0xc0,0xee,0xea,0xfa,0xf0,
+    0xfa,0xfa,0xff,0xff,0xff,0xff,0xff,0x0,0x0,0xff,0xff,0xf,0x1f,0xf8,0xe0,
+
+    0x0,0x3,0x7,0xf,0xf,0x1b,0x18,0x19,0xfb,0xfe,0xff,0xff,0xf0,0xe0,0xc0,0xc1,
+    0xe1,0xf1,0xf1,0xf1,0xf1,0xf1,0xf1,0xf1,0xf1,0xf1,0xf1,0xf1,0xf9,0xf9,0xf9,0xf9,
+    0xf9,0xf9,0x79,0x79,0x79,0xf1,0xf0,0x10,0x18,0x1f,0x7,0x6,0x3,0x3,0x0,
+
+    0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xf8,0xff,0xef,0xdf,0xbf,0x7f,0xff,0xff,0xff,
+    0x40,0x41,0x43,0x43,0x7f,0x21,0x20,0x20,0x21,0x7f,0xff,0xff,0xff,0x3f,0xb0,0x91,
+    0xd1,0xdf,0xd0,0x50,0x58,0x1f,0x1f,0xf0,0xf0,0x0,0x0,0x0,0x0,0x0,0x0,
+
+    0x0,0x0,0x0,0x0,0x0,0x0,0x3,0x7,0xf,0x1e,0x3d,0x7b,0x77,0xee,0xd1,0xde,
+    0xde,0xcf,0x4b,0x4b,0x69,0x69,0x68,0x68,0x68,0x60,0x3f,0x3f,0x37,0x37,0x37,0x35,
+    0x34,0x30,0x10,0x10,0x18,0x18,0x1a,0x1b,0xf,0x6,0x0,0x0,0x0,0x0,0x0,
+};
 
 #define ENCODER_TICKS_PER_MAIN_MENU_ITEM 4
 #define ENCODER_TICKS_PER_FILE_MENU_ITEM 4
@@ -138,12 +236,50 @@ void lcd_menu_startup()
     lcd_encoder_pos = ENCODER_NO_SELECTION;
     
     lcd_lib_led_color(32,32,40);
-    if (lcd_lib_button_pressed)
-        lcd_lib_beep();
-    if (!IS_FIRST_RUN_DONE())
-        currentMenu = lcd_menu_maintenance_first_run_initial;
-    else
-        currentMenu = lcd_menu_main;
+    lcd_lib_clear();
+    
+    if (led_glow < 84)
+    {
+        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
+        for(uint8_t n=0;n<10;n++)
+        {
+            if (led_glow*2 >= n + 20)
+                lcd_lib_clear(0, 22+n*2, led_glow*2-n-20, 23+n*2);
+            if (led_glow*2 >= n)
+                lcd_lib_clear(led_glow*2 - n, 22+n*2, 127, 23+n*2);
+            else
+                lcd_lib_clear(0, 22+n*2, 127, 23+n*2);
+        }
+    /*
+    }else if (led_glow < 86) {
+        led_glow--;
+        //lcd_lib_set();
+        //lcd_lib_clear_gfx(0, 22, ultimakerTextGfx);
+        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
+    */
+    }else{
+        led_glow--;
+        lcd_lib_draw_gfx(80, 0, ultimakerRobotGfx);
+        lcd_lib_clear_gfx(0, 22, ultimakerTextOutlineGfx);
+        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
+    }
+    lcd_lib_update_screen();
+
+    if (led_glow_dir || lcd_lib_button_pressed)
+    {
+        //led_glow = led_glow_dir = 0;
+        //return;
+        if (lcd_lib_button_pressed)
+            lcd_lib_beep();
+        
+        if (!IS_FIRST_RUN_DONE())
+        {
+            currentMenu = lcd_menu_maintenance_first_run_initial;
+            SELECT_MENU_ITEM(0);
+        }else{
+            currentMenu = lcd_menu_main;
+        }
+    }
 }
 
 void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos = ENCODER_NO_SELECTION)
@@ -229,17 +365,47 @@ static void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel =
     }
 }
 
-static bool lcd_info_second_button(const char* pstr)
+static void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const char* AButtonText, menuFunc_t optionBMenu, menuFunc_t callbackOnB, const char* BButtonText)
 {
+    if (lcd_encoder_pos != ENCODER_NO_SELECTION)
+    {
+        if (lcd_encoder_pos < 0)
+            lcd_encoder_pos += 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
+        if (lcd_encoder_pos >= 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+            lcd_encoder_pos -= 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
+    }
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED(0))
+        {
+            if (callbackOnA) callbackOnA();
+            if (optionAMenu) lcd_change_to_menu(optionAMenu);
+        }else if (IS_SELECTED(1))
+        {
+            if (callbackOnB) callbackOnB();
+            if (optionBMenu) lcd_change_to_menu(optionBMenu);
+        }
+    }
+
+    lcd_lib_clear();
+    lcd_lib_draw_hline(3, 124, 48);
+
+    if (IS_SELECTED(0))
+    {
+        lcd_lib_draw_box(3+2, 49+2, 64-2, 63-2);
+        lcd_lib_set(3+3, 49+3, 64-3, 63-3);
+        lcd_lib_clear_stringP(35 - strlen_P(AButtonText) * 3, 53, AButtonText);
+    }else{
+        lcd_lib_draw_stringP(35 - strlen_P(AButtonText) * 3, 53, AButtonText);
+    }
     if (IS_SELECTED(1))
     {
-        lcd_lib_draw_box(3+2, 29+2, 124-2, 43-2);
-        lcd_lib_set(3+3, 29+3, 124-3, 43-3);
-        lcd_lib_clear_string_centerP(33, pstr);
+        lcd_lib_draw_box(64+2, 49+2, 64+60-2, 63-2);
+        lcd_lib_set(64+3, 49+3, 64+60-3, 63-3);
+        lcd_lib_clear_stringP(64+31 - strlen_P(BButtonText) * 3, 53, BButtonText);
     }else{
-        lcd_lib_draw_string_centerP(33, pstr);
+        lcd_lib_draw_stringP(64+31 - strlen_P(BButtonText) * 3, 53, BButtonText);
     }
-    return (lcd_lib_button_pressed && IS_SELECTED(1));
 }
 
 static void lcd_progressbar(uint8_t progress)
@@ -263,6 +429,8 @@ static void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, char* (*en
     {
 		return;//Selection possibly changed the menu, so do not update it this cycle.
     }
+    if (lcd_encoder_pos == ENCODER_NO_SELECTION)
+        lcd_encoder_pos = 0;
     
 	static int16_t viewPos = 0;
 	if (lcd_encoder_pos < 0) lcd_encoder_pos += entryCount * ENCODER_TICKS_PER_FILE_MENU_ITEM;
@@ -274,27 +442,19 @@ static void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, char* (*en
 
     int16_t targetViewPos = selIndex * 8 - 15;
 
-    if (targetViewPos < 0) targetViewPos += entryCount * 8;
-    if (targetViewPos >= entryCount * 8) targetViewPos -= entryCount * 8;
     int16_t viewDiff = targetViewPos - viewPos;
-    if (viewDiff > entryCount * 4) viewDiff = (targetViewPos - entryCount * 8) - viewPos;
-    if (viewDiff < -entryCount * 4) viewDiff = (targetViewPos + entryCount * 8) - viewPos;
     viewPos += viewDiff / 4;
     if (viewDiff > 0) viewPos ++;
     if (viewDiff < 0) viewPos --;
-    if (viewPos < 0) viewPos += entryCount * 8;
-    if (viewPos >= entryCount * 8) viewPos -= entryCount * 8;
     
-    char selectedName[LONG_FILENAME_LENGTH];
+    char selectedName[LONG_FILENAME_LENGTH] = {'\0'};
     uint8_t drawOffset = 10 - (uint16_t(viewPos) % 8);
     uint8_t itemOffset = uint16_t(viewPos) / 8;
     for(uint8_t n=0; n<6; n++)
     {
         uint8_t itemIdx = n + itemOffset;
-        if (itemIdx >= entryCount * 2)
-            itemIdx += entryCount;
-        while(itemIdx >= entryCount)
-            itemIdx -= entryCount;
+        if (itemIdx >= entryCount)
+            continue;
 
         char* ptr = entryNameCallback(itemIdx);
 		if (itemIdx == selIndex)
@@ -382,7 +542,7 @@ static void doCooldown()
     setTargetBed(0);
     fanSpeed = 0;
     
-    quickStop();         //Abort all moves already in the planner
+    //quickStop();         //Abort all moves already in the planner
 }
 static void doCancelPrint()
 {
@@ -609,17 +769,26 @@ static void lcd_menu_maintenance_first_run_bed_level_adjust()
         {
             lcd_change_to_menu(lcd_menu_maintenance);
         }else{
-            lcd_change_to_menu(lcd_menu_main);
+            lcd_change_to_menu(lcd_menu_maintenance_first_run_done, MENU_ITEM_POS(1));
             SET_FIRST_RUN_DONE();
         }
     }
 
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(10, PSTR("Adjust the bed"));
-    lcd_lib_draw_string_centerP(20, PSTR("height by rotating"));
-    lcd_lib_draw_string_centerP(30, PSTR("the dial."));
-    lcd_lib_draw_string_centerP(40, PSTR("So the nozzle"));
-    lcd_lib_draw_string_centerP(50, PSTR("touches the bed"));
+    lcd_lib_draw_string_centerP(20, PSTR("by rotating the dial"));
+    lcd_lib_draw_string_centerP(30, PSTR("Have the nozzle touch"));
+    lcd_lib_draw_string_centerP(40, PSTR("the bed. And press"));
+    lcd_lib_draw_string_centerP(50, PSTR("the button..."));
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_maintenance_first_run_done()
+{
+    lcd_info_screen(lcd_menu_main, NULL, PSTR("OK"));
+    
+    lcd_lib_draw_string_centerP(20, PSTR("Your Ultimaker"));
+    lcd_lib_draw_string_centerP(30, PSTR("is now ready."));
     lcd_lib_update_screen();
 }
 
@@ -645,39 +814,40 @@ static void lcd_menu_maintenance_advanced()
         if (IS_SELECTED(0))
             lcd_change_to_menu(lcd_menu_maintenance);
         else if (IS_SELECTED(1))
-            lcd_change_to_menu(lcd_menu_advanced_factory_reset);
+            lcd_change_to_menu(lcd_menu_advanced_factory_reset, MENU_ITEM_POS(1));
     }
     lcd_scroll_menu("ADVANCED", 5, lcd_advanced_item, lcd_advanced_details);
 }
 
+static void doFactoryReset()
+{
+    eeprom_write_byte((uint8_t*)100, 0);
+    eeprom_write_byte((uint8_t*)101, 0);
+    eeprom_write_byte((uint8_t*)102, 0);
+    eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
+    
+    cli();
+    //NOTE: Jumping to address 0 is not a fully proper way to reset.
+    // Letting the watchdog timeout is a better reset, but the bootloader does not continue on a watchdog timeout.
+    // So we disable interrupts and hope for the best!
+    //Jump to address 0x0000
+#ifdef __AVR__
+    asm volatile(
+            "clr	r30		\n\t"
+            "clr	r31		\n\t"
+            "ijmp	\n\t"
+            );
+#else
+    exit(0);
+#endif
+}
+
 static void lcd_menu_advanced_factory_reset()
 {
-    lcd_info_screen(previousMenu, NULL, PSTR("NO"));
+    lcd_question_screen(NULL, doFactoryReset, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
     
     lcd_lib_draw_string_centerP(10, PSTR("Reset everything"));
     lcd_lib_draw_string_centerP(20, PSTR("to default?"));
-    if (lcd_info_second_button(PSTR("YES")))
-    {
-        eeprom_write_byte((uint8_t*)100, 0);
-        eeprom_write_byte((uint8_t*)101, 0);
-        eeprom_write_byte((uint8_t*)102, 0);
-        eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
-        
-        cli();
-        //NOTE: Jumping to address 0 is not a fully proper way to reset.
-        // Letting the watchdog timeout is a better reset, but the bootloader does not continue on a watchdog timeout.
-        // So we disable interrupts and hope for the best!
-        //Jump to address 0x0000
-#ifdef __AVR__
-        asm volatile(
-                "clr	r30		\n\t"
-                "clr	r31		\n\t"
-                "ijmp	\n\t"
-                );
-#else
-        exit(0);
-#endif
-    }
     lcd_lib_update_screen();
 }
 
@@ -692,15 +862,19 @@ static void lcd_menu_change_material_preheat()
         volume_to_filament_length = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
         
         float old_max_feedrate_e = max_feedrate[E_AXIS];
+        float old_retract_acceleration = retract_acceleration;
         max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
+        retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
+        
         current_position[E_AXIS] = 0;
         plan_set_e_position(current_position[E_AXIS]);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 5.0, FILAMENT_INSERT_EXTRUDE_SPEED, 0);//First extrude a bit trough the nozzle to clean up the end.
-        for(uint8_t n=0;n<4;n++)
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (n+1)*-FILAMENT_REVERSAL_LENGTH/10/4, (n+1)*FILAMENT_REVERSAL_SPEED/5, 0);//Do the first bit slower
-        for(uint8_t n=1;n<10;n++)
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (n+1)*-FILAMENT_REVERSAL_LENGTH/10, FILAMENT_REVERSAL_SPEED, 0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -1.0, FILAMENT_REVERSAL_SPEED, 0);
+        for(uint8_t n=0;n<6;n++)
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (n+1)*-FILAMENT_REVERSAL_LENGTH/6, FILAMENT_REVERSAL_SPEED, 0);
+        
         max_feedrate[E_AXIS] = old_max_feedrate_e;
+        retract_acceleration = old_retract_acceleration;
+        
         currentMenu = lcd_menu_change_material_remove;
         temp = target;
     }
@@ -730,7 +904,7 @@ static void lcd_menu_change_material_remove()
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
         currentMenu = lcd_menu_change_material_remove_wait_user;
-        SELECT_MENU_ITEM(1);
+        SELECT_MENU_ITEM(0);
         //Disable the extruder motor so you can pull out the remaining filament.
         disable_e0();
         disable_e1();
@@ -745,19 +919,44 @@ static void lcd_menu_change_material_remove()
     lcd_lib_update_screen();
 }
 
+static void lcd_menu_change_material_remove_wait_user_ready()
+{
+    current_position[E_AXIS] = 0;
+    plan_set_e_position(current_position[E_AXIS]);
+    lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MENU_ITEM_POS(0));
+    //TODO: Move head to front
+}
+
 static void lcd_menu_change_material_remove_wait_user()
 {
     lcd_lib_led_color(8 + led_glow / 2, 8 + led_glow / 2, 16 + led_glow / 4);
 
-    lcd_info_screen(lcd_menu_main, doCooldown);
-    lcd_lib_draw_stringP(65 - strlen_P(PSTR("Remove material")) * 3, 20, PSTR("Remove material"));
-    if (lcd_info_second_button(PSTR("READY")))
-    {
-        current_position[E_AXIS] = 0;
-        plan_set_e_position(current_position[E_AXIS]);
-        lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MENU_ITEM_POS(1));
-    }
+    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_menu_main, doCooldown, PSTR("CANCEL"));
+    lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
     lcd_lib_update_screen();
+}
+
+static void lcd_menu_change_material_insert_wait_user_ready()
+{
+    //Override the max feedrate and acceleration values to get a better insert speed and speedup/slowdown
+    float old_max_feedrate_e = max_feedrate[E_AXIS];
+    float old_retract_acceleration = retract_acceleration;
+    max_feedrate[E_AXIS] = FILAMENT_INSERT_FAST_SPEED;
+    retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
+    
+    current_position[E_AXIS] = 0;
+    plan_set_e_position(current_position[E_AXIS]);
+    for(uint8_t n=0;n<6;n++)
+    {
+        current_position[E_AXIS] += FILAMENT_FORWARD_LENGTH / 6;
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, 0);
+    }
+    
+    //Put back origonal values.
+    max_feedrate[E_AXIS] = old_max_feedrate_e;
+    retract_acceleration = old_retract_acceleration;
+    
+    lcd_change_to_menu(lcd_menu_change_material_insert_forward);
 }
 
 static void lcd_menu_change_material_insert_wait_user()
@@ -770,22 +969,8 @@ static void lcd_menu_change_material_insert_wait_user()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_EXTRUDE_SPEED, 0);
     }
     
-    lcd_info_screen(lcd_menu_main, doCooldown);
+    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_menu_main, doCooldown, PSTR("CANCEL"));
     lcd_lib_draw_stringP(65 - strlen_P(PSTR("Insert new material")) * 3, 20, PSTR("Insert new material"));
-    if (lcd_info_second_button(PSTR("READY")))
-    {
-        float old_max_feedrate_e = max_feedrate[E_AXIS];
-        max_feedrate[E_AXIS] = FILAMENT_INSERT_FAST_SPEED;
-        current_position[E_AXIS] = 0;
-        plan_set_e_position(current_position[E_AXIS]);
-        for(uint8_t n=0;n<6;n++)
-        {
-            current_position[E_AXIS] += FILAMENT_FORWARD_LENGTH / 6;
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, 0);
-        }
-        max_feedrate[E_AXIS] = old_max_feedrate_e;
-        lcd_change_to_menu(lcd_menu_change_material_insert_forward);
-    }
     lcd_lib_update_screen();
 }
 
@@ -798,8 +983,9 @@ static void lcd_menu_change_material_insert_forward()
     {
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
+        //TODO: Set E motor power lower so the motor skips instead of digging into the material
         currentMenu = lcd_menu_change_material_insert;
-        SELECT_MENU_ITEM(1);
+        SELECT_MENU_ITEM(0);
     }
 
     long pos = st_get_position(E_AXIS);
@@ -810,18 +996,18 @@ static void lcd_menu_change_material_insert_forward()
     lcd_lib_update_screen();
 }
 
+static void lcd_menu_change_material_insert_ready()
+{
+    doCooldown();
+    lcd_change_to_menu(lcd_menu_main);
+}
 static void lcd_menu_change_material_insert()
 {
     lcd_lib_led_color(8 + led_glow / 2, 8 + led_glow / 2, 16 + led_glow / 4);
     
-    lcd_info_screen(lcd_menu_main, doCooldown);
+    lcd_question_screen(NULL, lcd_menu_change_material_insert_ready, PSTR("READY"), lcd_menu_main, doCooldown, PSTR("CANCEL"));
     lcd_lib_draw_stringP(65 - strlen_P(PSTR("Wait till material")) * 3, 10, PSTR("Wait till material"));
     lcd_lib_draw_stringP(65 - strlen_P(PSTR("comes out the nozzle")) * 3, 20, PSTR("comes out the nozzle"));
-    if (lcd_info_second_button(PSTR("READY")))
-    {
-        doCooldown();
-        lcd_change_to_menu(lcd_menu_main);
-    }
 
     if (movesplanned() < 2)
     {
@@ -966,7 +1152,7 @@ static void lcd_menu_print_select()
                         volume_to_filament_length = 1.0;
                         extrudemultiply = 100;
                         
-                        lcd_change_to_menu(lcd_menu_print_classic_warning, MENU_ITEM_POS(1));
+                        lcd_change_to_menu(lcd_menu_print_classic_warning, MENU_ITEM_POS(0));
                     }
                 }
             }else{
@@ -1033,6 +1219,7 @@ static void lcd_menu_print_printing()
         enquecommand_P(PSTR("G1 F200 E0"));
         enquecommand_P(PSTR("G28"));
         currentMenu = lcd_menu_print_ready;
+        SELECT_MENU_ITEM(0);
     }
 
     lcd_progressbar(progress);
@@ -1040,18 +1227,17 @@ static void lcd_menu_print_printing()
     lcd_lib_update_screen();
 }
 
+static void doStartPrint()
+{
+    card.startFileprint();
+    starttime = millis();
+}
 static void lcd_menu_print_classic_warning()
 {
-    lcd_info_screen(lcd_menu_print_select);
+    lcd_question_screen(lcd_menu_print_classic, doStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, NULL, PSTR("CANCEL"));
     
     lcd_lib_draw_string_centerP(10, PSTR("This file ignores"));
     lcd_lib_draw_string_centerP(20, PSTR("material settings"));
-    if (lcd_info_second_button(PSTR("CONTINUE")))
-    {
-        card.startFileprint();
-        starttime = millis();
-        lcd_change_to_menu(lcd_menu_print_classic);
-    }
 
     lcd_lib_update_screen();
 }
@@ -1087,6 +1273,7 @@ static void lcd_menu_print_classic()
     {
         doCooldown();
         currentMenu = lcd_menu_print_ready;
+        SELECT_MENU_ITEM(0);
     }
 
     lcd_progressbar(progress);
@@ -1096,14 +1283,9 @@ static void lcd_menu_print_classic()
 
 static void lcd_menu_print_abort()
 {
-    lcd_info_screen(previousMenu, NULL, PSTR("NO"));
+    lcd_question_screen(lcd_menu_print_ready, doCancelPrint, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
     
     lcd_lib_draw_string_centerP(15, PSTR("Abort the print?"));
-    if (lcd_info_second_button(PSTR("YES")))
-    {
-        doCancelPrint();
-        lcd_change_to_menu(lcd_menu_print_ready);
-    }
 
     lcd_lib_update_screen();
 }
