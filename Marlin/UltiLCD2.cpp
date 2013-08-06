@@ -18,6 +18,17 @@
 #define IS_FIRST_RUN_DONE() (eeprom_read_byte((const uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET) == 'U')
 #define SET_FIRST_RUN_DONE() do { eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 'U'); } while(0)
 
+#define EEPROM_MATERIAL_SETTINGS_OFFSET 0x800
+#define EEPROM_MATERIAL_SETTINGS_SIZE   8 + 16
+#define EEPROM_MATERIAL_COUNT_OFFSET()            ((uint8_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 0)
+#define EEPROM_MATERIAL_NAME_OFFSET(n)            ((uint8_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * (n))
+#define EEPROM_MATERIAL_TEMPERATURE_OFFSET(n)     ((uint16_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * (n) + 8)
+#define EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(n) ((uint16_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * (n) + 10)
+#define EEPROM_MATERIAL_FAN_SPEED_OFFSET(n)       ((uint8_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * (n) + 12)
+#define EEPROM_MATERIAL_FLOW_OFFSET(n)            ((uint16_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * (n) + 13)
+#define EEPROM_MATERIAL_DIAMETER_OFFSET(n)        ((float*)EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * (n) + 15)
+
+
 //#ifdef ENABLE_ULTILCD2
 typedef void (*menuFunc_t)();
 
@@ -37,6 +48,8 @@ static void lcd_menu_change_material_remove_wait_user();
 static void lcd_menu_change_material_insert_wait_user();
 static void lcd_menu_change_material_insert_forward();
 static void lcd_menu_change_material_insert();
+static void lcd_menu_material_select();
+static void lcd_menu_material_selected();
 static void lcd_menu_material_settings();
 static void lcd_menu_maintenance();
 static void lcd_menu_maintenance_first_run_initial();
@@ -79,9 +92,9 @@ struct materialSettings material = {210, 65, 100, 100, 2.85};
 #define LCD_CACHE_SIZE (1 + (2 + LONG_FILENAME_LENGTH) * LCD_CACHE_COUNT)
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES lcd_cache[(LCD_CACHE_SIZE - 1)]
-#define LCD_CACHE_ID(n) lcd_cache[n]
-#define LCD_CACHE_FILENAME(n) ((char*)&lcd_cache[2*LCD_CACHE_COUNT + n * LONG_FILENAME_LENGTH])
-#define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + n]
+#define LCD_CACHE_ID(n) lcd_cache[(n)]
+#define LCD_CACHE_FILENAME(n) ((char*)&lcd_cache[2*LCD_CACHE_COUNT + (n) * LONG_FILENAME_LENGTH])
+#define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
 
 void lcd_init()
 {
@@ -184,12 +197,29 @@ const uint8_t ultimakerRobotGfx[] PROGMEM = {
     0x34,0x30,0x10,0x10,0x18,0x18,0x1a,0x1b,0xf,0x6,0x0,0x0,0x0,0x0,0x0,
 };
 
+const uint8_t folderGfx[] PROGMEM = {
+    16, 15,
+    0xfc,0xe,0xf,0xcf,0xcf,0xcf,0xce,0xcc,0xcc,0xcc,0xcc,0xcc,0xcc,0xdc,0xc0,0xc0,
+    0x7,0x70,0x7e,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0x7f,0xf,0x1,
+};
+
+const uint8_t backArrowGfx[] PROGMEM = {
+  28, 24,
+  0x0,0x0,0x0,0x0,0x0,0x80,0x80,0xc0,0x40,0x60,0x20,0x30,0x10,0x18,0x8,0xc,
+  0x4,0x6,0x2,0x3,0x7f,0x40,0x40,0x40,0x40,0x40,0x40,0xc0,
+  0x3c,0x66,0x42,0xc3,0x81,0x81,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+  0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xff,
+  0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x3,0x2,0x6,0x4,0xc,0x8,0x18,0x10,0x30,
+  0x20,0x60,0x40,0xc0,0xfe,0x2,0x2,0x2,0x2,0x2,0x2,0x3,
+};
+
 #define ENCODER_TICKS_PER_MAIN_MENU_ITEM 4
 #define ENCODER_TICKS_PER_FILE_MENU_ITEM 4
 #define ENCODER_NO_SELECTION (ENCODER_TICKS_PER_MAIN_MENU_ITEM * -11)
 #define MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_MAIN_MENU_ITEM * (n) + ENCODER_TICKS_PER_MAIN_MENU_ITEM / 2)
 #define SELECT_MENU_ITEM(n)  do { lcd_encoder_pos = MENU_ITEM_POS(n); } while(0)
-#define IS_SELECTED(n) (n == lcd_encoder_pos / ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+#define SELECTED_MENU_ITEM() (lcd_encoder_pos / ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+#define IS_SELECTED(n) ((n) == SELECTED_MENU_ITEM())
 
 void lcd_update()
 {
@@ -348,7 +378,7 @@ static void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel =
     if (lcd_lib_button_pressed && IS_SELECTED(0))
     {
         if (callbackOnCancel) callbackOnCancel();
-        lcd_change_to_menu(cancelMenu);
+        if (cancelMenu) lcd_change_to_menu(cancelMenu);
     }
 
     lcd_lib_clear();
@@ -506,10 +536,9 @@ static void lcd_menu_edit_setting()
     lcd_lib_draw_string_centerP(20, lcd_setting_name);
     char buffer[16];
     if (lcd_setting_type == 3)
-        float_to_string(float(lcd_encoder_pos) / 100.0, buffer);
+        float_to_string(float(lcd_encoder_pos) / 100.0, buffer, lcd_setting_postfix);
     else
-        int_to_string(lcd_encoder_pos, buffer);
-    strcat_P(buffer, lcd_setting_postfix);
+        int_to_string(lcd_encoder_pos, buffer, lcd_setting_postfix);
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
 }
@@ -604,12 +633,115 @@ static void lcd_menu_material()
             lcd_change_to_menu(lcd_menu_change_material_preheat);//TODO: If multiple extruders, select extruder.
         }
         else if (IS_SELECTED(1))
-            lcd_change_to_menu(lcd_menu_material_settings, MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_material_select, MENU_ITEM_POS(0));
+            //lcd_change_to_menu(lcd_menu_material_settings, MENU_ITEM_POS(0));
         else if (IS_SELECTED(2))
             lcd_change_to_menu(lcd_menu_main);
             
     }
 
+    lcd_lib_update_screen();
+}
+
+static char* lcd_material_select_callback(uint8_t nr)
+{
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    if (nr == 0)
+        strcpy_P(card.longFilename, PSTR("<- RETURN"));
+    else if (nr > count)
+        strcpy_P(card.longFilename, PSTR("Customize"));
+    else
+        eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
+    return card.longFilename;
+}
+
+static void lcd_material_select_details_callback(uint8_t nr)
+{
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    if (nr == 0)
+    {
+        lcd_lib_draw_gfx(80, 13, backArrowGfx);
+    }
+    else if (nr <= count)
+    {
+        char buffer[8];
+        int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr - 1)), buffer, PSTR("C"));
+        lcd_lib_draw_string(70, 10, buffer);
+        int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr - 1)), buffer, PSTR("C"));
+        lcd_lib_draw_string(100, 10, buffer);
+        int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr - 1)), buffer, PSTR("%"));
+        lcd_lib_draw_stringP(70, 20, PSTR("Flow"));
+        lcd_lib_draw_string(70 + 5 * 6, 20, buffer);
+
+        int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr - 1)), buffer, PSTR("%"));
+        lcd_lib_draw_stringP(70, 30, PSTR("Fan"));
+        lcd_lib_draw_string(70 + 5 * 6, 30, buffer);
+        float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr - 1)), buffer, PSTR("mm"));
+        lcd_lib_draw_string(70, 40, buffer);
+    }else{
+        lcd_lib_draw_stringP(67, 10, PSTR("Modify the"));
+        lcd_lib_draw_stringP(67, 20, PSTR("current"));
+        lcd_lib_draw_stringP(67, 30, PSTR("settings"));
+    }
+}
+
+static void lcd_menu_material_select()
+{
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    if (count == 0)
+    {
+        //Fill in the defaults
+        char buffer[8];
+        
+        strcpy_P(buffer, PSTR("PLA"));
+        eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
+        eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
+        eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(0), 65);
+        eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(0), 100);
+        eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
+        eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(0), 2.85);
+
+        strcpy_P(buffer, PSTR("ABS"));
+        eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(1), 4);
+        eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(1), 240);
+        eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(1), 80);
+        eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(1), 50);
+        eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(1), 107);
+        eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(1), 2.85);
+        
+        eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 2);
+        return;
+    }
+    
+    lcd_scroll_menu(PSTR("MATERIAL"), count + 2, lcd_material_select_callback, lcd_material_select_details_callback);
+    if (lcd_lib_button_pressed)
+    {
+        printf("%i\n", count);
+        if (IS_SELECTED(0))
+            lcd_change_to_menu(lcd_menu_material);
+        else if (IS_SELECTED(count + 1))
+            lcd_change_to_menu(lcd_menu_material_settings);
+        else{
+            uint8_t nr = SELECTED_MENU_ITEM() - 1;
+            material.temperature = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr));
+            material.bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr));
+            material.flow = eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr));
+
+            material.fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr));
+            material.diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
+            eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+            card.longFilename[8] = '\0';
+            
+            lcd_change_to_menu(lcd_menu_material_selected, MENU_ITEM_POS(0));
+        }
+    }
+}
+
+static void lcd_menu_material_selected()
+{
+    lcd_info_screen(lcd_menu_main, NULL, PSTR("OK"));
+    lcd_lib_draw_string_centerP(20, PSTR("Selected material:"));
+    lcd_lib_draw_string_center(30, card.longFilename);
     lcd_lib_update_screen();
 }
 
@@ -637,27 +769,24 @@ static void lcd_material_settings_details_callback(uint8_t nr)
     char buffer[10];
     buffer[0] = '\0';
     if (nr == 0)
-        return;
-    else if (nr == 1)
     {
-        int_to_string(material.temperature, buffer);
-        strcat_P(buffer, PSTR("C"));
+        lcd_lib_draw_gfx(80, 13, backArrowGfx);
+        return;
+    }else if (nr == 1)
+    {
+        int_to_string(material.temperature, buffer, PSTR("C"));
     }else if (nr == 2)
     {
-        int_to_string(material.bed_temperature, buffer);
-        strcat_P(buffer, PSTR("C"));
+        int_to_string(material.bed_temperature, buffer, PSTR("C"));
     }else if (nr == 3)
     {
-        float_to_string(material.diameter, buffer);
-        strcat_P(buffer, PSTR("mm"));
+        float_to_string(material.diameter, buffer, PSTR("mm"));
     }else if (nr == 4)
     {
-        int_to_string(material.fan_speed, buffer);
-        strcat_P(buffer, PSTR("%"));
+        int_to_string(material.fan_speed, buffer, PSTR("%"));
     }else if (nr == 5)
     {
-        int_to_string(material.flow, buffer);
-        strcat_P(buffer, PSTR("%"));
+        int_to_string(material.flow, buffer, PSTR("%"));
     }
     lcd_lib_draw_string(70, 25, buffer);
 }
@@ -769,17 +898,16 @@ static void lcd_menu_maintenance_first_run_bed_level_adjust()
         {
             lcd_change_to_menu(lcd_menu_maintenance);
         }else{
-            lcd_change_to_menu(lcd_menu_maintenance_first_run_done, MENU_ITEM_POS(1));
+            lcd_change_to_menu(lcd_menu_maintenance_first_run_done, MENU_ITEM_POS(0));
             SET_FIRST_RUN_DONE();
         }
     }
 
-    lcd_lib_clear();
+    lcd_info_screen(NULL, NULL, PSTR("READY"));
     lcd_lib_draw_string_centerP(10, PSTR("Adjust the bed"));
     lcd_lib_draw_string_centerP(20, PSTR("by rotating the dial"));
     lcd_lib_draw_string_centerP(30, PSTR("Have the nozzle touch"));
-    lcd_lib_draw_string_centerP(40, PSTR("the bed. And press"));
-    lcd_lib_draw_string_centerP(50, PSTR("the button..."));
+    lcd_lib_draw_string_centerP(40, PSTR("the bed."));
     lcd_lib_update_screen();
 }
 
@@ -825,6 +953,7 @@ static void doFactoryReset()
     eeprom_write_byte((uint8_t*)101, 0);
     eeprom_write_byte((uint8_t*)102, 0);
     eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
+    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
     
     cli();
     //NOTE: Jumping to address 0 is not a fully proper way to reset.
@@ -1006,8 +1135,8 @@ static void lcd_menu_change_material_insert()
     lcd_lib_led_color(8 + led_glow / 2, 8 + led_glow / 2, 16 + led_glow / 4);
     
     lcd_question_screen(NULL, lcd_menu_change_material_insert_ready, PSTR("READY"), lcd_menu_main, doCooldown, PSTR("CANCEL"));
-    lcd_lib_draw_stringP(65 - strlen_P(PSTR("Wait till material")) * 3, 10, PSTR("Wait till material"));
-    lcd_lib_draw_stringP(65 - strlen_P(PSTR("comes out the nozzle")) * 3, 20, PSTR("comes out the nozzle"));
+    lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
+    lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
 
     if (movesplanned() < 2)
     {
@@ -1057,7 +1186,19 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
 
 void lcd_sd_menu_details_callback(uint8_t nr)
 {
-    
+    if (nr == 0)
+    {
+        lcd_lib_draw_gfx(80, 13, backArrowGfx);
+        return;
+    }
+    for(uint8_t idx=0; idx<LCD_CACHE_COUNT; idx++)
+    {
+        if (LCD_CACHE_ID(idx) == nr)
+        {
+            if (LCD_CACHE_TYPE(idx) == 1)
+                lcd_lib_draw_gfx(80, 20, folderGfx);
+        }
+    }
 }
 
 static void lcd_menu_print_select()
@@ -1173,6 +1314,7 @@ static void lcd_menu_print_heatup()
     
     if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW)
     {
+        //TODO: Custom start code.
         enquecommand_P(PSTR("G28"));
         enquecommand_P(PSTR("G92 E-5"));
         enquecommand_P(PSTR("G1 F200 E0"));
@@ -1206,11 +1348,18 @@ static void lcd_menu_print_heatup()
 
 static void lcd_menu_print_printing()
 {
-    lcd_info_screen(lcd_menu_print_abort, NULL, PSTR("ABORT"));
+    lcd_question_screen(NULL, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     
     uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
     lcd_lib_draw_string_centerP(15, PSTR("Printing"));
     lcd_lib_draw_string_center(25, card.longFilename);
+    unsigned long printTime = (millis() - starttime);
+    unsigned long totalTime = float(printTime) * float(card.getFileSize()) / float(card.getFilePos());
+    unsigned long timeLeft = (totalTime - printTime) / 1000L;
+    
+    char buffer[8];
+    int_to_time_string(timeLeft, buffer);
+    lcd_lib_draw_string(5, 5, buffer);
 
     if (!card.sdprinting && !is_command_queued())
     {
@@ -1309,7 +1458,7 @@ static void lcd_menu_print_ready()
             
         lcd_progressbar(progress);
         char buffer[8];
-        int_to_string(current_temperature[0], buffer);
+        int_to_string(current_temperature[0], buffer, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
     }else{
         lcd_lib_draw_string_centerP(15, PSTR("Print finished"));

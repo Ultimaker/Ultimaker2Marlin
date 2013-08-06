@@ -241,7 +241,7 @@ void CardReader::openFile(char* name,bool read)
   if(name[0]=='/')
   {
     dirname_start=strchr(name,'/')+1;
-    while(dirname_start>0)
+    while(dirname_start>(char*)1)
     {
       dirname_end=strchr(dirname_start,'/');
       //SERIAL_ECHO("start:");SERIAL_ECHOLN((int)(dirname_start-name));

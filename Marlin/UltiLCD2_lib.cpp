@@ -757,7 +757,7 @@ void lcd_lib_buttons_update()
     lcd_lib_button_down = buttonState;
 }
 
-void int_to_string(int i, char* temp_buffer)
+void int_to_string(int i, char* temp_buffer, const char* p_postfix)
 {
     char* c = temp_buffer;
     if (i < 0)
@@ -773,9 +773,31 @@ void int_to_string(int i, char* temp_buffer)
         *c++ = ((i/10)%10)+'0';
     *c++ = ((i)%10)+'0';
     *c = '\0';
+    if (p_postfix)
+        strcpy_P(c, p_postfix);
 }
 
-void float_to_string(float f, char* temp_buffer)
+void int_to_time_string(unsigned long i, char* temp_buffer)
+{
+    char* c = temp_buffer;
+    uint8_t hours = (i / 60 / 60) % 60;
+    uint8_t mins = (i / 60) % 60;
+    uint8_t secs = i % 60;
+    
+    if (hours > 99)
+        *c++ = '0' + hours / 100;
+    *c++ = '0' + (hours / 10) % 10;
+    *c++ = '0' + hours % 10;
+    *c++ = ':';
+    *c++ = '0' + mins / 10;
+    *c++ = '0' + mins % 10;
+    *c++ = ':';
+    *c++ = '0' + secs / 10;
+    *c++ = '0' + secs % 10;
+    *c = '\0';
+}
+
+void float_to_string(float f, char* temp_buffer, const char* p_postfix)
 {
     int i = f * 100.0 + 0.5;
     char* c = temp_buffer;
@@ -793,6 +815,8 @@ void float_to_string(float f, char* temp_buffer)
         *c++ = ((i/10)%10)+'0';
     *c++ = ((i)%10)+'0';
     *c = '\0';
+    if (p_postfix)
+        strcpy_P(c, p_postfix);
 }
 
 //#endif//ENABLE_ULTILCD2

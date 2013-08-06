@@ -34,7 +34,8 @@ extern int16_t lcd_encoder_pos;
 extern bool lcd_lib_button_pressed;
 extern bool lcd_lib_button_down;
 
-void int_to_string(int i, char* temp_buffer);
-void float_to_string(float f, char* temp_buffer);
+void int_to_string(int i, char* temp_buffer, const char* p_postfix = NULL);
+void int_to_time_string(unsigned long i, char* temp_buffer);
+void float_to_string(float f, char* temp_buffer, const char* p_postfix = NULL);
 
 #endif//ULTI_LCD2_LIB_H

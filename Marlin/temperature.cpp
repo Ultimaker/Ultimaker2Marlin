@@ -437,25 +437,25 @@ void manage_heater()
           //K1 defined in Configuration.h in the PID settings
           #define K2 (1.0-K1)
           dTerm[e] = (Kd * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
-          temp_dState[e] = pid_input;
-
           pid_output = constrain(pTerm[e] + iTerm[e] - dTerm[e], 0, PID_MAX);
         }
+        temp_dState[e] = pid_input;
     #else 
           pid_output = constrain(target_temperature[e], 0, PID_MAX);
     #endif //PID_OPENLOOP
     #ifdef PID_DEBUG
-    SERIAL_ECHO_START(" PIDDEBUG ");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM(" PIDDEBUG ");
     SERIAL_ECHO(e);
-    SERIAL_ECHO(": Input ");
+    SERIAL_ECHOPGM(": Input ");
     SERIAL_ECHO(pid_input);
-    SERIAL_ECHO(" Output ");
+    SERIAL_ECHOPGM(" Output ");
     SERIAL_ECHO(pid_output);
-    SERIAL_ECHO(" pTerm ");
+    SERIAL_ECHOPGM(" pTerm ");
     SERIAL_ECHO(pTerm[e]);
-    SERIAL_ECHO(" iTerm ");
+    SERIAL_ECHOPGM(" iTerm ");
     SERIAL_ECHO(iTerm[e]);
-    SERIAL_ECHO(" dTerm ");
+    SERIAL_ECHOPGM(" dTerm ");
     SERIAL_ECHOLN(dTerm[e]);  
     #endif //PID_DEBUG
   #else /* PID off */
