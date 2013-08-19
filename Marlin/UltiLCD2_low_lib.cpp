@@ -1,8 +1,8 @@
 #include "Configuration.h"
 #include "pins.h"
-#include "UltiLCD2_lib.h"
+#include "UltiLCD2_low_lib.h"
 
-//#ifdef ENABLE_ULTILCD2
+#ifdef ENABLE_ULTILCD2
 /**
  * Implementation of the LCD display routines for a SSD1309 OLED graphical display connected with i2c.
  **/
@@ -16,6 +16,9 @@
 
 #define I2C_FREQ 400000
 
+//The TWI interrupt routine conflicts with an interrupt already defined by Arduino, if you are using the Arduino IDE.
+// Not running the screen update from interrupts causes a 25ms delay each screen refresh. Which will cause issues during printing.
+// I recommend against using the Arduino IDE and setup a proper development environment.
 #define USE_TWI_INTERRUPT 1
 
 #define I2C_WRITE   0x00
@@ -169,7 +172,7 @@ void lcd_lib_init()
 
     lcd_lib_buttons_update_interrupt();
     lcd_lib_buttons_update();
-    lcd_encoder_pos = 0;
+    lcd_lib_encoder_pos = 0;
     lcd_lib_update_screen();
 }
 
@@ -698,8 +701,8 @@ void lcd_lib_beep()
 #undef _BEEP
 }
 
-int8_t lcd_encoder_pos_interrupt = 0;
-int16_t lcd_encoder_pos = 0;
+int8_t lcd_lib_encoder_pos_interrupt = 0;
+int16_t lcd_lib_encoder_pos = 0;
 bool lcd_lib_button_pressed = false;
 bool lcd_lib_button_down;
 
@@ -720,27 +723,27 @@ void lcd_lib_buttons_update_interrupt()
         {
         case encrot0:
             if(lastEncBits==encrot3)
-                lcd_encoder_pos_interrupt++;
+                lcd_lib_encoder_pos_interrupt++;
             else if(lastEncBits==encrot1)
-                lcd_encoder_pos_interrupt--;
+                lcd_lib_encoder_pos_interrupt--;
             break;
         case encrot1:
             if(lastEncBits==encrot0)
-                lcd_encoder_pos_interrupt++;
+                lcd_lib_encoder_pos_interrupt++;
             else if(lastEncBits==encrot2)
-                lcd_encoder_pos_interrupt--;
+                lcd_lib_encoder_pos_interrupt--;
             break;
         case encrot2:
             if(lastEncBits==encrot1)
-                lcd_encoder_pos_interrupt++;
+                lcd_lib_encoder_pos_interrupt++;
             else if(lastEncBits==encrot3)
-                lcd_encoder_pos_interrupt--;
+                lcd_lib_encoder_pos_interrupt--;
             break;
         case encrot3:
             if(lastEncBits==encrot2)
-                lcd_encoder_pos_interrupt++;
+                lcd_lib_encoder_pos_interrupt++;
             else if(lastEncBits==encrot0)
-                lcd_encoder_pos_interrupt--;
+                lcd_lib_encoder_pos_interrupt--;
             break;
         }
         lastEncBits = encBits;
@@ -749,8 +752,8 @@ void lcd_lib_buttons_update_interrupt()
 
 void lcd_lib_buttons_update()
 {
-    lcd_encoder_pos += lcd_encoder_pos_interrupt;
-    lcd_encoder_pos_interrupt = 0;
+    lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
+    lcd_lib_encoder_pos_interrupt = 0;
 
     uint8_t buttonState = !READ(BTN_ENC);
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);
@@ -819,4 +822,4 @@ void float_to_string(float f, char* temp_buffer, const char* p_postfix)
         strcpy_P(c, p_postfix);
 }
 
-//#endif//ENABLE_ULTILCD2
+#endif//ENABLE_ULTILCD2

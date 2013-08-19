@@ -379,7 +379,6 @@ bool Sd2Card::readBlock(uint32_t blockNumber, uint8_t* dst) {
  retry2:
   retryCnt --;
   if (cardCommand(CMD17, blockNumber)) {
-    MSerial.println("SD_CARD_ERROR_CMD17!");
     if (retryCnt > 0) goto retry;
     goto fail;
   }

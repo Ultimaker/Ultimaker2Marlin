@@ -1,5 +1,8 @@
-#ifndef ULTI_LCD2_LIB_H
-#define ULTI_LCD2_LIB_H
+#ifndef ULTI_LCD2_LOW_LIB_H
+#define ULTI_LCD2_LOW_LIB_H
+
+#include <stdint.h>
+#include <stddef.h>
 
 void lcd_lib_init();
 void lcd_lib_update_screen();   /* Start sending out the display buffer to the screen. Wait till lcd_lib_update_ready before issuing any draw functions */
@@ -30,7 +33,7 @@ void lcd_lib_buttons_update();
 void lcd_lib_buttons_update_interrupt();
 void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b);
 
-extern int16_t lcd_encoder_pos;
+extern int16_t lcd_lib_encoder_pos;
 extern bool lcd_lib_button_pressed;
 extern bool lcd_lib_button_down;
 
@@ -38,4 +41,4 @@ void int_to_string(int i, char* temp_buffer, const char* p_postfix = NULL);
 void int_to_time_string(unsigned long i, char* temp_buffer);
 void float_to_string(float f, char* temp_buffer, const char* p_postfix = NULL);
 
-#endif//ULTI_LCD2_LIB_H
+#endif//ULTI_LCD2_LOW_LIB_H

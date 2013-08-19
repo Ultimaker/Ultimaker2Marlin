@@ -95,30 +95,31 @@ volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1};
 
 #define CHECK_ENDSTOPS  if(check_endstops)
 
+#ifdef __AVR
 // intRes = intIn1 * intIn2 >> 16
 // uses:
 // r26 to store 0
 // r27 to store the byte 1 of the 24 bit result
 #define MultiU16X8toH16(intRes, charIn1, intIn2) \
-asm volatile ( \
-"clr r26 \n\t" \
-"mul %A1, %B2 \n\t" \
-"movw %A0, r0 \n\t" \
-"mul %A1, %A2 \n\t" \
-"add %A0, r1 \n\t" \
-"adc %B0, r26 \n\t" \
-"lsr r0 \n\t" \
-"adc %A0, r26 \n\t" \
-"adc %B0, r26 \n\t" \
-"clr r1 \n\t" \
-: \
-"=&r" (intRes) \
-: \
-"d" (charIn1), \
-"d" (intIn2) \
-: \
-"r26" \
-)
+    asm volatile ( \
+    "clr r26 \n\t" \
+    "mul %A1, %B2 \n\t" \
+    "movw %A0, r0 \n\t" \
+    "mul %A1, %A2 \n\t" \
+    "add %A0, r1 \n\t" \
+    "adc %B0, r26 \n\t" \
+    "lsr r0 \n\t" \
+    "adc %A0, r26 \n\t" \
+    "adc %B0, r26 \n\t" \
+    "clr r1 \n\t" \
+    : \
+    "=&r" (intRes) \
+    : \
+    "d" (charIn1), \
+    "d" (intIn2) \
+    : \
+    "r26" \
+    )
 
 // intRes = longIn1 * longIn2 >> 24
 // uses:
@@ -164,6 +165,14 @@ asm volatile ( \
 : \
 "r26" , "r27" \
 )
+#else
+
+// intRes = intIn1 * intIn2 >> 16
+#define MultiU16X8toH16(intRes, charIn1, intIn2) do { (intRes) = (uint32_t(charIn1) * uint32_t(intIn2)) >> 16; } while(0)
+
+// intRes = longIn1 * longIn2 >> 24
+#define MultiU24X24toH16(intRes, longIn1, longIn2) do { (intRes) = (uint64_t(longIn1) * uint64_t(longIn2)) >> 24; } while(0)
+#endif
 
 // Some useful constants
 
@@ -264,14 +273,14 @@ FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
   if(step_rate < (F_CPU/500000)) step_rate = (F_CPU/500000);
   step_rate -= (F_CPU/500000); // Correct for minimal speed
   if(step_rate >= (8*256)){ // higher step rate 
-    unsigned short table_address = (unsigned short)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
+    const uint8_t* table_address = (const uint8_t*)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
     unsigned char tmp_step_rate = (step_rate & 0x00ff);
     unsigned short gain = (unsigned short)pgm_read_word_near(table_address+2);
     MultiU16X8toH16(timer, tmp_step_rate, gain);
     timer = (unsigned short)pgm_read_word_near(table_address) - timer;
   }
   else { // lower step rates
-    unsigned short table_address = (unsigned short)&speed_lookuptable_slow[0][0];
+    const uint8_t* table_address = (const uint8_t*)&speed_lookuptable_slow[0][0];
     table_address += ((step_rate)>>1) & 0xfffc;
     timer = (unsigned short)pgm_read_word_near(table_address);
     timer -= (((unsigned short)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
