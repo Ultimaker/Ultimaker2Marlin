@@ -217,7 +217,7 @@ static void lcd_advanced_details(uint8_t nr)
 {
     if (nr == 0)
     {
-        lcd_lib_draw_gfx(80, 13, backArrowGfx);
+        
     }else if(nr == 1)
     {
         lcd_lib_draw_stringP(67, 15, PSTR("Heatup"));

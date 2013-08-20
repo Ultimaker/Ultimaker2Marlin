@@ -214,11 +214,12 @@ static char* lcd_material_select_callback(uint8_t nr)
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (nr == 0)
-        strcpy_P(card.longFilename, PSTR("<- RETURN"));
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
     else if (nr > count)
         strcpy_P(card.longFilename, PSTR("Customize"));
-    else
+    else{
         eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
+    }
     return card.longFilename;
 }
 
@@ -227,28 +228,33 @@ static void lcd_material_select_details_callback(uint8_t nr)
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (nr == 0)
     {
-        lcd_lib_draw_gfx(80, 13, backArrowGfx);
+        
     }
     else if (nr <= count)
     {
-        char buffer[8];
-        int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr - 1)), buffer, PSTR("C"));
-        lcd_lib_draw_string(70, 10, buffer);
-        int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr - 1)), buffer, PSTR("C"));
-        lcd_lib_draw_string(100, 10, buffer);
-        int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr - 1)), buffer, PSTR("%"));
-        lcd_lib_draw_stringP(70, 20, PSTR("Flow"));
-        lcd_lib_draw_string(70 + 5 * 6, 20, buffer);
-
-        int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr - 1)), buffer, PSTR("%"));
-        lcd_lib_draw_stringP(70, 30, PSTR("Fan"));
-        lcd_lib_draw_string(70 + 5 * 6, 30, buffer);
-        float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr - 1)), buffer, PSTR("mm"));
-        lcd_lib_draw_string(70, 40, buffer);
+        char buffer[32];
+        char* c = buffer;
+        nr -= 1;
+        
+        if (led_glow_dir)
+        {
+            c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
+            while(c < buffer + 10) *c++ = ' ';
+            strcpy_P(c, PSTR("Flow:"));
+            c += 5;
+            c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
+        }else{
+            c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+            *c++ = ' ';
+            c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+            while(c < buffer + 10) *c++ = ' ';
+            strcpy_P(c, PSTR("Fan: "));
+            c += 5;
+            c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
+        }
+        lcd_lib_draw_string(5, 53, buffer);
     }else{
-        lcd_lib_draw_stringP(67, 10, PSTR("Modify the"));
-        lcd_lib_draw_stringP(67, 20, PSTR("current"));
-        lcd_lib_draw_stringP(67, 30, PSTR("settings"));
+        lcd_lib_draw_string_centerP(53, PSTR("Modify the settings"));
     }
 }
 
@@ -283,19 +289,19 @@ static void lcd_menu_material_selected()
 static char* lcd_material_settings_callback(uint8_t nr)
 {
     if (nr == 0)
-        strcpy_P(card.longFilename, PSTR("<- RETURN"));
+        strcpy_P(card.longFilename, PSTR("    <- RETURN"));
     else if (nr == 1)
-        strcpy_P(card.longFilename, PSTR("Temperature"));
+        strcpy_P(card.longFilename, PSTR("    Temperature"));
     else if (nr == 2)
-        strcpy_P(card.longFilename, PSTR("Heated bed"));
+        strcpy_P(card.longFilename, PSTR("    Heated bed"));
     else if (nr == 3)
-        strcpy_P(card.longFilename, PSTR("Diameter"));
+        strcpy_P(card.longFilename, PSTR("    Diameter"));
     else if (nr == 4)
-        strcpy_P(card.longFilename, PSTR("Fan"));
+        strcpy_P(card.longFilename, PSTR("    Fan"));
     else if (nr == 5)
-        strcpy_P(card.longFilename, PSTR("Flow %"));
+        strcpy_P(card.longFilename, PSTR("    Flow %"));
     else
-        strcpy_P(card.longFilename, PSTR("???"));
+        strcpy_P(card.longFilename, PSTR("    ???"));
     return card.longFilename;
 }
 
@@ -305,7 +311,6 @@ static void lcd_material_settings_details_callback(uint8_t nr)
     buffer[0] = '\0';
     if (nr == 0)
     {
-        lcd_lib_draw_gfx(80, 13, backArrowGfx);
         return;
     }else if (nr == 1)
     {
@@ -351,7 +356,7 @@ void lcd_material_reset_defaults()
     //Fill in the defaults
     char buffer[8];
     
-    strcpy_P(buffer, PSTR("PLA"));
+    strcpy_P(buffer, PSTR("PLA 3mm"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(0), 65);
@@ -359,7 +364,7 @@ void lcd_material_reset_defaults()
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(0), 2.85);
 
-    strcpy_P(buffer, PSTR("ABS"));
+    strcpy_P(buffer, PSTR("ABS 3mm"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(1), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(1), 240);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(1), 80);

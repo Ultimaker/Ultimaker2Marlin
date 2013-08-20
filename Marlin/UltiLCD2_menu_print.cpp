@@ -81,7 +81,6 @@ void lcd_sd_menu_details_callback(uint8_t nr)
 {
     if (nr == 0)
     {
-        lcd_lib_draw_gfx(80, 13, backArrowGfx);
         return;
     }
     for(uint8_t idx=0; idx<LCD_CACHE_COUNT; idx++)

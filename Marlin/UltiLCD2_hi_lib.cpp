@@ -170,12 +170,11 @@ void lcd_progressbar(uint8_t progress)
 void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback_t entryNameCallback, entryDetailsCallback_t entryDetailsCallback)
 {
     if (lcd_lib_button_pressed)
-    {
 		return;//Selection possibly changed the menu, so do not update it this cycle.
-    }
+
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
-    
+
 	static int16_t viewPos = 0;
 	if (lcd_lib_encoder_pos < 0) lcd_lib_encoder_pos += entryCount * ENCODER_TICKS_PER_MENU_ITEM;
 	if (lcd_lib_encoder_pos >= entryCount * ENCODER_TICKS_PER_MENU_ITEM) lcd_lib_encoder_pos -= entryCount * ENCODER_TICKS_PER_MENU_ITEM;
@@ -188,10 +187,9 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
 
     int16_t viewDiff = targetViewPos - viewPos;
     viewPos += viewDiff / 4;
-    if (viewDiff > 0) viewPos ++;
-    if (viewDiff < 0) viewPos --;
-    
-    char selectedName[LONG_FILENAME_LENGTH] = {'\0'};
+    if (viewDiff > 0) { viewPos ++; led_glow = led_glow_dir = 0; }
+    if (viewDiff < 0) { viewPos --; led_glow = led_glow_dir = 0; }
+
     uint8_t drawOffset = 10 - (uint16_t(viewPos) % 8);
     uint8_t itemOffset = uint16_t(viewPos) / 8;
     for(uint8_t n=0; n<6; n++)
@@ -201,30 +199,25 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
             continue;
 
         char* ptr = entryNameCallback(itemIdx);
-		if (itemIdx == selIndex)
-			strcpy(selectedName, ptr);
-		ptr[10] = '\0';
+		//ptr[10] = '\0';
+		ptr[20] = '\0';
         if (itemIdx == selIndex)
         {
-            lcd_lib_set(3, drawOffset+8*n-1, 62, drawOffset+8*n+7);
+            //lcd_lib_set(3, drawOffset+8*n-1, 62, drawOffset+8*n+7);
+            lcd_lib_set(3, drawOffset+8*n-1, 124, drawOffset+8*n+7);
             lcd_lib_clear_string(4, drawOffset+8*n, ptr);
         }else{
             lcd_lib_draw_string(4, drawOffset+8*n, ptr);
         }
     }
-    selectedName[20] = '\0';
+    lcd_lib_set(3, 0, 124, 8);
+    lcd_lib_clear(3, 47, 124, 63);
+    lcd_lib_clear(3, 9, 124, 9);
 
-    lcd_lib_set(3, 0, 62, 8);
-    lcd_lib_clear(3, 47, 62, 63);
-    lcd_lib_clear(3, 9, 62, 9);
-
-    lcd_lib_draw_vline(64, 5, 45);
     lcd_lib_draw_hline(3, 124, 48);
 
-    lcd_lib_clear_stringP(10, 1, menuNameP);
+    lcd_lib_clear_string_centerP(1, menuNameP);
     
-    lcd_lib_draw_string(5, 53, selectedName);
-	
 	entryDetailsCallback(selIndex);
 	
     lcd_lib_update_screen();

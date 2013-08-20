@@ -143,6 +143,7 @@
 // M908 - Control digital trimpot directly.
 // M350 - Set microstepping mode.
 // M351 - Toggle MS1 MS2 pins directly.
+// M923 - Select file and start printing directly (can be used from other SD file)
 // M928 - Start SD logging (M928 filename.g) - ended by M29
 // M999 - Restart after being stopped by error
 
@@ -978,7 +979,7 @@ void process_commands()
              plan_set_e_position(current_position[E_AXIS]);
            }
            else {
-             current_position[i] = code_value();
+             current_position[i] = code_value() + add_homeing[i];
              plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
            }
         }
@@ -1090,6 +1091,14 @@ void process_commands()
         }
         card.removeFile(strchr_pointer + 4);
       }
+      break;
+    case 923: //M923 - Select file and start printing
+      starpos = (strchr(strchr_pointer + 4,'*'));
+      if(starpos!=NULL)
+        *(starpos-1)='\0';
+      card.openFile(strchr_pointer + 4,true);
+      card.startFileprint();
+      starttime=millis();
       break;
     case 928: //M928 - Start SD write
       starpos = (strchr(strchr_pointer + 5,'*'));
