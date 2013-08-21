@@ -190,10 +190,10 @@ int EtoPPressure=0;
 #endif
 
 #ifdef FWRETRACT
-  bool autoretract_enabled=true;
+  bool autoretract_enabled=false;
   bool retracted=false;
-  float retract_length=3, retract_feedrate=17*60, retract_zlift=0.8;
-  float retract_recover_length=0, retract_recover_feedrate=8*60;
+  float retract_length=4.5, retract_feedrate=25*60, retract_zlift=0.8;
+  float retract_recover_length=0, retract_recover_feedrate=25*60;
 #endif
 
 //===========================================================================
@@ -781,23 +781,21 @@ void process_commands()
         destination[X_AXIS]=current_position[X_AXIS];
         destination[Y_AXIS]=current_position[Y_AXIS];
         destination[Z_AXIS]=current_position[Z_AXIS];
-        current_position[Z_AXIS]+=-retract_zlift;
         destination[E_AXIS]=current_position[E_AXIS]-retract_length;
+        retract_recover_length = current_position[E_AXIS]-destination[E_AXIS];//Set the recover length to whatever distance we retracted so we recover properly.
         feedrate=retract_feedrate;
         retracted=true;
         prepare_move();
       }
 
       break;
-      case 11: // G10 retract_recover
-      if(!retracted)
+      case 11: // G11 retract_recover
+      if(retracted)
       {
         destination[X_AXIS]=current_position[X_AXIS];
         destination[Y_AXIS]=current_position[Y_AXIS];
         destination[Z_AXIS]=current_position[Z_AXIS];
-
-        current_position[Z_AXIS]+=retract_zlift;
-        current_position[E_AXIS]+=-retract_recover_length;
+        destination[E_AXIS]=current_position[E_AXIS]+retract_recover_length;
         feedrate=retract_recover_feedrate;
         retracted=false;
         prepare_move();
@@ -2053,55 +2051,58 @@ void ClearToSend()
 
 void get_coordinates()
 {
-  bool seen[4]={false,false,false,false};
-  for(int8_t i=0; i < NUM_AXIS; i++) {
-    if(code_seen(axis_codes[i]))
+    bool seen[4]={false,false,false,false};
+    for(int8_t i=0; i < NUM_AXIS; i++)
     {
-      destination[i] = (float)code_value() + (axis_relative_modes[i] || relative_mode)*current_position[i];
-      seen[i]=true;
+        if(code_seen(axis_codes[i]))
+        {
+            destination[i] = (float)code_value() + (axis_relative_modes[i] || relative_mode)*current_position[i];
+            seen[i]=true;
+        }
+        else
+        {
+            destination[i] = current_position[i]; //Are these else lines really needed?
+        }
     }
-    else destination[i] = current_position[i]; //Are these else lines really needed?
-  }
-  if(code_seen('F')) {
-    next_feedrate = code_value();
-    if(next_feedrate > 0.0) feedrate = next_feedrate;
-  }
-  #ifdef FWRETRACT
-  if(autoretract_enabled)
-  if( !(seen[X_AXIS] || seen[Y_AXIS] || seen[Z_AXIS]) && seen[E_AXIS])
-  {
-    float echange=destination[E_AXIS]-current_position[E_AXIS];
-    if(echange<-MIN_RETRACT) //retract
+    if(code_seen('F'))
     {
-      if(!retracted)
-      {
-
-      destination[Z_AXIS]+=retract_zlift; //not sure why chaninging current_position negatively does not work.
-      //if slicer retracted by echange=-1mm and you want to retract 3mm, corrrectede=-2mm additionally
-      float correctede=-echange-retract_length;
-      //to generate the additional steps, not the destination is changed, but inversely the current position
-      current_position[E_AXIS]+=-correctede;
-      feedrate=retract_feedrate;
-      retracted=true;
-      }
-
+        next_feedrate = code_value();
+        if(next_feedrate > 0.0) feedrate = next_feedrate;
     }
-    else
-      if(echange>MIN_RETRACT) //retract_recover
+    #ifdef FWRETRACT
+    if(autoretract_enabled)
     {
-      if(retracted)
-      {
-      //current_position[Z_AXIS]+=-retract_zlift;
-      //if slicer retracted_recovered by echange=+1mm and you want to retract_recover 3mm, corrrectede=2mm additionally
-      float correctede=-echange+1*retract_length+retract_recover_length; //total unretract=retract_length+retract_recover_length[surplus]
-      current_position[E_AXIS]+=correctede; //to generate the additional steps, not the destination is changed, but inversely the current position
-      feedrate=retract_recover_feedrate;
-      retracted=false;
-      }
+        if( !(seen[X_AXIS] || seen[Y_AXIS] || seen[Z_AXIS]) && seen[E_AXIS])
+        {
+            float echange=destination[E_AXIS]-current_position[E_AXIS];
+            if(echange<-MIN_RETRACT) //retract
+            {
+                if(!retracted)
+                {
+                    destination[Z_AXIS]+=retract_zlift; //not sure why chaninging current_position negatively does not work.
+                    //if slicer retracted by echange=-1mm and you want to retract 3mm, corrrectede=-2mm additionally
+                    float correctede=-echange-retract_length;
+                    //to generate the additional steps, not the destination is changed, but inversely the current position
+                    current_position[E_AXIS]+=-correctede;
+                    feedrate=retract_feedrate;
+                    retracted=true;
+                }
+            }
+            else if(echange>MIN_RETRACT) //retract_recover
+            {
+                if(retracted)
+                {
+                    //current_position[Z_AXIS]+=-retract_zlift;
+                    //if slicer retracted_recovered by echange=+1mm and you want to retract_recover 3mm, corrrectede=2mm additionally
+                    float correctede=-echange+1*retract_length+retract_recover_length; //total unretract=retract_length+retract_recover_length[surplus]
+                    current_position[E_AXIS]+=correctede; //to generate the additional steps, not the destination is changed, but inversely the current position
+                    feedrate=retract_recover_feedrate;
+                    retracted=false;
+                }
+            }
+        }
     }
-
-  }
-  #endif //FWRETRACT
+    #endif //FWRETRACT
 }
 
 void get_arc_coordinates()

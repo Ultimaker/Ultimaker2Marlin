@@ -1,12 +1,14 @@
 #include <avr/pgmspace.h>
 
+#include "Configuration.h"
+#ifdef ENABLE_ULTILCD2
 #include "marlin.h"
 #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
 #include "temperature.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_material.h"
 
-struct materialSettings material = {210, 65, 100, 100, 2.85};
+struct materialSettings material = {0, 0, 100, 100, 2.85};
 
 void doCooldown();//TODO
 void lcd_menu_main();//TODO
@@ -289,19 +291,19 @@ static void lcd_menu_material_selected()
 static char* lcd_material_settings_callback(uint8_t nr)
 {
     if (nr == 0)
-        strcpy_P(card.longFilename, PSTR("    <- RETURN"));
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
     else if (nr == 1)
-        strcpy_P(card.longFilename, PSTR("    Temperature"));
+        strcpy_P(card.longFilename, PSTR("Temperature"));
     else if (nr == 2)
-        strcpy_P(card.longFilename, PSTR("    Heated bed"));
+        strcpy_P(card.longFilename, PSTR("Heated bed"));
     else if (nr == 3)
-        strcpy_P(card.longFilename, PSTR("    Diameter"));
+        strcpy_P(card.longFilename, PSTR("Diameter"));
     else if (nr == 4)
-        strcpy_P(card.longFilename, PSTR("    Fan"));
+        strcpy_P(card.longFilename, PSTR("Fan"));
     else if (nr == 5)
-        strcpy_P(card.longFilename, PSTR("    Flow %"));
+        strcpy_P(card.longFilename, PSTR("Flow %"));
     else
-        strcpy_P(card.longFilename, PSTR("    ???"));
+        strcpy_P(card.longFilename, PSTR("???"));
     return card.longFilename;
 }
 
@@ -328,7 +330,7 @@ static void lcd_material_settings_details_callback(uint8_t nr)
     {
         int_to_string(material.flow, buffer, PSTR("%"));
     }
-    lcd_lib_draw_string(70, 25, buffer);
+    lcd_lib_draw_string(5, 53, buffer);
 }
 
 static void lcd_menu_material_settings()
@@ -356,7 +358,7 @@ void lcd_material_reset_defaults()
     //Fill in the defaults
     char buffer[8];
     
-    strcpy_P(buffer, PSTR("PLA 3mm"));
+    strcpy_P(buffer, PSTR("PLA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(0), 65);
@@ -364,7 +366,7 @@ void lcd_material_reset_defaults()
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(0), 2.85);
 
-    strcpy_P(buffer, PSTR("ABS 3mm"));
+    strcpy_P(buffer, PSTR("ABS"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(1), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(1), 240);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(1), 80);
@@ -386,3 +388,4 @@ void lcd_material_set_material(uint8_t nr)
     eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     card.longFilename[8] = '\0';
 }
+#endif//ENABLE_ULTILCD2

@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "configuration.h"
+#ifdef ENABLE_ULTILCD2
 #include "cardreader.h"
 #include "UltiLCD2_hi_lib.h"
 
@@ -249,3 +250,4 @@ void lcd_menu_edit_setting()
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
 }
+#endif//ENABLE_ULTILCD2

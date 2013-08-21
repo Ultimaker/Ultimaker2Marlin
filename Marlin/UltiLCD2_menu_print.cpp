@@ -1,5 +1,7 @@
 #include <avr/pgmspace.h>
 
+#include "Configuration.h"
+#ifdef ENABLE_ULTILCD2
 #include "marlin.h"
 #include "cardreader.h"
 #include "temperature.h"
@@ -89,10 +91,9 @@ void lcd_sd_menu_details_callback(uint8_t nr)
         {
             if (LCD_CACHE_TYPE(idx) == 1)
             {
-                lcd_lib_draw_gfx(80, 20, folderGfx);
+                lcd_lib_draw_string_centerP(53, PSTR("Folder"));
             }else{
-                lcd_lib_draw_stringP(70, 15, PSTR("No info"));
-                lcd_lib_draw_stringP(70, 25, PSTR("Available"));
+                lcd_lib_draw_stringP(3, 53, PSTR("No info available"));
             }
         }
     }
@@ -253,11 +254,18 @@ static void lcd_menu_print_printing()
     lcd_lib_draw_string_center(25, card.longFilename);
     unsigned long printTime = (millis() - starttime);
     unsigned long totalTime = float(printTime) * float(card.getFileSize()) / float(card.getFilePos());
-    unsigned long timeLeft = (totalTime - printTime) / 1000L;
-    
-    char buffer[8];
-    int_to_time_string(timeLeft, buffer);
-    lcd_lib_draw_string(5, 5, buffer);
+    static unsigned long totalTimeSmooth;
+    if (printTime < 60000)
+    {
+        totalTimeSmooth = totalTime;
+        lcd_lib_draw_stringP(5, 5, PSTR("Time left unknown"));
+    }else{
+        totalTimeSmooth = (totalTimeSmooth * 9 + totalTime) / 10;
+        unsigned long timeLeft = (totalTimeSmooth - printTime) / 1000L;
+        char buffer[16];
+        int_to_time_string(timeLeft, buffer);
+        lcd_lib_draw_string(5, 5, buffer);
+    }
 
     if (!card.sdprinting && !is_command_queued())
     {
@@ -363,3 +371,4 @@ static void lcd_menu_print_ready()
     }
     lcd_lib_update_screen();
 }
+#endif//ENABLE_ULTILCD2

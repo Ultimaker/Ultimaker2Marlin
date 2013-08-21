@@ -1,5 +1,7 @@
 #include <avr/pgmspace.h>
 
+#include "Configuration.h"
+#ifdef ENABLE_ULTILCD2
 #include "marlin.h"
 #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
 #include "temperature.h"
@@ -46,7 +48,7 @@ void lcd_menu_first_run_init()
     lcd_lib_draw_stringP(100, 0, PSTR("1/22"));
     lcd_lib_draw_string_centerP(10, PSTR("Welcome to the first"));
     lcd_lib_draw_string_centerP(20, PSTR("start up of your"));
-    lcd_lib_draw_string_centerP(30, PSTR("Ultimaker! Use the"));
+    lcd_lib_draw_string_centerP(30, PSTR("Ultimaker! Press the"));
     lcd_lib_draw_string_centerP(40, PSTR("wheel to continue"));
     lcd_lib_update_screen();
 }
@@ -79,7 +81,7 @@ static void lcd_menu_first_run_init_remove_knobs()
     lcd_info_screen(lcd_menu_first_run_init_3, NULL, PSTR("CONTINUE"));
     lcd_lib_draw_stringP(100, 0, PSTR("3/22"));
     lcd_lib_draw_string_centerP(10, PSTR("Please remove the"));
-    lcd_lib_draw_string_centerP(20, PSTR("black pins"));
+    lcd_lib_draw_string_centerP(20, PSTR("black pins from"));
     lcd_lib_draw_string_centerP(30, PSTR("under the"));
     lcd_lib_draw_string_centerP(40, PSTR("print platform."));
     lcd_lib_update_screen();
@@ -138,7 +140,7 @@ static void lcd_menu_first_run_bed_level_center_adjust()
 
     lcd_info_screen(lcd_menu_first_run_bed_level_left_adjust, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
     lcd_lib_draw_stringP(100, 0, PSTR("5/22"));
-    lcd_lib_draw_string_centerP(10, PSTR("Rotate the knob till"));
+    lcd_lib_draw_string_centerP(10, PSTR("Turn the wheel until"));
     lcd_lib_draw_string_centerP(20, PSTR("the nozzle is half a"));
     lcd_lib_draw_string_centerP(30, PSTR("millimeter away"));
     lcd_lib_draw_string_centerP(40, PSTR("from the printbed."));
@@ -204,7 +206,7 @@ static void lcd_menu_first_run_bed_level_paper()
     lcd_lib_draw_string_centerP(10, PSTR("Repeat this step, but"));
     lcd_lib_draw_string_centerP(20, PSTR("now use a paper"));
     lcd_lib_draw_string_centerP(30, PSTR("sheet to finetune"));
-    lcd_lib_draw_string_centerP(40, PSTR("the bed level"));
+    lcd_lib_draw_string_centerP(40, PSTR("the bed level."));
     lcd_lib_update_screen();
 }
 
@@ -226,7 +228,7 @@ static void lcd_menu_first_run_bed_level_paper_center()
     lcd_lib_draw_stringP(100, 0, PSTR("9/22"));
     lcd_lib_draw_string_centerP(10, PSTR("Slide a paper between"));
     lcd_lib_draw_string_centerP(20, PSTR("the bed & nozzle till"));
-    lcd_lib_draw_string_centerP(30, PSTR("paper get a little"));
+    lcd_lib_draw_string_centerP(30, PSTR("you feel a little"));
     lcd_lib_draw_string_centerP(40, PSTR("bit resistance."));
     lcd_lib_update_screen();
 }
@@ -238,7 +240,7 @@ static void lcd_menu_first_run_bed_level_paper_left()
     SELECT_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_paper_right, parkHeadForRightAdjustment, PSTR("CONTINUE"));
     lcd_lib_draw_stringP(94, 0, PSTR("10/22"));
-    lcd_lib_draw_string_centerP(20, PSTR("repeat this for"));
+    lcd_lib_draw_string_centerP(20, PSTR("Repeat this for"));
     lcd_lib_draw_string_centerP(30, PSTR("the left corner..."));
     lcd_lib_update_screen();
 }
@@ -255,7 +257,7 @@ static void lcd_menu_first_run_bed_level_paper_right()
     SELECT_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_load, homeBed, PSTR("CONTINUE"));
     lcd_lib_draw_stringP(94, 0, PSTR("11/22"));
-    lcd_lib_draw_string_centerP(20, PSTR("repeat this for"));
+    lcd_lib_draw_string_centerP(20, PSTR("Repeat this for"));
     lcd_lib_draw_string_centerP(30, PSTR("the right corner..."));
     lcd_lib_update_screen();
 }
@@ -299,8 +301,8 @@ static void lcd_menu_first_run_material_load_heatup()
     
     lcd_basic_screen();
     lcd_lib_draw_stringP(94, 0, PSTR("13/22"));
-    lcd_lib_draw_string_centerP(10, PSTR("Please wait"));
-    lcd_lib_draw_string_centerP(20, PSTR("Printhead heating for"));
+    lcd_lib_draw_string_centerP(10, PSTR("Please wait,"));
+    lcd_lib_draw_string_centerP(20, PSTR("printhead heating for"));
     lcd_lib_draw_string_centerP(30, PSTR("material loading"));
 
     lcd_progressbar(progress);
@@ -343,7 +345,7 @@ static void lcd_menu_first_run_material_load_insert()
     lcd_info_screen(lcd_menu_first_run_material_load_forward, runMaterialForward, PSTR("READY"));
     lcd_lib_draw_stringP(94, 0, PSTR("14/22"));
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
-    lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
+    lcd_lib_draw_string_centerP(20, PSTR("from the rear of"));
     lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
     lcd_lib_draw_string_centerP(40, PSTR("above the arrow."));
     lcd_lib_update_screen();
@@ -396,10 +398,10 @@ static void lcd_menu_first_run_material_select_1()
     SELECT_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_select_pla_abs, doCooldown, PSTR("READY"));
     lcd_lib_draw_stringP(94, 0, PSTR("17/22"));
-    lcd_lib_draw_string_centerP(10, PSTR("Check your filament"));
-    lcd_lib_draw_string_centerP(20, PSTR("and tell your UM2"));
-    lcd_lib_draw_string_centerP(30, PSTR("what kind of material"));
-    lcd_lib_draw_string_centerP(40, PSTR("it is going to use."));
+    lcd_lib_draw_string_centerP(10, PSTR("Next you will select"));
+    lcd_lib_draw_string_centerP(20, PSTR("the kind of material"));
+    lcd_lib_draw_string_centerP(30, PSTR("you inserted into"));
+    lcd_lib_draw_string_centerP(40, PSTR("your Ultimaker."));
     lcd_lib_update_screen();
 }
 
@@ -432,9 +434,9 @@ static void lcd_menu_first_run_material_select_confirm_pla()
     LED_GLOW();
     lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, NULL, PSTR("NO"));
     lcd_lib_draw_stringP(94, 0, PSTR("19/22"));
-    lcd_lib_draw_string_centerP(10, PSTR("You have chosen"));
-    lcd_lib_draw_string_centerP(20, PSTR("PLA as material"));
-    lcd_lib_draw_string_centerP(30, PSTR("is this is right?"));
+    lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
+    lcd_lib_draw_string_centerP(30, PSTR("PLA as material"));
+    lcd_lib_draw_string_centerP(40, PSTR("is this is right?"));
     lcd_lib_update_screen();
 }
 
@@ -443,9 +445,9 @@ static void lcd_menu_first_run_material_select_confirm_abs()
     LED_GLOW();
     lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, NULL, PSTR("NO"));
     lcd_lib_draw_stringP(94, 0, PSTR("19/22"));
-    lcd_lib_draw_string_centerP(10, PSTR("You have chosen"));
-    lcd_lib_draw_string_centerP(20, PSTR("ABS as material"));
-    lcd_lib_draw_string_centerP(30, PSTR("is this is right?"));
+    lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
+    lcd_lib_draw_string_centerP(30, PSTR("ABS as material"));
+    lcd_lib_draw_string_centerP(40, PSTR("is this is right?"));
     lcd_lib_update_screen();
 }
 
@@ -459,7 +461,7 @@ static void lcd_menu_first_run_material_select_2()
     SELECT_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_print_1, setFirstRunDone, PSTR("CONTINUE"));
     lcd_lib_draw_stringP(94, 0, PSTR("20/22"));
-    lcd_lib_draw_string_centerP(10, PSTR("Now your ultimaker"));
+    lcd_lib_draw_string_centerP(10, PSTR("Now your Ultimaker"));
     lcd_lib_draw_string_centerP(20, PSTR("knows what kind"));
     lcd_lib_draw_string_centerP(30, PSTR("of material it has"));
     lcd_lib_draw_string_centerP(40, PSTR("and how to use this"));
@@ -474,7 +476,7 @@ static void lcd_menu_first_run_print_1()
     lcd_lib_draw_string_centerP(10, PSTR("We have come to"));
     lcd_lib_draw_string_centerP(20, PSTR("the best step"));
     lcd_lib_draw_string_centerP(30, PSTR("and that is making"));
-    lcd_lib_draw_string_centerP(40, PSTR("you first print"));
+    lcd_lib_draw_string_centerP(40, PSTR("you first print."));
     lcd_lib_update_screen();
 }
 
@@ -484,9 +486,9 @@ static void lcd_menu_first_run_print_card_detect()
     {
         lcd_info_screen(lcd_menu_main);
         lcd_lib_draw_stringP(94, 0, PSTR("22/22"));
-        lcd_lib_draw_string_centerP(10, PSTR("please insert sd card"));
-        lcd_lib_draw_string_centerP(20, PSTR("that came with"));
-        lcd_lib_draw_string_centerP(30, PSTR("your ultimaker..."));
+        lcd_lib_draw_string_centerP(20, PSTR("Please insert sd card"));
+        lcd_lib_draw_string_centerP(30, PSTR("that came with"));
+        lcd_lib_draw_string_centerP(40, PSTR("your ultimaker..."));
         lcd_lib_update_screen();
         card.release();
         return;
@@ -507,7 +509,8 @@ static void lcd_menu_first_run_print_card_detect()
     lcd_lib_draw_stringP(94, 0, PSTR("22/22"));
     lcd_lib_draw_string_centerP(10, PSTR("Select a printfile"));
     lcd_lib_draw_string_centerP(20, PSTR("on the SD card"));
-    lcd_lib_draw_string_centerP(30, PSTR("and hit the knob"));
+    lcd_lib_draw_string_centerP(30, PSTR("and press the wheel"));
     lcd_lib_draw_string_centerP(40, PSTR("to print it!"));
     lcd_lib_update_screen();
 }
+#endif//ENABLE_ULTILCD2
