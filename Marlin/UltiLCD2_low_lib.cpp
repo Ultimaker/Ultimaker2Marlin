@@ -798,21 +798,26 @@ char* int_to_time_string(unsigned long i, char* temp_buffer)
         if (hours > 9)
             *c++ = '0' + (hours / 10) % 10;
         *c++ = '0' + hours % 10;
-        strcpy_P(c, PSTR(" hours"));
-        return c + 6;
+        if (hours > 1)
+        {
+            strcpy_P(c, PSTR(" hours"));
+            return c + 6;
+        }
+        strcpy_P(c, PSTR(" hour"));
+        return c + 5;
     }
     if (mins > 0)
     {
         if (mins > 9)
             *c++ = '0' + (mins / 10) % 10;
         *c++ = '0' + mins % 10;
-        strcpy_P(c, PSTR(" minutes"));
+        strcpy_P(c, PSTR(" min"));
         return c + 8;
     }
     if (secs > 9)
         *c++ = '0' + secs / 10;
     *c++ = '0' + secs % 10;
-    strcpy_P(c, PSTR(" seconds"));
+    strcpy_P(c, PSTR(" sec"));
     return c + 8;
     /*
     if (hours > 99)

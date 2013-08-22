@@ -20,7 +20,6 @@ void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_classic_warning();
-static void lcd_menu_print_classic();
 static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
 
@@ -31,12 +30,26 @@ void lcd_clear_cache()
     LCD_CACHE_NR_OF_FILES = 0xFF;
 }
 
-void doCancelPrint()
+static void abortPrint()
 {
     card.sdprinting = false;
     doCooldown();
+    enquecommand_P(PSTR("G92 E20"));
+    enquecommand_P(PSTR("G1 F1500 E0"));
     enquecommand_P(PSTR("G28"));
 }
+
+static void doStartPrint()
+{
+    //TODO: Custom start code.
+    enquecommand_P(PSTR("G28"));
+    enquecommand_P(PSTR("G92 E-20"));
+    enquecommand_P(PSTR("G1 F1500 E0"));
+    
+    card.startFileprint();
+    starttime = millis();
+}
+
 static void cardUpdir()
 {
     card.updir();
@@ -103,6 +116,7 @@ void lcd_menu_print_select()
 {
     if (!IS_SD_INSERTED)
     {
+        LED_GLOW();
         lcd_lib_encoder_pos = MENU_ITEM_POS(0);
         lcd_info_screen(lcd_menu_main);
         lcd_lib_draw_string_centerP(15, PSTR("No SD CARD!"));
@@ -213,12 +227,7 @@ static void lcd_menu_print_heatup()
     
     if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW)
     {
-        //TODO: Custom start code.
-        enquecommand_P(PSTR("G28"));
-        enquecommand_P(PSTR("G92 E-5"));
-        enquecommand_P(PSTR("G1 F200 E0"));
-        card.startFileprint();
-        starttime = millis();
+        doStartPrint();
         currentMenu = lcd_menu_print_printing;
     }
 
@@ -252,27 +261,25 @@ static void lcd_menu_print_printing()
     uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
     lcd_lib_draw_string_centerP(15, PSTR("Printing"));
     lcd_lib_draw_string_center(25, card.longFilename);
-    unsigned long printTime = (millis() - starttime);
-    unsigned long totalTime = float(printTime) * float(card.getFileSize()) / float(card.getFilePos());
-    static unsigned long totalTimeSmooth;
-    if (printTime < 60000)
+    unsigned long printTimeMs = (millis() - starttime);
+    unsigned long totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
+    static unsigned long totalTimeSmoothSec;
+    if (printTimeMs < 60000)
     {
-        totalTimeSmooth = totalTime;
+        totalTimeSmoothSec = totalTimeMs / 1000;
         lcd_lib_draw_stringP(5, 5, PSTR("Time left unknown"));
     }else{
-        totalTimeSmooth = (totalTimeSmooth * 9 + totalTime) / 10;
-        unsigned long timeLeft = (totalTimeSmooth - printTime) / 1000L;
+        totalTimeSmoothSec = (totalTimeSmoothSec * 999 + totalTimeMs / 1000) / 1000;
+        unsigned long timeLeftSec = totalTimeSmoothSec - printTimeMs / 1000L;
         char buffer[16];
-        int_to_time_string(timeLeft, buffer);
-        lcd_lib_draw_string(5, 5, buffer);
+        int_to_time_string(timeLeftSec, buffer);
+        lcd_lib_draw_stringP(5, 5, PSTR("Time left"));
+        lcd_lib_draw_string(50, 5, buffer);
     }
 
     if (!card.sdprinting && !is_command_queued())
     {
-        doCooldown();
-        enquecommand_P(PSTR("G92 E5"));
-        enquecommand_P(PSTR("G1 F200 E0"));
-        enquecommand_P(PSTR("G28"));
+        abortPrint();
         currentMenu = lcd_menu_print_ready;
         SELECT_MENU_ITEM(0);
     }
@@ -282,14 +289,10 @@ static void lcd_menu_print_printing()
     lcd_lib_update_screen();
 }
 
-static void doStartPrint()
-{
-    card.startFileprint();
-    starttime = millis();
-}
+
 static void lcd_menu_print_classic_warning()
 {
-    lcd_question_screen(lcd_menu_print_classic, doStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, NULL, PSTR("CANCEL"));
+    lcd_question_screen(lcd_menu_print_printing, doStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, NULL, PSTR("CANCEL"));
     
     lcd_lib_draw_string_centerP(10, PSTR("This file ignores"));
     lcd_lib_draw_string_centerP(20, PSTR("material settings"));
@@ -297,48 +300,10 @@ static void lcd_menu_print_classic_warning()
     lcd_lib_update_screen();
 }
 
-static void lcd_menu_print_classic()
-{
-    lcd_info_screen(lcd_menu_print_abort, NULL, PSTR("ABORT"));
-    
-    uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
-    if (current_temperature[0] < target_temperature[0] - TEMP_WINDOW - 5 || current_temperature_bed < target_temperature_bed - TEMP_WINDOW - 5)
-    {
-        progress = 125;
-        uint8_t p;
-        
-        p = (current_temperature[0] - 20) * 125 / (target_temperature[0] - 20 - TEMP_WINDOW);
-        if (p < progress)
-            progress = p;
-        p = (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW);
-        if (p < progress)
-            progress = p;
-        
-        if (progress < minProgress)
-            progress = minProgress;
-        else
-            minProgress = progress;
-        lcd_lib_draw_string_centerP(15, PSTR("Heating"));
-    }else{
-        lcd_lib_draw_string_centerP(15, PSTR("Printing"));
-    }
-    lcd_lib_draw_string_center(25, card.longFilename);
-    
-    if (!card.sdprinting)
-    {
-        doCooldown();
-        currentMenu = lcd_menu_print_ready;
-        SELECT_MENU_ITEM(0);
-    }
-
-    lcd_progressbar(progress);
-    
-    lcd_lib_update_screen();
-}
-
 static void lcd_menu_print_abort()
 {
-    lcd_question_screen(lcd_menu_print_ready, doCancelPrint, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
+    LED_GLOW();
+    lcd_question_screen(lcd_menu_print_ready, abortPrint, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
     
     lcd_lib_draw_string_centerP(15, PSTR("Abort the print?"));
 
@@ -349,11 +314,11 @@ static void lcd_menu_print_ready()
 {
     lcd_info_screen(lcd_menu_main, NULL, PSTR("BACK TO MENU"));
 
-    if (current_temperature[0] > 80)
+    if (current_temperature[0] > 60)
     {
         lcd_lib_draw_string_centerP(15, PSTR("Printer cooling down"));
 
-        int16_t progress = 124 - (current_temperature[0] - 80);
+        int16_t progress = 124 - (current_temperature[0] - 60);
         if (progress < 0) progress = 0;
         if (progress > 124) progress = 124;
         
@@ -367,7 +332,10 @@ static void lcd_menu_print_ready()
         int_to_string(current_temperature[0], buffer, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
     }else{
-        lcd_lib_draw_string_centerP(15, PSTR("Print finished"));
+        LED_GLOW();
+        lcd_lib_draw_string_centerP(10, PSTR("Print finished"));
+        lcd_lib_draw_string_centerP(30, PSTR("You can remove"));
+        lcd_lib_draw_string_centerP(40, PSTR("the print."));
     }
     lcd_lib_update_screen();
 }
