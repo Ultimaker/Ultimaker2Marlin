@@ -3,7 +3,6 @@
 
 #include "configuration.h"
 #ifdef ENABLE_ULTILCD2
-#include "cardreader.h"
 #include "UltiLCD2_hi_lib.h"
 
 menuFunc_t currentMenu;
@@ -230,16 +229,16 @@ void lcd_menu_edit_setting()
         lcd_lib_encoder_pos = lcd_setting_min;
     if (lcd_lib_encoder_pos > lcd_setting_max)
         lcd_lib_encoder_pos = lcd_setting_max;
-    if (lcd_lib_button_pressed)
-    {
-        if (lcd_setting_type == 1)
-            *(uint8_t*)lcd_setting_ptr = lcd_lib_encoder_pos;
-        else if (lcd_setting_type == 2)
-            *(uint16_t*)lcd_setting_ptr = lcd_lib_encoder_pos;
-        else if (lcd_setting_type == 3)
-            *(float*)lcd_setting_ptr = float(lcd_lib_encoder_pos) / 100.0;
-        lcd_change_to_menu(previousMenu, previousEncoderPos);
-    }
+
+    if (lcd_setting_type == 1)
+        *(uint8_t*)lcd_setting_ptr = lcd_lib_encoder_pos;
+    else if (lcd_setting_type == 2)
+        *(uint16_t*)lcd_setting_ptr = lcd_lib_encoder_pos;
+    else if (lcd_setting_type == 3)
+        *(float*)lcd_setting_ptr = float(lcd_lib_encoder_pos) / 100.0;
+    else if (lcd_setting_type == 4)
+        *(int32_t*)lcd_setting_ptr = lcd_lib_encoder_pos;
+
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, lcd_setting_name);
     char buffer[16];
@@ -249,5 +248,8 @@ void lcd_menu_edit_setting()
         int_to_string(lcd_lib_encoder_pos, buffer, lcd_setting_postfix);
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
+
+    if (lcd_lib_button_pressed)
+        lcd_change_to_menu(previousMenu, previousEncoderPos);
 }
 #endif//ENABLE_ULTILCD2

@@ -22,6 +22,7 @@ static void lcd_menu_print_printing();
 static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
+static void lcd_menu_print_tune();
 
 void lcd_clear_cache()
 {
@@ -172,6 +173,8 @@ void lcd_menu_print_select()
                 card.openFile(card.filename, true);
                 if (card.isFileOpen())
                 {
+                    if (!card.longFilename[0])
+                        strcpy(card.longFilename, card.filename);
                     card.longFilename[20] = '\0';
                     if (strchr(card.longFilename, '.')) strchr(card.longFilename, '.')[0] = '\0';
                     
@@ -256,7 +259,7 @@ static void lcd_menu_print_heatup()
 
 static void lcd_menu_print_printing()
 {
-    lcd_question_screen(NULL, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
+    lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     
     uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
     lcd_lib_draw_string_centerP(15, PSTR("Printing"));
@@ -305,7 +308,7 @@ static void lcd_menu_print_abort()
     LED_GLOW();
     lcd_question_screen(lcd_menu_print_ready, abortPrint, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
     
-    lcd_lib_draw_string_centerP(15, PSTR("Abort the print?"));
+    lcd_lib_draw_string_centerP(20, PSTR("Abort the print?"));
 
     lcd_lib_update_screen();
 }
@@ -339,4 +342,52 @@ static void lcd_menu_print_ready()
     }
     lcd_lib_update_screen();
 }
+
+static char* tune_item_callback(uint8_t nr)
+{
+    char* c = (char*)lcd_cache;
+    if (nr == 0)
+        strcpy_P(c, PSTR("< RETURN"));
+    else if (nr == 1)
+        strcpy_P(c, PSTR("Speed"));
+    else if (nr == 2)
+        strcpy_P(c, PSTR("Temperature"));
+    else if (nr == 3)
+        strcpy_P(c, PSTR("Fan speed"));
+    return c;
+}
+
+static void tune_item_details_callback(uint8_t nr)
+{
+    char* c = (char*)lcd_cache;
+    if (nr == 1)
+        c = int_to_string(feedmultiply, c, PSTR("%"));
+    else if (nr == 2)
+    {
+        c = int_to_string(current_temperature[0], c, PSTR("C"));
+        *c++ = '/';
+        c = int_to_string(target_temperature[0], c, PSTR("C"));
+    }
+    else if (nr == 3)
+        c = int_to_string(fanSpeed, c, PSTR("%"));
+    lcd_lib_draw_string(5, 53, (char*)lcd_cache);
+}
+
+extern void lcd_menu_maintenance_advanced_heatup();//TODO
+static void lcd_menu_print_tune()
+{
+    lcd_scroll_menu(PSTR("TUNE"), 4, tune_item_callback, tune_item_details_callback);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED(0))
+            lcd_change_to_menu(lcd_menu_print_printing);
+        else if (IS_SELECTED(1))
+            LCD_EDIT_SETTING(feedmultiply, "Print speed", "%", 10, 1000);
+        else if (IS_SELECTED(2))
+            lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.
+        else if (IS_SELECTED(3))
+            LCD_EDIT_SETTING(fanSpeed, "Fan speed", "%", 0, 100);
+    }
+}
+
 #endif//ENABLE_ULTILCD2

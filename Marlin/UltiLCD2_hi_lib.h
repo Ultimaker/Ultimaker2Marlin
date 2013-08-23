@@ -39,7 +39,7 @@ extern menuFunc_t previousMenu;
 extern int16_t previousEncoderPos;
 extern uint8_t minProgress;
 
-#define lcd_edit_setting(_setting, _name, _postfix, _min, _max) do { \
+#define LCD_EDIT_SETTING(_setting, _name, _postfix, _min, _max) do { \
             lcd_change_to_menu(lcd_menu_edit_setting); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR(_postfix); \
@@ -49,7 +49,7 @@ extern uint8_t minProgress;
             lcd_setting_min = _min; \
             lcd_setting_max = _max; \
         } while(0)
-#define lcd_edit_setting_float(_setting, _name, _postfix, _min, _max) do { \
+#define LCD_EDIT_SETTING_FLOAT(_setting, _name, _postfix, _min, _max) do { \
             lcd_change_to_menu(lcd_menu_edit_setting); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR(_postfix); \

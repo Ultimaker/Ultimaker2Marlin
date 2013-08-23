@@ -341,15 +341,15 @@ static void lcd_menu_material_settings()
         if (IS_SELECTED(0))
             lcd_change_to_menu(lcd_menu_material);
         else if (IS_SELECTED(1))
-            lcd_edit_setting(material.temperature, "Temperature", "C", 0, HEATER_0_MAXTEMP - 15);
+            LCD_EDIT_SETTING(material.temperature, "Temperature", "C", 0, HEATER_0_MAXTEMP - 15);
         else if (IS_SELECTED(2))
-            lcd_edit_setting(material.bed_temperature, "Bed Temperature", "C", 0, BED_MAXTEMP - 15);
+            LCD_EDIT_SETTING(material.bed_temperature, "Bed Temperature", "C", 0, BED_MAXTEMP - 15);
         else if (IS_SELECTED(3))
-            lcd_edit_setting_float(material.diameter, "Material Diameter", "mm", 0, 1000);
+            LCD_EDIT_SETTING_FLOAT(material.diameter, "Material Diameter", "mm", 0, 1000);
         else if (IS_SELECTED(4))
-            lcd_edit_setting(material.fan_speed, "Fan speed", "%", 0, 100);
+            LCD_EDIT_SETTING(material.fan_speed, "Fan speed", "%", 0, 100);
         else if (IS_SELECTED(5))
-            lcd_edit_setting(material.flow, "Material flow", "%", 1, 1000);
+            LCD_EDIT_SETTING(material.flow, "Material flow", "%", 1, 1000);
     }
 }
 

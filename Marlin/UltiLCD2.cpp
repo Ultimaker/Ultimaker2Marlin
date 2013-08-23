@@ -17,7 +17,7 @@ void lcd_menu_material();
 static void lcd_menu_maintenance();
 static void lcd_menu_maintenance_first_run_select();
 static void lcd_menu_maintenance_advanced();
-static void lcd_menu_maintenance_advanced_heatup();
+void lcd_menu_maintenance_advanced_heatup();
 static void lcd_menu_advanced_factory_reset();
 static void lcd_menu_breakout();
 static void lcd_menu_TODO();
@@ -274,7 +274,7 @@ static void lcd_menu_maintenance_advanced()
     lcd_scroll_menu(PSTR("ADVANCED"), 6, lcd_advanced_item, lcd_advanced_details);
 }
 
-static void lcd_menu_maintenance_advanced_heatup()
+void lcd_menu_maintenance_advanced_heatup()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM != 0)
     {
@@ -286,7 +286,7 @@ static void lcd_menu_maintenance_advanced_heatup()
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
-        lcd_change_to_menu(lcd_menu_maintenance_advanced);
+        lcd_change_to_menu(previousMenu, previousEncoderPos);
     
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Head temperature:"));
