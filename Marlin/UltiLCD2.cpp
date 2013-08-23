@@ -18,6 +18,7 @@ static void lcd_menu_maintenance();
 static void lcd_menu_maintenance_first_run_select();
 static void lcd_menu_maintenance_advanced();
 void lcd_menu_maintenance_advanced_heatup();
+void lcd_menu_maintenance_advanced_bed_heatup();
 static void lcd_menu_advanced_factory_reset();
 static void lcd_menu_breakout();
 static void lcd_menu_TODO();
@@ -199,14 +200,16 @@ static char* lcd_advanced_item(uint8_t nr)
     if (nr == 0)
         strcpy_P(card.longFilename, PSTR("<- RETURN"));
     else if (nr == 1)
-        strcpy_P(card.longFilename, PSTR("Heatup"));
+        strcpy_P(card.longFilename, PSTR("Heatup head"));
     else if (nr == 2)
-        strcpy_P(card.longFilename, PSTR("Home head"));
+        strcpy_P(card.longFilename, PSTR("Heatup bed"));
     else if (nr == 3)
-        strcpy_P(card.longFilename, PSTR("Home bed"));
+        strcpy_P(card.longFilename, PSTR("Home head"));
     else if (nr == 4)
-        strcpy_P(card.longFilename, PSTR("Raise bed"));
+        strcpy_P(card.longFilename, PSTR("Home bed"));
     else if (nr == 5)
+        strcpy_P(card.longFilename, PSTR("Raise bed"));
+    else if (nr == 6)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -220,32 +223,28 @@ static void lcd_advanced_details(uint8_t nr)
         
     }else if(nr == 1)
     {
-        lcd_lib_draw_stringP(67, 15, PSTR("Heatup"));
-        lcd_lib_draw_stringP(67, 25, PSTR("the head"));
+        lcd_lib_draw_stringP(5, 53, PSTR("Heatup the head"));
     }else if(nr == 2)
     {
-        lcd_lib_draw_stringP(67, 15, PSTR("Move the"));
-        lcd_lib_draw_stringP(67, 25, PSTR("head to"));
-        lcd_lib_draw_stringP(67, 35, PSTR("the corner"));
+        lcd_lib_draw_stringP(5, 53, PSTR("Heatup the bed"));
     }else if(nr == 3)
     {
-        lcd_lib_draw_stringP(67, 15, PSTR("Move the"));
-        lcd_lib_draw_stringP(67, 25, PSTR("bed to the"));
-        lcd_lib_draw_stringP(67, 35, PSTR("bottom"));
+        
     }else if(nr == 4)
     {
-        lcd_lib_draw_stringP(67, 15, PSTR("Move the"));
-        lcd_lib_draw_stringP(67, 25, PSTR("bed to the"));
-        lcd_lib_draw_stringP(67, 35, PSTR("top"));
+        
     }else if(nr == 5)
     {
-        lcd_lib_draw_stringP(67, 15, PSTR("Clear all"));
-        lcd_lib_draw_stringP(67, 25, PSTR("settings"));
+        
+    }else if(nr == 6)
+    {
+        lcd_lib_draw_stringP(5, 53, PSTR("Clear all settings"));
     }
 }
 
 static void lcd_menu_maintenance_advanced()
 {
+    lcd_scroll_menu(PSTR("ADVANCED"), 7, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
@@ -253,32 +252,33 @@ static void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED(1))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);
         else if (IS_SELECTED(2))
-        {
-            lcd_lib_beep();
-            enquecommand_P(PSTR("G28 X0 Y0"));
-        }
+            lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);
         else if (IS_SELECTED(3))
         {
             lcd_lib_beep();
-            enquecommand_P(PSTR("G28 Z0"));
+            enquecommand_P(PSTR("G28 X0 Y0"));
         }
         else if (IS_SELECTED(4))
         {
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 Z0"));
-            enquecommand_P(PSTR("G1 Z40"));
         }
         else if (IS_SELECTED(5))
+        {
+            lcd_lib_beep();
+            enquecommand_P(PSTR("G28 Z0"));
+            enquecommand_P(PSTR("G1 Z40"));
+        }
+        else if (IS_SELECTED(6))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, MENU_ITEM_POS(1));
     }
-    lcd_scroll_menu(PSTR("ADVANCED"), 6, lcd_advanced_item, lcd_advanced_details);
 }
 
 void lcd_menu_maintenance_advanced_heatup()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM != 0)
     {
-        target_temperature[0] = int(target_temperature[0]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM) * 5;
+        target_temperature[0] = int(target_temperature[0]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM);
         if (target_temperature[0] < 0)
             target_temperature[0] = 0;
         if (target_temperature[0] > HEATER_0_MAXTEMP - 15)
@@ -294,6 +294,30 @@ void lcd_menu_maintenance_advanced_heatup()
     char buffer[16];
     int_to_string(int(current_temperature[0]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
+    lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_update_screen();
+}
+
+void lcd_menu_maintenance_advanced_bed_heatup()
+{
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM != 0)
+    {
+        target_temperature_bed = int(target_temperature_bed) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM);
+        if (target_temperature_bed < 0)
+            target_temperature_bed = 0;
+        if (target_temperature_bed > BED_MAXTEMP - 15)
+            target_temperature_bed = BED_MAXTEMP - 15;
+        lcd_lib_encoder_pos = 0;
+    }
+    if (lcd_lib_button_pressed)
+        lcd_change_to_menu(previousMenu, previousEncoderPos);
+    
+    lcd_lib_clear();
+    lcd_lib_draw_string_centerP(20, PSTR("Bed temperature:"));
+    lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
+    char buffer[16];
+    int_to_string(int(current_temperature_bed), buffer, PSTR("C/"));
+    int_to_string(int(target_temperature_bed), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
 }
