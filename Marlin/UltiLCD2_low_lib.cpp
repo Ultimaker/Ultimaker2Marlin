@@ -812,13 +812,13 @@ char* int_to_time_string(unsigned long i, char* temp_buffer)
             *c++ = '0' + (mins / 10) % 10;
         *c++ = '0' + mins % 10;
         strcpy_P(c, PSTR(" min"));
-        return c + 8;
+        return c + 4;
     }
     if (secs > 9)
         *c++ = '0' + secs / 10;
     *c++ = '0' + secs % 10;
     strcpy_P(c, PSTR(" sec"));
-    return c + 8;
+    return c + 4;
     /*
     if (hours > 99)
         *c++ = '0' + hours / 100;
@@ -837,17 +837,18 @@ char* int_to_time_string(unsigned long i, char* temp_buffer)
 
 char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
 {
-    int i = f * 100.0 + 0.5;
+    int32_t i = f * 100.0 + 0.5;
     char* c = temp_buffer;
     if (i < 0)
     {
         *c++ = '-'; 
         i = -i;
     }
+    if (i >= 10000)
+        *c++ = ((i/10000)%10)+'0';
     if (i >= 1000)
         *c++ = ((i/1000)%10)+'0';
-    if (i >= 100)
-        *c++ = ((i/100)%10)+'0';
+    *c++ = ((i/100)%10)+'0';
     *c++ = '.';
     if (i >= 10)
         *c++ = ((i/10)%10)+'0';

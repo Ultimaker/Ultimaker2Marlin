@@ -10,10 +10,14 @@
 #include "UltiLCD2_menu_material.h"
 
 uint8_t lcd_cache[LCD_CACHE_SIZE];
-#define LCD_CACHE_NR_OF_FILES lcd_cache[(LCD_CACHE_SIZE - 1)]
+#define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
 #define LCD_CACHE_ID(n) lcd_cache[(n)]
 #define LCD_CACHE_FILENAME(n) ((char*)&lcd_cache[2*LCD_CACHE_COUNT + (n) * LONG_FILENAME_LENGTH])
 #define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
+#define LCD_DETAIL_CACHE_START ((LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))+1)
+#define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
+#define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
+#define LCD_DETAIL_CACHE_MATERIAL() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5])
 
 void lcd_menu_main();//TODO
 void doCooldown();//TODO
@@ -28,7 +32,8 @@ void lcd_clear_cache()
 {
     for(uint8_t n=0; n<LCD_CACHE_COUNT; n++)
         LCD_CACHE_ID(n) = 0xFF;
-    LCD_CACHE_NR_OF_FILES = 0xFF;
+    LCD_DETAIL_CACHE_ID() = 0;
+    LCD_CACHE_NR_OF_FILES() = 0xFF;
 }
 
 static void abortPrint()
@@ -63,9 +68,9 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
     {
         if (card.atRoot())
         {
-            strcpy_P(card.longFilename, PSTR("<- RETURN"));
+            strcpy_P(card.longFilename, PSTR("< RETURN"));
         }else{
-            strcpy_P(card.longFilename, PSTR("<- BACK"));
+            strcpy_P(card.longFilename, PSTR("< BACK"));
         }
     }else{
         card.longFilename[0] = '\0';
@@ -107,7 +112,42 @@ void lcd_sd_menu_details_callback(uint8_t nr)
             {
                 lcd_lib_draw_string_centerP(53, PSTR("Folder"));
             }else{
-                lcd_lib_draw_stringP(3, 53, PSTR("No info available"));
+                char buffer[64];
+                if (LCD_DETAIL_CACHE_ID() != nr)
+                {
+                    LCD_DETAIL_CACHE_ID() = nr;
+                    LCD_DETAIL_CACHE_TIME() = 0;
+                    LCD_DETAIL_CACHE_MATERIAL() = 0;
+                    card.openFile(card.filename, true);
+                    if (card.isFileOpen())
+                    {
+                        for(uint8_t n=0;n<8;n++)
+                        {
+                            card.fgets(buffer, sizeof(buffer));
+                            buffer[sizeof(buffer)-1] = '\0';
+                            while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
+                            if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
+                                LCD_DETAIL_CACHE_TIME() = atol(buffer + 6);
+                            else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
+                                LCD_DETAIL_CACHE_MATERIAL() = atol(buffer + 10);
+                        }
+                    }
+                }
+                
+                if (LCD_DETAIL_CACHE_TIME() > 0)
+                {
+                    char* c = buffer;
+                    c = int_to_time_string(LCD_DETAIL_CACHE_TIME(), c);
+                    *c++ = ' ';*c++ = ' ';
+                    float length = float(LCD_DETAIL_CACHE_MATERIAL()) / (M_PI * (material.diameter / 2.0) * (material.diameter / 2.0));
+                    if (length < 10000)
+                        c = float_to_string(length / 1000.0, c, PSTR(" meter"));
+                    else
+                        c = int_to_string(length / 1000.0, c, PSTR(" meter"));
+                    lcd_lib_draw_string(3, 53, buffer);
+                }else{
+                    lcd_lib_draw_stringP(3, 53, PSTR("No info available"));
+                }
             }
         }
     }
@@ -137,10 +177,10 @@ void lcd_menu_print_select()
         return;
     }
     
-    if (LCD_CACHE_NR_OF_FILES == 0xFF)
-        LCD_CACHE_NR_OF_FILES = card.getnrfilenames();
-    uint8_t nrOfFiles = LCD_CACHE_NR_OF_FILES + 1;
-    if (nrOfFiles == 1)
+    if (LCD_CACHE_NR_OF_FILES() == 0xFF)
+        LCD_CACHE_NR_OF_FILES() = card.getnrfilenames();
+    uint8_t nrOfFiles = LCD_CACHE_NR_OF_FILES();
+    if (nrOfFiles == 0)
     {
         if (card.atRoot())
             lcd_info_screen(lcd_menu_main, NULL, PSTR("OK"));
@@ -221,7 +261,7 @@ void lcd_menu_print_select()
             return;//Return so we do not continue after changing the directory or selecting a file. The nrOfFiles is invalid at this point.
         }
     }
-    lcd_scroll_menu(PSTR("SD CARD"), nrOfFiles, lcd_sd_menu_filename_callback, lcd_sd_menu_details_callback);
+    lcd_scroll_menu(PSTR("SD CARD"), nrOfFiles+1, lcd_sd_menu_filename_callback, lcd_sd_menu_details_callback);
 }
 
 static void lcd_menu_print_heatup()
@@ -249,8 +289,9 @@ static void lcd_menu_print_heatup()
     else
         minProgress = progress;
     
-    lcd_lib_draw_string_centerP(15, PSTR("Heating up"));
-    lcd_lib_draw_string_centerP(25, PSTR("before printing"));
+    lcd_lib_draw_string_centerP(10, PSTR("Heating up..."));
+    lcd_lib_draw_string_centerP(20, PSTR("Preparing to print:"));
+    lcd_lib_draw_string_center(30, card.longFilename);
 
     lcd_progressbar(progress);
     
@@ -262,22 +303,22 @@ static void lcd_menu_print_printing()
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     
     uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
-    lcd_lib_draw_string_centerP(15, PSTR("Printing"));
-    lcd_lib_draw_string_center(25, card.longFilename);
+    lcd_lib_draw_string_centerP(20, PSTR("Printing"));
+    lcd_lib_draw_string_center(30, card.longFilename);
     unsigned long printTimeMs = (millis() - starttime);
     unsigned long totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
     static unsigned long totalTimeSmoothSec;
     if (printTimeMs < 60000)
     {
         totalTimeSmoothSec = totalTimeMs / 1000;
-        lcd_lib_draw_stringP(5, 5, PSTR("Time left unknown"));
+        lcd_lib_draw_stringP(5, 10, PSTR("Time left unknown"));
     }else{
         totalTimeSmoothSec = (totalTimeSmoothSec * 999 + totalTimeMs / 1000) / 1000;
         unsigned long timeLeftSec = totalTimeSmoothSec - printTimeMs / 1000L;
         char buffer[16];
         int_to_time_string(timeLeftSec, buffer);
-        lcd_lib_draw_stringP(5, 5, PSTR("Time left"));
-        lcd_lib_draw_string(50, 5, buffer);
+        lcd_lib_draw_stringP(5, 10, PSTR("Time left"));
+        lcd_lib_draw_string(65, 10, buffer);
     }
 
     if (!card.sdprinting && !is_command_queued())

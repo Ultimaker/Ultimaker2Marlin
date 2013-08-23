@@ -24,6 +24,12 @@ static void lcd_menu_material_select();
 static void lcd_menu_material_selected();
 static void lcd_menu_material_settings();
 
+static void cancelMaterialInsert()
+{
+    digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
+    doCooldown();
+}
+
 void lcd_menu_material()
 {
     lcd_tripple_menu(PSTR("CHANGE"), PSTR("SETTINGS"), PSTR("RETURN"));
@@ -54,6 +60,8 @@ static void lcd_menu_change_material_preheat()
     {
         volume_to_filament_length = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
         
+        digipot_current(2, motor_current_setting[2] / 2);//Set the E motor power lower to we skip instead of grind.
+        
         float old_max_feedrate_e = max_feedrate[E_AXIS];
         float old_retract_acceleration = retract_acceleration;
         max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
@@ -78,7 +86,7 @@ static void lcd_menu_change_material_preheat()
     else
         minProgress = progress;
     
-    lcd_info_screen(lcd_menu_main, doCooldown);
+    lcd_info_screen(lcd_menu_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead"));
     lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
 
@@ -89,7 +97,7 @@ static void lcd_menu_change_material_preheat()
 
 static void lcd_menu_change_material_remove()
 {
-    lcd_info_screen(lcd_menu_main, doCooldown);
+    lcd_info_screen(lcd_menu_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Reversing material"));
     
     if (!blocks_queued())
@@ -119,7 +127,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
     lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MENU_ITEM_POS(0));
     
     char buffer[32];
-    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, 10);
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
     enquecommand(buffer);
 }
 
@@ -127,7 +135,7 @@ static void lcd_menu_change_material_remove_wait_user()
 {
     LED_GLOW();
 
-    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_menu_main, doCooldown, PSTR("CANCEL"));
+    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
     lcd_lib_update_screen();
 }
@@ -142,7 +150,7 @@ static void lcd_menu_change_material_insert_wait_user()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, 0);
     }
     
-    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_menu_main, doCooldown, PSTR("CANCEL"));
+    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
     lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
     lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
@@ -175,14 +183,14 @@ static void lcd_menu_change_material_insert_wait_user_ready()
 
 static void lcd_menu_change_material_insert_forward()
 {
-    lcd_info_screen(lcd_menu_main, doCooldown);
+    lcd_info_screen(lcd_menu_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Forwarding material"));
     
     if (!blocks_queued())
     {
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
-        //TODO: Set E motor power lower so the motor skips instead of digging into the material
+        
         currentMenu = lcd_menu_change_material_insert;
         SELECT_MENU_ITEM(0);
     }
@@ -195,11 +203,18 @@ static void lcd_menu_change_material_insert_forward()
     lcd_lib_update_screen();
 }
 
+static void materialInsertReady()
+{
+    current_position[E_AXIS] -= 20;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, 0);
+    cancelMaterialInsert();
+}
+
 static void lcd_menu_change_material_insert()
 {
     LED_GLOW();
     
-    lcd_question_screen(lcd_menu_main, doCooldown, PSTR("READY"), lcd_menu_main, doCooldown, PSTR("CANCEL"));
+    lcd_question_screen(lcd_menu_main, materialInsertReady, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
     lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
 
