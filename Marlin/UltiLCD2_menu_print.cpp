@@ -137,13 +137,18 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                 if (LCD_DETAIL_CACHE_TIME() > 0)
                 {
                     char* c = buffer;
-                    c = int_to_time_string(LCD_DETAIL_CACHE_TIME(), c);
-                    *c++ = ' ';*c++ = ' ';
-                    float length = float(LCD_DETAIL_CACHE_MATERIAL()) / (M_PI * (material.diameter / 2.0) * (material.diameter / 2.0));
-                    if (length < 10000)
-                        c = float_to_string(length / 1000.0, c, PSTR(" meter"));
-                    else
-                        c = int_to_string(length / 1000.0, c, PSTR(" meter"));
+                    if (led_glow_dir)
+                    {
+                        strcpy_P(c, PSTR("Time: ")); c += 6;
+                        c = int_to_time_string(LCD_DETAIL_CACHE_TIME(), c);
+                    }else{
+                        strcpy_P(c, PSTR("Material: ")); c += 10;
+                        float length = float(LCD_DETAIL_CACHE_MATERIAL()) / (M_PI * (material.diameter / 2.0) * (material.diameter / 2.0));
+                        if (length < 10000)
+                            c = float_to_string(length / 1000.0, c, PSTR("m"));
+                        else
+                            c = int_to_string(length / 1000.0, c, PSTR("m"));
+                    }
                     lcd_lib_draw_string(3, 53, buffer);
                 }else{
                     lcd_lib_draw_stringP(3, 53, PSTR("No info available"));
