@@ -59,6 +59,16 @@ extern uint8_t minProgress;
             lcd_setting_min = _min; \
             lcd_setting_max = _max; \
         } while(0)
+#define LCD_EDIT_SETTING_BYTE_PERCENT(_setting, _name, _postfix, _min, _max) do { \
+            lcd_change_to_menu(lcd_menu_edit_setting); \
+            lcd_setting_name = PSTR(_name); \
+            lcd_setting_postfix = PSTR(_postfix); \
+            lcd_setting_ptr = &_setting; \
+            lcd_setting_type = 5; \
+            lcd_lib_encoder_pos = int(_setting) * 100 / 255; \
+            lcd_setting_min = _min; \
+            lcd_setting_max = _max; \
+        } while(0)
 
 extern uint8_t led_glow;
 extern uint8_t led_glow_dir;

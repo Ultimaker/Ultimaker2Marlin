@@ -435,7 +435,7 @@ static void tune_item_details_callback(uint8_t nr)
         c = int_to_string(target_temperature_bed, c, PSTR("C"));
     }
     else if (nr == 4)
-        c = int_to_string(fanSpeed, c, PSTR("%"));
+        c = int_to_string(int(fanSpeed) * 100 / 255, c, PSTR("%"));
     else if (nr == 5)
         c = int_to_string(extrudemultiply, c, PSTR("%"));
     lcd_lib_draw_string(5, 53, (char*)lcd_cache);
@@ -457,9 +457,9 @@ static void lcd_menu_print_tune()
         else if (IS_SELECTED(3))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.
         else if (IS_SELECTED(4))
-            LCD_EDIT_SETTING(fanSpeed, "Fan speed", "%", 0, 100);
+            LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
         else if (IS_SELECTED(5))
-            LCD_EDIT_SETTING(extrudemultiply, "Material flow", "%", 0, 100);
+            LCD_EDIT_SETTING(extrudemultiply, "Material flow", "%", 10, 1000);
     }
 }
 

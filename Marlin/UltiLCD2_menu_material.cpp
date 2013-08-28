@@ -354,8 +354,10 @@ static void lcd_menu_material_settings()
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
+        {
             lcd_change_to_menu(lcd_menu_material);
-        else if (IS_SELECTED(1))
+            lcd_material_store_current_material();
+        }else if (IS_SELECTED(1))
             LCD_EDIT_SETTING(material.temperature, "Temperature", "C", 0, HEATER_0_MAXTEMP - 15);
         else if (IS_SELECTED(2))
             LCD_EDIT_SETTING(material.bed_temperature, "Bed Temperature", "C", 0, BED_MAXTEMP - 15);
@@ -402,5 +404,27 @@ void lcd_material_set_material(uint8_t nr)
     material.diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
     eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     card.longFilename[8] = '\0';
+    
+    lcd_material_store_current_material();
 }
+
+void lcd_material_read_current_material()
+{
+    material.temperature = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT));
+    material.bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT));
+    material.flow = eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT));
+
+    material.fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT));
+    material.diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT));
+}
+
+void lcd_material_store_current_material()
+{
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT), material.temperature);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT), material.bed_temperature);
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT), material.flow);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT), material.fan_speed);
+    eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT), material.diameter);
+}
+
 #endif//ENABLE_ULTILCD2

@@ -22,6 +22,7 @@ extern struct materialSettings material;
 #define FILAMENT_INSERT_EXTRUDE_SPEED 0.5     //Final speed when extruding
 
 #define EEPROM_MATERIAL_SETTINGS_OFFSET 0x800
+#define EEPROM_MATERIAL_SETTINGS_MAX_COUNT 16
 #define EEPROM_MATERIAL_SETTINGS_SIZE   8 + 16
 #define EEPROM_MATERIAL_COUNT_OFFSET()            ((uint8_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 0)
 #define EEPROM_MATERIAL_NAME_OFFSET(n)            ((uint8_t*)EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * (n))
@@ -34,5 +35,7 @@ extern struct materialSettings material;
 void lcd_menu_material();
 void lcd_material_reset_defaults();
 void lcd_material_set_material(uint8_t nr);
+void lcd_material_read_current_material();
+void lcd_material_store_current_material();
 
 #endif//ULTI_LCD2_MENU_MATERIAL_H

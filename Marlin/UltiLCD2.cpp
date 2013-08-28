@@ -30,6 +30,7 @@ static void lcd_menu_TODO();
 void lcd_init()
 {
     lcd_lib_init();
+    lcd_material_read_current_material();
     currentMenu = lcd_menu_startup;
 #if LED_PIN > -1
     analogWrite(LED_PIN, 255);
