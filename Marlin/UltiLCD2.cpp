@@ -188,7 +188,7 @@ void lcd_menu_main()
 
 void lcd_menu_maintenance()
 {
-    lcd_tripple_menu(PSTR("FIRST RUN"), PSTR("ADVANCED"), PSTR("RETURN"));
+    lcd_tripple_menu(PSTR("CALIBRATE"), PSTR("ADVANCED"), PSTR("RETURN"));
 
     if (lcd_lib_button_pressed)
     {
@@ -205,14 +205,13 @@ void lcd_menu_maintenance()
 
 static void lcd_menu_maintenance_first_run_select()
 {
-    lcd_tripple_menu(PSTR("BED HEIGHT"), PSTR("..."), PSTR("RETURN"));
+    lcd_tripple_menu(PSTR("BED"), PSTR("..."), PSTR("RETURN"));
 
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
         {
-            //lcd_change_to_menu(lcd_menu_maintenance_first_run_bed_level_start);
-            lcd_change_to_menu(lcd_menu_TODO);
+            lcd_change_to_menu(lcd_menu_first_run_start_bed_leveling);
         }else if (IS_SELECTED(1))
             lcd_change_to_menu(lcd_menu_TODO);
         else if (IS_SELECTED(2))
