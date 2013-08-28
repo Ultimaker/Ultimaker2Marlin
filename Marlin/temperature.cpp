@@ -901,7 +901,7 @@ void disable_heater()
    #endif
   #endif
      
-  #if defined(TEMP_1_PIN) && TEMP_1_PIN > -1
+  #if defined(TEMP_1_PIN) && TEMP_1_PIN > -1 && EXTRUDERS > 1
     target_temperature[1]=0;
     soft_pwm[1]=0;
     #if defined(HEATER_1_PIN) && HEATER_1_PIN > -1 
@@ -909,7 +909,7 @@ void disable_heater()
     #endif
   #endif
       
-  #if defined(TEMP_2_PIN) && TEMP_2_PIN > -1
+  #if defined(TEMP_2_PIN) && TEMP_2_PIN > -1 && EXTRUDERS > 2
     target_temperature[2]=0;
     soft_pwm[2]=0;
     #if defined(HEATER_2_PIN) && HEATER_2_PIN > -1  
@@ -1125,7 +1125,7 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 4;
       break;
     case 4: // Prepare TEMP_1
-      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1)
+      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1) && EXTRUDERS > 1
         #if TEMP_1_PIN > 7
           ADCSRB = 1<<MUX5;
         #else
@@ -1138,13 +1138,13 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 5;
       break;
     case 5: // Measure TEMP_1
-      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1)
+      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1) && EXTRUDERS > 1
         raw_temp_1_value += ADC;
       #endif
       temp_state = 6;
       break;
     case 6: // Prepare TEMP_2
-      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
+      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1) && EXTRUDERS > 2
         #if TEMP_2_PIN > 7
           ADCSRB = 1<<MUX5;
         #else
@@ -1157,7 +1157,7 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 7;
       break;
     case 7: // Measure TEMP_2
-      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1)
+      #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1) && EXTRUDERS > 2
         raw_temp_2_value += ADC;
       #endif
       temp_state = 0;

@@ -311,15 +311,25 @@ static void lcd_menu_print_printing()
     lcd_lib_draw_string_centerP(20, PSTR("Printing"));
     lcd_lib_draw_string_center(30, card.longFilename);
     unsigned long printTimeMs = (millis() - starttime);
+    unsigned long printTimeSec = printTimeMs / 1000;
     unsigned long totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
     static unsigned long totalTimeSmoothSec;
-    if (printTimeMs < 60000)
+    totalTimeSmoothSec = (totalTimeSmoothSec * 999 + totalTimeMs / 1000) / 1000;
+    
+    if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
     {
         totalTimeSmoothSec = totalTimeMs / 1000;
         lcd_lib_draw_stringP(5, 10, PSTR("Time left unknown"));
     }else{
-        totalTimeSmoothSec = (totalTimeSmoothSec * 999 + totalTimeMs / 1000) / 1000;
-        unsigned long timeLeftSec = totalTimeSmoothSec - printTimeMs / 1000L;
+        unsigned long totalTimeSec;
+        if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
+        {
+            float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
+            totalTimeSec = totalTimeSmoothSec * f + LCD_DETAIL_CACHE_TIME() * (1 - f);
+        }else{
+            totalTimeSec = totalTimeSmoothSec;
+        }
+        unsigned long timeLeftSec = totalTimeSec - printTimeSec;
         char buffer[16];
         int_to_time_string(timeLeftSec, buffer);
         lcd_lib_draw_stringP(5, 10, PSTR("Time left"));

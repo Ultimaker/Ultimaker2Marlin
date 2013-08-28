@@ -31,6 +31,9 @@ void lcd_init()
 {
     lcd_lib_init();
     currentMenu = lcd_menu_startup;
+#if LED_PIN > -1
+    analogWrite(LED_PIN, 255);
+#endif
 }
 
 void lcd_update()
@@ -134,7 +137,7 @@ static void lcd_menu_special_startup()
     lcd_lib_draw_gfx(7, 12, specialStartupGfx);
     lcd_lib_draw_stringP(3, 2, PSTR("Welcome"));
     lcd_lib_draw_string_centerP(47, PSTR("To the Ultimaker2"));
-    lcd_lib_draw_string_centerP(55, PSTR("experiance!"));
+    lcd_lib_draw_string_centerP(55, PSTR("experience!"));
     lcd_lib_update_screen();
 
     if (lcd_lib_button_pressed)
@@ -232,7 +235,7 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 3)
         strcpy_P(card.longFilename, PSTR("Home head"));
     else if (nr == 4)
-        strcpy_P(card.longFilename, PSTR("Home bed"));
+        strcpy_P(card.longFilename, PSTR("Lower bed"));
     else if (nr == 5)
         strcpy_P(card.longFilename, PSTR("Raise bed"));
     else if (nr == 6)
