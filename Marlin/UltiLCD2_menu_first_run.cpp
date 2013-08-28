@@ -288,6 +288,7 @@ static void lcd_menu_first_run_material_load_heatup()
     if (temp > target)
     {
         volume_to_filament_length = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
+        digipot_current(2, motor_current_setting[2]/2);//Set E motor power lower so the motor will skip instead of grind.
         
         currentMenu = lcd_menu_first_run_material_load_insert;
         temp = target;
@@ -361,7 +362,6 @@ static void lcd_menu_first_run_material_load_forward()
     {
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
-        //TODO: Set E motor power lower so the motor skips instead of digging into the material
         currentMenu = lcd_menu_first_run_material_load_wait;
         SELECT_MENU_ITEM(0);
     }
@@ -414,6 +414,7 @@ static void lcd_menu_first_run_material_select_pla_abs()
     
     if (lcd_lib_button_pressed)
     {
+        digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
         if (IS_SELECTED(0))
         {
             lcd_material_reset_defaults();

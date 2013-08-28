@@ -11,7 +11,11 @@
 #include "temperature.h"
 #include "pins.h"
 
+#define SPECIAL_STARTUP
+
 static void lcd_menu_startup();
+static void lcd_menu_special_startup();
+
 void lcd_menu_main();
 void lcd_menu_material();
 static void lcd_menu_maintenance();
@@ -97,8 +101,8 @@ void lcd_menu_startup()
     */
     }else{
         led_glow--;
-        lcd_lib_draw_gfx(80, 0, ultimakerRobotGfx);
-        lcd_lib_clear_gfx(0, 22, ultimakerTextOutlineGfx);
+        //lcd_lib_draw_gfx(80, 0, ultimakerRobotGfx);
+        //lcd_lib_clear_gfx(0, 22, ultimakerTextOutlineGfx);
         lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
     }
     lcd_lib_update_screen();
@@ -106,15 +110,40 @@ void lcd_menu_startup()
     if (led_glow_dir || lcd_lib_button_pressed)
     {
         led_glow = led_glow_dir = 0;
-        //return;
         if (lcd_lib_button_pressed)
             lcd_lib_beep();
-        
+
+#ifdef SPECIAL_STARTUP
+        currentMenu = lcd_menu_special_startup;
+#else        
         if (!IS_FIRST_RUN_DONE())
         {
             currentMenu = lcd_menu_first_run_init;
         }else{
             currentMenu = lcd_menu_main;
+        }
+#endif
+    }
+}
+
+static void lcd_menu_special_startup()
+{
+    LED_GLOW();
+    
+    lcd_lib_clear();
+    lcd_lib_draw_gfx(7, 12, specialStartupGfx);
+    lcd_lib_draw_stringP(3, 2, PSTR("Welcome"));
+    lcd_lib_draw_string_centerP(47, PSTR("To the Ultimaker2"));
+    lcd_lib_draw_string_centerP(55, PSTR("experiance!"));
+    lcd_lib_update_screen();
+
+    if (lcd_lib_button_pressed)
+    {
+        if (!IS_FIRST_RUN_DONE())
+        {
+            lcd_change_to_menu(lcd_menu_first_run_init);
+        }else{
+            lcd_change_to_menu(lcd_menu_main);
         }
     }
 }
@@ -149,9 +178,7 @@ void lcd_menu_main()
     {
         led_glow_dir = 0;
         if (led_glow > 200)
-        {
             lcd_change_to_menu(lcd_menu_breakout);
-        }
     }else{
         led_glow = led_glow_dir = 0;
     }
