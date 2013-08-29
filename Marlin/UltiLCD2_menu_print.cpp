@@ -119,6 +119,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     LCD_DETAIL_CACHE_ID() = nr;
                     LCD_DETAIL_CACHE_TIME() = 0;
                     LCD_DETAIL_CACHE_MATERIAL() = 0;
+                    card.getfilename(nr - 1);
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
@@ -332,10 +333,10 @@ static void lcd_menu_print_printing()
         break;
     }
     unsigned long printTimeMs = (millis() - starttime);
-    unsigned long printTimeSec = printTimeMs / 1000;
+    unsigned long printTimeSec = printTimeMs / 1000L;
     unsigned long totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
     static unsigned long totalTimeSmoothSec;
-    totalTimeSmoothSec = (totalTimeSmoothSec * 999 + totalTimeMs / 1000) / 1000;
+    totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
     
     if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
     {
