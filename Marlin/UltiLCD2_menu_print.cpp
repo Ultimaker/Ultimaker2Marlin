@@ -308,8 +308,29 @@ static void lcd_menu_print_printing()
 {
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
-    lcd_lib_draw_string_centerP(20, PSTR("Printing"));
-    lcd_lib_draw_string_center(30, card.longFilename);
+    char buffer[16];
+    char* c;
+    switch(printing_state)
+    {
+    default:
+        lcd_lib_draw_string_centerP(20, PSTR("Printing"));
+        lcd_lib_draw_string_center(30, card.longFilename);
+        break;
+    case PRINT_STATE_HEATING:
+        lcd_lib_draw_string_centerP(20, PSTR("Heating"));
+        c = int_to_string(current_temperature[0], buffer, PSTR("C"));
+        *c++ = '/';
+        c = int_to_string(target_temperature[0], c, PSTR("C"));
+        lcd_lib_draw_string_center(30, buffer);
+        break;
+    case PRINT_STATE_HEATING_BED:
+        lcd_lib_draw_string_centerP(20, PSTR("Heating bed"));
+        c = int_to_string(current_temperature_bed, buffer, PSTR("C"));
+        *c++ = '/';
+        c = int_to_string(target_temperature_bed, c, PSTR("C"));
+        lcd_lib_draw_string_center(30, buffer);
+        break;
+    }
     unsigned long printTimeMs = (millis() - starttime);
     unsigned long printTimeSec = printTimeMs / 1000;
     unsigned long totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
@@ -330,7 +351,6 @@ static void lcd_menu_print_printing()
             totalTimeSec = totalTimeSmoothSec;
         }
         unsigned long timeLeftSec = totalTimeSec - printTimeSec;
-        char buffer[16];
         int_to_time_string(timeLeftSec, buffer);
         lcd_lib_draw_stringP(5, 10, PSTR("Time left"));
         lcd_lib_draw_string(65, 10, buffer);
@@ -370,9 +390,10 @@ static void lcd_menu_print_classic_warning()
 {
     lcd_question_screen(lcd_menu_print_printing, doStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, NULL, PSTR("CANCEL"));
     
-    lcd_lib_draw_string_centerP(10, PSTR("This file ignores"));
-    lcd_lib_draw_string_centerP(20, PSTR("machine material"));
-    lcd_lib_draw_string_centerP(30, PSTR("settings."));
+    lcd_lib_draw_string_centerP(10, PSTR("This file will"));
+    lcd_lib_draw_string_centerP(20, PSTR("override machine"));
+    lcd_lib_draw_string_centerP(30, PSTR("setting with setting"));
+    lcd_lib_draw_string_centerP(40, PSTR("from the slicer."));
 
     lcd_lib_update_screen();
 }
@@ -390,7 +411,7 @@ static void lcd_menu_print_abort()
 static void lcd_menu_print_ready()
 {
     lcd_info_screen(lcd_menu_main, NULL, PSTR("BACK TO MENU"));
-
+    //unsigned long printTimeSec = (stoptime-starttime)/1000;
     if (current_temperature[0] > 60)
     {
         lcd_lib_draw_string_centerP(15, PSTR("Printer cooling down"));

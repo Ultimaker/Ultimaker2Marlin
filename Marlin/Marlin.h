@@ -194,7 +194,7 @@ extern float current_position[NUM_AXIS] ;
 extern float add_homeing[3];
 extern float min_pos[3];
 extern float max_pos[3];
-extern int fanSpeed;
+extern uint8_t fanSpeed;
 extern uint8_t fanSpeedPercent;
 #ifdef BARICUDA
 extern int ValvePressure;
@@ -214,6 +214,14 @@ extern float retract_recover_length, retract_recover_feedrate;
 
 extern unsigned long starttime;
 extern unsigned long stoptime;
+
+//The printing state from the main command processor. Is not zero when the command processor is in a loop waiting for a result.
+extern uint8_t printing_state;
+#define PRINT_STATE_NORMAL      0
+#define PRINT_STATE_DWELL       1
+#define PRINT_STATE_WAIT_USER   2
+#define PRINT_STATE_HEATING     3
+#define PRINT_STATE_HEATING_BED 4
 
 // Handling multiple extruders pins
 extern uint8_t active_extruder;

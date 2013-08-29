@@ -178,7 +178,7 @@ float extruder_offset[2][EXTRUDERS] = {
 };
 #endif
 uint8_t active_extruder = 0;
-int fanSpeed=0;
+uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
 #ifdef SERVO_ENDSTOPS
   int servo_endstops[] = SERVO_ENDSTOPS;
@@ -195,6 +195,8 @@ int EtoPPressure=0;
   float retract_length=4.5, retract_feedrate=25*60, retract_zlift=0.8;
   float retract_recover_length=0, retract_recover_feedrate=25*60;
 #endif
+
+uint8_t printing_state;
 
 //===========================================================================
 //=============================private variables=============================
@@ -734,6 +736,7 @@ void process_commands()
   unsigned long codenum; //throw away variable
   char *starpos = NULL;
 
+  printing_state = PRINT_STATE_NORMAL;
   if(code_seen('G'))
   {
     switch((int)code_value())
@@ -768,6 +771,7 @@ void process_commands()
       st_synchronize();
       codenum += millis();  // keep track of when we started waiting
       previous_millis_cmd = millis();
+      printing_state = PRINT_STATE_DWELL;
       while(millis()  < codenum ){
         manage_heater();
         manage_inactivity();
@@ -994,6 +998,7 @@ void process_commands()
     case 0: // M0 - Unconditional stop - Wait for user button press on LCD
     case 1: // M1 - Conditional stop - Wait for user button press on LCD
     {
+      printing_state = PRINT_STATE_WAIT_USER;
       LCD_MESSAGEPGM(MSG_USERWAIT);
       codenum = 0;
       if(code_seen('P')) codenum = code_value(); // milliseconds to wait
@@ -1196,6 +1201,7 @@ void process_commands()
       if(setTargetedHotend(109)){
         break;
       }
+      printing_state = PRINT_STATE_HEATING;
       LCD_MESSAGEPGM(MSG_HEATING);
       #ifdef AUTOTEMP
         autotemp_enabled=false;
@@ -1270,6 +1276,7 @@ void process_commands()
       break;
     case 190: // M190 - Wait for bed heater to reach target.
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
+        printing_state = PRINT_STATE_HEATING_BED;
         LCD_MESSAGEPGM(MSG_BED_HEATING);
         if (code_seen('S')) setTargetBed(code_value());
         codenum = millis();
@@ -1398,8 +1405,7 @@ void process_commands()
       }
       break;
     case 85: // M85
-      code_seen('S');
-      max_inactive_time = code_value() * 1000;
+      if (code_seen('S')) max_inactive_time = code_value() * 1000;
       break;
     case 92: // M92
       for(int8_t i=0; i < NUM_AXIS; i++)
