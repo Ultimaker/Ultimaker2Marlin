@@ -768,6 +768,8 @@ char* int_to_string(int i, char* temp_buffer, const char* p_postfix)
         *c++ = '-'; 
         i = -i;
     }
+    if (i >= 10000)
+        *c++ = ((i/10000)%10)+'0';
     if (i >= 1000)
         *c++ = ((i/1000)%10)+'0';
     if (i >= 100)

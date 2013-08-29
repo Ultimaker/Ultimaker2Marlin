@@ -16,6 +16,8 @@ static void lcd_menu_maintenance_first_run_select();
 static void lcd_menu_maintenance_advanced();
 void lcd_menu_maintenance_advanced_heatup();
 void lcd_menu_maintenance_advanced_bed_heatup();
+static void lcd_menu_maintenance_retraction();
+static void lcd_menu_maintenance_motion();
 static void lcd_menu_advanced_factory_reset();
 static void lcd_menu_TODO();
 
@@ -57,7 +59,7 @@ static void lcd_menu_maintenance_first_run_select()
 static char* lcd_advanced_item(uint8_t nr)
 {
     if (nr == 0)
-        strcpy_P(card.longFilename, PSTR("<- RETURN"));
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
     else if (nr == 1)
         strcpy_P(card.longFilename, PSTR("Heatup head"));
     else if (nr == 2)
@@ -69,6 +71,10 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 5)
         strcpy_P(card.longFilename, PSTR("Raise bed"));
     else if (nr == 6)
+        strcpy_P(card.longFilename, PSTR("Retraction settings"));
+    else if (nr == 7)
+        strcpy_P(card.longFilename, PSTR("Motion settings"));
+    else if (nr == 8)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -86,16 +92,7 @@ static void lcd_advanced_details(uint8_t nr)
     }else if(nr == 2)
     {
         lcd_lib_draw_stringP(5, 53, PSTR("Heatup the bed"));
-    }else if(nr == 3)
-    {
-        
-    }else if(nr == 4)
-    {
-        
-    }else if(nr == 5)
-    {
-        
-    }else if(nr == 6)
+    }else if(nr == 8)
     {
         lcd_lib_draw_stringP(5, 53, PSTR("Clear all settings"));
     }
@@ -103,7 +100,7 @@ static void lcd_advanced_details(uint8_t nr)
 
 static void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu(PSTR("ADVANCED"), 7, lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu(PSTR("ADVANCED"), 9, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
@@ -129,6 +126,10 @@ static void lcd_menu_maintenance_advanced()
             enquecommand_P(PSTR("G1 Z40"));
         }
         else if (IS_SELECTED(6))
+            lcd_change_to_menu(lcd_menu_maintenance_retraction, MENU_ITEM_POS(0));
+        else if (IS_SELECTED(7))
+            lcd_change_to_menu(lcd_menu_maintenance_motion, MENU_ITEM_POS(0));
+        else if (IS_SELECTED(8))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, MENU_ITEM_POS(1));
     }
 }
@@ -213,6 +214,103 @@ static void lcd_menu_advanced_factory_reset()
     lcd_lib_draw_string_centerP(10, PSTR("Reset everything"));
     lcd_lib_draw_string_centerP(20, PSTR("to default?"));
     lcd_lib_update_screen();
+}
+
+
+static char* lcd_retraction_item(uint8_t nr)
+{
+    if (nr == 0)
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
+    else if (nr == 1)
+        strcpy_P(card.longFilename, PSTR("Retract length"));
+    else if (nr == 2)
+        strcpy_P(card.longFilename, PSTR("Retract speed"));
+    else
+        strcpy_P(card.longFilename, PSTR("???"));
+    return card.longFilename;
+}
+
+static void lcd_retraction_details(uint8_t nr)
+{
+    char buffer[16];
+    if (nr == 0)
+        return;
+    else if(nr == 1)
+        float_to_string(retract_length, buffer, PSTR("mm"));
+    else if(nr == 2)
+        int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
+    lcd_lib_draw_string(5, 53, buffer);
+}
+
+static void lcd_menu_maintenance_retraction()
+{
+    lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED(0))
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, MENU_ITEM_POS(6));
+        else if (IS_SELECTED(1))
+            LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
+        else if (IS_SELECTED(2))
+            LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
+    }
+}
+
+static char* lcd_motion_item(uint8_t nr)
+{
+    if (nr == 0)
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
+    else if (nr == 1)
+        strcpy_P(card.longFilename, PSTR("Acceleration"));
+    else if (nr == 2)
+        strcpy_P(card.longFilename, PSTR("X/Y Jerk"));
+    else if (nr == 3)
+        strcpy_P(card.longFilename, PSTR("Max speed X"));
+    else if (nr == 4)
+        strcpy_P(card.longFilename, PSTR("Max speed Y"));
+    else if (nr == 5)
+        strcpy_P(card.longFilename, PSTR("Max speed Z"));
+    else
+        strcpy_P(card.longFilename, PSTR("???"));
+    return card.longFilename;
+}
+
+static void lcd_motion_details(uint8_t nr)
+{
+    char buffer[16];
+    if (nr == 0)
+        return;
+    else if(nr == 1)
+        int_to_string(acceleration, buffer, PSTR("mm/sec^2"));
+    else if(nr == 2)
+        int_to_string(max_xy_jerk, buffer, PSTR("mm/sec"));
+    else if(nr == 3)
+        int_to_string(max_feedrate[X_AXIS], buffer, PSTR("mm/sec"));
+    else if(nr == 4)
+        int_to_string(max_feedrate[Y_AXIS], buffer, PSTR("mm/sec"));
+    else if(nr == 5)
+        int_to_string(max_feedrate[Z_AXIS], buffer, PSTR("mm/sec"));
+    lcd_lib_draw_string(5, 53, buffer);
+}
+
+static void lcd_menu_maintenance_motion()
+{
+    lcd_scroll_menu(PSTR("MOTION"), 6, lcd_motion_item, lcd_motion_details);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED(0))
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, MENU_ITEM_POS(7));
+        else if (IS_SELECTED(1))
+            LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec^2", 0, 20000);
+        else if (IS_SELECTED(2))
+            LCD_EDIT_SETTING_FLOAT1(max_xy_jerk, "X/Y Jerk", "mm/sec", 0, 100);
+        else if (IS_SELECTED(3))
+            LCD_EDIT_SETTING_FLOAT1(max_feedrate[X_AXIS], "Max speed X", "mm/sec", 0, 1000);
+        else if (IS_SELECTED(4))
+            LCD_EDIT_SETTING_FLOAT1(max_feedrate[Y_AXIS], "Max speed Y", "mm/sec", 0, 1000);
+        else if (IS_SELECTED(5))
+            LCD_EDIT_SETTING_FLOAT1(max_feedrate[Z_AXIS], "Max speed Z", "mm/sec", 0, 1000);
+    }
 }
 
 static void lcd_menu_TODO()

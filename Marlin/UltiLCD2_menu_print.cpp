@@ -313,7 +313,7 @@ static void lcd_menu_print_printing()
     switch(printing_state)
     {
     default:
-        lcd_lib_draw_string_centerP(20, PSTR("Printing"));
+        lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
         lcd_lib_draw_string_center(30, card.longFilename);
         break;
     case PRINT_STATE_HEATING:

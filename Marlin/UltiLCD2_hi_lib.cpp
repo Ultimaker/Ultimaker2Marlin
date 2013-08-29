@@ -240,6 +240,12 @@ void lcd_menu_edit_setting()
         *(int32_t*)lcd_setting_ptr = lcd_lib_encoder_pos;
     else if (lcd_setting_type == 5)
         *(uint8_t*)lcd_setting_ptr = lcd_lib_encoder_pos * 255 / 100;
+    else if (lcd_setting_type == 6)
+        *(float*)lcd_setting_ptr = float(lcd_lib_encoder_pos) * 60;
+    else if (lcd_setting_type == 7)
+        *(float*)lcd_setting_ptr = float(lcd_lib_encoder_pos) * 100;
+    else if (lcd_setting_type == 8)
+        *(float*)lcd_setting_ptr = float(lcd_lib_encoder_pos);
 
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, lcd_setting_name);

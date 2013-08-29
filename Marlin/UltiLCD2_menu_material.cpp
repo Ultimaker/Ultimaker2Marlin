@@ -362,7 +362,7 @@ static void lcd_menu_material_settings()
         else if (IS_SELECTED(2))
             LCD_EDIT_SETTING(material.bed_temperature, "Bed Temperature", "C", 0, BED_MAXTEMP - 15);
         else if (IS_SELECTED(3))
-            LCD_EDIT_SETTING_FLOAT(material.diameter, "Material Diameter", "mm", 0, 1000);
+            LCD_EDIT_SETTING_FLOAT001(material.diameter, "Material Diameter", "mm", 0, 100);
         else if (IS_SELECTED(4))
             LCD_EDIT_SETTING(material.fan_speed, "Fan speed", "%", 0, 100);
         else if (IS_SELECTED(5))
