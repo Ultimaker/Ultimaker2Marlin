@@ -5,13 +5,13 @@
 #include "marlin.h"
 #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
 #include "temperature.h"
+#include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_material.h"
 
 struct materialSettings material = {0, 0, 100, 100, 2.85};
 
 void doCooldown();//TODO
-void lcd_menu_main();//TODO
 static void lcd_menu_change_material_preheat();
 static void lcd_menu_change_material_remove();
 static void lcd_menu_change_material_remove_wait_user();
@@ -377,7 +377,7 @@ void lcd_material_reset_defaults()
     
     strcpy_P(buffer, PSTR("PLA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
-    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 220);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(0), 65);
     eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(0), 100);
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
@@ -385,7 +385,7 @@ void lcd_material_reset_defaults()
 
     strcpy_P(buffer, PSTR("ABS"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(1), 4);
-    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(1), 240);
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(1), 280);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(1), 80);
     eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(1), 50);
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(1), 107);

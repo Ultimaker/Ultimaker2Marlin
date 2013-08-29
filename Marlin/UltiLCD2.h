@@ -15,6 +15,8 @@ FORCE_INLINE void lcd_buzz(long duration,uint16_t freq) {}
 #define LCD_MESSAGEPGM(x) 
 #define LCD_ALERTMESSAGEPGM(x) 
 
+void lcd_menu_main();
+
 #endif
 
 #endif//ULTI_LCD2_H

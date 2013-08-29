@@ -5,6 +5,7 @@
 #include "marlin.h"
 #include "cardreader.h"
 #include "temperature.h"
+#include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_material.h"
@@ -19,10 +20,10 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
 #define LCD_DETAIL_CACHE_MATERIAL() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5])
 
-void lcd_menu_main();//TODO
 void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
+static void lcd_menu_print_error();
 static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
@@ -172,7 +173,7 @@ void lcd_menu_print_select()
         return;
     }
     
-    if (!card.cardOK)
+    if (!card.isOk())
     {
         lcd_info_screen(lcd_menu_main);
         lcd_lib_draw_string_centerP(16, PSTR("Reading card..."));
@@ -306,7 +307,6 @@ static void lcd_menu_print_heatup()
 static void lcd_menu_print_printing()
 {
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
-    
     uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
     lcd_lib_draw_string_centerP(20, PSTR("Printing"));
     lcd_lib_draw_string_center(30, card.longFilename);
@@ -325,7 +325,7 @@ static void lcd_menu_print_printing()
         if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
         {
             float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
-            totalTimeSec = totalTimeSmoothSec * f + LCD_DETAIL_CACHE_TIME() * (1 - f);
+            totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
         }else{
             totalTimeSec = totalTimeSmoothSec;
         }
@@ -342,19 +342,37 @@ static void lcd_menu_print_printing()
         currentMenu = lcd_menu_print_ready;
         SELECT_MENU_ITEM(0);
     }
+    if (!card.isOk())
+    {
+        abortPrint();
+        currentMenu = lcd_menu_print_error;
+        SELECT_MENU_ITEM(0);
+    }
 
     lcd_progressbar(progress);
     
     lcd_lib_update_screen();
 }
 
+static void lcd_menu_print_error()
+{
+    lcd_lib_led_color(led_glow, 0, 0);
+    lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
+
+    lcd_lib_draw_string_centerP(10, PSTR("Error while"));
+    lcd_lib_draw_string_centerP(20, PSTR("reading SD"));
+    lcd_lib_draw_string_centerP(30, PSTR("card!"));
+
+    lcd_lib_update_screen();
+}
 
 static void lcd_menu_print_classic_warning()
 {
     lcd_question_screen(lcd_menu_print_printing, doStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, NULL, PSTR("CANCEL"));
     
     lcd_lib_draw_string_centerP(10, PSTR("This file ignores"));
-    lcd_lib_draw_string_centerP(20, PSTR("material settings"));
+    lcd_lib_draw_string_centerP(20, PSTR("machine material"));
+    lcd_lib_draw_string_centerP(30, PSTR("settings."));
 
     lcd_lib_update_screen();
 }

@@ -48,17 +48,18 @@ public:
   FORCE_INLINE bool atRoot() { return workDirDepth==0; }
   FORCE_INLINE uint32_t getFilePos() { return sdpos; }
   FORCE_INLINE uint32_t getFileSize() { return filesize; }
+  FORCE_INLINE bool isOk() { return cardOK && card.errorCode() == 0; }
 
 public:
   bool saving;
   bool logging;
   bool sdprinting ;  
-  bool cardOK ;
   char filename[13];
   char longFilename[LONG_FILENAME_LENGTH];
   bool filenameIsDir;
   int lastnr; //last number of the autostart;
 private:
+  bool cardOK;
   SdFile root,*curDir,workDir,workDirParents[MAX_DIR_DEPTH];
   uint8_t workDirDepth;
   Sd2Card card;

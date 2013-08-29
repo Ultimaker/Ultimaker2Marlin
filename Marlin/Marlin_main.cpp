@@ -1058,7 +1058,7 @@ void process_commands()
       card.pauseSDPrint();
       break;
     case 26: //M26 - Set SD index
-      if(card.cardOK && code_seen('S')) {
+      if(card.isOk() && code_seen('S')) {
         card.setIndex(code_value_long());
       }
       break;
@@ -1079,7 +1079,7 @@ void process_commands()
       //card,saving = false;
       break;
     case 30: //M30 <filename> Delete File
-      if (card.cardOK){
+      if (card.isOk()){
         card.closefile();
         starpos = (strchr(strchr_pointer + 4,'*'));
         if(starpos != NULL){

@@ -6,13 +6,13 @@
 #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
 #include "temperature.h"
 #include "ConfigurationStore.h"
+#include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_print.h"
 
-void lcd_menu_main();//TODO
-void doCooldown();
+void doCooldown();//TODO
 
 static void lcd_menu_first_run_init_2();
 static void lcd_menu_first_run_init_remove_knobs();
@@ -521,7 +521,7 @@ static void lcd_menu_first_run_print_card_detect()
         return;
     }
     
-    if (!card.cardOK)
+    if (!card.isOk())
     {
         lcd_info_screen(lcd_menu_main);
         DRAW_PROGRESS_NR(22);
