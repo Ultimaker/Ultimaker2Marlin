@@ -24,7 +24,7 @@ void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 {
     minProgress = 0;
     led_glow = led_glow_dir = 0;
-    lcd_lib_led_color(32,32,40);
+    LED_NORMAL();
     lcd_lib_beep();
     previousMenu = currentMenu;
     previousEncoderPos = lcd_lib_encoder_pos;

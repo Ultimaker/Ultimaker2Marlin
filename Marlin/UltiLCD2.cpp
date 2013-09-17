@@ -64,7 +64,7 @@ void lcd_update()
         }
         lcd_lib_draw_stringP(1, 40, PSTR("Contact:"));
         lcd_lib_draw_stringP(1, 50, PSTR("support@ultimaker.com"));
-        lcd_lib_led_color(led_glow,0,0);
+        LED_GLOW_RED();
         lcd_lib_update_screen();
     }else{
         currentMenu();
@@ -76,7 +76,7 @@ void lcd_menu_startup()
 {
     lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
     
-    lcd_lib_led_color(32,32,40);
+    LED_GLOW();
     lcd_lib_clear();
     
     if (led_glow < 84)
@@ -113,6 +113,7 @@ void lcd_menu_startup()
     {
         analogWrite(LED_PIN, 255);
         led_glow = led_glow_dir = 0;
+        LED_NORMAL();
         if (lcd_lib_button_pressed)
             lcd_lib_beep();
 

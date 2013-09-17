@@ -389,7 +389,7 @@ static void lcd_menu_print_printing()
 
 static void lcd_menu_print_error()
 {
-    lcd_lib_led_color(led_glow, 0, 0);
+    LED_GLOW_RED();
     lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
