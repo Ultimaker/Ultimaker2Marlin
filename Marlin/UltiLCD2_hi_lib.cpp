@@ -7,6 +7,7 @@
 
 menuFunc_t currentMenu;
 menuFunc_t previousMenu;
+menuFunc_t postMenuCheck;
 int16_t previousEncoderPos;
 uint8_t led_glow = 0;
 uint8_t led_glow_dir;

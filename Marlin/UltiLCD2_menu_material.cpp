@@ -60,7 +60,7 @@ static void lcd_menu_change_material_preheat()
     {
         volume_to_filament_length = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
         
-        digipot_current(2, motor_current_setting[2] / 2);//Set the E motor power lower to we skip instead of grind.
+        digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.
         
         float old_max_feedrate_e = max_feedrate[E_AXIS];
         float old_retract_acceleration = retract_acceleration;

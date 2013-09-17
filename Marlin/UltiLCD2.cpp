@@ -12,10 +12,12 @@
 #include "temperature.h"
 #include "pins.h"
 
-#define SPECIAL_STARTUP
+//#define SPECIAL_STARTUP
 
 static void lcd_menu_startup();
+#ifdef SPECIAL_STARTUP
 static void lcd_menu_special_startup();
+#endif//SPECIAL_STARTUP
 
 static void lcd_menu_breakout();
 
@@ -25,7 +27,7 @@ void lcd_init()
     lcd_material_read_current_material();
     currentMenu = lcd_menu_startup;
 #if LED_PIN > -1
-    analogWrite(LED_PIN, 255);
+    analogWrite(LED_PIN, 0);
 #endif
 }
 
@@ -66,6 +68,7 @@ void lcd_update()
         lcd_lib_update_screen();
     }else{
         currentMenu();
+        if (postMenuCheck) postMenuCheck();
     }
 }
 
@@ -103,25 +106,30 @@ void lcd_menu_startup()
     }
     lcd_lib_update_screen();
 
+#if LED_PIN > -1
+    analogWrite(LED_PIN, led_glow << 1);
+#endif
     if (led_glow_dir || lcd_lib_button_pressed)
     {
+        analogWrite(LED_PIN, 255);
         led_glow = led_glow_dir = 0;
         if (lcd_lib_button_pressed)
             lcd_lib_beep();
 
 #ifdef SPECIAL_STARTUP
         currentMenu = lcd_menu_special_startup;
-#else        
+#else
         if (!IS_FIRST_RUN_DONE())
         {
             currentMenu = lcd_menu_first_run_init;
         }else{
             currentMenu = lcd_menu_main;
         }
-#endif
+#endif//SPECIAL_STARTUP
     }
 }
 
+#ifdef SPECIAL_STARTUP
 static void lcd_menu_special_startup()
 {
     LED_GLOW();
@@ -143,6 +151,7 @@ static void lcd_menu_special_startup()
         }
     }
 }
+#endif//SPECIAL_STARTUP
 
 void doCooldown()
 {

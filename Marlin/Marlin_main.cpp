@@ -785,7 +785,7 @@ void process_commands()
         destination[X_AXIS]=current_position[X_AXIS];
         destination[Y_AXIS]=current_position[Y_AXIS];
         destination[Z_AXIS]=current_position[Z_AXIS];
-        destination[E_AXIS]=current_position[E_AXIS]-retract_length;
+        destination[E_AXIS]=current_position[E_AXIS]-retract_length/volume_to_filament_length;
         retract_recover_length = current_position[E_AXIS]-destination[E_AXIS];//Set the recover length to whatever distance we retracted so we recover properly.
         feedrate=retract_feedrate;
         retracted=true;

@@ -28,6 +28,7 @@ static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
 static void lcd_menu_print_tune();
+static void lcd_menu_print_tune_retraction();
 
 void lcd_clear_cache()
 {
@@ -39,20 +40,44 @@ void lcd_clear_cache()
 
 static void abortPrint()
 {
+    postMenuCheck = NULL;
     card.sdprinting = false;
     doCooldown();
-    enquecommand_P(PSTR("G92 E20"));
+
+    char buffer[32];
+    enquecommand_P(PSTR("G28"));
+    sprintf_P(buffer, PSTR("G92 E%i"), int(20.0 / volume_to_filament_length));
+    enquecommand(buffer);
     enquecommand_P(PSTR("G1 F1500 E0"));
     enquecommand_P(PSTR("G28"));
+}
+
+static void checkPrintFinished()
+{
+    if (!card.sdprinting && !is_command_queued())
+    {
+        abortPrint();
+        currentMenu = lcd_menu_print_ready;
+        SELECT_MENU_ITEM(0);
+    }
+    if (!card.isOk())
+    {
+        abortPrint();
+        currentMenu = lcd_menu_print_error;
+        SELECT_MENU_ITEM(0);
+    }
 }
 
 static void doStartPrint()
 {
     //TODO: Custom start code.
+    char buffer[32];
     enquecommand_P(PSTR("G28"));
-    enquecommand_P(PSTR("G92 E-20"));
+    sprintf_P(buffer, PSTR("G92 E-%i"), int(20.0 / volume_to_filament_length));
+    enquecommand(buffer);
     enquecommand_P(PSTR("G1 F1500 E0"));
     
+    postMenuCheck = checkPrintFinished;
     card.startFileprint();
     starttime = millis();
 }
@@ -357,19 +382,6 @@ static void lcd_menu_print_printing()
         lcd_lib_draw_string(65, 10, buffer);
     }
 
-    if (!card.sdprinting && !is_command_queued())
-    {
-        abortPrint();
-        currentMenu = lcd_menu_print_ready;
-        SELECT_MENU_ITEM(0);
-    }
-    if (!card.isOk())
-    {
-        abortPrint();
-        currentMenu = lcd_menu_print_error;
-        SELECT_MENU_ITEM(0);
-    }
-
     lcd_progressbar(progress);
     
     lcd_lib_update_screen();
@@ -454,6 +466,8 @@ static char* tune_item_callback(uint8_t nr)
         strcpy_P(c, PSTR("Fan speed"));
     else if (nr == 5)
         strcpy_P(c, PSTR("Material flow"));
+    else if (nr == 6)
+        strcpy_P(c, PSTR("Retraction"));
     return c;
 }
 
@@ -478,6 +492,8 @@ static void tune_item_details_callback(uint8_t nr)
         c = int_to_string(int(fanSpeed) * 100 / 255, c, PSTR("%"));
     else if (nr == 5)
         c = int_to_string(extrudemultiply, c, PSTR("%"));
+    else
+        return;
     lcd_lib_draw_string(5, 53, (char*)lcd_cache);
 }
 
@@ -485,7 +501,7 @@ extern void lcd_menu_maintenance_advanced_heatup();//TODO
 extern void lcd_menu_maintenance_advanced_bed_heatup();//TODO
 static void lcd_menu_print_tune()
 {
-    lcd_scroll_menu(PSTR("TUNE"), 6, tune_item_callback, tune_item_details_callback);
+    lcd_scroll_menu(PSTR("TUNE"), 7, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
@@ -500,7 +516,49 @@ static void lcd_menu_print_tune()
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
         else if (IS_SELECTED(5))
             LCD_EDIT_SETTING(extrudemultiply, "Material flow", "%", 10, 1000);
+        else if (IS_SELECTED(6))
+            lcd_change_to_menu(lcd_menu_print_tune_retraction);
     }
 }
+
+static char* lcd_retraction_item(uint8_t nr)
+{
+    if (nr == 0)
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
+    else if (nr == 1)
+        strcpy_P(card.longFilename, PSTR("Retract length"));
+    else if (nr == 2)
+        strcpy_P(card.longFilename, PSTR("Retract speed"));
+    else
+        strcpy_P(card.longFilename, PSTR("???"));
+    return card.longFilename;
+}
+
+static void lcd_retraction_details(uint8_t nr)
+{
+    char buffer[16];
+    if (nr == 0)
+        return;
+    else if(nr == 1)
+        float_to_string(retract_length, buffer, PSTR("mm"));
+    else if(nr == 2)
+        int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
+    lcd_lib_draw_string(5, 53, buffer);
+}
+
+static void lcd_menu_print_tune_retraction()
+{
+    lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED(0))
+            lcd_change_to_menu(lcd_menu_print_tune, MENU_ITEM_POS(6));
+        else if (IS_SELECTED(1))
+            LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
+        else if (IS_SELECTED(2))
+            LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
+    }
+}
+
 
 #endif//ENABLE_ULTILCD2

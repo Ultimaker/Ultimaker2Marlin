@@ -46,6 +46,7 @@ static void lcd_menu_first_run_print_card_detect();
 //Run the first time you start-up the machine or after a factory reset.
 void lcd_menu_first_run_init()
 {
+    add_homeing[Z_AXIS] = 0;
     SELECT_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_init_2, NULL, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(1);
@@ -58,7 +59,6 @@ void lcd_menu_first_run_init()
 
 static void homeAndParkHeadForCenterAdjustment2()
 {
-    add_homeing[Z_AXIS] = 0;
     enquecommand_P(PSTR("G28 Z0 X0 Y0"));
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH - 10);
@@ -87,7 +87,7 @@ static void homeAndRaiseBed()
 static void lcd_menu_first_run_init_2()
 {
     SELECT_MENU_ITEM(0);
-    lcd_info_screen(lcd_menu_first_run_init_remove_knobs, homeAndRaiseBed, PSTR("CONTINUE"));
+    lcd_info_screen(lcd_menu_first_run_init_3, homeAndRaiseBed, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(2);
     lcd_lib_draw_string_centerP(10, PSTR("Because this is the"));
     lcd_lib_draw_string_centerP(20, PSTR("first start up I will"));
@@ -112,7 +112,6 @@ static void lcd_menu_first_run_init_remove_knobs()
 
 static void homeAndParkHeadForCenterAdjustment()
 {
-    add_homeing[Z_AXIS] = 0;
     enquecommand_P(PSTR("G28 X0 Y0"));
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH - 10);
@@ -141,7 +140,7 @@ static void storeHomingZ_parkHeadForLeftAdjustment()
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z5"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), 5, 10);
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), 35, 10);
     enquecommand(buffer);
     sprintf_P(buffer, PSTR("G1 F%i Z0"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
@@ -314,7 +313,7 @@ static void lcd_menu_first_run_material_load_heatup()
     if (temp > target)
     {
         volume_to_filament_length = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
-        digipot_current(2, motor_current_setting[2]/2);//Set E motor power lower so the motor will skip instead of grind.
+        digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
         
         currentMenu = lcd_menu_first_run_material_load_insert;
         temp = target;
