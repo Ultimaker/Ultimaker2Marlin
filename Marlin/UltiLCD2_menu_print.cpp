@@ -298,7 +298,7 @@ void lcd_menu_print_select()
 
 static void lcd_menu_print_heatup()
 {
-    lcd_info_screen(lcd_menu_print_abort, NULL, PSTR("ABORT"));
+    lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     
     if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW)
     {
@@ -389,7 +389,7 @@ static void lcd_menu_print_printing()
 
 static void lcd_menu_print_error()
 {
-    LED_GLOW_RED();
+    LED_GLOW_ERROR();
     lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
@@ -505,8 +505,12 @@ static void lcd_menu_print_tune()
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
-            lcd_change_to_menu(lcd_menu_print_printing);
-        else if (IS_SELECTED(1))
+        {
+            if (card.sdprinting)
+                lcd_change_to_menu(lcd_menu_print_printing);
+            else
+                lcd_change_to_menu(lcd_menu_print_heatup);
+        }else if (IS_SELECTED(1))
             LCD_EDIT_SETTING(feedmultiply, "Print speed", "%", 10, 1000);
         else if (IS_SELECTED(2))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.

@@ -64,7 +64,7 @@ void lcd_update()
         }
         lcd_lib_draw_stringP(1, 40, PSTR("Contact:"));
         lcd_lib_draw_stringP(1, 50, PSTR("support@ultimaker.com"));
-        LED_GLOW_RED();
+        LED_GLOW_ERROR();
         lcd_lib_update_screen();
     }else{
         currentMenu();
@@ -194,6 +194,7 @@ void lcd_menu_main()
 
 
 #define BREAKOUT_PADDLE_WIDTH 21
+//Use the lcd_cache memory to store breakout data, so we do not waste memory.
 #define ball_x (*(int16_t*)&lcd_cache[3*5])
 #define ball_y (*(int16_t*)&lcd_cache[3*5+2])
 #define ball_dx (*(int16_t*)&lcd_cache[3*5+4])
@@ -227,6 +228,16 @@ static void lcd_menu_breakout()
         {
             lcd_cache[x+y*5]--;
             ball_dy = abs(ball_dy);
+            for(y=0; y<3;y++)
+                for(x=0; x<5;x++)
+                    if (lcd_cache[x+y*5])
+                        break;
+            if (x==5 && y==3)
+            {
+                for(y=0; y<3;y++)
+                    for(x=0; x<5;x++)
+                        lcd_cache[x+y*5] = 3;
+            }
         }
     }
     if (ball_y > (58 << 8))
