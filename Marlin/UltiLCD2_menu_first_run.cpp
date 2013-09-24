@@ -160,7 +160,10 @@ static void lcd_menu_first_run_bed_level_center_adjust()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, 0);
     }
 
-    lcd_info_screen(lcd_menu_first_run_bed_level_left_adjust, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
+    if (movesplanned() > 0)
+        lcd_info_screen(NULL, NULL, PSTR("CONTINUE"));
+    else
+        lcd_info_screen(lcd_menu_first_run_bed_level_left_adjust, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(5);
     lcd_lib_draw_string_centerP(10, PSTR("Turn the wheel until"));
     lcd_lib_draw_string_centerP(20, PSTR("the nozzle is half a"));
@@ -246,7 +249,10 @@ static void lcd_menu_first_run_bed_level_paper_center()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, 0);
     }
 
-    lcd_info_screen(lcd_menu_first_run_bed_level_paper_left, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
+    if (movesplanned() > 0)
+        lcd_info_screen(NULL, NULL, PSTR("CONTINUE"));
+    else
+        lcd_info_screen(lcd_menu_first_run_bed_level_paper_left, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(9);
     lcd_lib_draw_string_centerP(10, PSTR("Slide a paper between"));
     lcd_lib_draw_string_centerP(20, PSTR("the bed & nozzle till"));
