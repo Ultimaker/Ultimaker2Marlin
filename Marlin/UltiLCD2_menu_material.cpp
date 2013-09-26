@@ -127,6 +127,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
     lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MENU_ITEM_POS(0));
     
     char buffer[32];
+    enquecommand_P(PSTR("G28 X0 Y0"));
     sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
     enquecommand(buffer);
 }

@@ -190,9 +190,9 @@
     //#define  DEFAULT_Kd 114
 
 // Ultimaker2
-    #define  DEFAULT_Kp 20
-    #define  DEFAULT_Ki 1.5
-    #define  DEFAULT_Kd 25
+    #define  DEFAULT_Kp 12.15
+    #define  DEFAULT_Ki 1.0
+    #define  DEFAULT_Kd 37.02
 
 // Makergear
 //    #define  DEFAULT_Kp 7.0
@@ -321,7 +321,7 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 #define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
 // Travel limits after homing
-#define X_MAX_POS 220
+#define X_MAX_POS 230
 #define X_MIN_POS 0
 #define Y_MAX_POS 225
 #define Y_MIN_POS 0
