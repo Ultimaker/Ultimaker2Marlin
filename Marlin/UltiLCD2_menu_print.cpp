@@ -41,14 +41,16 @@ void lcd_clear_cache()
 static void abortPrint()
 {
     postMenuCheck = NULL;
-    card.sdprinting = false;
     doCooldown();
 
     char buffer[32];
-    enquecommand_P(PSTR("G28"));
-    sprintf_P(buffer, PSTR("G92 E%i"), int(20.0 / volume_to_filament_length));
-    enquecommand(buffer);
-    enquecommand_P(PSTR("G1 F1500 E0"));
+    if (card.sdprinting)
+    {
+        card.sdprinting = false;
+        sprintf_P(buffer, PSTR("G92 E%i"), int(20.0 / volume_to_filament_length));
+        enquecommand(buffer);
+        enquecommand_P(PSTR("G1 F1500 E0"));
+    }
     enquecommand_P(PSTR("G28"));
 }
 
