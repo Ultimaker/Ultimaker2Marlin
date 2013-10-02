@@ -403,6 +403,11 @@ void CardReader::getStatus()
   else{
     SERIAL_PROTOCOLLNPGM(MSG_SD_NOT_PRINTING);
   }
+  if (card.errorCode())
+  {
+    SERIAL_PROTOCOLPGM("Card error:");
+    SERIAL_PROTOCOLLN(card.errorCode());
+  }
 }
 void CardReader::write_command(char *buf)
 {

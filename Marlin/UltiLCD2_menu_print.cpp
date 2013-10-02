@@ -309,12 +309,14 @@ static void lcd_menu_print_heatup()
     }
 
     uint8_t progress = 125;
-    uint8_t p;
+    uint8_t p = 0;
     
-    p = (current_temperature[0] - 20) * 125 / (target_temperature[0] - 20 - TEMP_WINDOW);
+    if (current_temperature[0] > 20)
+        p = (current_temperature[0] - 20) * 125 / (target_temperature[0] - 20 - TEMP_WINDOW);
     if (p < progress)
         progress = p;
-    p = (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW);
+    if (current_temperature_bed > 20)
+        p = (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW);
     if (p < progress)
         progress = p;
     
