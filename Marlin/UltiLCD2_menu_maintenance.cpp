@@ -18,6 +18,7 @@ void lcd_menu_maintenance_advanced_heatup();
 void lcd_menu_maintenance_advanced_bed_heatup();
 static void lcd_menu_maintenance_extrude();
 static void lcd_menu_maintenance_retraction();
+static void lcd_menu_advanced_version();
 static void lcd_menu_maintenance_motion();
 static void lcd_menu_advanced_factory_reset();
 static void lcd_menu_TODO();
@@ -78,6 +79,8 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 8)
         strcpy_P(card.longFilename, PSTR("Motion settings"));
     else if (nr == 9)
+        strcpy_P(card.longFilename, PSTR("Version"));
+    else if (nr == 10)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -103,7 +106,7 @@ static void lcd_advanced_details(uint8_t nr)
 
 static void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu(PSTR("ADVANCED"), 10, lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu(PSTR("ADVANCED"), 11, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
@@ -139,6 +142,8 @@ static void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED(8))
             lcd_change_to_menu(lcd_menu_maintenance_motion, MENU_ITEM_POS(0));
         else if (IS_SELECTED(9))
+            lcd_change_to_menu(lcd_menu_advanced_version, MENU_ITEM_POS(0));
+        else if (IS_SELECTED(10))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, MENU_ITEM_POS(1));
     }
 }
@@ -217,6 +222,14 @@ void lcd_menu_maintenance_advanced_bed_heatup()
     int_to_string(int(current_temperature_bed), buffer, PSTR("C/"));
     int_to_string(int(target_temperature_bed), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_update_screen();
+}
+
+void lcd_menu_advanced_version()
+{
+    lcd_info_screen(previousMenu, NULL, PSTR("Return"));
+    lcd_lib_draw_string_centerP(30, PSTR(STRING_VERSION_CONFIG_H));
+    lcd_lib_draw_string_centerP(40, PSTR(STRING_CONFIG_H_AUTHOR));
     lcd_lib_update_screen();
 }
 
