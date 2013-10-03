@@ -53,7 +53,7 @@ void lcd_menu_first_run_init()
     lcd_lib_draw_string_centerP(10, PSTR("Welcome to the first"));
     lcd_lib_draw_string_centerP(20, PSTR("start up of your"));
     lcd_lib_draw_string_centerP(30, PSTR("Ultimaker! Press the"));
-    lcd_lib_draw_string_centerP(40, PSTR("wheel to continue"));
+    lcd_lib_draw_string_centerP(40, PSTR("button to continue"));
     lcd_lib_update_screen();
 }
 
@@ -155,7 +155,7 @@ static void lcd_menu_first_run_bed_level_center_adjust()
     
     if (lcd_lib_encoder_pos != 0)
     {
-        current_position[Z_AXIS] += float(lcd_lib_encoder_pos) * 0.05;
+        current_position[Z_AXIS] -= float(lcd_lib_encoder_pos) * 0.05;
         lcd_lib_encoder_pos = 0;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, 0);
     }
@@ -165,7 +165,7 @@ static void lcd_menu_first_run_bed_level_center_adjust()
     else
         lcd_info_screen(lcd_menu_first_run_bed_level_left_adjust, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(5);
-    lcd_lib_draw_string_centerP(10, PSTR("Turn the wheel until"));
+    lcd_lib_draw_string_centerP(10, PSTR("Turn the button until"));
     lcd_lib_draw_string_centerP(20, PSTR("the nozzle is half a"));
     lcd_lib_draw_string_centerP(30, PSTR("millimeter away"));
     lcd_lib_draw_string_centerP(40, PSTR("from the printbed."));
@@ -244,7 +244,7 @@ static void lcd_menu_first_run_bed_level_paper_center()
     
     if (lcd_lib_encoder_pos != 0)
     {
-        current_position[Z_AXIS] += float(lcd_lib_encoder_pos) * 0.05;
+        current_position[Z_AXIS] -= float(lcd_lib_encoder_pos) * 0.05;
         lcd_lib_encoder_pos = 0;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, 0);
     }
@@ -319,7 +319,6 @@ static void lcd_menu_first_run_material_load_heatup()
     if (temp > target)
     {
         volume_to_filament_length = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
-        digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
         
         currentMenu = lcd_menu_first_run_material_load_insert;
         temp = target;
@@ -393,6 +392,7 @@ static void lcd_menu_first_run_material_load_forward()
     {
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
+        digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
         currentMenu = lcd_menu_first_run_material_load_wait;
         SELECT_MENU_ITEM(0);
     }
@@ -411,7 +411,7 @@ static void lcd_menu_first_run_material_load_wait()
     
     lcd_info_screen(lcd_menu_first_run_material_select_1, doCooldown, PSTR("READY"));
     DRAW_PROGRESS_NR(16);
-    lcd_lib_draw_string_centerP(10, PSTR("Push wheel when"));
+    lcd_lib_draw_string_centerP(10, PSTR("Push button when"));
     lcd_lib_draw_string_centerP(20, PSTR("material exits"));
     lcd_lib_draw_string_centerP(30, PSTR("from nozzle..."));
 
@@ -541,7 +541,7 @@ static void lcd_menu_first_run_print_card_detect()
     DRAW_PROGRESS_NR(22);
     lcd_lib_draw_string_centerP(10, PSTR("Select a printfile"));
     lcd_lib_draw_string_centerP(20, PSTR("on the SD card"));
-    lcd_lib_draw_string_centerP(30, PSTR("and press the wheel"));
+    lcd_lib_draw_string_centerP(30, PSTR("and press the button"));
     lcd_lib_draw_string_centerP(40, PSTR("to print it!"));
     lcd_lib_update_screen();
 }
