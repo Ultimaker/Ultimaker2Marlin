@@ -143,7 +143,7 @@ static void lcd_menu_change_material_insert_wait_user()
 {
     LED_GLOW();
 
-    if (movesplanned() < 2)
+    if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 2)
     {
         current_position[E_AXIS] += 0.5;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, 0);
