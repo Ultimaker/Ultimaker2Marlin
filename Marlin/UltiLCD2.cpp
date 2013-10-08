@@ -12,6 +12,9 @@
 #include "temperature.h"
 #include "pins.h"
 
+uint8_t led_brightness_level = 100;
+uint8_t led_mode = LED_MODE_ALWAYS_ON;
+
 //#define SPECIAL_STARTUP
 
 static void lcd_menu_startup();
@@ -26,9 +29,7 @@ void lcd_init()
     lcd_lib_init();
     lcd_material_read_current_material();
     currentMenu = lcd_menu_startup;
-#if LED_PIN > -1
     analogWrite(LED_PIN, 0);
-#endif
 }
 
 void lcd_update()
@@ -42,7 +43,7 @@ void lcd_update()
         if (led_glow == 0) led_glow_dir = 0;
     }else{
         led_glow+=2;
-        if (led_glow == 128) led_glow_dir = 1;
+        if (led_glow == 126) led_glow_dir = 1;
     }
     
     if (IsStopped())
@@ -106,12 +107,12 @@ void lcd_menu_startup()
     }
     lcd_lib_update_screen();
 
-#if LED_PIN > -1
-    analogWrite(LED_PIN, led_glow << 1);
-#endif
+    if (led_mode == LED_MODE_ALWAYS_ON)
+        analogWrite(LED_PIN, int(led_glow << 1) * led_brightness_level / 100);
     if (led_glow_dir || lcd_lib_button_pressed)
     {
-        analogWrite(LED_PIN, 255);
+        if (led_mode == LED_MODE_ALWAYS_ON)
+            analogWrite(LED_PIN, 255);
         led_glow = led_glow_dir = 0;
         LED_NORMAL();
         if (lcd_lib_button_pressed)

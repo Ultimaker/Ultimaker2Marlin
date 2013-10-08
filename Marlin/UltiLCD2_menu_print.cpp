@@ -247,6 +247,8 @@ void lcd_menu_print_select()
                 card.openFile(card.filename, true);
                 if (card.isFileOpen())
                 {
+                    if (led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
+                        analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
                     if (!card.longFilename[0])
                         strcpy(card.longFilename, card.filename);
                     card.longFilename[20] = '\0';
@@ -425,9 +427,19 @@ static void lcd_menu_print_abort()
     lcd_lib_update_screen();
 }
 
+static void postPrintReady()
+{
+    if (led_mode == LED_MODE_BLINK_ON_DONE)
+        analogWrite(LED_PIN, 0);
+}
+
 static void lcd_menu_print_ready()
 {
-    lcd_info_screen(lcd_menu_main, NULL, PSTR("BACK TO MENU"));
+    if (led_mode == LED_MODE_WHILE_PRINTING)
+        analogWrite(LED_PIN, 0);
+    else if (led_mode == LED_MODE_BLINK_ON_DONE)
+        analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
+    lcd_info_screen(lcd_menu_main, postPrintReady, PSTR("BACK TO MENU"));
     //unsigned long printTimeSec = (stoptime-starttime)/1000;
     if (current_temperature[0] > 60)
     {

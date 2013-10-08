@@ -12,10 +12,10 @@
 #include "pins.h"
 
 
-static void lcd_menu_maintenance_first_run_select();
 static void lcd_menu_maintenance_advanced();
 void lcd_menu_maintenance_advanced_heatup();
 void lcd_menu_maintenance_advanced_bed_heatup();
+static void lcd_menu_maintenance_led();
 static void lcd_menu_maintenance_extrude();
 static void lcd_menu_maintenance_retraction();
 static void lcd_menu_advanced_version();
@@ -25,34 +25,16 @@ static void lcd_menu_TODO();
 
 void lcd_menu_maintenance()
 {
-    lcd_tripple_menu(PSTR("CALIBRATE"), PSTR("ADVANCED"), PSTR("RETURN"));
+    lcd_tripple_menu(PSTR("BED LEVEL"), PSTR("ADVANCED"), PSTR("RETURN"));
 
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
-            lcd_change_to_menu(lcd_menu_maintenance_first_run_select);
+            lcd_change_to_menu(lcd_menu_first_run_start_bed_leveling);
         else if (IS_SELECTED(1))
             lcd_change_to_menu(lcd_menu_maintenance_advanced);
         else if (IS_SELECTED(2))
             lcd_change_to_menu(lcd_menu_main);
-    }
-
-    lcd_lib_update_screen();
-}
-
-static void lcd_menu_maintenance_first_run_select()
-{
-    lcd_tripple_menu(PSTR("BED"), PSTR("..."), PSTR("RETURN"));
-
-    if (lcd_lib_button_pressed)
-    {
-        if (IS_SELECTED(0))
-        {
-            lcd_change_to_menu(lcd_menu_first_run_start_bed_leveling);
-        }else if (IS_SELECTED(1))
-            lcd_change_to_menu(lcd_menu_TODO);
-        else if (IS_SELECTED(2))
-            lcd_change_to_menu(lcd_menu_maintenance);
     }
 
     lcd_lib_update_screen();
@@ -63,24 +45,26 @@ static char* lcd_advanced_item(uint8_t nr)
     if (nr == 0)
         strcpy_P(card.longFilename, PSTR("< RETURN"));
     else if (nr == 1)
-        strcpy_P(card.longFilename, PSTR("Heatup head"));
+        strcpy_P(card.longFilename, PSTR("LED settings"));
     else if (nr == 2)
-        strcpy_P(card.longFilename, PSTR("Heatup bed"));
+        strcpy_P(card.longFilename, PSTR("Heatup head"));
     else if (nr == 3)
-        strcpy_P(card.longFilename, PSTR("Home head"));
+        strcpy_P(card.longFilename, PSTR("Heatup bed"));
     else if (nr == 4)
-        strcpy_P(card.longFilename, PSTR("Lower bed"));
+        strcpy_P(card.longFilename, PSTR("Home head"));
     else if (nr == 5)
-        strcpy_P(card.longFilename, PSTR("Raise bed"));
+        strcpy_P(card.longFilename, PSTR("Lower bed"));
     else if (nr == 6)
-        strcpy_P(card.longFilename, PSTR("Move material"));
+        strcpy_P(card.longFilename, PSTR("Raise bed"));
     else if (nr == 7)
-        strcpy_P(card.longFilename, PSTR("Retraction settings"));
+        strcpy_P(card.longFilename, PSTR("Move material"));
     else if (nr == 8)
-        strcpy_P(card.longFilename, PSTR("Motion settings"));
+        strcpy_P(card.longFilename, PSTR("Retraction settings"));
     else if (nr == 9)
-        strcpy_P(card.longFilename, PSTR("Version"));
+        strcpy_P(card.longFilename, PSTR("Motion settings"));
     else if (nr == 10)
+        strcpy_P(card.longFilename, PSTR("Version"));
+    else if (nr == 11)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -89,61 +73,50 @@ static char* lcd_advanced_item(uint8_t nr)
 
 static void lcd_advanced_details(uint8_t nr)
 {
-    if (nr == 0)
-    {
-        
-    }else if(nr == 1)
-    {
-        lcd_lib_draw_stringP(5, 53, PSTR("Heatup the head"));
-    }else if(nr == 2)
-    {
-        lcd_lib_draw_stringP(5, 53, PSTR("Heatup the bed"));
-    }else if(nr == 8)
-    {
-        lcd_lib_draw_stringP(5, 53, PSTR("Clear all settings"));
-    }
 }
 
 static void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu(PSTR("ADVANCED"), 11, lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu(PSTR("ADVANCED"), 12, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED(0))
             lcd_change_to_menu(lcd_menu_maintenance);
         else if (IS_SELECTED(1))
-            lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);
+            lcd_change_to_menu(lcd_menu_maintenance_led, 0);
         else if (IS_SELECTED(2))
-            lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);
+            lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);
         else if (IS_SELECTED(3))
-        {
-            lcd_lib_beep();
-            enquecommand_P(PSTR("G28 X0 Y0"));
-        }
+            lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);
         else if (IS_SELECTED(4))
         {
             lcd_lib_beep();
-            enquecommand_P(PSTR("G28 Z0"));
+            enquecommand_P(PSTR("G28 X0 Y0"));
         }
         else if (IS_SELECTED(5))
         {
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 Z0"));
-            enquecommand_P(PSTR("G1 Z40"));
         }
         else if (IS_SELECTED(6))
+        {
+            lcd_lib_beep();
+            enquecommand_P(PSTR("G28 Z0"));
+            enquecommand_P(PSTR("G1 Z40"));
+        }
+        else if (IS_SELECTED(7))
         {
             set_extrude_min_temp(0);
             target_temperature[0] = material.temperature;
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
-        else if (IS_SELECTED(7))
-            lcd_change_to_menu(lcd_menu_maintenance_retraction, MENU_ITEM_POS(0));
         else if (IS_SELECTED(8))
-            lcd_change_to_menu(lcd_menu_maintenance_motion, MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_maintenance_retraction, MENU_ITEM_POS(0));
         else if (IS_SELECTED(9))
-            lcd_change_to_menu(lcd_menu_advanced_version, MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_maintenance_motion, MENU_ITEM_POS(0));
         else if (IS_SELECTED(10))
+            lcd_change_to_menu(lcd_menu_advanced_version, MENU_ITEM_POS(0));
+        else if (IS_SELECTED(11))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, MENU_ITEM_POS(1));
     }
 }
@@ -361,6 +334,64 @@ static void lcd_menu_maintenance_motion()
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Y_AXIS], "Max speed Y", "mm/sec", 0, 1000);
         else if (IS_SELECTED(5))
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Z_AXIS], "Max speed Z", "mm/sec", 0, 1000);
+    }
+}
+
+static char* lcd_led_item(uint8_t nr)
+{
+    if (nr == 0)
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
+    else if (nr == 1)
+        strcpy_P(card.longFilename, PSTR("Brightness"));
+    else if (nr == 2)
+        strcpy_P(card.longFilename, PSTR(" Always On"));
+    else if (nr == 3)
+        strcpy_P(card.longFilename, PSTR(" Always Off"));
+    else if (nr == 4)
+        strcpy_P(card.longFilename, PSTR(" On while printing"));
+    else if (nr == 5)
+        strcpy_P(card.longFilename, PSTR(" Glow when done"));
+    else
+        strcpy_P(card.longFilename, PSTR("???"));
+    if (nr - 2 == led_mode)
+        card.longFilename[0] = '>';
+    return card.longFilename;
+}
+
+static void lcd_led_details(uint8_t nr)
+{
+    char buffer[16];
+    if (nr == 0)
+        return;
+    else if(nr == 1)
+    {
+        int_to_string(led_brightness_level, buffer, PSTR("%"));
+        lcd_lib_draw_string(5, 53, buffer);
+    }
+}
+
+static void lcd_menu_maintenance_led()
+{
+    analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
+    lcd_scroll_menu(PSTR("LED"), 6, lcd_led_item, lcd_led_details);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED(0))
+        {
+            if (led_mode != LED_MODE_ALWAYS_ON)
+                analogWrite(LED_PIN, 0);
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, MENU_ITEM_POS(1));
+        }
+        else if (IS_SELECTED(1))
+            LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
+        else if (IS_SELECTED(2))
+            led_mode = LED_MODE_ALWAYS_ON;
+        else if (IS_SELECTED(3))
+            led_mode = LED_MODE_ALWAYS_OFF;
+        else if (IS_SELECTED(4))
+            led_mode = LED_MODE_WHILE_PRINTING;
+        else if (IS_SELECTED(5))
+            led_mode = LED_MODE_BLINK_ON_DONE;
     }
 }
 
