@@ -64,9 +64,15 @@ static void checkPrintFinished()
     }
     if (!card.isOk())
     {
-        abortPrint();
-        currentMenu = lcd_menu_print_error;
-        SELECT_MENU_ITEM(0);
+        if ((card.errorCode() == SD_CARD_ERROR_CMD17 || card.errorCode() == SD_CARD_ERROR_READ) && IS_SD_INSERTED)
+        {
+            //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
+            card.setIndex(card.getFilePos());
+        }else{
+            abortPrint();
+            currentMenu = lcd_menu_print_error;
+            SELECT_MENU_ITEM(0);
+        }
     }
 }
 

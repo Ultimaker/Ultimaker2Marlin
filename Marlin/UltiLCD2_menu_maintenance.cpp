@@ -380,6 +380,7 @@ static void lcd_menu_maintenance_led()
         {
             if (led_mode != LED_MODE_ALWAYS_ON)
                 analogWrite(LED_PIN, 0);
+            Config_StoreSettings();
             lcd_change_to_menu(lcd_menu_maintenance_advanced, MENU_ITEM_POS(1));
         }
         else if (IS_SELECTED(1))

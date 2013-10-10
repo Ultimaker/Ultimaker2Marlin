@@ -49,6 +49,7 @@ public:
   FORCE_INLINE uint32_t getFilePos() { return sdpos; }
   FORCE_INLINE uint32_t getFileSize() { return filesize; }
   FORCE_INLINE bool isOk() { return cardOK && card.errorCode() == 0; }
+  FORCE_INLINE int errorCode() { return card.errorCode(); }
 
 public:
   bool saving;

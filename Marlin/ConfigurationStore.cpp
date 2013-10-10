@@ -2,6 +2,7 @@
 #include "planner.h"
 #include "temperature.h"
 #include "ultralcd.h"
+#include "UltiLCD2.h"
 #include "ConfigurationStore.h"
 
 void _EEPROM_writeData(int &pos, uint8_t* value, uint8_t size)
@@ -37,7 +38,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
-#define EEPROM_VERSION "V08"
+#define EEPROM_VERSION "V09"
 
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings() 
@@ -79,6 +80,14 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,dummy);
   #endif
   EEPROM_WRITE_VAR(i,motor_current_setting);
+  #ifdef ENABLE_ULTILCD2
+  EEPROM_WRITE_VAR(i,led_brightness_level);
+  EEPROM_WRITE_VAR(i,led_mode);
+  #else
+  uint8_t dummyByte=0;
+  EEPROM_WRITE_VAR(i,dummyByte);
+  EEPROM_WRITE_VAR(i,dummyByte);
+  #endif
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
@@ -200,6 +209,14 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,Ki);
         EEPROM_READ_VAR(i,Kd);
         EEPROM_READ_VAR(i,motor_current_setting);
+        #ifdef ENABLE_ULTILCD2
+        EEPROM_READ_VAR(i,led_brightness_level);
+        EEPROM_READ_VAR(i,led_mode);
+        #else
+        uint8_t dummyByte;
+        EEPROM_READ_VAR(i,dummyByte);
+        EEPROM_READ_VAR(i,dummyByte);
+        #endif
 
 		// Call updatePID (similar to when we have processed M301)
 		updatePID();
@@ -262,6 +279,11 @@ void Config_ResetDefault()
     motor_current_setting[0] = tmp_motor_current_setting[0];
     motor_current_setting[1] = tmp_motor_current_setting[1];
     motor_current_setting[2] = tmp_motor_current_setting[2];
+
+    #ifdef ENABLE_ULTILCD2
+    led_brightness_level = 100;
+    led_mode = LED_MODE_ALWAYS_ON;
+    #endif
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");

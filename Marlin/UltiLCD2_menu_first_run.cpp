@@ -153,7 +153,7 @@ static void lcd_menu_first_run_bed_level_center_adjust()
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
     
-    if (printing_state == PRINT_STATE_NORMAL && lcd_lib_encoder_pos != 0)
+    if (printing_state == PRINT_STATE_NORMAL && lcd_lib_encoder_pos != 0 && movesplanned() < 4)
     {
         current_position[Z_AXIS] -= float(lcd_lib_encoder_pos) * 0.05;
         lcd_lib_encoder_pos = 0;
@@ -242,7 +242,7 @@ static void lcd_menu_first_run_bed_level_paper_center()
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
     
-    if (printing_state == PRINT_STATE_NORMAL && lcd_lib_encoder_pos != 0)
+    if (printing_state == PRINT_STATE_NORMAL && lcd_lib_encoder_pos != 0 && movesplanned() < 4)
     {
         current_position[Z_AXIS] -= float(lcd_lib_encoder_pos) * 0.05;
         lcd_lib_encoder_pos = 0;
