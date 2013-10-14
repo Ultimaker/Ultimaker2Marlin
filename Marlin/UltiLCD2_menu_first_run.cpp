@@ -51,7 +51,7 @@ void lcd_menu_first_run_init()
     lcd_info_screen(lcd_menu_first_run_init_2, NULL, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(1);
     lcd_lib_draw_string_centerP(10, PSTR("Welcome to the first"));
-    lcd_lib_draw_string_centerP(20, PSTR("start up of your"));
+    lcd_lib_draw_string_centerP(20, PSTR("startup of your"));
     lcd_lib_draw_string_centerP(30, PSTR("Ultimaker! Press the"));
     lcd_lib_draw_string_centerP(40, PSTR("button to continue"));
     lcd_lib_update_screen();
@@ -90,7 +90,7 @@ static void lcd_menu_first_run_init_2()
     lcd_info_screen(lcd_menu_first_run_init_3, homeAndRaiseBed, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(2);
     lcd_lib_draw_string_centerP(10, PSTR("Because this is the"));
-    lcd_lib_draw_string_centerP(20, PSTR("first start up I will"));
+    lcd_lib_draw_string_centerP(20, PSTR("first startup I will"));
     lcd_lib_draw_string_centerP(30, PSTR("walk you through"));
     lcd_lib_draw_string_centerP(40, PSTR("a first run wizard."));
     lcd_lib_update_screen();
@@ -156,9 +156,9 @@ static void lcd_menu_first_run_bed_level_center_adjust()
     if (printing_state == PRINT_STATE_NORMAL && lcd_lib_encoder_pos != 0 && movesplanned() < 4)
     {
         current_position[Z_AXIS] -= float(lcd_lib_encoder_pos) * 0.05;
-        lcd_lib_encoder_pos = 0;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, 0);
     }
+    lcd_lib_encoder_pos = 0;
 
     if (movesplanned() > 0)
         lcd_info_screen(NULL, NULL, PSTR("CONTINUE"));
