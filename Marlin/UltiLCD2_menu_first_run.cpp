@@ -45,7 +45,6 @@ static void lcd_menu_first_run_print_card_detect();
 //Run the first time you start-up the machine or after a factory reset.
 void lcd_menu_first_run_init()
 {
-    add_homeing[Z_AXIS] = 0;
     SELECT_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_init_2, NULL, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(1);
@@ -66,6 +65,7 @@ static void homeAndParkHeadForCenterAdjustment2()
 //Started bed leveling from the calibration menu
 void lcd_menu_first_run_start_bed_leveling()
 {
+    add_homeing[Z_AXIS] = 0;
     SELECT_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_center_adjust, homeAndParkHeadForCenterAdjustment2, PSTR("CONTINUE"));
     lcd_lib_draw_string_centerP(10, PSTR("I will guide you"));
@@ -260,6 +260,7 @@ static void lcd_menu_first_run_bed_level_paper_left()
 
 static void homeBed()
 {
+    add_homeing[Z_AXIS] += 0.2;//Adjust the Z homing position to account for the thickness of the paper.
     enquecommand_P(PSTR("G28 Z0"));
 }
 
