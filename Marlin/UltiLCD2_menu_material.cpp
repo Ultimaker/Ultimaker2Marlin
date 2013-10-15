@@ -310,7 +310,7 @@ static char* lcd_material_settings_callback(uint8_t nr)
     else if (nr == 1)
         strcpy_P(card.longFilename, PSTR("Temperature"));
     else if (nr == 2)
-        strcpy_P(card.longFilename, PSTR("Heated bed"));
+        strcpy_P(card.longFilename, PSTR("Heated buildplate"));
     else if (nr == 3)
         strcpy_P(card.longFilename, PSTR("Diameter"));
     else if (nr == 4)
@@ -360,7 +360,7 @@ static void lcd_menu_material_settings()
         }else if (IS_SELECTED(1))
             LCD_EDIT_SETTING(material.temperature, "Temperature", "C", 0, HEATER_0_MAXTEMP - 15);
         else if (IS_SELECTED(2))
-            LCD_EDIT_SETTING(material.bed_temperature, "Bed Temperature", "C", 0, BED_MAXTEMP - 15);
+            LCD_EDIT_SETTING(material.bed_temperature, "Buildplate Temp.", "C", 0, BED_MAXTEMP - 15);
         else if (IS_SELECTED(3))
             LCD_EDIT_SETTING_FLOAT001(material.diameter, "Material Diameter", "mm", 0, 100);
         else if (IS_SELECTED(4))

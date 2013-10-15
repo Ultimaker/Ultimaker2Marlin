@@ -25,7 +25,15 @@ static void lcd_menu_TODO();
 
 void lcd_menu_maintenance()
 {
-    lcd_tripple_menu(PSTR("BED LEVEL"), PSTR("ADVANCED"), PSTR("RETURN"));
+    lcd_tripple_menu(PSTR(""), PSTR("ADVANCED"), PSTR("RETURN"));
+    if (IS_SELECTED(0))
+    {
+        lcd_lib_clear_stringP(17,17, PSTR("BUILD-"));
+        lcd_lib_clear_stringP(17,27, PSTR("PLATE"));
+    }else{
+        lcd_lib_draw_stringP(17,17, PSTR("BUILD-"));
+        lcd_lib_draw_stringP(17,27, PSTR("PLATE"));
+    }
 
     if (lcd_lib_button_pressed)
     {
@@ -49,13 +57,13 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 2)
         strcpy_P(card.longFilename, PSTR("Heatup head"));
     else if (nr == 3)
-        strcpy_P(card.longFilename, PSTR("Heatup bed"));
+        strcpy_P(card.longFilename, PSTR("Heatup buildplate"));
     else if (nr == 4)
         strcpy_P(card.longFilename, PSTR("Home head"));
     else if (nr == 5)
-        strcpy_P(card.longFilename, PSTR("Lower bed"));
+        strcpy_P(card.longFilename, PSTR("Lower buildplate"));
     else if (nr == 6)
-        strcpy_P(card.longFilename, PSTR("Raise bed"));
+        strcpy_P(card.longFilename, PSTR("Raise buildplate"));
     else if (nr == 7)
         strcpy_P(card.longFilename, PSTR("Move material"));
     else if (nr == 8)
@@ -189,7 +197,7 @@ void lcd_menu_maintenance_advanced_bed_heatup()
         lcd_change_to_menu(previousMenu, previousEncoderPos);
     
     lcd_lib_clear();
-    lcd_lib_draw_string_centerP(20, PSTR("Bed temperature:"));
+    lcd_lib_draw_string_centerP(20, PSTR("Buildplate temp.:"));
     lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
     char buffer[16];
     int_to_string(int(current_temperature_bed), buffer, PSTR("C/"));

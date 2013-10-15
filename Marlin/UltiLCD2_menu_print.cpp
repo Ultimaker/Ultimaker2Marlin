@@ -200,7 +200,7 @@ void lcd_menu_print_select()
         LED_GLOW();
         lcd_lib_encoder_pos = MENU_ITEM_POS(0);
         lcd_info_screen(lcd_menu_main);
-        lcd_lib_draw_string_centerP(15, PSTR("No SD CARD!"));
+        lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
         lcd_lib_draw_string_centerP(25, PSTR("Please insert card"));
         lcd_lib_update_screen();
         card.release();
@@ -364,7 +364,7 @@ static void lcd_menu_print_printing()
         lcd_lib_draw_string_center(30, buffer);
         break;
     case PRINT_STATE_HEATING_BED:
-        lcd_lib_draw_string_centerP(20, PSTR("Heating bed"));
+        lcd_lib_draw_string_centerP(20, PSTR("Heating buildplate"));
         c = int_to_string(current_temperature_bed, buffer, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature_bed, c, PSTR("C"));
@@ -407,8 +407,8 @@ static void lcd_menu_print_error()
     lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
-    lcd_lib_draw_string_centerP(20, PSTR("reading SD"));
-    lcd_lib_draw_string_centerP(30, PSTR("card!"));
+    lcd_lib_draw_string_centerP(20, PSTR("reading"));
+    lcd_lib_draw_string_centerP(30, PSTR("SD-card!"));
 
     lcd_lib_update_screen();
 }
@@ -485,7 +485,7 @@ static char* tune_item_callback(uint8_t nr)
     else if (nr == 2)
         strcpy_P(c, PSTR("Temperature"));
     else if (nr == 3)
-        strcpy_P(c, PSTR("Bed temperature"));
+        strcpy_P(c, PSTR("Buildplate temp."));
     else if (nr == 4)
         strcpy_P(c, PSTR("Fan speed"));
     else if (nr == 5)

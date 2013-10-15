@@ -71,7 +71,7 @@ void lcd_menu_first_run_start_bed_leveling()
     lcd_lib_draw_string_centerP(10, PSTR("I will guide you"));
     lcd_lib_draw_string_centerP(20, PSTR("trought the process"));
     lcd_lib_draw_string_centerP(30, PSTR("of adjusting your"));
-    lcd_lib_draw_string_centerP(40, PSTR("printer bed."));
+    lcd_lib_draw_string_centerP(40, PSTR("buildplate."));
     lcd_lib_update_screen();
 }
 
@@ -216,7 +216,7 @@ static void lcd_menu_first_run_bed_level_paper()
     lcd_lib_draw_string_centerP(10, PSTR("Repeat this step, but"));
     lcd_lib_draw_string_centerP(20, PSTR("now use a sheet of"));
     lcd_lib_draw_string_centerP(30, PSTR("paper to fine-tune"));
-    lcd_lib_draw_string_centerP(40, PSTR("the bed level."));
+    lcd_lib_draw_string_centerP(40, PSTR("the buildplate level."));
     lcd_lib_update_screen();
 }
 
@@ -240,8 +240,8 @@ static void lcd_menu_first_run_bed_level_paper_center()
         lcd_info_screen(lcd_menu_first_run_bed_level_paper_left, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(8);
     lcd_lib_draw_string_centerP(10, PSTR("Slide a paper between"));
-    lcd_lib_draw_string_centerP(20, PSTR("the bed & nozzle till"));
-    lcd_lib_draw_string_centerP(30, PSTR("you feel a little"));
+    lcd_lib_draw_string_centerP(20, PSTR("buildplate and nozzle"));
+    lcd_lib_draw_string_centerP(30, PSTR("until you feel a"));
     lcd_lib_draw_string_centerP(40, PSTR("bit resistance."));
     lcd_lib_update_screen();
 }
