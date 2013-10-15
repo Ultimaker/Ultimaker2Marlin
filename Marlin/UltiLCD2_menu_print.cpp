@@ -325,6 +325,8 @@ static void lcd_menu_print_heatup()
         progress = p;
     if (current_temperature_bed > 20)
         p = (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW);
+    else
+        p = 0;
     if (p < progress)
         progress = p;
     
