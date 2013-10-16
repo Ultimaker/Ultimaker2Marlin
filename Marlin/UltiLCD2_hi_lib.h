@@ -105,6 +105,6 @@ extern uint8_t led_glow;
 extern uint8_t led_glow_dir;
 #define LED_NORMAL() lcd_lib_led_color(48,48,60)
 #define LED_GLOW() lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow)
-#define LED_GLOW_ERROR() lcd_lib_led_color(led_glow,128-led_glow,128-led_glow);
+#define LED_GLOW_ERROR() lcd_lib_led_color(led_glow,128-led_glow,led_glow);
 
 #endif//ULTI_LCD2_HI_LIB_H
