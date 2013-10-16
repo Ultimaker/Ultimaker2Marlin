@@ -786,10 +786,12 @@ void process_commands()
         destination[Y_AXIS]=current_position[Y_AXIS];
         destination[Z_AXIS]=current_position[Z_AXIS];
         destination[E_AXIS]=current_position[E_AXIS]-retract_length/volume_to_filament_length;
+        float oldFeedrate = feedrate;
         retract_recover_length = current_position[E_AXIS]-destination[E_AXIS];//Set the recover length to whatever distance we retracted so we recover properly.
         feedrate=retract_feedrate;
         retracted=true;
         prepare_move();
+        feedrate = oldFeedrate;
       }
 
       break;
@@ -800,9 +802,11 @@ void process_commands()
         destination[Y_AXIS]=current_position[Y_AXIS];
         destination[Z_AXIS]=current_position[Z_AXIS];
         destination[E_AXIS]=current_position[E_AXIS]+retract_recover_length;
+        float oldFeedrate = feedrate;
         feedrate=retract_recover_feedrate;
         retracted=false;
         prepare_move();
+        feedrate = oldFeedrate;
       }
       break;
       #endif //FWRETRACT
