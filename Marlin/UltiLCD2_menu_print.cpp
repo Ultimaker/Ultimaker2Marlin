@@ -67,6 +67,7 @@ static void checkPrintFinished()
         if ((card.errorCode() == SD_CARD_ERROR_CMD17 || card.errorCode() == SD_CARD_ERROR_READ) && IS_SD_INSERTED)
         {
             //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
+            card.clearError();
             card.setIndex(card.getFilePos());
         }else{
             abortPrint();
@@ -127,6 +128,12 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
             LCD_CACHE_ID(idx) = nr;
             strcpy(LCD_CACHE_FILENAME(idx), card.longFilename);
             LCD_CACHE_TYPE(idx) = card.filenameIsDir ? 1 : 0;
+            if ((card.errorCode() == SD_CARD_ERROR_CMD17 || card.errorCode() == SD_CARD_ERROR_READ) && IS_SD_INSERTED)
+            {
+                //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
+                card.clearError();
+                LCD_CACHE_ID(idx) = 255;
+            }
         }
     }
     return card.longFilename;
@@ -166,6 +173,12 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
                                 LCD_DETAIL_CACHE_MATERIAL() = atol(buffer + 10);
                         }
+                    }
+                    if ((card.errorCode() == SD_CARD_ERROR_CMD17 || card.errorCode() == SD_CARD_ERROR_READ) && IS_SD_INSERTED)
+                    {
+                        //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
+                        card.clearError();
+                        LCD_DETAIL_CACHE_ID() = 255;
                     }
                 }
                 

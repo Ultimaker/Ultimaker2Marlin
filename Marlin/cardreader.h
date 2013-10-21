@@ -50,6 +50,7 @@ public:
   FORCE_INLINE uint32_t getFileSize() { return filesize; }
   FORCE_INLINE bool isOk() { return cardOK && card.errorCode() == 0; }
   FORCE_INLINE int errorCode() { return card.errorCode(); }
+  FORCE_INLINE void clearError() { card.error(0); }
 
 public:
   bool saving;
