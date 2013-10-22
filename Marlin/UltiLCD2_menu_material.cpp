@@ -9,6 +9,22 @@
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_material.h"
 
+#ifndef eeprom_read_float
+//Arduino IDE compatibility, lacks the eeprom_read_float function
+float inline eeprom_read_float(float* addr)
+{
+    union { uint32_t i; float f; } n;
+    n.i = eeprom_read_dword((uint32_t*)addr);
+    return n.f;
+}
+void inline eeprom_write_float(float* addr, float f)
+{
+    union { uint32_t i; float f; } n;
+    n.f = f;
+    eeprom_write_dword((uint32_t*)addr, n.i);
+}
+#endif
+
 struct materialSettings material = {0, 0, 100, 100, 2.85};
 
 void doCooldown();//TODO

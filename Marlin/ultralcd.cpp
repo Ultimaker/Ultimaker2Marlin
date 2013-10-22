@@ -62,6 +62,7 @@ static void menu_action_function(menuFunc_t data);
 static void menu_action_sdfile(const char* filename, char* longFilename);
 static void menu_action_sddirectory(const char* filename, char* longFilename);
 static void menu_action_setting_edit_bool(const char* pstr, bool* ptr);
+static void menu_action_setting_edit_byte(const char* pstr, uint8_t* ptr, uint8_t minValue, uint8_t maxValue);
 static void menu_action_setting_edit_int3(const char* pstr, int* ptr, int minValue, int maxValue);
 static void menu_action_setting_edit_int4(const char* pstr, int* ptr, int minValue, int maxValue);
 static void menu_action_setting_edit_float3(const char* pstr, float* ptr, float minValue, float maxValue);
@@ -71,6 +72,7 @@ static void menu_action_setting_edit_float51(const char* pstr, float* ptr, float
 static void menu_action_setting_edit_float52(const char* pstr, float* ptr, float minValue, float maxValue);
 static void menu_action_setting_edit_long5(const char* pstr, unsigned long* ptr, unsigned long minValue, unsigned long maxValue);
 static void menu_action_setting_edit_callback_bool(const char* pstr, bool* ptr, menuFunc_t callbackFunc);
+static void menu_action_setting_edit_callback_uchar(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_int3(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_int4(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 static void menu_action_setting_edit_callback_float3(const char* pstr, float* ptr, float minValue, float maxValue, menuFunc_t callbackFunc);
@@ -177,8 +179,8 @@ static void lcd_status_screen()
     }
 
     // Dead zone at 100% feedrate
-    if (feedmultiply < 100 && (feedmultiply + int(encoderPosition)) > 100 ||
-            feedmultiply > 100 && (feedmultiply + int(encoderPosition)) < 100)
+    if ((feedmultiply < 100 && (feedmultiply + int(encoderPosition)) > 100) ||
+            (feedmultiply > 100 && (feedmultiply + int(encoderPosition)) < 100))
     {
         encoderPosition = 0;
         feedmultiply = 100;
@@ -235,67 +237,6 @@ static void lcd_sdcard_stop()
     autotempShutdown();
 }
 
-static int led_0 = 0x20;
-static int led_1 = 0x20;
-static int led_2 = 0x20;
-static void tmp_set_led()
-{
-    led_write(2, led_0);//PWM0
-    led_write(3, led_1);//PWM1
-    led_write(4, led_2);//PWM2
-}
-
-static void tmp_tune_start_z_manual()
-{
-    if (encoderPosition != 0)
-    {
-        current_position[Z_AXIS] += float((int)encoderPosition) * 0.05;
-        //if (current_position[Z_AXIS] < Z_MIN_POS)
-        //    current_position[Z_AXIS] = Z_MIN_POS;
-        //if (current_position[Z_AXIS] > Z_MAX_POS)
-        //    current_position[Z_AXIS] = Z_MAX_POS;
-        encoderPosition = 0;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, active_extruder);
-        lcdDrawUpdate = 1;
-    }
-    if (lcdDrawUpdate)
-    {
-        lcd_implementation_drawedit(PSTR("Z"), ftostr32(current_position[Z_AXIS]));
-    }
-    if (LCD_CLICKED)
-    {
-        add_homeing[Z_AXIS] = -current_position[Z_AXIS];
-        lcd_quick_feedback();
-        currentMenu = lcd_main_menu;
-        encoderPosition = 0;
-    }
-}
-
-static void tmp_tune_start_z_homing()
-{
-    if (lcdDrawUpdate)
-    {
-        lcd_implementation_draw_line(1, PSTR("Homing..."));
-    }
-    encoderDiff++;//increase the encoderDiff to trick the timeout to status menu.
-    if (!is_command_queued() && !blocks_queued())
-    {
-        currentMenu = tmp_tune_start_z_manual;
-        encoderDiff = 0;
-        encoderPosition = 0;
-        lcdDrawUpdate = 2;
-    }
-}
-
-static void tmp_tune_start_z()
-{
-    add_homeing[Z_AXIS] = 0;
-    enquecommand_P(PSTR("G28"));
-    enquecommand_P(PSTR("G1 Z60 X108.25 Y113"));
-    currentMenu = tmp_tune_start_z_homing;
-    lcdDrawUpdate = 2;
-}
-
 /* Menu implementation */
 static void lcd_main_menu()
 {
@@ -309,13 +250,8 @@ static void lcd_main_menu()
     }
     MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
 
-    MENU_ITEM_EDIT_CALLBACK(int3, "LED0", &led_0, 0, 255, tmp_set_led);
-    MENU_ITEM_EDIT_CALLBACK(int3, "LED1", &led_1, 0, 255, tmp_set_led);
-    MENU_ITEM_EDIT_CALLBACK(int3, "LED2", &led_2, 0, 255, tmp_set_led);
-    MENU_ITEM(submenu, "Tune start height", tmp_tune_start_z);
-
 #ifdef SDSUPPORT
-    if (card.cardOK)
+    if (card.isOk())
     {
         if (card.isFileOpen())
         {
@@ -395,7 +331,7 @@ static void lcd_tune_menu()
 #if TEMP_SENSOR_BED != 0
     MENU_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
 #endif
-    MENU_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
+    MENU_ITEM_EDIT(byte, MSG_FAN_SPEED, &fanSpeed, 0, 255);
     MENU_ITEM_EDIT(int3, MSG_FLOW, &extrudemultiply, 10, 999);
 #ifdef FILAMENTCHANGEENABLE
      MENU_ITEM(gcode, MSG_FILAMENTCHANGE, PSTR("M600"));
@@ -590,7 +526,7 @@ static void lcd_control_temperature_menu()
 #if TEMP_SENSOR_BED != 0
     MENU_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
 #endif
-    MENU_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
+    MENU_ITEM_EDIT(byte, MSG_FAN_SPEED, &fanSpeed, 0, 255);
 #ifdef AUTOTEMP
     MENU_ITEM_EDIT(bool, MSG_AUTOTEMP, &autotemp_enabled);
     MENU_ITEM_EDIT(float3, MSG_MIN, &autotemp_min, 0, HEATER_0_MAXTEMP - 15);
@@ -809,6 +745,7 @@ void lcd_sdcard_menu()
         encoderPosition = (*ptr) * scale; \
         callbackFunc = callback;\
     }
+menu_edit_type(uint8_t, byte, itostr3, 1)
 menu_edit_type(int, int3, itostr3, 1)
 menu_edit_type(int, int4, itostr4, 1)
 menu_edit_type(float, float3, ftostr3, 1)
