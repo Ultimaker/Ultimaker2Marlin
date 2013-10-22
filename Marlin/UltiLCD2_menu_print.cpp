@@ -64,16 +64,9 @@ static void checkPrintFinished()
     }
     if (!card.isOk())
     {
-        if ((card.errorCode() == SD_CARD_ERROR_CMD17 || card.errorCode() == SD_CARD_ERROR_READ) && IS_SD_INSERTED)
-        {
-            //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
-            card.clearError();
-            card.setIndex(card.getFilePos());
-        }else{
-            abortPrint();
-            currentMenu = lcd_menu_print_error;
-            SELECT_MENU_ITEM(0);
-        }
+        abortPrint();
+        currentMenu = lcd_menu_print_error;
+        SELECT_MENU_ITEM(0);
     }
 }
 
@@ -128,7 +121,7 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
             LCD_CACHE_ID(idx) = nr;
             strcpy(LCD_CACHE_FILENAME(idx), card.longFilename);
             LCD_CACHE_TYPE(idx) = card.filenameIsDir ? 1 : 0;
-            if ((card.errorCode() == SD_CARD_ERROR_CMD17 || card.errorCode() == SD_CARD_ERROR_READ) && IS_SD_INSERTED)
+            if (card.errorCode() && IS_SD_INSERTED)
             {
                 //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
                 card.clearError();
@@ -174,7 +167,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                                 LCD_DETAIL_CACHE_MATERIAL() = atol(buffer + 10);
                         }
                     }
-                    if ((card.errorCode() == SD_CARD_ERROR_CMD17 || card.errorCode() == SD_CARD_ERROR_READ) && IS_SD_INSERTED)
+                    if (card.errorCode() && IS_SD_INSERTED)
                     {
                         //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
                         card.clearError();
@@ -422,6 +415,10 @@ static void lcd_menu_print_error()
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
     lcd_lib_draw_string_centerP(20, PSTR("reading"));
     lcd_lib_draw_string_centerP(30, PSTR("SD-card!"));
+    char buffer[12];
+    strcpy_P(buffer, PSTR("Code:"));
+    int_to_string(card.errorCode(), buffer+5);
+    lcd_lib_draw_string_center(40, buffer);
 
     lcd_lib_update_screen();
 }

@@ -597,6 +597,22 @@ void get_command()
   }
   while( !card.eof()  && buflen < BUFSIZE) {
     int16_t n=card.get();
+    if (card.errorCode() || n < 0)
+    {
+        if (!IS_SD_INSERTED)
+        {
+            card.release();
+            serial_count = 0;
+            return;
+        }
+        
+        //On an error, reset the error, reset the file position and try again.
+        card.clearError();
+        uint32_t idx = card.getFilePos() - serial_count;
+        serial_count = 0;
+        card.setIndex(idx);
+        continue;
+    }
     serial_char = (char)n;
     if(serial_char == '\n' ||
        serial_char == '\r' ||

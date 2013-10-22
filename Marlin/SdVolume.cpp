@@ -134,6 +134,7 @@ bool SdVolume::cacheRawBlock(uint32_t blockNumber, bool dirty) {
   return true;
 
  fail:
+  cacheBlockNumber_ = 0XFFFFFFFF;
   return false;
 }
 //------------------------------------------------------------------------------
