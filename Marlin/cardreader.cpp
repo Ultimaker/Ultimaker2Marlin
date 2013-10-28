@@ -481,6 +481,7 @@ void CardReader::checkautostart(bool force)
     lastnr=-1;
   else
     lastnr++;
+  clearError();
 }
 
 void CardReader::closefile()

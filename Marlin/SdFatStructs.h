@@ -558,9 +558,9 @@ struct directoryVFATEntry {
    *  bit 6:   indicates first long filename block for the next file
    *  bit 0-4: the position of this long filename block (first block is 1)
    */
-  uint8_t  sequenceNumber;
+  uint8_t sequenceNumber;
   /** First set of UTF-16 characters */
-  uint16_t name1[5];//UTF-16
+  uint8_t name1[10];//UTF-16
   /** attributes (at the same location as in directoryEntry), always 0x0F */
   uint8_t  attributes;
   /** Reserved for use by Windows NT. Always 0. */
@@ -568,11 +568,11 @@ struct directoryVFATEntry {
   /** Checksum of the short 8.3 filename, can be used to checked if the file system as modified by a not-long-filename aware implementation. */
   uint8_t  checksum;
   /** Second set of UTF-16 characters */
-  uint16_t name2[6];//UTF-16
+  uint8_t name2[12];//UTF-16
   /** firstClusterLow is always zero for longFilenames */
   uint16_t firstClusterLow;
   /** Third set of UTF-16 characters */
-  uint16_t name3[2];//UTF-16
+  uint8_t name3[4];//UTF-16
 } PACKED;
 //------------------------------------------------------------------------------
 // Definitions for directory entries

@@ -325,7 +325,7 @@ uint8_t badPinNumber(void)
 static inline __attribute__((always_inline))
   bool getPinMode(uint8_t pin) {
   if (__builtin_constant_p(pin) && pin < digitalPinCount) {
-    return (*digitalPinMap[pin].ddr >> digitalPinMap[pin].bit) & 1;
+    return (uint8_t(*digitalPinMap[pin].ddr) >> digitalPinMap[pin].bit) & 1;
   } else {
     return badPinNumber();
   }

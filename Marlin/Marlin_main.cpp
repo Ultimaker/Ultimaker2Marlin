@@ -595,9 +595,10 @@ void get_command()
   if(!card.sdprinting || serial_count!=0){
     return;
   }
+  static uint32_t endOfLineFilePosition = 0;
   while( !card.eof()  && buflen < BUFSIZE) {
     int16_t n=card.get();
-    if (card.errorCode() || n < 0)
+    if (card.errorCode())
     {
         if (!IS_SD_INSERTED)
         {
@@ -608,11 +609,11 @@ void get_command()
         
         //On an error, reset the error, reset the file position and try again.
         card.clearError();
-        uint32_t idx = card.getFilePos() - serial_count;
         serial_count = 0;
-        card.setIndex(idx);
-        continue;
+        card.setIndex(endOfLineFilePosition);
+        return;
     }
+    
     serial_char = (char)n;
     if(serial_char == '\n' ||
        serial_char == '\r' ||
@@ -648,6 +649,7 @@ void get_command()
 //      }
       comment_mode = false; //for new command
       serial_count = 0; //clear buffer
+      endOfLineFilePosition = card.getFilePos();
     }
     else
     {

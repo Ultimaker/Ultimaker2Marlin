@@ -42,7 +42,11 @@
                                      }\
                                      while (0)
 
+#ifdef __AVR__
 #define _WRITE(IO, v)  do {  if (&(DIO ##  IO ## _RPORT) >= (uint8_t *)0x100) {_WRITE_C(IO, v); } else {_WRITE_NC(IO, v); }; } while (0)
+#else
+#define _WRITE(IO, v)  do {  _WRITE_C(IO, v); } while (0)
+#endif
 
 /// toggle a pin
 #define _TOGGLE(IO)  do {DIO ##  IO ## _RPORT = MASK(DIO ## IO ## _PIN); } while (0)

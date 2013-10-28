@@ -114,7 +114,7 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
                 strcpy(card.longFilename, card.filename);
             if (!card.filenameIsDir)
             {
-                if (strchr(card.longFilename, '.')) strchr(card.longFilename, '.')[0] = '\0';
+                if (strchr(card.longFilename, '.')) strrchr(card.longFilename, '.')[0] = '\0';
             }
 
             uint8_t idx = nr % LCD_CACHE_COUNT;
@@ -149,10 +149,15 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                 char buffer[64];
                 if (LCD_DETAIL_CACHE_ID() != nr)
                 {
+                    card.getfilename(nr - 1);
+                    if (card.errorCode())
+                    {
+                        card.clearError();
+                        return;
+                    }
                     LCD_DETAIL_CACHE_ID() = nr;
                     LCD_DETAIL_CACHE_TIME() = 0;
                     LCD_DETAIL_CACHE_MATERIAL() = 0;
-                    card.getfilename(nr - 1);
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
@@ -167,7 +172,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                                 LCD_DETAIL_CACHE_MATERIAL() = atol(buffer + 10);
                         }
                     }
-                    if (card.errorCode() && IS_SD_INSERTED)
+                    if (card.errorCode())
                     {
                         //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
                         card.clearError();
@@ -225,6 +230,11 @@ void lcd_menu_print_select()
     
     if (LCD_CACHE_NR_OF_FILES() == 0xFF)
         LCD_CACHE_NR_OF_FILES() = card.getnrfilenames();
+    if (card.errorCode())
+    {
+        LCD_CACHE_NR_OF_FILES() = 0xFF;
+        return;
+    }
     uint8_t nrOfFiles = LCD_CACHE_NR_OF_FILES();
     if (nrOfFiles == 0)
     {
@@ -316,7 +326,7 @@ static void lcd_menu_print_heatup()
 {
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     
-    if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW)
+    if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2)
     {
         doStartPrint();
         currentMenu = lcd_menu_print_printing;
