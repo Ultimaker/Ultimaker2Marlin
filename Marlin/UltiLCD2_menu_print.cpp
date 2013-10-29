@@ -387,10 +387,10 @@ static void lcd_menu_print_printing()
         lcd_lib_draw_string_center(30, buffer);
         break;
     }
-    unsigned long printTimeMs = (millis() - starttime);
-    unsigned long printTimeSec = printTimeMs / 1000L;
-    unsigned long totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
-    static unsigned long totalTimeSmoothSec;
+    float printTimeMs = (millis() - starttime);
+    float printTimeSec = printTimeMs / 1000L;
+    float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
+    static float totalTimeSmoothSec;
     totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
     
     if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)

@@ -174,6 +174,7 @@ void lcd_menu_main()
         if (IS_SELECTED_MAIN(0))
         {
             lcd_clear_cache();
+            card.release();
             lcd_change_to_menu(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0));
         }
         else if (IS_SELECTED_MAIN(1))
