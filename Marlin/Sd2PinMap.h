@@ -27,9 +27,15 @@
 //------------------------------------------------------------------------------
 /** struct for mapping digital pins */
 struct pin_map_t {
+#ifdef __AVR__
   volatile uint8_t* ddr;
   volatile uint8_t* pin;
   volatile uint8_t* port;
+#else
+  AVRRegistor* ddr;
+  AVRRegistor* pin;
+  AVRRegistor* port;
+#endif
   uint8_t bit;
 };
 //------------------------------------------------------------------------------

@@ -26,7 +26,7 @@ static void lcd_menu_TODO();
 void lcd_menu_maintenance()
 {
     lcd_tripple_menu(PSTR(""), PSTR("ADVANCED"), PSTR("RETURN"));
-    if (IS_SELECTED(0))
+    if (IS_SELECTED_MAIN(0))
     {
         lcd_lib_clear_stringP(17,17, PSTR("BUILD-"));
         lcd_lib_clear_stringP(17,27, PSTR("PLATE"));
@@ -37,11 +37,11 @@ void lcd_menu_maintenance()
 
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_MAIN(0))
             lcd_change_to_menu(lcd_menu_first_run_start_bed_leveling);
-        else if (IS_SELECTED(1))
+        else if (IS_SELECTED_MAIN(1))
             lcd_change_to_menu(lcd_menu_maintenance_advanced);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_MAIN(2))
             lcd_change_to_menu(lcd_menu_main);
     }
 
@@ -88,52 +88,52 @@ static void lcd_menu_maintenance_advanced()
     lcd_scroll_menu(PSTR("ADVANCED"), 12, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_SCROLL(0))
             lcd_change_to_menu(lcd_menu_maintenance);
-        else if (IS_SELECTED(1))
+        else if (IS_SELECTED_SCROLL(1))
             lcd_change_to_menu(lcd_menu_maintenance_led, 0);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_SCROLL(2))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);
-        else if (IS_SELECTED(3))
+        else if (IS_SELECTED_SCROLL(3))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);
-        else if (IS_SELECTED(4))
+        else if (IS_SELECTED_SCROLL(4))
         {
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 X0 Y0"));
         }
-        else if (IS_SELECTED(5))
+        else if (IS_SELECTED_SCROLL(5))
         {
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 Z0"));
         }
-        else if (IS_SELECTED(6))
+        else if (IS_SELECTED_SCROLL(6))
         {
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 Z0"));
             enquecommand_P(PSTR("G1 Z40"));
         }
-        else if (IS_SELECTED(7))
+        else if (IS_SELECTED_SCROLL(7))
         {
             set_extrude_min_temp(0);
             target_temperature[0] = material.temperature;
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
-        else if (IS_SELECTED(8))
-            lcd_change_to_menu(lcd_menu_maintenance_retraction, MENU_ITEM_POS(0));
-        else if (IS_SELECTED(9))
-            lcd_change_to_menu(lcd_menu_maintenance_motion, MENU_ITEM_POS(0));
-        else if (IS_SELECTED(10))
-            lcd_change_to_menu(lcd_menu_advanced_version, MENU_ITEM_POS(0));
-        else if (IS_SELECTED(11))
-            lcd_change_to_menu(lcd_menu_advanced_factory_reset, MENU_ITEM_POS(1));
+        else if (IS_SELECTED_SCROLL(8))
+            lcd_change_to_menu(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(9))
+            lcd_change_to_menu(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(10))
+            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(11))
+            lcd_change_to_menu(lcd_menu_advanced_factory_reset, SCROLL_MENU_ITEM_POS(1));
     }
 }
 
 void lcd_menu_maintenance_advanced_heatup()
 {
-    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM != 0)
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
-        target_temperature[0] = int(target_temperature[0]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM);
+        target_temperature[0] = int(target_temperature[0]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
         if (target_temperature[0] < 0)
             target_temperature[0] = 0;
         if (target_temperature[0] > HEATER_0_MAXTEMP - 15)
@@ -155,7 +155,7 @@ void lcd_menu_maintenance_advanced_heatup()
 
 void lcd_menu_maintenance_extrude()
 {
-    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM != 0)
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
         if (movesplanned() < 3)
         {
@@ -184,9 +184,9 @@ void lcd_menu_maintenance_extrude()
 
 void lcd_menu_maintenance_advanced_bed_heatup()
 {
-    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM != 0)
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
-        target_temperature_bed = int(target_temperature_bed) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM);
+        target_temperature_bed = int(target_temperature_bed) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
         if (target_temperature_bed < 0)
             target_temperature_bed = 0;
         if (target_temperature_bed > BED_MAXTEMP - 15)
@@ -279,11 +279,11 @@ static void lcd_menu_maintenance_retraction()
     lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
-            lcd_change_to_menu(lcd_menu_maintenance_advanced, MENU_ITEM_POS(6));
-        else if (IS_SELECTED(1))
+        if (IS_SELECTED_SCROLL(0))
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(6));
+        else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
     }
 }
@@ -330,17 +330,17 @@ static void lcd_menu_maintenance_motion()
     lcd_scroll_menu(PSTR("MOTION"), 6, lcd_motion_item, lcd_motion_details);
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
-            lcd_change_to_menu(lcd_menu_maintenance_advanced, MENU_ITEM_POS(7));
-        else if (IS_SELECTED(1))
+        if (IS_SELECTED_SCROLL(0))
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7));
+        else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec^2", 0, 20000);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_FLOAT1(max_xy_jerk, "X/Y Jerk", "mm/sec", 0, 100);
-        else if (IS_SELECTED(3))
+        else if (IS_SELECTED_SCROLL(3))
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[X_AXIS], "Max speed X", "mm/sec", 0, 1000);
-        else if (IS_SELECTED(4))
+        else if (IS_SELECTED_SCROLL(4))
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Y_AXIS], "Max speed Y", "mm/sec", 0, 1000);
-        else if (IS_SELECTED(5))
+        else if (IS_SELECTED_SCROLL(5))
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Z_AXIS], "Max speed Z", "mm/sec", 0, 1000);
     }
 }
@@ -384,22 +384,22 @@ static void lcd_menu_maintenance_led()
     lcd_scroll_menu(PSTR("LED"), 6, lcd_led_item, lcd_led_details);
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_SCROLL(0))
         {
             if (led_mode != LED_MODE_ALWAYS_ON)
                 analogWrite(LED_PIN, 0);
             Config_StoreSettings();
-            lcd_change_to_menu(lcd_menu_maintenance_advanced, MENU_ITEM_POS(1));
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(1));
         }
-        else if (IS_SELECTED(1))
+        else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_SCROLL(2))
             led_mode = LED_MODE_ALWAYS_ON;
-        else if (IS_SELECTED(3))
+        else if (IS_SELECTED_SCROLL(3))
             led_mode = LED_MODE_ALWAYS_OFF;
-        else if (IS_SELECTED(4))
+        else if (IS_SELECTED_SCROLL(4))
             led_mode = LED_MODE_WHILE_PRINTING;
-        else if (IS_SELECTED(5))
+        else if (IS_SELECTED_SCROLL(5))
             led_mode = LED_MODE_BLINK_ON_DONE;
     }
 }

@@ -37,16 +37,16 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     if (lcd_lib_encoder_pos != ENCODER_NO_SELECTION)
     {
         if (lcd_lib_encoder_pos < 0)
-            lcd_lib_encoder_pos += 3*ENCODER_TICKS_PER_MENU_ITEM;
-        if (lcd_lib_encoder_pos >= 3*ENCODER_TICKS_PER_MENU_ITEM)
-            lcd_lib_encoder_pos -= 3*ENCODER_TICKS_PER_MENU_ITEM;
+            lcd_lib_encoder_pos += 3*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
+        if (lcd_lib_encoder_pos >= 3*ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+            lcd_lib_encoder_pos -= 3*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
     }
 
     lcd_lib_clear();
     lcd_lib_draw_vline(64, 5, 45);
     lcd_lib_draw_hline(3, 124, 48);
 
-    if (IS_SELECTED(0))
+    if (IS_SELECTED_MAIN(0))
     {
         lcd_lib_draw_box(3+2, 5+2, 64-3-2, 45-2);
         lcd_lib_set(3+3, 5+3, 64-3-3, 45-3);
@@ -55,7 +55,7 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
         lcd_lib_draw_stringP(33 - strlen_P(left) * 3, 22, left);
     }
     
-    if (IS_SELECTED(1))
+    if (IS_SELECTED_MAIN(1))
     {
         lcd_lib_draw_box(64+3+2, 5+2, 124-2, 45-2);
         lcd_lib_set(64+3+3, 5+3, 124-3, 45-3);
@@ -66,7 +66,7 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     
     if (bottom != NULL)
     {
-        if (IS_SELECTED(2))
+        if (IS_SELECTED_MAIN(2))
         {
             lcd_lib_draw_box(3+2, 49+2, 124-2, 63-2);
             lcd_lib_set(3+3, 49+3, 124-3, 63-3);
@@ -88,11 +88,11 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     if (lcd_lib_encoder_pos != ENCODER_NO_SELECTION)
     {
         if (lcd_lib_encoder_pos < 0)
-            lcd_lib_encoder_pos += 2*ENCODER_TICKS_PER_MENU_ITEM;
-        if (lcd_lib_encoder_pos >= 2*ENCODER_TICKS_PER_MENU_ITEM)
-            lcd_lib_encoder_pos -= 2*ENCODER_TICKS_PER_MENU_ITEM;
+            lcd_lib_encoder_pos += 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
+        if (lcd_lib_encoder_pos >= 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+            lcd_lib_encoder_pos -= 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
     }
-    if (lcd_lib_button_pressed && IS_SELECTED(0))
+    if (lcd_lib_button_pressed && IS_SELECTED_MAIN(0))
     {
         if (callbackOnCancel) callbackOnCancel();
         if (cancelMenu) lcd_change_to_menu(cancelMenu);
@@ -101,7 +101,7 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     lcd_basic_screen();
 
     if (!cancelButtonText) cancelButtonText = PSTR("CANCEL");
-    if (IS_SELECTED(0))
+    if (IS_SELECTED_MAIN(0))
     {
         lcd_lib_draw_box(3+2, 49+2, 124-2, 63-2);
         lcd_lib_set(3+3, 49+3, 124-3, 63-3);
@@ -116,17 +116,17 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
     if (lcd_lib_encoder_pos != ENCODER_NO_SELECTION)
     {
         if (lcd_lib_encoder_pos < 0)
-            lcd_lib_encoder_pos += 2*ENCODER_TICKS_PER_MENU_ITEM;
-        if (lcd_lib_encoder_pos >= 2*ENCODER_TICKS_PER_MENU_ITEM)
-            lcd_lib_encoder_pos -= 2*ENCODER_TICKS_PER_MENU_ITEM;
+            lcd_lib_encoder_pos += 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
+        if (lcd_lib_encoder_pos >= 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+            lcd_lib_encoder_pos -= 2*ENCODER_TICKS_PER_MAIN_MENU_ITEM;
     }
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_MAIN(0))
         {
             if (callbackOnA) callbackOnA();
             if (optionAMenu) lcd_change_to_menu(optionAMenu);
-        }else if (IS_SELECTED(1))
+        }else if (IS_SELECTED_MAIN(1))
         {
             if (callbackOnB) callbackOnB();
             if (optionBMenu) lcd_change_to_menu(optionBMenu);
@@ -135,7 +135,7 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
 
     lcd_basic_screen();
 
-    if (IS_SELECTED(0))
+    if (IS_SELECTED_MAIN(0))
     {
         lcd_lib_draw_box(3+2, 49+2, 64-2, 63-2);
         lcd_lib_set(3+3, 49+3, 64-3, 63-3);
@@ -143,7 +143,7 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
     }else{
         lcd_lib_draw_stringP(35 - strlen_P(AButtonText) * 3, 53, AButtonText);
     }
-    if (IS_SELECTED(1))
+    if (IS_SELECTED_MAIN(1))
     {
         lcd_lib_draw_box(64+2, 49+2, 64+60-2, 63-2);
         lcd_lib_set(64+3, 49+3, 64+60-3, 63-3);
@@ -177,10 +177,10 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
         lcd_lib_encoder_pos = 0;
 
 	static int16_t viewPos = 0;
-	if (lcd_lib_encoder_pos < 0) lcd_lib_encoder_pos += entryCount * ENCODER_TICKS_PER_MENU_ITEM;
-	if (lcd_lib_encoder_pos >= entryCount * ENCODER_TICKS_PER_MENU_ITEM) lcd_lib_encoder_pos -= entryCount * ENCODER_TICKS_PER_MENU_ITEM;
+	if (lcd_lib_encoder_pos < 0) lcd_lib_encoder_pos += entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
+	if (lcd_lib_encoder_pos >= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM) lcd_lib_encoder_pos -= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
 
-    uint8_t selIndex = uint16_t(lcd_lib_encoder_pos/ENCODER_TICKS_PER_MENU_ITEM);
+    uint8_t selIndex = uint16_t(lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
 
     lcd_lib_clear();
 

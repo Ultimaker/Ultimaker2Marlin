@@ -39,6 +39,7 @@ static void lcd_menu_change_material_insert();
 static void lcd_menu_material_select();
 static void lcd_menu_material_selected();
 static void lcd_menu_material_settings();
+static void lcd_menu_material_settings_store();
 
 static void cancelMaterialInsert()
 {
@@ -52,14 +53,14 @@ void lcd_menu_material()
 
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_MAIN(0))
         {
             minProgress = 0;
             lcd_change_to_menu(lcd_menu_change_material_preheat);//TODO: If multiple extruders, select extruder.
         }
-        else if (IS_SELECTED(1))
-            lcd_change_to_menu(lcd_menu_material_select, MENU_ITEM_POS(0));
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_MAIN(1))
+            lcd_change_to_menu(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_MAIN(2))
             lcd_change_to_menu(lcd_menu_main);
     }
 
@@ -119,7 +120,7 @@ static void lcd_menu_change_material_remove()
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
         currentMenu = lcd_menu_change_material_remove_wait_user;
-        SELECT_MENU_ITEM(0);
+        SELECT_MAIN_MENU_ITEM(0);
         //Disable the extruder motor so you can pull out the remaining filament.
         disable_e0();
         disable_e1();
@@ -138,7 +139,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
 {
     current_position[E_AXIS] = 0;
     plan_set_e_position(current_position[E_AXIS]);
-    lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MENU_ITEM_POS(0));
+    lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0));
     
     char buffer[32];
     enquecommand_P(PSTR("G28 X0 Y0"));
@@ -208,7 +209,7 @@ static void lcd_menu_change_material_insert_forward()
         
         digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.
         currentMenu = lcd_menu_change_material_insert;
-        SELECT_MENU_ITEM(0);
+        SELECT_MAIN_MENU_ITEM(0);
     }
 
     long pos = st_get_position(E_AXIS);
@@ -252,6 +253,7 @@ static char* lcd_material_select_callback(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Customize"));
     else{
         eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
+        card.longFilename[8] = '\0';
     }
     return card.longFilename;
 }
@@ -299,14 +301,14 @@ static void lcd_menu_material_select()
     if (lcd_lib_button_pressed)
     {
         printf("%i\n", count);
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_SCROLL(0))
             lcd_change_to_menu(lcd_menu_material);
-        else if (IS_SELECTED(count + 1))
+        else if (IS_SELECTED_SCROLL(count + 1))
             lcd_change_to_menu(lcd_menu_material_settings);
         else{
-            lcd_material_set_material(SELECTED_MENU_ITEM() - 1);
+            lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM() - 1);
             
-            lcd_change_to_menu(lcd_menu_material_selected, MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
         }
     }
 }
@@ -333,6 +335,8 @@ static char* lcd_material_settings_callback(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Fan"));
     else if (nr == 5)
         strcpy_P(card.longFilename, PSTR("Flow %"));
+    else if (nr == 6)
+        strcpy_P(card.longFilename, PSTR("Store as preset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
     return card.longFilename;
@@ -366,23 +370,68 @@ static void lcd_material_settings_details_callback(uint8_t nr)
 
 static void lcd_menu_material_settings()
 {
-    lcd_scroll_menu(PSTR("MATERIAL"), 6, lcd_material_settings_callback, lcd_material_settings_details_callback);
+    lcd_scroll_menu(PSTR("MATERIAL"), 7, lcd_material_settings_callback, lcd_material_settings_details_callback);
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_SCROLL(0))
         {
             lcd_change_to_menu(lcd_menu_material);
             lcd_material_store_current_material();
-        }else if (IS_SELECTED(1))
+        }else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING(material.temperature, "Temperature", "C", 0, HEATER_0_MAXTEMP - 15);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING(material.bed_temperature, "Buildplate Temp.", "C", 0, BED_MAXTEMP - 15);
-        else if (IS_SELECTED(3))
+        else if (IS_SELECTED_SCROLL(3))
             LCD_EDIT_SETTING_FLOAT001(material.diameter, "Material Diameter", "mm", 0, 100);
-        else if (IS_SELECTED(4))
+        else if (IS_SELECTED_SCROLL(4))
             LCD_EDIT_SETTING(material.fan_speed, "Fan speed", "%", 0, 100);
-        else if (IS_SELECTED(5))
+        else if (IS_SELECTED_SCROLL(5))
             LCD_EDIT_SETTING(material.flow, "Material flow", "%", 1, 1000);
+        else if (IS_SELECTED_SCROLL(6))
+            lcd_change_to_menu(lcd_menu_material_settings_store);
+    }
+}
+
+static char* lcd_menu_material_settings_store_callback(uint8_t nr)
+{
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    if (nr == 0)
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
+    else if (nr > count)
+        strcpy_P(card.longFilename, PSTR("New preset"));
+    else{
+        eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
+        card.longFilename[8] = '\0';
+    }
+    return card.longFilename;
+}
+
+static void lcd_menu_material_settings_store_details_callback(uint8_t nr)
+{
+}
+
+static void lcd_menu_material_settings_store()
+{
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    if (count == EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
+        count--;
+    lcd_scroll_menu(PSTR("PRESETS"), 2 + count, lcd_menu_material_settings_store_callback, lcd_menu_material_settings_store_details_callback);
+
+    if (lcd_lib_button_pressed)
+    {
+        if (!IS_SELECTED_SCROLL(0))
+        {
+            uint8_t idx = SELECTED_SCROLL_MENU_ITEM() - 1;
+            if (idx == count)
+            {
+                char buffer[9] = "CUSTOM";
+                int_to_string(idx - 1, buffer + 6);
+                eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(idx), 8);
+                eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), idx + 1);
+            }
+            lcd_material_store_material(idx);
+        }
+        lcd_change_to_menu(lcd_menu_material_settings, SCROLL_MENU_ITEM_POS(6));
     }
 }
 
@@ -420,8 +469,23 @@ void lcd_material_set_material(uint8_t nr)
     material.diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
     eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     card.longFilename[8] = '\0';
+    if (material.temperature > HEATER_0_MAXTEMP - 15)
+        material.temperature = HEATER_0_MAXTEMP - 15;
+    if (material.bed_temperature > BED_MAXTEMP - 15)
+        material.bed_temperature = BED_MAXTEMP - 15;
     
     lcd_material_store_current_material();
+}
+
+void lcd_material_store_material(uint8_t nr)
+{
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr), material.temperature);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr), material.bed_temperature);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(nr), material.flow);
+
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr), material.fan_speed);
+    eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr), material.diameter);
+    //eeprom_write_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
 }
 
 void lcd_material_read_current_material()

@@ -8,12 +8,17 @@ typedef void (*menuFunc_t)();
 typedef char* (*entryNameCallback_t)(uint8_t nr);
 typedef void (*entryDetailsCallback_t)(uint8_t nr);
 
-#define ENCODER_TICKS_PER_MENU_ITEM 4
-#define ENCODER_NO_SELECTION (ENCODER_TICKS_PER_MENU_ITEM * -11)
-#define MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_MENU_ITEM * (n) + ENCODER_TICKS_PER_MENU_ITEM / 2)
-#define SELECT_MENU_ITEM(n)  do { lcd_lib_encoder_pos = MENU_ITEM_POS(n); } while(0)
-#define SELECTED_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MENU_ITEM)
-#define IS_SELECTED(n) ((n) == SELECTED_MENU_ITEM())
+#define ENCODER_TICKS_PER_MAIN_MENU_ITEM 8
+#define ENCODER_TICKS_PER_SCROLL_MENU_ITEM 4
+#define ENCODER_NO_SELECTION (ENCODER_TICKS_PER_MAIN_MENU_ITEM * -11)
+#define MAIN_MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_MAIN_MENU_ITEM * (n) + ENCODER_TICKS_PER_MAIN_MENU_ITEM / 2)
+#define SCROLL_MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_SCROLL_MENU_ITEM * (n) + ENCODER_TICKS_PER_SCROLL_MENU_ITEM / 2)
+#define SELECT_MAIN_MENU_ITEM(n)  do { lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(n); } while(0)
+#define SELECT_SCROLL_MENU_ITEM(n)  do { lcd_lib_encoder_pos = SCROLL_MENU_ITEM_POS(n); } while(0)
+#define SELECTED_MAIN_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+#define SELECTED_SCROLL_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM)
+#define IS_SELECTED_MAIN(n) ((n) == SELECTED_MAIN_MENU_ITEM())
+#define IS_SELECTED_SCROLL(n) ((n) == SELECTED_SCROLL_MENU_ITEM())
 
 void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos = ENCODER_NO_SELECTION);
 

@@ -45,7 +45,7 @@ static void lcd_menu_first_run_print_card_detect();
 //Run the first time you start-up the machine or after a factory reset.
 void lcd_menu_first_run_init()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_init_2, NULL, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(1);
     lcd_lib_draw_string_centerP(10, PSTR("Welcome to the first"));
@@ -66,7 +66,7 @@ static void homeAndParkHeadForCenterAdjustment2()
 void lcd_menu_first_run_start_bed_leveling()
 {
     add_homeing[Z_AXIS] = 0;
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_center_adjust, homeAndParkHeadForCenterAdjustment2, PSTR("CONTINUE"));
     lcd_lib_draw_string_centerP(10, PSTR("I will guide you"));
     lcd_lib_draw_string_centerP(20, PSTR("trought the process"));
@@ -85,7 +85,7 @@ static void homeAndRaiseBed()
 
 static void lcd_menu_first_run_init_2()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_init_3, homeAndRaiseBed, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(2);
     lcd_lib_draw_string_centerP(10, PSTR("Because this is the"));
@@ -105,7 +105,7 @@ static void homeAndParkHeadForCenterAdjustment()
 
 static void lcd_menu_first_run_init_3()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_center_adjust, homeAndParkHeadForCenterAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(3);
     lcd_lib_draw_string_centerP(10, PSTR("After transportation"));
@@ -171,7 +171,7 @@ static void parkHeadForRightAdjustment()
 static void lcd_menu_first_run_bed_level_left_adjust()
 {
     LED_GLOW();
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
         
     lcd_info_screen(lcd_menu_first_run_bed_level_right_adjust, parkHeadForRightAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(5);
@@ -186,7 +186,7 @@ static void lcd_menu_first_run_bed_level_left_adjust()
 static void lcd_menu_first_run_bed_level_right_adjust()
 {
     LED_GLOW();
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_paper, NULL, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(6);
     lcd_lib_draw_string_centerP(10, PSTR("Turn right buildplate"));
@@ -210,7 +210,7 @@ static void parkHeadForCenterAdjustment()
 
 static void lcd_menu_first_run_bed_level_paper()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_paper_center, parkHeadForCenterAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(7);
     lcd_lib_draw_string_centerP(10, PSTR("Repeat this step, but"));
@@ -250,7 +250,7 @@ static void lcd_menu_first_run_bed_level_paper_left()
 {
     LED_GLOW();
 
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_paper_right, parkHeadForRightAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(9);
     lcd_lib_draw_string_centerP(20, PSTR("Repeat this for"));
@@ -268,7 +268,7 @@ static void lcd_menu_first_run_bed_level_paper_right()
 {
     LED_GLOW();
 
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     if (IS_FIRST_RUN_DONE())
         lcd_info_screen(lcd_menu_main, homeBed, PSTR("DONE"));
     else
@@ -286,7 +286,7 @@ static void parkHeadForHeating()
 
 static void lcd_menu_first_run_material_load()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_load_heatup, parkHeadForHeating, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(11);
     lcd_lib_draw_string_centerP(10, PSTR("Now that we leveled"));
@@ -358,7 +358,7 @@ static void lcd_menu_first_run_material_load_insert()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, 0);
     }
     
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_load_forward, runMaterialForward, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(13);
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
@@ -380,7 +380,7 @@ static void lcd_menu_first_run_material_load_forward()
         led_glow_dir = led_glow = 0;
         digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
         currentMenu = lcd_menu_first_run_material_load_wait;
-        SELECT_MENU_ITEM(0);
+        SELECT_MAIN_MENU_ITEM(0);
     }
 
     long pos = st_get_position(E_AXIS);
@@ -412,7 +412,7 @@ static void lcd_menu_first_run_material_load_wait()
 
 static void lcd_menu_first_run_material_select_1()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_select_pla_abs, doCooldown, PSTR("READY"));
     DRAW_PROGRESS_NR(16);
     lcd_lib_draw_string_centerP(10, PSTR("Next, select the"));
@@ -432,13 +432,13 @@ static void lcd_menu_first_run_material_select_pla_abs()
     if (lcd_lib_button_pressed)
     {
         digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_MAIN(0))
         {
             lcd_material_reset_defaults();
             lcd_material_set_material(0);
             lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_pla);
         }
-        else if (IS_SELECTED(1))
+        else if (IS_SELECTED_MAIN(1))
         {
             lcd_material_reset_defaults();
             lcd_material_set_material(1);
@@ -476,7 +476,7 @@ static void setFirstRunDone()
 
 static void lcd_menu_first_run_material_select_2()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_print_1, NULL, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(19);
     lcd_lib_draw_string_centerP(10, PSTR("Now your Ultimaker2"));
@@ -488,7 +488,7 @@ static void lcd_menu_first_run_material_select_2()
 
 static void lcd_menu_first_run_print_1()
 {
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_print_card_detect, NULL, PSTR("ARE YOU READY?"));
     DRAW_PROGRESS_NR(20);
     lcd_lib_draw_string_centerP(20, PSTR("I'm ready let's"));
@@ -520,7 +520,7 @@ static void lcd_menu_first_run_print_card_detect()
         return;
     }
     
-    SELECT_MENU_ITEM(0);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_print_select, setFirstRunDone, PSTR("LET'S PRINT"));
     DRAW_PROGRESS_NR(21);
     lcd_lib_draw_string_centerP(10, PSTR("Select a print file"));

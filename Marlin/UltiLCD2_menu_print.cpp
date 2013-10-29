@@ -60,13 +60,13 @@ static void checkPrintFinished()
     {
         abortPrint();
         currentMenu = lcd_menu_print_ready;
-        SELECT_MENU_ITEM(0);
+        SELECT_MAIN_MENU_ITEM(0);
     }
     if (!card.isOk())
     {
         abortPrint();
         currentMenu = lcd_menu_print_error;
-        SELECT_MENU_ITEM(0);
+        SELECT_MAIN_MENU_ITEM(0);
     }
 }
 
@@ -209,7 +209,7 @@ void lcd_menu_print_select()
     if (!IS_SD_INSERTED)
     {
         LED_GLOW();
-        lcd_lib_encoder_pos = MENU_ITEM_POS(0);
+        lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
         lcd_info_screen(lcd_menu_main);
         lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
         lcd_lib_draw_string_centerP(25, PSTR("Please insert card"));
@@ -250,7 +250,7 @@ void lcd_menu_print_select()
     
     if (lcd_lib_button_pressed)
     {
-        uint8_t selIndex = uint16_t(lcd_lib_encoder_pos/ENCODER_TICKS_PER_MENU_ITEM);
+        uint8_t selIndex = uint16_t(SELECTED_SCROLL_MENU_ITEM());
         if (selIndex == 0)
         {
             if (card.atRoot())
@@ -307,14 +307,14 @@ void lcd_menu_print_select()
                         volume_to_filament_length = 1.0;
                         extrudemultiply = 100;
                         
-                        lcd_change_to_menu(lcd_menu_print_classic_warning, MENU_ITEM_POS(0));
+                        lcd_change_to_menu(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0));
                     }
                 }
             }else{
                 lcd_lib_beep();
                 lcd_clear_cache();
                 card.chdir(card.filename);
-                SELECT_MENU_ITEM(0);
+                SELECT_SCROLL_MENU_ITEM(0);
             }
             return;//Return so we do not continue after changing the directory or selecting a file. The nrOfFiles is invalid at this point.
         }
@@ -548,23 +548,23 @@ static void lcd_menu_print_tune()
     lcd_scroll_menu(PSTR("TUNE"), 7, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_SCROLL(0))
         {
             if (card.sdprinting)
                 lcd_change_to_menu(lcd_menu_print_printing);
             else
                 lcd_change_to_menu(lcd_menu_print_heatup);
-        }else if (IS_SELECTED(1))
+        }else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING(feedmultiply, "Print speed", "%", 10, 1000);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_SCROLL(2))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.
-        else if (IS_SELECTED(3))
+        else if (IS_SELECTED_SCROLL(3))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.
-        else if (IS_SELECTED(4))
+        else if (IS_SELECTED_SCROLL(4))
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
-        else if (IS_SELECTED(5))
+        else if (IS_SELECTED_SCROLL(5))
             LCD_EDIT_SETTING(extrudemultiply, "Material flow", "%", 10, 1000);
-        else if (IS_SELECTED(6))
+        else if (IS_SELECTED_SCROLL(6))
             lcd_change_to_menu(lcd_menu_print_tune_retraction);
     }
 }
@@ -599,11 +599,11 @@ static void lcd_menu_print_tune_retraction()
     lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
-            lcd_change_to_menu(lcd_menu_print_tune, MENU_ITEM_POS(6));
-        else if (IS_SELECTED(1))
+        if (IS_SELECTED_SCROLL(0))
+            lcd_change_to_menu(lcd_menu_print_tune, SCROLL_MENU_ITEM_POS(6));
+        else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
     }
 }

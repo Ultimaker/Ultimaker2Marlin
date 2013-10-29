@@ -171,14 +171,14 @@ void lcd_menu_main()
 
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED(0))
+        if (IS_SELECTED_MAIN(0))
         {
             lcd_clear_cache();
-            lcd_change_to_menu(lcd_menu_print_select, MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0));
         }
-        else if (IS_SELECTED(1))
+        else if (IS_SELECTED_MAIN(1))
             lcd_change_to_menu(lcd_menu_material);
-        else if (IS_SELECTED(2))
+        else if (IS_SELECTED_MAIN(2))
             lcd_change_to_menu(lcd_menu_maintenance);
     }
     if (lcd_lib_button_down && lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
