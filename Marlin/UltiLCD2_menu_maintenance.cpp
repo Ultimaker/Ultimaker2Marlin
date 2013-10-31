@@ -24,15 +24,7 @@ static void lcd_menu_advanced_factory_reset();
 
 void lcd_menu_maintenance()
 {
-    lcd_tripple_menu(PSTR(""), PSTR("ADVANCED"), PSTR("RETURN"));
-    if (IS_SELECTED_MAIN(0))
-    {
-        lcd_lib_clear_stringP(17,17, PSTR("BUILD-"));
-        lcd_lib_clear_stringP(17,27, PSTR("PLATE"));
-    }else{
-        lcd_lib_draw_stringP(17,17, PSTR("BUILD-"));
-        lcd_lib_draw_stringP(17,27, PSTR("PLATE"));
-    }
+    lcd_tripple_menu(PSTR("BUILD-|PLATE"), PSTR("ADVANCED"), PSTR("RETURN"));
 
     if (lcd_lib_button_pressed)
     {

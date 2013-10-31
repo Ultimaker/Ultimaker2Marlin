@@ -16,6 +16,8 @@ void lcd_lib_draw_stringP(uint8_t x, uint8_t y, const char* pstr);
 void lcd_lib_clear_stringP(uint8_t x, uint8_t y, const char* pstr);
 void lcd_lib_draw_string_centerP(uint8_t y, const char* pstr);
 void lcd_lib_clear_string_centerP(uint8_t y, const char* pstr);
+void lcd_lib_draw_string_center_atP(uint8_t x, uint8_t y, const char* pstr);
+void lcd_lib_clear_string_center_atP(uint8_t x, uint8_t y, const char* pstr);
 void lcd_lib_draw_vline(uint8_t x, uint8_t y0, uint8_t y1);
 void lcd_lib_draw_hline(uint8_t x0, uint8_t x1, uint8_t y);
 void lcd_lib_draw_box(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);

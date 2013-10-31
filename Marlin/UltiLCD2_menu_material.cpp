@@ -28,6 +28,7 @@ void inline eeprom_write_float(float* addr, float f)
 struct materialSettings material[EXTRUDERS];
 
 void doCooldown();//TODO
+static void lcd_menu_material_main();
 static void lcd_menu_change_material_preheat();
 static void lcd_menu_change_material_remove();
 static void lcd_menu_change_material_remove_wait_user();
@@ -50,6 +51,33 @@ static void cancelMaterialInsert()
 
 void lcd_menu_material()
 {
+#if EXTRUDERS > 1
+    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
+
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED_MAIN(0))
+        {
+            active_extruder = 0;
+            lcd_change_to_menu(lcd_menu_material_main);
+        }
+        else if (IS_SELECTED_MAIN(1))
+        {
+            active_extruder = 1;
+            lcd_change_to_menu(lcd_menu_material_main);
+        }
+        else if (IS_SELECTED_MAIN(2))
+            lcd_change_to_menu(lcd_menu_main);
+    }
+
+    lcd_lib_update_screen();
+#else
+    currentMenu = lcd_menu_material_main;
+#endif
+}
+
+static void lcd_menu_material_main()
+{
     lcd_tripple_menu(PSTR("CHANGE"), PSTR("SETTINGS"), PSTR("RETURN"));
 
     if (lcd_lib_button_pressed)
@@ -57,11 +85,7 @@ void lcd_menu_material()
         if (IS_SELECTED_MAIN(0))
         {
             minProgress = 0;
-#if EXTRUDERS > 1
-            lcd_change_to_menu(lcd_menu_change_material_select_extruder);
-#else
             lcd_change_to_menu(lcd_menu_change_material_preheat);
-#endif
         }
         else if (IS_SELECTED_MAIN(1))
             lcd_change_to_menu(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0));
@@ -107,7 +131,7 @@ static void lcd_menu_change_material_preheat()
     else
         minProgress = progress;
     
-    lcd_info_screen(lcd_menu_main, cancelMaterialInsert);
+    lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead"));
     lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
 
@@ -118,7 +142,7 @@ static void lcd_menu_change_material_preheat()
 
 static void lcd_menu_change_material_remove()
 {
-    lcd_info_screen(lcd_menu_main, cancelMaterialInsert);
+    lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Reversing material"));
     
     if (!blocks_queued())
@@ -308,7 +332,7 @@ static void lcd_menu_material_select()
     {
         printf("%i\n", count);
         if (IS_SELECTED_SCROLL(0))
-            lcd_change_to_menu(lcd_menu_material);
+            lcd_change_to_menu(lcd_menu_material_main);
         else if (IS_SELECTED_SCROLL(count + 1))
             lcd_change_to_menu(lcd_menu_material_settings);
         else{
@@ -324,6 +348,12 @@ static void lcd_menu_material_selected()
     lcd_info_screen(lcd_menu_main, NULL, PSTR("OK"));
     lcd_lib_draw_string_centerP(20, PSTR("Selected material:"));
     lcd_lib_draw_string_center(30, card.longFilename);
+#if EXTRUDERS > 1
+    if (active_extruder == 0)
+        lcd_lib_draw_string_centerP(40, PSTR("for primary nozzle"));
+    else if (active_extruder == 1)
+        lcd_lib_draw_string_centerP(40, PSTR("for secondary nozzle"));
+#endif
     lcd_lib_update_screen();
 }
 
@@ -381,7 +411,7 @@ static void lcd_menu_material_settings()
     {
         if (IS_SELECTED_SCROLL(0))
         {
-            lcd_change_to_menu(lcd_menu_material);
+            lcd_change_to_menu(lcd_menu_material_main);
             lcd_material_store_current_material();
         }else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING(material[active_extruder].temperature, "Temperature", "C", 0, HEATER_0_MAXTEMP - 15);

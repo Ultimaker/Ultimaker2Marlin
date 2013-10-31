@@ -50,29 +50,29 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     {
         lcd_lib_draw_box(3+2, 5+2, 64-3-2, 45-2);
         lcd_lib_set(3+3, 5+3, 64-3-3, 45-3);
-        lcd_lib_clear_stringP(33 - strlen_P(left) * 3, 22, left);
+        lcd_lib_clear_string_center_atP(33, 22, left);
     }else{
-        lcd_lib_draw_stringP(33 - strlen_P(left) * 3, 22, left);
+        lcd_lib_draw_string_center_atP(33, 22, left);
     }
     
     if (IS_SELECTED_MAIN(1))
     {
-        lcd_lib_draw_box(64+3+2, 5+2, 124-2, 45-2);
-        lcd_lib_set(64+3+3, 5+3, 124-3, 45-3);
-        lcd_lib_clear_stringP(64 + 33 - strlen_P(right) * 3, 22, right);
+        lcd_lib_draw_box(64+3+2, 5+2, 125-2, 45-2);
+        lcd_lib_set(64+3+3, 5+3, 125-3, 45-3);
+        lcd_lib_clear_string_center_atP(64 + 33, 22, right);
     }else{
-        lcd_lib_draw_stringP(64 + 33 - strlen_P(right) * 3, 22, right);
+        lcd_lib_draw_string_center_atP(64 + 33, 22, right);
     }
     
     if (bottom != NULL)
     {
         if (IS_SELECTED_MAIN(2))
         {
-            lcd_lib_draw_box(3+2, 49+2, 124-2, 63-2);
-            lcd_lib_set(3+3, 49+3, 124-3, 63-3);
-            lcd_lib_clear_stringP(65 - strlen_P(bottom) * 3, 53, bottom);
+            lcd_lib_draw_box(3+2, 49+2, 125-2, 63-2);
+            lcd_lib_set(3+3, 49+3, 125-3, 63-3);
+            lcd_lib_clear_string_centerP(53, bottom);
         }else{
-            lcd_lib_draw_stringP(65 - strlen_P(bottom) * 3, 53, bottom);
+            lcd_lib_draw_string_centerP(53, bottom);
         }
     }
 }
@@ -103,8 +103,8 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     if (!cancelButtonText) cancelButtonText = PSTR("CANCEL");
     if (IS_SELECTED_MAIN(0))
     {
-        lcd_lib_draw_box(3+2, 49+2, 124-2, 63-2);
-        lcd_lib_set(3+3, 49+3, 124-3, 63-3);
+        lcd_lib_draw_box(3+2, 49+2, 125-2, 63-2);
+        lcd_lib_set(3+3, 49+3, 125-3, 63-3);
         lcd_lib_clear_stringP(65 - strlen_P(cancelButtonText) * 3, 53, cancelButtonText);
     }else{
         lcd_lib_draw_stringP(65 - strlen_P(cancelButtonText) * 3, 53, cancelButtonText);

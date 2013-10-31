@@ -479,6 +479,36 @@ void lcd_lib_clear_string_centerP(uint8_t y, const char* pstr)
     lcd_lib_clear_stringP(64 - strlen_P(pstr) * 3, y, pstr);
 }
 
+void lcd_lib_draw_string_center_atP(uint8_t x, uint8_t y, const char* pstr)
+{
+    char* split = strchr_P(pstr, '|');
+    if (split)
+    {
+        char buf[10];
+        strncpy_P(buf, pstr, split - pstr);
+        buf[split - pstr] = '\0';
+        lcd_lib_draw_string(x - strlen(buf) * 3, y - 5, buf);
+        lcd_lib_draw_stringP(x - strlen_P(split+1) * 3, y + 5, split+1);
+    }else{
+        lcd_lib_draw_stringP(x - strlen_P(pstr) * 3, y, pstr);
+    }
+}
+
+void lcd_lib_clear_string_center_atP(uint8_t x, uint8_t y, const char* pstr)
+{
+    char* split = strchr_P(pstr, '|');
+    if (split)
+    {
+        char buf[10];
+        strncpy_P(buf, pstr, split - pstr);
+        buf[split - pstr] = '\0';
+        lcd_lib_clear_string(x - strlen(buf) * 3, y - 5, buf);
+        lcd_lib_clear_stringP(x - strlen_P(split+1) * 3, y + 5, split+1);
+    }else{
+        lcd_lib_clear_stringP(x - strlen_P(pstr) * 3, y, pstr);
+    }
+}
+
 void lcd_lib_draw_hline(uint8_t x0, uint8_t x1, uint8_t y)
 {
     uint8_t* dst = lcd_buffer + x0 + (y / 8) * LCD_GFX_WIDTH;
