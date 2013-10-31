@@ -45,6 +45,7 @@ static void cancelMaterialInsert()
 {
     digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
     doCooldown();
+    enquecommand_P(PSTR("G28 X0 Y0"));
 }
 
 void lcd_menu_material()
