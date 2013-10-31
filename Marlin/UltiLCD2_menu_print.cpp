@@ -47,7 +47,7 @@ static void abortPrint()
     if (card.sdprinting)
     {
         card.sdprinting = false;
-        sprintf_P(buffer, PSTR("G92 E%i"), int(20.0 / volume_to_filament_length));
+        sprintf_P(buffer, PSTR("G92 E%i"), int(20.0 / volume_to_filament_length[active_extruder]));
         enquecommand(buffer);
         enquecommand_P(PSTR("G1 F1500 E0"));
     }
@@ -75,7 +75,7 @@ static void doStartPrint()
     //TODO: Custom start code.
     char buffer[32];
     enquecommand_P(PSTR("G28"));
-    sprintf_P(buffer, PSTR("G92 E-%i"), int(20.0 / volume_to_filament_length));
+    sprintf_P(buffer, PSTR("G92 E-%i"), int(20.0 / volume_to_filament_length[active_extruder]));
     enquecommand(buffer);
     enquecommand_P(PSTR("G1 F1500 E0"));
     
@@ -188,8 +188,9 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                         strcpy_P(c, PSTR("Time: ")); c += 6;
                         c = int_to_time_string(LCD_DETAIL_CACHE_TIME(), c);
                     }else{
+                        //TODO: This is single material only!
                         strcpy_P(c, PSTR("Material: ")); c += 10;
-                        float length = float(LCD_DETAIL_CACHE_MATERIAL()) / (M_PI * (material.diameter / 2.0) * (material.diameter / 2.0));
+                        float length = float(LCD_DETAIL_CACHE_MATERIAL()) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
                         if (length < 10000)
                             c = float_to_string(length / 1000.0, c, PSTR("m"));
                         else
@@ -291,11 +292,16 @@ void lcd_menu_print_select()
                     {
                         //New style GCode flavor without start/end code.
                         // Temperature settings, filament settings, fan settings, start and end-code are machine controlled.
-                        target_temperature[0] = material.temperature;
-                        target_temperature_bed = material.bed_temperature;
-                        volume_to_filament_length = 1.0 / (M_PI * (material.diameter / 2.0) * (material.diameter / 2.0));
-                        fanSpeedPercent = material.fan_speed;
-                        extrudemultiply = material.flow;
+                        //TODO: Only heatup the hotends used in this GCode file.
+                        target_temperature_bed = 0;
+                        for(uint8_t e=0; e<EXTRUDERS; e++)
+                        {
+                            target_temperature[e] = material[e].temperature;
+                            target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
+                            volume_to_filament_length[e] = 1.0 / (M_PI * (material[e].diameter / 2.0) * (material[e].diameter / 2.0));
+                        }
+                        fanSpeedPercent = material[0].fan_speed;
+                        extrudemultiply = material[0].flow;
                         
                         fanSpeed = 0;
                         lcd_change_to_menu(lcd_menu_print_heatup);
@@ -304,7 +310,8 @@ void lcd_menu_print_select()
                         
                         //Set the settings to defaults so the classic GCode has full control
                         fanSpeedPercent = 100;
-                        volume_to_filament_length = 1.0;
+                        for(uint8_t e=0; e<EXTRUDERS; e++)
+                            volume_to_filament_length[e] = 1.0;
                         extrudemultiply = 100;
                         
                         lcd_change_to_menu(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0));
@@ -392,6 +399,8 @@ static void lcd_menu_print_printing()
     float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
     static float totalTimeSmoothSec;
     totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
+    if (isinf(totalTimeSmoothSec))
+        totalTimeSmoothSec = totalTimeMs;
     
     if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
     {

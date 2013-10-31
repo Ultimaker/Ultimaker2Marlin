@@ -54,7 +54,7 @@
 
 #define LCD_I2C_FREQ 200000
 
-static const char lcd_font[] PROGMEM = {
+static const uint8_t lcd_font[] PROGMEM = {
     // font data
     0x00, 0x00, 0x00, 0x00, 0x00,// '\x00'
     0x06, 0x09, 0x09, 0x06, 0x00,// '\x01'
@@ -190,7 +190,7 @@ static const char lcd_font[] PROGMEM = {
 	0x08, 0x1C, 0x2A, 0x08, 0x08 // <-
 };
 
-static const char large_number16[] PROGMEM = {
+static const uint8_t large_number16[] PROGMEM = {
   /* page 0 (lines 0-7) */
   0x0,0xfc,0xfe,0x6,0x6,0x6,0x6,0xfe,0xfc,0x0,
   /* page 1 (lines 8-15) */
@@ -232,7 +232,7 @@ static const char large_number16[] PROGMEM = {
   /* page 19 (lines 152-159) */
   0x0,0x0,0x61,0x61,0x61,0x61,0x61,0x7f,0x3f,0x0,
 };
-static const char large_number24[] PROGMEM = {
+static const uint8_t large_number24[] PROGMEM = {
   0x0,0x0,0xf8,0xfc,0xfe,0xe,0xe,0xe,0xe,0xe,0xe,0xe,0xfe,0xfc,0xf8,0x0,
   0x0,0x0,0xff,0xff,0xff,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xff,0xff,0xff,0x0,
   0x0,0x0,0x1f,0x3f,0x7f,0x70,0x70,0x70,0x70,0x70,0x70,0x70,0x7f,0x3f,0x1f,0x0,
@@ -422,7 +422,7 @@ static void lcd_implementation_init()
 }
 static void lcd_draw_char(const char chr)
 {
-    const char* c = lcd_font + chr * 5;
+    const uint8_t* c = lcd_font + chr * 5;
     i2c_send_raw(pgm_read_byte(c++));
     i2c_send_raw(pgm_read_byte(c++));
     i2c_send_raw(pgm_read_byte(c++));
@@ -432,7 +432,7 @@ static void lcd_draw_char(const char chr)
 }
 static void lcd_draw_char_inverted(const char chr)
 {
-    const char* c = lcd_font + chr * 5;
+    const uint8_t* c = lcd_font + chr * 5;
     i2c_send_raw(pgm_read_byte(c++) ^ 0xFF);
     i2c_send_raw(pgm_read_byte(c++) ^ 0xFF);
     i2c_send_raw(pgm_read_byte(c++) ^ 0xFF);
@@ -491,7 +491,7 @@ static void lcd_draw_large_number16(uint8_t col, uint8_t row, uint8_t nr)
 {
     lcd_set_pos(col, row);
     i2c_start_data();
-    const char* c = large_number16 + nr * 10 * 2;
+    const uint8_t* c = large_number16 + nr * 10 * 2;
     for(uint8_t n=0;n<10;n++)
         i2c_send_raw(pgm_read_byte(c++));
 
@@ -505,7 +505,7 @@ static void lcd_draw_large_number24(uint8_t col, uint8_t row, uint8_t nr)
 {
     lcd_set_pos(col, row);
     i2c_start_data();
-    const char* c = large_number24 + nr * 16 * 3;
+    const uint8_t* c = large_number24 + nr * 16 * 3;
     for(uint8_t n=0;n<16;n++)
         i2c_send_raw(pgm_read_byte(c++));
 
@@ -520,7 +520,7 @@ static void lcd_draw_large_number24(uint8_t col, uint8_t row, uint8_t nr)
         i2c_send_raw(pgm_read_byte(c++));
 }
 
-static const char ultimaker_logo[] PROGMEM = {
+static const uint8_t ultimaker_logo[] PROGMEM = {
   /* page 0 (lines 0-7) */
   0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
   0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
@@ -615,7 +615,7 @@ static void lcd_implementation_status_screen()
         i2c_send_raw(0xB0);
         
         i2c_start_data();
-        const char* ptr = ultimaker_logo;
+        const uint8_t* ptr = ultimaker_logo;
         for(uint8_t m=0;m<LCD_GFX_HEIGHT / 8; m++)
         {
             for(uint8_t n=0;n<LCD_GFX_WIDTH;n++)
@@ -829,6 +829,8 @@ static void lcd_implementation_drawmenu_setting_edit_generic_P(uint8_t row, cons
         lcd_draw_char(c);
     i2c_end();
 }
+#define lcd_implementation_drawmenu_setting_edit_byte_selected(row, pstr, pstr2, data, minValue, maxValue) lcd_implementation_drawmenu_setting_edit_generic_selected(row, pstr, itostr3(*(data)))
+#define lcd_implementation_drawmenu_setting_edit_byte(row, pstr, pstr2, data, minValue, maxValue) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, itostr3(*(data)))
 #define lcd_implementation_drawmenu_setting_edit_int3_selected(row, pstr, pstr2, data, minValue, maxValue) lcd_implementation_drawmenu_setting_edit_generic_selected(row, pstr, itostr3(*(data)))
 #define lcd_implementation_drawmenu_setting_edit_int3(row, pstr, pstr2, data, minValue, maxValue) lcd_implementation_drawmenu_setting_edit_generic(row, pstr, itostr3(*(data)))
 #define lcd_implementation_drawmenu_setting_edit_int4_selected(row, pstr, pstr2, data, minValue, maxValue) lcd_implementation_drawmenu_setting_edit_generic_selected(row, pstr, itostr4(*(data)))

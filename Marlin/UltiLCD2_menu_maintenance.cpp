@@ -21,7 +21,6 @@ static void lcd_menu_maintenance_retraction();
 static void lcd_menu_advanced_version();
 static void lcd_menu_maintenance_motion();
 static void lcd_menu_advanced_factory_reset();
-static void lcd_menu_TODO();
 
 void lcd_menu_maintenance()
 {
@@ -115,7 +114,7 @@ static void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(7))
         {
             set_extrude_min_temp(0);
-            target_temperature[0] = material.temperature;
+            target_temperature[active_extruder] = material[active_extruder].temperature;
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
         else if (IS_SELECTED_SCROLL(8))
@@ -402,15 +401,6 @@ static void lcd_menu_maintenance_led()
         else if (IS_SELECTED_SCROLL(5))
             led_mode = LED_MODE_BLINK_ON_DONE;
     }
-}
-
-static void lcd_menu_TODO()
-{
-    lcd_info_screen(previousMenu, NULL, PSTR("OK"));
-    
-    lcd_lib_draw_string_centerP(20, PSTR("UNIMPLEMENTED"));
-
-    lcd_lib_update_screen();
 }
 
 #endif//ENABLE_ULTILCD2

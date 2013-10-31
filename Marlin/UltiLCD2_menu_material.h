@@ -10,7 +10,7 @@ struct materialSettings
     float diameter; //Filament diameter in mm
 };
 
-extern struct materialSettings material;
+extern struct materialSettings material[EXTRUDERS];
 
 #define FILAMENT_REVERSAL_LENGTH      750
 #define FILAMENT_REVERSAL_SPEED       200
