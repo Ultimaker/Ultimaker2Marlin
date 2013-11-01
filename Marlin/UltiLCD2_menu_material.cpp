@@ -98,9 +98,9 @@ static void lcd_menu_material_main()
 
 static void lcd_menu_change_material_preheat()
 {
-    setTargetHotend(material[active_extruder].temperature + 10, active_extruder);
+    setTargetHotend(material[active_extruder].temperature, active_extruder);
     int16_t temp = degHotend(active_extruder) - 20;
-    int16_t target = degTargetHotend(active_extruder) - 10 - 20;
+    int16_t target = degTargetHotend(active_extruder) - 20 - 20;
     if (temp < 0) temp = 0;
     if (temp > target)
     {

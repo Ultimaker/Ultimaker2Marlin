@@ -481,7 +481,7 @@ void lcd_lib_clear_string_centerP(uint8_t y, const char* pstr)
 
 void lcd_lib_draw_string_center_atP(uint8_t x, uint8_t y, const char* pstr)
 {
-    char* split = strchr_P(pstr, '|');
+    const char* split = strchr_P(pstr, '|');
     if (split)
     {
         char buf[10];
@@ -496,7 +496,7 @@ void lcd_lib_draw_string_center_atP(uint8_t x, uint8_t y, const char* pstr)
 
 void lcd_lib_clear_string_center_atP(uint8_t x, uint8_t y, const char* pstr)
 {
-    char* split = strchr_P(pstr, '|');
+    const char* split = strchr_P(pstr, '|');
     if (split)
     {
         char buf[10];
