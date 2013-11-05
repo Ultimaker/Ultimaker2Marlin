@@ -18,7 +18,7 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_START ((LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))+1)
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
-#define LCD_DETAIL_CACHE_MATERIAL() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5])
+#define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 
 void doCooldown();//TODO
 static void lcd_menu_print_heatup();
@@ -157,7 +157,8 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     }
                     LCD_DETAIL_CACHE_ID() = nr;
                     LCD_DETAIL_CACHE_TIME() = 0;
-                    LCD_DETAIL_CACHE_MATERIAL() = 0;
+                    for(uint8_t e=0; e<EXTRUDERS; e++)
+                        LCD_DETAIL_CACHE_MATERIAL(e) = 0;
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
@@ -169,7 +170,11 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
                                 LCD_DETAIL_CACHE_TIME() = atol(buffer + 6);
                             else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL() = atol(buffer + 10);
+                                LCD_DETAIL_CACHE_MATERIAL(0) = atol(buffer + 10);
+#if EXTRUDERS > 1
+                            else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
+                                LCD_DETAIL_CACHE_MATERIAL(1) = atol(buffer + 11);
+#endif
                         }
                     }
                     if (card.errorCode())
@@ -188,13 +193,21 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                         strcpy_P(c, PSTR("Time: ")); c += 6;
                         c = int_to_time_string(LCD_DETAIL_CACHE_TIME(), c);
                     }else{
-                        //TODO: This is single material only!
                         strcpy_P(c, PSTR("Material: ")); c += 10;
-                        float length = float(LCD_DETAIL_CACHE_MATERIAL()) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
+                        float length = float(LCD_DETAIL_CACHE_MATERIAL(0)) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
                         if (length < 10000)
                             c = float_to_string(length / 1000.0, c, PSTR("m"));
                         else
                             c = int_to_string(length / 1000.0, c, PSTR("m"));
+                        if (LCD_DETAIL_CACHE_MATERIAL(1))
+                        {
+                            *c++ = '/';
+                            float length = float(LCD_DETAIL_CACHE_MATERIAL(1)) / (M_PI * (material[1].diameter / 2.0) * (material[1].diameter / 2.0));
+                            if (length < 10000)
+                                c = float_to_string(length / 1000.0, c, PSTR("m"));
+                            else
+                                c = int_to_string(length / 1000.0, c, PSTR("m"));
+                        }
                     }
                     lcd_lib_draw_string(3, 53, buffer);
                 }else{
@@ -267,6 +280,7 @@ void lcd_menu_print_select()
             if (!card.filenameIsDir)
             {
                 //Start print
+                active_extruder = 0;
                 card.openFile(card.filename, true);
                 if (card.isFileOpen())
                 {
@@ -292,16 +306,18 @@ void lcd_menu_print_select()
                     {
                         //New style GCode flavor without start/end code.
                         // Temperature settings, filament settings, fan settings, start and end-code are machine controlled.
-                        //TODO: Only heatup the hotends used in this GCode file.
                         target_temperature_bed = 0;
+                        fanSpeedPercent = 0;
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
+                            if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
+                                continue;
                             target_temperature[e] = material[e].temperature;
                             target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
+                            fanSpeedPercent = max(fanSpeedPercent, material[0].fan_speed);
                             volume_to_filament_length[e] = 1.0 / (M_PI * (material[e].diameter / 2.0) * (material[e].diameter / 2.0));
+                            extrudemultiply[e] = material[e].flow;
                         }
-                        fanSpeedPercent = material[0].fan_speed;
-                        extrudemultiply = material[0].flow;
                         
                         fanSpeed = 0;
                         lcd_change_to_menu(lcd_menu_print_heatup);
@@ -311,8 +327,10 @@ void lcd_menu_print_select()
                         //Set the settings to defaults so the classic GCode has full control
                         fanSpeedPercent = 100;
                         for(uint8_t e=0; e<EXTRUDERS; e++)
+                        {
                             volume_to_filament_length[e] = 1.0;
-                        extrudemultiply = 100;
+                            extrudemultiply[e] = 100;
+                        }
                         
                         lcd_change_to_menu(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0));
                     }
@@ -340,18 +358,19 @@ static void lcd_menu_print_heatup()
     }
 
     uint8_t progress = 125;
-    uint8_t p = 0;
-    
-    if (current_temperature[0] > 20)
-        p = (current_temperature[0] - 20) * 125 / (target_temperature[0] - 20 - TEMP_WINDOW);
-    if (p < progress)
-        progress = p;
+    for(uint8_t e=0; e<EXTRUDERS; e++)
+    {
+        if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
+            continue;
+        if (current_temperature[e] > 20)
+            progress = min(progress, (current_temperature[e] - 20) * 125 / (target_temperature[e] - 20 - TEMP_WINDOW));
+        else
+            progress = 0;
+    }
     if (current_temperature_bed > 20)
-        p = (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW);
+        progress = min(progress, (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW));
     else
-        p = 0;
-    if (p < progress)
-        progress = p;
+        progress = 0;
     
     if (progress < minProgress)
         progress = minProgress;
@@ -544,7 +563,7 @@ static void tune_item_details_callback(uint8_t nr)
     else if (nr == 4)
         c = int_to_string(int(fanSpeed) * 100 / 255, c, PSTR("%"));
     else if (nr == 5)
-        c = int_to_string(extrudemultiply, c, PSTR("%"));
+        c = int_to_string(extrudemultiply[0], c, PSTR("%"));
     else
         return;
     lcd_lib_draw_string(5, 53, (char*)lcd_cache);
@@ -572,7 +591,7 @@ static void lcd_menu_print_tune()
         else if (IS_SELECTED_SCROLL(4))
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
         else if (IS_SELECTED_SCROLL(5))
-            LCD_EDIT_SETTING(extrudemultiply, "Material flow", "%", 10, 1000);
+            LCD_EDIT_SETTING(extrudemultiply[0], "Material flow", "%", 10, 1000);
         else if (IS_SELECTED_SCROLL(6))
             lcd_change_to_menu(lcd_menu_print_tune_retraction);
     }

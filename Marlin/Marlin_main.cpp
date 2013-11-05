@@ -164,7 +164,7 @@ float homing_feedrate[] = HOMING_FEEDRATE;
 bool axis_relative_modes[] = AXIS_RELATIVE_MODES;
 int feedmultiply=100; //100->1 200->2
 int saved_feedmultiply;
-int extrudemultiply=100; //100->1 200->2
+int extrudemultiply[EXTRUDERS]=ARRAY_BY_EXTRUDERS(100, 100, 100); //100->1 200->2
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
 float add_homeing[3]={0,0,0};
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
@@ -1642,7 +1642,7 @@ void process_commands()
     {
       if(code_seen('S'))
       {
-        extrudemultiply = code_value() ;
+        extrudemultiply[active_extruder] = code_value() ;
       }
     }
     break;

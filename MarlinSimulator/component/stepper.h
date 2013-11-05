@@ -17,6 +17,8 @@ public:
     stepperSim(arduinoIOSim* arduinoIO, int enablePinNr, int stepPinNr, int dirPinNr, bool invertDir);
     virtual ~stepperSim();
     
+    virtual void draw(int x, int y);
+    
     void setRange(int minValue, int maxValue) { minStepValue = minValue; maxStepValue = maxValue; stepValue = (maxValue + minValue) / 2; }
     void setEndstops(int minEndstopPinNr, int maxEndstopPinNr);
     int getPosition() { return stepValue; }

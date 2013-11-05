@@ -189,7 +189,7 @@ void setPwmFrequency(uint8_t pin, int val);
 extern float homing_feedrate[];
 extern bool axis_relative_modes[];
 extern int feedmultiply;
-extern int extrudemultiply; // Sets extrude multiply factor (in percent)
+extern int extrudemultiply[EXTRUDERS]; // Sets extrude multiply factor (in percent)
 extern float current_position[NUM_AXIS] ;
 extern float add_homeing[3];
 extern float min_pos[3];
@@ -226,5 +226,15 @@ extern uint8_t printing_state;
 
 // Handling multiple extruders pins
 extern uint8_t active_extruder;
+
+#if EXTRUDERS > 3
+  # error Unsupported number of extruders
+#elif EXTRUDERS > 2
+  # define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1, v2, v3 }
+#elif EXTRUDERS > 1
+  # define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1, v2 }
+#else
+  # define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1 }
+#endif
 
 #endif

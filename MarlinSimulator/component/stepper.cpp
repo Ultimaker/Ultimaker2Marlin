@@ -50,3 +50,10 @@ void stepperSim::setEndstops(int minEndstopPinNr, int maxEndstopPinNr)
     writeInput(minEndstopPin, stepValue != minStepValue);
     writeInput(maxEndstopPin, stepValue != maxStepValue);
 }
+
+void stepperSim::draw(int x, int y)
+{
+    char buffer[32];
+    sprintf(buffer, "%i steps", int(stepValue));
+    drawString(x, y, buffer, 0xFFFFFF);
+}

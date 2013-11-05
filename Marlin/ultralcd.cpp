@@ -332,7 +332,7 @@ static void lcd_tune_menu()
     MENU_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
 #endif
     MENU_ITEM_EDIT(byte, MSG_FAN_SPEED, &fanSpeed, 0, 255);
-    MENU_ITEM_EDIT(int3, MSG_FLOW, &extrudemultiply, 10, 999);
+    MENU_ITEM_EDIT(int3, MSG_FLOW, &extrudemultiply[0], 10, 999);
 #ifdef FILAMENTCHANGEENABLE
      MENU_ITEM(gcode, MSG_FILAMENTCHANGE, PSTR("M600"));
 #endif
