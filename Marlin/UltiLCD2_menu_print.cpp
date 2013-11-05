@@ -72,12 +72,16 @@ static void checkPrintFinished()
 
 static void doStartPrint()
 {
-    //TODO: Custom start code.
-    char buffer[32];
-    enquecommand_P(PSTR("G28"));
-    sprintf_P(buffer, PSTR("G92 E-%i"), int(20.0 / volume_to_filament_length[active_extruder]));
-    enquecommand(buffer);
-    enquecommand_P(PSTR("G1 F1500 E0"));
+    for(uint8_t e = 0; e<EXTRUDERS; e++)
+    {
+        if (!LCD_DETAIL_CACHE_MATERIAL(e))
+            continue;
+        active_extruder = e;
+        plan_set_e_position(-20.0 / volume_to_filament_length[e]);
+        current_position[E_AXIS] = 0.0;
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, e);
+    }
+    active_extruder = 0;
     
     postMenuCheck = checkPrintFinished;
     card.startFileprint();
@@ -320,6 +324,8 @@ void lcd_menu_print_select()
                         }
                         
                         fanSpeed = 0;
+                        enquecommand_P(PSTR("G28"));
+                        enquecommand_P(PSTR("G1 F12000 X5 Y10"));
                         lcd_change_to_menu(lcd_menu_print_heatup);
                     }else{
                         //Classic gcode file

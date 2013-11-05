@@ -197,7 +197,7 @@ public:
         float pos[3];
         float stepsPerUnit[4] = DEFAULT_AXIS_STEPS_PER_UNIT;
         pos[0] = x->getPosition() / stepsPerUnit[X_AXIS];
-        pos[1] = y->getPosition() / stepsPerUnit[Y_AXIS];
+        pos[1] = Y_MAX_POS - y->getPosition() / stepsPerUnit[Y_AXIS];
         pos[2] = z->getPosition() / stepsPerUnit[Z_AXIS];
         
         map[int(pos[0]/PRINTER_DOWN_SCALE)][int(pos[1]/PRINTER_DOWN_SCALE)] += e0->getPosition() - e0stepPos;
