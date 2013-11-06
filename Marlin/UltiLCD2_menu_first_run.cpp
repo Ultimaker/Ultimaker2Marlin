@@ -436,13 +436,15 @@ static void lcd_menu_first_run_material_select_pla_abs()
         if (IS_SELECTED_MAIN(0))
         {
             lcd_material_reset_defaults();
-            lcd_material_set_material(0);
+            for(uint8_t e=0; e<EXTRUDERS; e++)
+                lcd_material_set_material(0, e);
             lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_pla);
         }
         else if (IS_SELECTED_MAIN(1))
         {
             lcd_material_reset_defaults();
-            lcd_material_set_material(1);
+            for(uint8_t e=0; e<EXTRUDERS; e++)
+                lcd_material_set_material(1, e);
             lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_abs);
         }
     }

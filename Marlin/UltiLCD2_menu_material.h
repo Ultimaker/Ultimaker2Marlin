@@ -34,7 +34,7 @@ extern struct materialSettings material[EXTRUDERS];
 
 void lcd_menu_material();
 void lcd_material_reset_defaults();
-void lcd_material_set_material(uint8_t nr);
+void lcd_material_set_material(uint8_t nr, uint8_t e);
 void lcd_material_store_material(uint8_t nr);
 void lcd_material_read_current_material();
 void lcd_material_store_current_material();

@@ -336,7 +336,7 @@ static void lcd_menu_material_select()
         else if (IS_SELECTED_SCROLL(count + 1))
             lcd_change_to_menu(lcd_menu_material_settings);
         else{
-            lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM() - 1);
+            lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM() - 1, active_extruder);
             
             lcd_change_to_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
         }
@@ -495,20 +495,20 @@ void lcd_material_reset_defaults()
     eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 2);
 }
 
-void lcd_material_set_material(uint8_t nr)
+void lcd_material_set_material(uint8_t nr, uint8_t e)
 {
-    material[active_extruder].temperature = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr));
-    material[active_extruder].bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr));
-    material[active_extruder].flow = eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr));
+    material[e].temperature = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr));
+    material[e].bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr));
+    material[e].flow = eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr));
 
-    material[active_extruder].fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr));
-    material[active_extruder].diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
+    material[e].fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr));
+    material[e].diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
     eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     card.longFilename[8] = '\0';
-    if (material[active_extruder].temperature > HEATER_0_MAXTEMP - 15)
-        material[active_extruder].temperature = HEATER_0_MAXTEMP - 15;
-    if (material[active_extruder].bed_temperature > BED_MAXTEMP - 15)
-        material[active_extruder].bed_temperature = BED_MAXTEMP - 15;
+    if (material[e].temperature > HEATER_0_MAXTEMP - 15)
+        material[e].temperature = HEATER_0_MAXTEMP - 15;
+    if (material[e].bed_temperature > BED_MAXTEMP - 15)
+        material[e].bed_temperature = BED_MAXTEMP - 15;
     
     lcd_material_store_current_material();
 }
