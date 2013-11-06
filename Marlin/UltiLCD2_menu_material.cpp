@@ -102,7 +102,7 @@ static void lcd_menu_change_material_preheat()
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20 - 20;
     if (temp < 0) temp = 0;
-    if (temp > target)
+    if (temp > target && !is_command_queued())
     {
         for(uint8_t e=0; e<EXTRUDERS; e++)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
