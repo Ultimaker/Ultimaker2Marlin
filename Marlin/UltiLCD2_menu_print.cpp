@@ -286,7 +286,7 @@ void lcd_menu_print_select()
                 //Start print
                 active_extruder = 0;
                 card.openFile(card.filename, true);
-                if (card.isFileOpen())
+                if (card.isFileOpen() && !is_command_queued())
                 {
                     if (led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
                         analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
