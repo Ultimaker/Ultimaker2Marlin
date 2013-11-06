@@ -80,6 +80,12 @@ static void doStartPrint()
         plan_set_e_position(-20.0 / volume_to_filament_length[e]);
         current_position[E_AXIS] = 0.0;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, e);
+        
+        if (e > 0)
+        {
+            plan_set_e_position(20.0 / volume_to_filament_length[e]);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 35*60, e);
+        }
     }
     active_extruder = 0;
     
@@ -538,13 +544,21 @@ static char* tune_item_callback(uint8_t nr)
         strcpy_P(c, PSTR("Speed"));
     else if (nr == 2)
         strcpy_P(c, PSTR("Temperature"));
+#if EXTRUDERS > 1
     else if (nr == 3)
+        strcpy_P(c, PSTR("Temperature 2"));
+#endif
+    else if (nr == 2 + EXTRUDERS)
         strcpy_P(c, PSTR("Buildplate temp."));
-    else if (nr == 4)
+    else if (nr == 3 + EXTRUDERS)
         strcpy_P(c, PSTR("Fan speed"));
-    else if (nr == 5)
+    else if (nr == 4 + EXTRUDERS)
         strcpy_P(c, PSTR("Material flow"));
-    else if (nr == 6)
+#if EXTRUDERS > 1
+    else if (nr == 5 + EXTRUDERS)
+        strcpy_P(c, PSTR("Material flow 2"));
+#endif
+    else if (nr == 4 + EXTRUDERS * 2)
         strcpy_P(c, PSTR("Retraction"));
     return c;
 }
@@ -560,26 +574,84 @@ static void tune_item_details_callback(uint8_t nr)
         *c++ = '/';
         c = int_to_string(target_temperature[0], c, PSTR("C"));
     }
+#if EXTRUDERS > 1
     else if (nr == 3)
+    {
+        c = int_to_string(current_temperature[1], c, PSTR("C"));
+        *c++ = '/';
+        c = int_to_string(target_temperature[1], c, PSTR("C"));
+    }
+#endif
+    else if (nr == 2 + EXTRUDERS)
     {
         c = int_to_string(current_temperature_bed, c, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature_bed, c, PSTR("C"));
     }
-    else if (nr == 4)
+    else if (nr == 3 + EXTRUDERS)
         c = int_to_string(int(fanSpeed) * 100 / 255, c, PSTR("%"));
-    else if (nr == 5)
+    else if (nr == 4 + EXTRUDERS)
         c = int_to_string(extrudemultiply[0], c, PSTR("%"));
+#if EXTRUDERS > 1
+    else if (nr == 5 + EXTRUDERS)
+        c = int_to_string(extrudemultiply[1], c, PSTR("%"));
+#endif
     else
         return;
     lcd_lib_draw_string(5, 53, (char*)lcd_cache);
 }
 
-extern void lcd_menu_maintenance_advanced_heatup();//TODO
+void lcd_menu_print_tune_heatup_nozzle0()
+{
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
+    {
+        target_temperature[0] = int(target_temperature[0]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
+        if (target_temperature[0] < 0)
+            target_temperature[0] = 0;
+        if (target_temperature[0] > HEATER_0_MAXTEMP - 15)
+            target_temperature[0] = HEATER_0_MAXTEMP - 15;
+        lcd_lib_encoder_pos = 0;
+    }
+    if (lcd_lib_button_pressed)
+        lcd_change_to_menu(previousMenu, previousEncoderPos);
+    
+    lcd_lib_clear();
+    lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
+    lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
+    char buffer[16];
+    int_to_string(int(current_temperature[0]), buffer, PSTR("C/"));
+    int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
+    lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_update_screen();
+}
+void lcd_menu_print_tune_heatup_nozzle1()
+{
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
+    {
+        target_temperature[1] = int(target_temperature[1]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
+        if (target_temperature[1] < 0)
+            target_temperature[1] = 0;
+        if (target_temperature[1] > HEATER_0_MAXTEMP - 15)
+            target_temperature[1] = HEATER_0_MAXTEMP - 15;
+        lcd_lib_encoder_pos = 0;
+    }
+    if (lcd_lib_button_pressed)
+        lcd_change_to_menu(previousMenu, previousEncoderPos);
+    
+    lcd_lib_clear();
+    lcd_lib_draw_string_centerP(20, PSTR("Nozzle2 temperature:"));
+    lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
+    char buffer[16];
+    int_to_string(int(current_temperature[1]), buffer, PSTR("C/"));
+    int_to_string(int(target_temperature[1]), buffer+strlen(buffer), PSTR("C"));
+    lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_update_screen();
+}
+
 extern void lcd_menu_maintenance_advanced_bed_heatup();//TODO
 static void lcd_menu_print_tune()
 {
-    lcd_scroll_menu(PSTR("TUNE"), 7, tune_item_callback, tune_item_details_callback);
+    lcd_scroll_menu(PSTR("TUNE"), 5 + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -591,14 +663,22 @@ static void lcd_menu_print_tune()
         }else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING(feedmultiply, "Print speed", "%", 10, 1000);
         else if (IS_SELECTED_SCROLL(2))
-            lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.
+            lcd_change_to_menu(lcd_menu_print_tune_heatup_nozzle0, 0);
+#if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(3))
+            lcd_change_to_menu(lcd_menu_print_tune_heatup_nozzle1, 0);
+#endif
+        else if (IS_SELECTED_SCROLL(2 + EXTRUDERS))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.
-        else if (IS_SELECTED_SCROLL(4))
+        else if (IS_SELECTED_SCROLL(3 + EXTRUDERS))
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
-        else if (IS_SELECTED_SCROLL(5))
+        else if (IS_SELECTED_SCROLL(4 + EXTRUDERS))
             LCD_EDIT_SETTING(extrudemultiply[0], "Material flow", "%", 10, 1000);
-        else if (IS_SELECTED_SCROLL(6))
+#if EXTRUDERS > 1
+        else if (IS_SELECTED_SCROLL(5 + EXTRUDERS))
+            LCD_EDIT_SETTING(extrudemultiply[1], "Material flow 2", "%", 10, 1000);
+#endif
+        else if (IS_SELECTED_SCROLL(4 + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_print_tune_retraction);
     }
 }
@@ -611,6 +691,10 @@ static char* lcd_retraction_item(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Retract length"));
     else if (nr == 2)
         strcpy_P(card.longFilename, PSTR("Retract speed"));
+#if EXTRUDERS > 1
+    else if (nr == 3)
+        strcpy_P(card.longFilename, PSTR("Extruder change len"));
+#endif
     else
         strcpy_P(card.longFilename, PSTR("???"));
     return card.longFilename;
@@ -625,12 +709,16 @@ static void lcd_retraction_details(uint8_t nr)
         float_to_string(retract_length, buffer, PSTR("mm"));
     else if(nr == 2)
         int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
+#if EXTRUDERS > 1
+    else if(nr == 3)
+        int_to_string(extruder_swap_retract_length, buffer, PSTR("mm"));
+#endif
     lcd_lib_draw_string(5, 53, buffer);
 }
 
 static void lcd_menu_print_tune_retraction()
 {
-    lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
+    lcd_scroll_menu(PSTR("RETRACTION"), 3 + (EXTRUDERS > 1 ? 1 : 0), lcd_retraction_item, lcd_retraction_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -639,6 +727,10 @@ static void lcd_menu_print_tune_retraction()
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
         else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
+#if EXTRUDERS > 1
+        else if (IS_SELECTED_SCROLL(3))
+            LCD_EDIT_SETTING_FLOAT001(extruder_swap_retract_length, "Extruder change", "mm", 0, 50);
+#endif
     }
 }
 

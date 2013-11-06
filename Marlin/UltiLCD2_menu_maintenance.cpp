@@ -13,7 +13,7 @@
 
 
 static void lcd_menu_maintenance_advanced();
-void lcd_menu_maintenance_advanced_heatup();
+static void lcd_menu_maintenance_advanced_heatup();
 void lcd_menu_maintenance_advanced_bed_heatup();
 static void lcd_menu_maintenance_led();
 static void lcd_menu_maintenance_extrude();
@@ -152,7 +152,7 @@ static void lcd_menu_maintenance_advanced()
     }
 }
 
-void lcd_menu_maintenance_advanced_heatup()
+static void lcd_menu_maintenance_advanced_heatup()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
