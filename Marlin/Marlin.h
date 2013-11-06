@@ -209,6 +209,9 @@ extern unsigned char fanSpeedSoftPwm;
 extern bool autoretract_enabled;
 extern bool retracted;
 extern float retract_length, retract_feedrate, retract_zlift;
+#if EXTRUDERS > 1
+extern float extruder_swap_retract_length;
+#endif
 extern float retract_recover_length, retract_recover_feedrate;
 #endif
 

@@ -114,9 +114,9 @@ static void lcd_menu_change_material_preheat()
         
         current_position[E_AXIS] = 0;
         plan_set_e_position(current_position[E_AXIS]);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -1.0, FILAMENT_REVERSAL_SPEED, 0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -1.0, FILAMENT_REVERSAL_SPEED, active_extruder);
         for(uint8_t n=0;n<6;n++)
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (n+1)*-FILAMENT_REVERSAL_LENGTH/6, FILAMENT_REVERSAL_SPEED, 0);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (n+1)*-FILAMENT_REVERSAL_LENGTH/6, FILAMENT_REVERSAL_SPEED, active_extruder);
         
         max_feedrate[E_AXIS] = old_max_feedrate_e;
         retract_acceleration = old_retract_acceleration;
@@ -193,7 +193,7 @@ static void lcd_menu_change_material_insert_wait_user()
     if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 2)
     {
         current_position[E_AXIS] += 0.5;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, 0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, active_extruder);
     }
     
     lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
@@ -217,7 +217,7 @@ static void lcd_menu_change_material_insert_wait_user_ready()
     for(uint8_t n=0;n<6;n++)
     {
         current_position[E_AXIS] += FILAMENT_FORWARD_LENGTH / 6;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, 0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, active_extruder);
     }
     
     //Put back origonal values.
@@ -253,7 +253,7 @@ static void lcd_menu_change_material_insert_forward()
 static void materialInsertReady()
 {
     current_position[E_AXIS] -= 20;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, 0);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, active_extruder);
     cancelMaterialInsert();
 }
 
@@ -268,7 +268,7 @@ static void lcd_menu_change_material_insert()
     if (movesplanned() < 2)
     {
         current_position[E_AXIS] += 0.5;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_EXTRUDE_SPEED, 0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
     }
     
     lcd_lib_update_screen();
@@ -330,7 +330,6 @@ static void lcd_menu_material_select()
     lcd_scroll_menu(PSTR("MATERIAL"), count + 2, lcd_material_select_callback, lcd_material_select_details_callback);
     if (lcd_lib_button_pressed)
     {
-        printf("%i\n", count);
         if (IS_SELECTED_SCROLL(0))
             lcd_change_to_menu(lcd_menu_material_main);
         else if (IS_SELECTED_SCROLL(count + 1))
