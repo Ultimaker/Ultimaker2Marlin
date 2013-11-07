@@ -79,12 +79,12 @@ static void doStartPrint()
         active_extruder = e;
         plan_set_e_position(-20.0 / volume_to_filament_length[e]);
         current_position[E_AXIS] = 0.0;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, e);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25, e);
         
         if (e > 0)
         {
             plan_set_e_position(20.0 / volume_to_filament_length[e]);
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 35*60, e);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 35, e);
         }
     }
     active_extruder = 0;
@@ -363,7 +363,7 @@ static void lcd_menu_print_heatup()
 {
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     
-    if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2)
+    if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
     {
         doStartPrint();
         currentMenu = lcd_menu_print_printing;
