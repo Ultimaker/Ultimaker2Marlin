@@ -322,7 +322,7 @@ void lcd_menu_print_select()
                         {
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
                                 continue;
-                            target_temperature[e] = material[e].temperature;
+                            target_temperature[e] = 0;//material[e].temperature;
                             target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
                             fanSpeedPercent = max(fanSpeedPercent, material[0].fan_speed);
                             volume_to_filament_length[e] = 1.0 / (M_PI * (material[e].diameter / 2.0) * (material[e].diameter / 2.0));
@@ -363,16 +363,34 @@ static void lcd_menu_print_heatup()
 {
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
     
-    if (current_temperature[0] >= target_temperature[0] - TEMP_WINDOW && current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
+    if (current_temperature_bed > target_temperature_bed - 10)
     {
-        doStartPrint();
-        currentMenu = lcd_menu_print_printing;
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+        {
+            if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
+                continue;
+            target_temperature[e] = material[e].temperature;
+        }
+
+        if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
+        {
+            bool ready = true;
+            for(uint8_t e=0; e<EXTRUDERS; e++)
+                if (current_temperature[0] < target_temperature[0] - TEMP_WINDOW)
+                    ready = false;
+            
+            if (ready)
+            {
+                doStartPrint();
+                currentMenu = lcd_menu_print_printing;
+            }
+        }
     }
 
     uint8_t progress = 125;
     for(uint8_t e=0; e<EXTRUDERS; e++)
     {
-        if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
+        if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] < 1)
             continue;
         if (current_temperature[e] > 20)
             progress = min(progress, (current_temperature[e] - 20) * 125 / (target_temperature[e] - 20 - TEMP_WINDOW));
