@@ -196,7 +196,6 @@ void lcd_lib_update_screen()
     i2c_led_write(2, led_r);//PWM0
     i2c_led_write(3, led_g);//PWM1
     i2c_led_write(4, led_b);//PWM2
-    
     i2c_start();
     i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
     //Set the drawin position to 0,0

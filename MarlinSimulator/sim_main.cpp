@@ -237,7 +237,7 @@ void sim_setup_main()
     (new heaterSim(HEATER_0_PIN, adc, TEMP_0_PIN))->setDrawPosition(130, 70);
     (new heaterSim(HEATER_1_PIN, adc, TEMP_1_PIN))->setDrawPosition(130, 80);
     (new heaterSim(HEATER_BED_PIN, adc, TEMP_BED_PIN, 0.2))->setDrawPosition(130, 90);
-    new sdcardSimulation("c:/models/");
+    new sdcardSimulation("c:/models/", 5000);
     (new serialSim())->setDrawPosition(150, 0);
 #if defined(ULTIBOARD_V2_CONTROLLER) || defined(ENABLE_ULTILCD2)
     i2cSim* i2c = new i2cSim();

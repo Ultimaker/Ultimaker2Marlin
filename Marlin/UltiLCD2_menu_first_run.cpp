@@ -501,7 +501,7 @@ static void lcd_menu_first_run_print_1()
 
 static void lcd_menu_first_run_print_card_detect()
 {
-    if (!IS_SD_INSERTED)
+    if (!card.sdInserted)
     {
         lcd_info_screen(lcd_menu_main);
         DRAW_PROGRESS_NR(21);

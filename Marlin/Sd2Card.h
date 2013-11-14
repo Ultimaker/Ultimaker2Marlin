@@ -164,7 +164,7 @@ class Sd2Card {
    *  Set SD error code.
    *  \param[in] code value for error code.
    */
-  void error(uint8_t code) {errorCode_ = code;}
+  void error(uint8_t code) {errorCode_ = code; }
   /**
    * \return error code for last error. See Sd2Card.h for a list of error codes.
    */

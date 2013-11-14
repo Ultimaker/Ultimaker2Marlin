@@ -36,6 +36,7 @@ void lcd_update()
 {
     if (!lcd_lib_update_ready()) return;
     lcd_lib_buttons_update();
+    card.updateSDInserted();
     
     if (led_glow_dir)
     {

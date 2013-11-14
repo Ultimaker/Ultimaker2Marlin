@@ -62,7 +62,7 @@ static void checkPrintFinished()
         currentMenu = lcd_menu_print_ready;
         SELECT_MAIN_MENU_ITEM(0);
     }
-    if (!card.isOk())
+    if (card.errorCode())
     {
         abortPrint();
         currentMenu = lcd_menu_print_error;
@@ -131,11 +131,12 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
             LCD_CACHE_ID(idx) = nr;
             strcpy(LCD_CACHE_FILENAME(idx), card.longFilename);
             LCD_CACHE_TYPE(idx) = card.filenameIsDir ? 1 : 0;
-            if (card.errorCode() && IS_SD_INSERTED)
+            if (card.errorCode() && card.sdInserted)
             {
                 //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
                 card.clearError();
                 LCD_CACHE_ID(idx) = 255;
+                card.longFilename[0] = '\0';
             }
         }
     }
@@ -230,7 +231,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
 
 void lcd_menu_print_select()
 {
-    if (!IS_SD_INSERTED)
+    if (!card.sdInserted)
     {
         LED_GLOW();
         lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
@@ -241,7 +242,6 @@ void lcd_menu_print_select()
         card.release();
         return;
     }
-    
     if (!card.isOk())
     {
         lcd_info_screen(lcd_menu_main);
@@ -578,6 +578,8 @@ static char* tune_item_callback(uint8_t nr)
 #endif
     else if (nr == 4 + EXTRUDERS * 2)
         strcpy_P(c, PSTR("Retraction"));
+    else if (nr == 5 + EXTRUDERS * 2)
+        strcpy_P(c, PSTR("LED Brightness"));
     return c;
 }
 
@@ -614,6 +616,12 @@ static void tune_item_details_callback(uint8_t nr)
     else if (nr == 5 + EXTRUDERS)
         c = int_to_string(extrudemultiply[1], c, PSTR("%"));
 #endif
+    else if (nr == 6 + EXTRUDERS)
+    {
+        c = int_to_string(led_brightness_level, c, PSTR("%"));
+        if (led_mode == LED_MODE_ALWAYS_ON ||  led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
+            analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
+    }
     else
         return;
     lcd_lib_draw_string(5, 53, (char*)lcd_cache);
@@ -669,7 +677,7 @@ void lcd_menu_print_tune_heatup_nozzle1()
 extern void lcd_menu_maintenance_advanced_bed_heatup();//TODO
 static void lcd_menu_print_tune()
 {
-    lcd_scroll_menu(PSTR("TUNE"), 5 + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
+    lcd_scroll_menu(PSTR("TUNE"), 6 + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -698,24 +706,26 @@ static void lcd_menu_print_tune()
 #endif
         else if (IS_SELECTED_SCROLL(4 + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_print_tune_retraction);
+        else if (IS_SELECTED_SCROLL(5 + EXTRUDERS * 2))
+            LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
     }
 }
 
 static char* lcd_retraction_item(uint8_t nr)
 {
     if (nr == 0)
-        strcpy_P(card.longFilename, PSTR("< RETURN"));
+        strcpy_P((char*)lcd_cache, PSTR("< RETURN"));
     else if (nr == 1)
-        strcpy_P(card.longFilename, PSTR("Retract length"));
+        strcpy_P((char*)lcd_cache, PSTR("Retract length"));
     else if (nr == 2)
-        strcpy_P(card.longFilename, PSTR("Retract speed"));
+        strcpy_P((char*)lcd_cache, PSTR("Retract speed"));
 #if EXTRUDERS > 1
     else if (nr == 3)
-        strcpy_P(card.longFilename, PSTR("Extruder change len"));
+        strcpy_P((char*)lcd_cache, PSTR("Extruder change len"));
 #endif
     else
-        strcpy_P(card.longFilename, PSTR("???"));
-    return card.longFilename;
+        strcpy_P((char*)lcd_cache, PSTR("???"));
+    return (char*)lcd_cache;
 }
 
 static void lcd_retraction_details(uint8_t nr)

@@ -603,7 +603,7 @@ void get_command()
     int16_t n=card.get();
     if (card.errorCode())
     {
-        if (!IS_SD_INSERTED)
+        if (!card.sdInserted)
         {
             card.release();
             serial_count = 0;
@@ -613,7 +613,11 @@ void get_command()
         //On an error, reset the error, reset the file position and try again.
         card.clearError();
         serial_count = 0;
-        card.setIndex(endOfLineFilePosition);
+        //Screw it, if we are near the end of a file with an error, act if the file is finished. Hopefully preventing the hang at the end.
+        if (endOfLineFilePosition > card.getFileSize() - 512)
+            card.sdprinting = false;
+        else
+            card.setIndex(endOfLineFilePosition);
         return;
     }
     
@@ -623,7 +627,7 @@ void get_command()
        (serial_char == ':' && comment_mode == false) ||
        serial_count >= (MAX_CMD_SIZE - 1)||n==-1)
     {
-      if(card.eof()){
+      if(card.eof() || n==-1){
         SERIAL_PROTOCOLLNPGM(MSG_FILE_PRINTED);
         stoptime=millis();
         char time[30];
@@ -704,8 +708,8 @@ XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
 
 static void axis_is_at_home(int axis) {
   current_position[axis] = base_home_pos(axis) + add_homeing[axis];
-  min_pos[axis] =          base_min_pos(axis) + add_homeing[axis];
-  max_pos[axis] =          base_max_pos(axis) + add_homeing[axis];
+  min_pos[axis] =          base_min_pos(axis);// + add_homeing[axis];
+  max_pos[axis] =          base_max_pos(axis);// + add_homeing[axis];
 }
 
 static void homeaxis(int axis) {
@@ -806,7 +810,7 @@ void process_commands()
         destination[X_AXIS]=current_position[X_AXIS];
         destination[Y_AXIS]=current_position[Y_AXIS];
         destination[Z_AXIS]=current_position[Z_AXIS];
-        #if EXTRUDERS 
+        #if EXTRUDERS > 1
         if (code_seen('S') && code_value_long() == 1)
             destination[E_AXIS]=current_position[E_AXIS]-extruder_swap_retract_length/volume_to_filament_length[active_extruder];
         else

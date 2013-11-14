@@ -379,8 +379,8 @@ bool Sd2Card::readBlock(uint32_t blockNumber, uint8_t* dst) {
  retry2:
   retryCnt --;
   if (cardCommand(CMD17, blockNumber)) {
-    if (retryCnt > 0) goto retry;
     error(SD_CARD_ERROR_CMD17);
+    if (retryCnt > 0) goto retry;
     goto fail;
   }
   if (!readData(dst, 512))
