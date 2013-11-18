@@ -210,6 +210,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             c = float_to_string(length / 1000.0, c, PSTR("m"));
                         else
                             c = int_to_string(length / 1000.0, c, PSTR("m"));
+#if EXTRUDERS > 1
                         if (LCD_DETAIL_CACHE_MATERIAL(1))
                         {
                             *c++ = '/';
@@ -219,6 +220,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             else
                                 c = int_to_string(length / 1000.0, c, PSTR("m"));
                         }
+#endif
                     }
                     lcd_lib_draw_string(3, 53, buffer);
                 }else{
@@ -650,6 +652,7 @@ void lcd_menu_print_tune_heatup_nozzle0()
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
 }
+#if EXTRUDERS > 1
 void lcd_menu_print_tune_heatup_nozzle1()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
@@ -673,7 +676,7 @@ void lcd_menu_print_tune_heatup_nozzle1()
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
 }
-
+#endif
 extern void lcd_menu_maintenance_advanced_bed_heatup();//TODO
 static void lcd_menu_print_tune()
 {
