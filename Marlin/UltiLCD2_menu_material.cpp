@@ -107,6 +107,8 @@ static void lcd_menu_change_material_preheat()
         set_extrude_min_temp(0);
         for(uint8_t e=0; e<EXTRUDERS; e++)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
+
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 20.0, retract_feedrate/60.0, active_extruder);
         
         float old_max_feedrate_e = max_feedrate[E_AXIS];
         float old_retract_acceleration = retract_acceleration;
