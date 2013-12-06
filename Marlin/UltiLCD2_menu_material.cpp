@@ -480,7 +480,7 @@ void lcd_material_reset_defaults()
     
     strcpy_P(buffer, PSTR("PLA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
-    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 220);
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(0), 75);
     eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(0), 100);
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);

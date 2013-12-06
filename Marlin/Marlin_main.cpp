@@ -583,6 +583,9 @@ void get_command()
           }
 
         }
+#ifdef ENABLE_ULTILCD2
+        lastSerialCommandTime = millis();
+#endif
         bufindw = (bufindw + 1)%BUFSIZE;
         buflen += 1;
       }
@@ -1317,7 +1320,7 @@ void process_commands()
         LCD_MESSAGEPGM(MSG_BED_HEATING);
         if (code_seen('S')) setTargetBed(code_value());
         codenum = millis();
-        while(target_temperature_bed < current_temperature_bed - TEMP_WINDOW)
+        while(current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
         {
           if(( millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
           {
@@ -2024,6 +2027,49 @@ void process_commands()
       gcode_LastN = Stopped_gcode_LastN;
       FlushSerialRequestResend();
     break;
+#ifdef ENABLE_ULTILCD2
+    case 10000://M10000 - Clear the whole LCD
+        lcd_lib_clear();
+        break;
+    case 10001://M10001 - Draw text on LCD, M10002 X0 Y0 SText
+        {
+        uint8_t x = 0, y = 0;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('S')) lcd_lib_draw_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+        }
+        break;
+    case 10002://M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText
+        {
+        uint8_t x = 0, y = 0;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('S')) lcd_lib_clear_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+        }
+        break;
+    case 10003://M10003 - Draw square on LCD, M10003 X1 Y1 W10 H10
+        {
+        uint8_t x = 0, y = 0, w = 1, h = 1;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('W')) w = code_value_long();
+        if (code_seen('H')) h = code_value_long();
+        lcd_lib_set(x, y, x + w, y + h);
+        }
+        break;
+    case 10010://M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
+        {
+            SERIAL_PROTOCOLPGM("ok R:");
+            SERIAL_PROTOCOL_F(lcd_lib_encoder_pos, 10);
+            lcd_lib_encoder_pos = 0;
+            if (lcd_lib_button_down)
+                SERIAL_PROTOCOLLNPGM(" B:1");
+            else
+                SERIAL_PROTOCOLLNPGM(" B:0");
+            return;
+        }
+        break;
+#endif//ENABLE_ULTILCD2
     }
   }
 

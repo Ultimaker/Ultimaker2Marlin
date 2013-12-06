@@ -12,6 +12,10 @@
 #include "temperature.h"
 #include "pins.h"
 
+#define SERIAL_CONTROL_TIMEOUT 5000
+
+unsigned long lastSerialCommandTime;
+bool serialScreenShown;
 uint8_t led_brightness_level = 100;
 uint8_t led_mode = LED_MODE_ALWAYS_ON;
 
@@ -36,6 +40,7 @@ void lcd_init()
     lcd_material_read_current_material();
     currentMenu = lcd_menu_startup;
     analogWrite(LED_PIN, 0);
+    lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
 }
 
 void lcd_update()
@@ -74,7 +79,17 @@ void lcd_update()
         lcd_lib_draw_stringP(1, 50, PSTR("support@ultimaker.com"));
         LED_GLOW_ERROR();
         lcd_lib_update_screen();
+    }else if (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
+    {
+        if (!serialScreenShown)
+        {
+            lcd_lib_clear();
+            lcd_lib_draw_string_centerP(20, PSTR("Printing with USB..."));
+            serialScreenShown = true;
+        }
+        lcd_lib_update_screen();
     }else{
+        serialScreenShown = false;
         currentMenu();
         if (postMenuCheck) postMenuCheck();
     }

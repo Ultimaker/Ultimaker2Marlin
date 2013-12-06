@@ -840,12 +840,12 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   float safe_speed = vmax_junction;
 
   if ((moves_queued > 1) && (previous_nominal_speed > 0.0001)) {
-    float jerk = sqrt(pow((current_speed[X_AXIS]-previous_speed[X_AXIS]), 2)+pow((current_speed[Y_AXIS]-previous_speed[Y_AXIS]), 2));
+    float xy_jerk = sqrt(square(current_speed[X_AXIS]-previous_speed[X_AXIS])+square(current_speed[Y_AXIS]-previous_speed[Y_AXIS]));
     //    if((fabs(previous_speed[X_AXIS]) > 0.0001) || (fabs(previous_speed[Y_AXIS]) > 0.0001)) {
     vmax_junction = block->nominal_speed;
     //    }
-    if (jerk > max_xy_jerk) {
-      vmax_junction_factor = (max_xy_jerk/jerk);
+    if (xy_jerk > max_xy_jerk) {
+      vmax_junction_factor = (max_xy_jerk/xy_jerk);
     } 
     if(fabs(current_speed[Z_AXIS] - previous_speed[Z_AXIS]) > max_z_jerk) {
       vmax_junction_factor= min(vmax_junction_factor, (max_z_jerk/fabs(current_speed[Z_AXIS] - previous_speed[Z_AXIS])));
@@ -909,8 +909,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
    */
 #endif // ADVANCE
 
-  calculate_trapezoid_for_block(block, block->entry_speed/block->nominal_speed,
-  safe_speed/block->nominal_speed);
+  calculate_trapezoid_for_block(block, block->entry_speed/block->nominal_speed, safe_speed/block->nominal_speed);
 
   // Move buffer head
   block_buffer_head = next_buffer_head;

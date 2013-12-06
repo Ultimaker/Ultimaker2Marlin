@@ -54,8 +54,8 @@
 #define SERIAL_PROTOCOL(x) MYSERIAL.print(x);
 #define SERIAL_PROTOCOL_F(x,y) MYSERIAL.print(x,y);
 #define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x));
-#define SERIAL_PROTOCOLLN(x) {MYSERIAL.print(x);MYSERIAL.write('\n');}
-#define SERIAL_PROTOCOLLNPGM(x) {serialprintPGM(PSTR(x));MYSERIAL.write('\n');}
+#define SERIAL_PROTOCOLLN(x) do {MYSERIAL.print(x);MYSERIAL.write('\n');} while(0)
+#define SERIAL_PROTOCOLLNPGM(x) do{serialprintPGM(PSTR(x));MYSERIAL.write('\n');} while(0)
 
 
 const char errormagic[] PROGMEM ="Error:";
