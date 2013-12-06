@@ -320,7 +320,7 @@
 #if MOTHERBOARD == 33 || MOTHERBOARD == 34 || MOTHERBOARD == 77
 
   #define LARGE_FLASH true
-  
+
   #if MOTHERBOARD == 77
     #define X_STEP_PIN         54
     #define X_DIR_PIN          55
@@ -356,7 +356,7 @@
     #define SDSS               25//53
     #define LED_PIN            13
 
-    #define BEEPER             33    
+    #define BEEPER             33
 
   #else
 
@@ -402,7 +402,7 @@
   #endif
 
   #if MOTHERBOARD == 77
-    #define FAN_PIN            8 
+    #define FAN_PIN            8
   #endif
 
   #define PS_ON_PIN          12
@@ -414,17 +414,17 @@
   #endif
 
   #define HEATER_0_PIN       10   // EXTRUDER 1
-  #if MOTHERBOARD == 33 
+  #if MOTHERBOARD == 33
     #define HEATER_1_PIN       -1
   #else
     #define HEATER_1_PIN       9    // EXTRUDER 2 (FAN On Sprinter)
   #endif
-  #define HEATER_2_PIN       -1 
+  #define HEATER_2_PIN       -1
 
   #if MOTHERBOARD == 77
-    #define HEATER_0_PIN       10   
-    #define HEATER_1_PIN       12 
-    #define HEATER_2_PIN       6   
+    #define HEATER_0_PIN       10
+    #define HEATER_1_PIN       12
+    #define HEATER_2_PIN       6
   #endif
 
   #define TEMP_0_PIN         13   // ANALOG NUMBERING
@@ -458,10 +458,10 @@
   #ifdef ULTRA_LCD
 
     #ifdef NEWPANEL
-      #define LCD_PINS_RS 16 
+      #define LCD_PINS_RS 16
       #define LCD_PINS_ENABLE 17
       #define LCD_PINS_D4 23
-      #define LCD_PINS_D5 25 
+      #define LCD_PINS_D5 25
       #define LCD_PINS_D6 27
       #define LCD_PINS_D7 29
 
@@ -496,25 +496,25 @@
         #else
           #define SDCARDDETECT -1  // Ramps does not use this port
         #endif
-    
+
       #endif
-    
-      #if MOTHERBOARD == 77 
-        #define BEEPER -1 
 
-        #define LCD_PINS_RS 27 
-        #define LCD_PINS_ENABLE 29 
-        #define LCD_PINS_D4 37 
-        #define LCD_PINS_D5 35 
-        #define LCD_PINS_D6 33 
-        #define LCD_PINS_D7 31 
+      #if MOTHERBOARD == 77
+        #define BEEPER -1
 
-       //buttons 
-       #define BTN_EN1 16 
-       #define BTN_EN2 17 
-       #define BTN_ENC 23 //the click 
+        #define LCD_PINS_RS 27
+        #define LCD_PINS_ENABLE 29
+        #define LCD_PINS_D4 37
+        #define LCD_PINS_D5 35
+        #define LCD_PINS_D6 33
+        #define LCD_PINS_D7 31
 
-    #endif 
+       //buttons
+       #define BTN_EN1 16
+       #define BTN_EN2 17
+       #define BTN_ENC 23 //the click
+
+    #endif
     #else //old style panel with shift register
       //arduino pin witch triggers an piezzo beeper
       #define BEEPER 33		//No Beeper added
@@ -525,14 +525,14 @@
       //#define SHIFT_LD 42
       //#define SHIFT_OUT 40
       //#define SHIFT_EN 17
-    
-      #define LCD_PINS_RS 16 
+
+      #define LCD_PINS_RS 16
       #define LCD_PINS_ENABLE 17
       #define LCD_PINS_D4 23
-      #define LCD_PINS_D5 25 
+      #define LCD_PINS_D5 25
       #define LCD_PINS_D6 27
       #define LCD_PINS_D7 29
-    #endif 
+    #endif
   #endif //ULTRA_LCD
 
 #else // RAMPS_V_1_1 or RAMPS_V_1_2 as default (MOTHERBOARD == 3)
@@ -577,16 +577,16 @@
 #define HEATER_1_PIN        -1
 #define HEATER_2_PIN        -1
 #define TEMP_0_PIN          2    // MUST USE ANALOG INPUT NUMBERING NOT DIGITAL OUTPUT NUMBERING!!!!!!!!!
-#define TEMP_1_PIN          -1   
-#define TEMP_2_PIN          -1   
+#define TEMP_1_PIN          -1
+#define TEMP_2_PIN          -1
 #define TEMP_BED_PIN        1    // MUST USE ANALOG INPUT NUMBERING NOT DIGITAL OUTPUT NUMBERING!!!!!!!!!
 
 #endif // MOTHERBOARD == 33 || MOTHERBOARD == 34 || MOTHERBOARD == 77
 
-// SPI for Max6675 Thermocouple 
+// SPI for Max6675 Thermocouple
 
 #ifndef SDSUPPORT
-// these pins are defined in the SD library if building with SD support  
+// these pins are defined in the SD library if building with SD support
   #define MAX_SCK_PIN          52
   #define MAX_MISO_PIN         50
   #define MAX_MOSI_PIN         51
@@ -722,17 +722,17 @@
   #define BTN_EN1          14
   #define BTN_EN2          39
   #define BTN_ENC          15  //the click
-    
+
   #define BLEN_C           2
   #define BLEN_B           1
   #define BLEN_A           0
-    
+
   //encoder rotation values
   #define encrot0          0
   #define encrot1          2
   #define encrot2          3
   #define encrot3          1
-  
+
 #endif //RA_CONTROL_PANEL
 
 #ifdef RA_DISCO
@@ -746,7 +746,7 @@
   //This currently only works with the RA Board.
   #define TLC_CLOCK_BIT 3 //bit 3 on port A
   #define TLC_CLOCK_PORT &PORTA //bit 3 on port A
-  
+
   #define TLC_BLANK_BIT 1 //bit 1 on port A
   #define TLC_BLANK_PORT &PORTA //bit 1 on port A
 
@@ -756,12 +756,12 @@
   #define TLC_XLAT_BIT 0 //bit 0 on port A
   #define TLC_XLAT_PORT &PORTA //bit 0 on port A
 
-  //change this to match your situation. Lots of TLCs takes up the arduino SRAM very quickly, so be careful 
+  //change this to match your situation. Lots of TLCs takes up the arduino SRAM very quickly, so be careful
   //Leave it at at least 1 if you have enabled RA_LIGHTING
   //The number of TLC5947 boards chained together for use with the animation, additional ones will repeat the animation on them, but are not individually addressable and mimic those before them. You can leave the default at 2 even if you only have 1 TLC5947 module.
-  #define NUM_TLCS 2 
+  #define NUM_TLCS 2
 
-  //These TRANS_ARRAY values let you change the order the LEDs on the lighting modules will animate for chase functions. 
+  //These TRANS_ARRAY values let you change the order the LEDs on the lighting modules will animate for chase functions.
   //Modify them according to your specific situation.
   //NOTE: the array should be 8 long for every TLC you have. These defaults assume (2) TLCs.
   #define TRANS_ARRAY {0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8} //forwards
@@ -960,8 +960,8 @@
        #define LCD_PINS_D7        27
      #endif
      //The encoder and click button
-     #define BTN_EN1 11  
-     #define BTN_EN2 10 
+     #define BTN_EN1 11
+     #define BTN_EN2 10
      #ifdef LCD_I2C_PANELOLU2
        #ifdef MELZI
          #define BTN_ENC 29 //the click switch
@@ -973,8 +973,8 @@
        #define BTN_ENC 16  //the click switch
      #endif //Panelolu2
      //not connected to a pin
-     #define SDCARDDETECT -1    
-    
+     #define SDCARDDETECT -1
+
    #endif //Newpanel
  #endif //Ultipanel
 
@@ -1058,9 +1058,9 @@
     #define BTN_EN1 40
     #define BTN_EN2 42
     #define BTN_ENC 19  //the click
-    
+
     #define SDCARDDETECT 38
-    
+
   #else //old style panel with shift register
     //arduino pin witch triggers an piezzo beeper
     #define BEEPER 18
@@ -1077,9 +1077,9 @@
     #define LCD_PINS_D5 21
     #define LCD_PINS_D6 20
     #define LCD_PINS_D7 19
-  
+
     #define SDCARDDETECT -1
-  #endif 
+  #endif
 #endif //ULTRA_LCD
 
 #endif
@@ -1182,7 +1182,7 @@
 #define TEMP_BED_PIN 10
 
 #define HEATER_0_PIN  2
-#define TEMP_0_PIN 8   
+#define TEMP_0_PIN 8
 
 #define HEATER_1_PIN 3
 #define TEMP_1_PIN 9
@@ -1214,16 +1214,16 @@
 #define MOTOR_CURRENT_PWM_XY_PIN 44
 #define MOTOR_CURRENT_PWM_Z_PIN 45
 #define MOTOR_CURRENT_PWM_E_PIN 46
-//Motor current PWM conversion, PWM value = MotorCurrentSetting * Range / 255
+//Motor current PWM conversion, PWM value = MotorCurrentSetting * 255 / range
 #define MOTOR_CURRENT_PWM_RANGE 2000
 
 //arduino pin witch triggers an piezzo beeper
 #define BEEPER 18
 
-#define LCD_PINS_RS 20 
+#define LCD_PINS_RS 20
 #define LCD_PINS_ENABLE 15
 #define LCD_PINS_D4 14
-#define LCD_PINS_D5 21 
+#define LCD_PINS_D5 21
 #define LCD_PINS_D6 5
 #define LCD_PINS_D7 6
 
@@ -1305,7 +1305,7 @@
  #else
   #define TEMP_0_PIN         15   // ANALOG NUMBERING - default connector for thermistor *T0* on rumba board is used
  #endif
-#endif 
+#endif
 
 #if (TEMP_SENSOR_1==0)
  #define TEMP_1_PIN         -1
@@ -1863,13 +1863,13 @@
     #define BTN_EN1 59
     #define BTN_EN2 64
     #define BTN_ENC 43  //the click
-    
+
     #define BLEN_C 2
     #define BLEN_B 1
     #define BLEN_A 0
-    
+
     #define SDCARDDETECT -1		// Ramps does not use this port
-    
+
       //encoder rotation values
     #define encrot0 0
     #define encrot1 2
@@ -1886,102 +1886,102 @@
 ****************************************************************************************/
 #if MOTHERBOARD == 701
  #define KNOWN_BOARD 1
- 
- 
+
+
  #ifndef __AVR_ATmega2560__
  #error Oops! Make sure you have 'Arduino Mega' selected from the 'Tools -> Boards' menu.
  #endif
- 
+
  #define LARGE_FLASH        true
- 
+
  #define X_STEP_PIN 26
  #define X_DIR_PIN 27
  #define X_ENABLE_PIN 25
  #define X_MIN_PIN 37
  #define X_MAX_PIN 40 //2 //Max endstops default to disabled "-1", set to commented value to enable.
- 
+
  #define Y_STEP_PIN 4 // A6
  #define Y_DIR_PIN 54 // A0
  #define Y_ENABLE_PIN 5
  #define Y_MIN_PIN 41
  #define Y_MAX_PIN 38 //15
- 
+
  #define Z_STEP_PIN 56 // A2
  #define Z_DIR_PIN 60 // A6
  #define Z_ENABLE_PIN 55 // A1
  #define Z_MIN_PIN 18
  #define Z_MAX_PIN 19
- 
+
  #define E0_STEP_PIN 35
  #define E0_DIR_PIN 36
  #define E0_ENABLE_PIN 34
- 
+
  #define E1_STEP_PIN 29
  #define E1_DIR_PIN 39
  #define E1_ENABLE_PIN 28
- 
+
  #define E2_STEP_PIN 23
  #define E2_DIR_PIN 24
  #define E2_ENABLE_PIN 22
- 
+
  #define SDPOWER -1
  #define SDSS 53
  #define LED_PIN 13
- 
+
  #define FAN_PIN 7
  #define FAN2_PIN 6
  #define PS_ON_PIN 12
  #define KILL_PIN -1
- 
+
  #define HEATER_0_PIN 9 // EXTRUDER 1
  #define HEATER_1_PIN 8 // EXTRUDER 2
  #define HEATER_2_PIN -1
- 
+
  #if TEMP_SENSOR_0 == -1
    #define TEMP_0_PIN 4 // ANALOG NUMBERING
  #else
    #define TEMP_0_PIN 13 // ANALOG NUMBERING
  #endif
- 
- 
+
+
  #if TEMP_SENSOR_1 == -1
    #define TEMP_1_PIN 8 // ANALOG NUMBERING
  #else
    #define TEMP_1_PIN 15 // ANALOG NUMBERING
  #endif
- 
+
  #define TEMP_2_PIN -1 // ANALOG NUMBERING
- 
+
  #define HEATER_BED_PIN 10 // BED
- 
+
  #if TEMP_SENSOR_BED == -1
    #define TEMP_BED_PIN 8 // ANALOG NUMBERING
- #else 
+ #else
    #define TEMP_BED_PIN 14 // ANALOG NUMBERING
  #endif
- 
- #define BEEPER 64	
- 
- 
+
+ #define BEEPER 64
+
+
  #define LCD_PINS_RS 14
  #define LCD_PINS_ENABLE 15
  #define LCD_PINS_D4 30
  #define LCD_PINS_D5 31
  #define LCD_PINS_D6 32
  #define LCD_PINS_D7 33
- 
- 
+
+
  //buttons are directly attached using keypad
  #define BTN_EN1 61
  #define BTN_EN2 59
  #define BTN_ENC 43 //the click
- 
+
  #define BLEN_C 2
  #define BLEN_B 1
  #define BLEN_A 0
- 
+
  #define SDCARDDETECT -1	// Megatronics does not use this port
- 
+
    //encoder rotation values
  #define encrot0 0
  #define encrot1 2
@@ -1997,87 +1997,87 @@
 ****************************************************************************************/
 #if MOTHERBOARD == 702
  #define KNOWN_BOARD 1
- 
- 
+
+
  #ifndef __AVR_ATmega1281__
  #error Oops! Make sure you have 'Minitronics ' selected from the 'Tools -> Boards' menu.
  #endif
- 
+
  #define LARGE_FLASH        true
- 
+
  #define X_STEP_PIN 48
  #define X_DIR_PIN 47
  #define X_ENABLE_PIN 49
  #define X_MIN_PIN 5
  #define X_MAX_PIN -1 //2 //Max endstops default to disabled "-1", set to commented value to enable.
- 
+
  #define Y_STEP_PIN 39 // A6
  #define Y_DIR_PIN 40 // A0
  #define Y_ENABLE_PIN 38
  #define Y_MIN_PIN 2
  #define Y_MAX_PIN -1 //15
- 
+
  #define Z_STEP_PIN 42 // A2
  #define Z_DIR_PIN 43 // A6
  #define Z_ENABLE_PIN 41 // A1
  #define Z_MIN_PIN 6
  #define Z_MAX_PIN -1
- 
+
  #define E0_STEP_PIN 45
  #define E0_DIR_PIN 44
  #define E0_ENABLE_PIN 27
- 
+
  #define E1_STEP_PIN 36
  #define E1_DIR_PIN 35
  #define E1_ENABLE_PIN 37
- 
+
  #define E2_STEP_PIN -1
  #define E2_DIR_PIN -1
  #define E2_ENABLE_PIN -1
- 
+
  #define SDPOWER -1
  #define SDSS 16
  #define LED_PIN 46
- 
+
  #define FAN_PIN 9
  #define FAN2_PIN -1
  #define PS_ON_PIN -1
  #define KILL_PIN -1
- 
+
  #define HEATER_0_PIN 7 // EXTRUDER 1
  #define HEATER_1_PIN 8 // EXTRUDER 2
  #define HEATER_2_PIN -1
- 
+
 
  #define TEMP_0_PIN 7 // ANALOG NUMBERING
  #define TEMP_1_PIN 6 // ANALOG NUMBERING
  #define TEMP_2_PIN -1 // ANALOG NUMBERING
- 
+
  #define HEATER_BED_PIN 3 // BED
  #define TEMP_BED_PIN 6 // ANALOG NUMBERING
- 
- #define BEEPER -1	
- 
- 
+
+ #define BEEPER -1
+
+
  #define LCD_PINS_RS -1
  #define LCD_PINS_ENABLE -1
  #define LCD_PINS_D4 -1
  #define LCD_PINS_D5 -1
  #define LCD_PINS_D6 -1
  #define LCD_PINS_D7 -1
- 
- 
+
+
  //buttons are directly attached using keypad
  #define BTN_EN1 -1
  #define BTN_EN2 -1
  #define BTN_ENC -1 //the click
- 
+
  #define BLEN_C 2
  #define BLEN_B 1
  #define BLEN_A 0
- 
+
  #define SDCARDDETECT -1	// Megatronics does not use this port
- 
+
    //encoder rotation values
  #define encrot0 0
  #define encrot1 2
