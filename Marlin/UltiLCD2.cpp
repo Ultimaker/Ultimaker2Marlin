@@ -87,6 +87,8 @@ void lcd_update()
             lcd_lib_draw_string_centerP(20, PSTR("Printing with USB..."));
             serialScreenShown = true;
         }
+        if (printing_state == PRINT_STATE_HEATING || printing_state == PRINT_STATE_HEATING_BED || printing_state == PRINT_STATE_HOMING)
+            lastSerialCommandTime = millis();
         lcd_lib_update_screen();
     }else{
         serialScreenShown = false;

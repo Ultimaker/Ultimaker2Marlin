@@ -2057,6 +2057,26 @@ void process_commands()
         lcd_lib_set(x, y, x + w, y + h);
         }
         break;
+    case 10004://M10004 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
+        {
+        uint8_t x = 0, y = 0, w = 1, h = 1;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('W')) w = code_value_long();
+        if (code_seen('H')) h = code_value_long();
+        lcd_lib_draw_shade(x, y, x + w, y + h);
+        }
+        break;
+    case 10005://M10005 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
+        {
+        uint8_t x = 0, y = 0, w = 1, h = 1;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('W')) w = code_value_long();
+        if (code_seen('H')) h = code_value_long();
+        lcd_lib_draw_shade(x, y, x + w, y + h);
+        }
+        break;
     case 10010://M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
         {
             SERIAL_PROTOCOLPGM("ok R:");
