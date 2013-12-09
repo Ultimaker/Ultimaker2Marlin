@@ -584,7 +584,9 @@ void get_command()
 
         }
 #ifdef ENABLE_ULTILCD2
-        lastSerialCommandTime = millis();
+        strchr_pointer = strchr(cmdbuffer[bufindw], 'M');
+        if (strtol(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL, 10) != 105)
+            lastSerialCommandTime = millis();
 #endif
         bufindw = (bufindw + 1)%BUFSIZE;
         buflen += 1;
