@@ -910,6 +910,8 @@ void disable_heater()
   #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
     target_temperature_bed=0;
     soft_pwm_bed=0;
+    pTerm_bed = 0;
+    iTerm_bed = 0;
     #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1  
       WRITE(HEATER_BED_PIN,LOW);
     #endif
