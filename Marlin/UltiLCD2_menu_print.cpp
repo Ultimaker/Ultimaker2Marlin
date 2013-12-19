@@ -43,6 +43,7 @@ static void abortPrint()
     postMenuCheck = NULL;
     doCooldown();
 
+    clear_command_queue();
     char buffer[32];
     if (card.sdprinting)
     {
@@ -52,6 +53,7 @@ static void abortPrint()
         enquecommand_P(PSTR("G1 F1500 E0"));
     }
     enquecommand_P(PSTR("G28"));
+    enquecommand_P(PSTR("M84"));
 }
 
 static void checkPrintFinished()
