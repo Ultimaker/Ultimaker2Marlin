@@ -283,8 +283,9 @@ extern "C"{
 //Clear all the commands in the ASCII command buffer, to make sure we have room for abort commands.
 void clear_command_queue()
 {
-    bufindr = bufindw;
-    buflen = 0;
+    bufindr = bufindw - 1;
+    buflen = 1;
+    cmdbuffer[bufindr][0] = '\0';
 }
 
 //adds an command to the main command buffer
@@ -484,8 +485,11 @@ void loop()
     #else
       process_commands();
     #endif //SDSUPPORT
-    buflen = (buflen-1);
-    bufindr = (bufindr + 1)%BUFSIZE;
+    if (buflen > 0)
+    {
+      buflen = (buflen-1);
+      bufindr = (bufindr + 1)%BUFSIZE;
+    }
   }
   //check heater every n milliseconds
   manage_heater();
