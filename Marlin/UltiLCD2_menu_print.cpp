@@ -531,7 +531,7 @@ static void lcd_menu_print_ready()
         analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
     lcd_info_screen(lcd_menu_main, postPrintReady, PSTR("BACK TO MENU"));
     //unsigned long printTimeSec = (stoptime-starttime)/1000;
-    if (current_temperature[0] > 60)
+    if (current_temperature[0] > 60 || current_temperature_bed > 40)
     {
         lcd_lib_draw_string_centerP(15, PSTR("Printer cooling down"));
 
@@ -548,6 +548,8 @@ static void lcd_menu_print_ready()
         char buffer[8];
         int_to_string(current_temperature[0], buffer, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
+        int_to_string(current_temperature_bed, buffer, PSTR("C"));
+        lcd_lib_draw_string_center(35, buffer);
     }else{
         LED_GLOW();
         lcd_lib_draw_string_centerP(10, PSTR("Print finished"));
