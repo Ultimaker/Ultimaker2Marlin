@@ -79,7 +79,7 @@ static void doStartPrint()
         if (!LCD_DETAIL_CACHE_MATERIAL(e))
             continue;
         active_extruder = e;
-        plan_set_e_position(-20.0 / volume_to_filament_length[e]);
+        plan_set_e_position(-25.0 / volume_to_filament_length[e]);
         current_position[E_AXIS] = 0.0;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25, e);
         
@@ -380,7 +380,7 @@ static void lcd_menu_print_heatup()
         {
             bool ready = true;
             for(uint8_t e=0; e<EXTRUDERS; e++)
-                if (current_temperature[0] < target_temperature[0] - TEMP_WINDOW)
+                if (current_temperature[e] < target_temperature[e] - TEMP_WINDOW)
                     ready = false;
             
             if (ready)
@@ -546,9 +546,11 @@ static void lcd_menu_print_ready()
             
         lcd_progressbar(progress);
         char buffer[8];
-        int_to_string(current_temperature[0], buffer, PSTR("C"));
+        char* c = buffer;
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+            c = int_to_string(current_temperature[e], buffer, PSTR("C "));
+        int_to_string(current_temperature_bed, c, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
-        int_to_string(current_temperature_bed, buffer, PSTR("C"));
         lcd_lib_draw_string_center(35, buffer);
     }else{
         LED_GLOW();
