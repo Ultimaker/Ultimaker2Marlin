@@ -283,9 +283,8 @@ extern "C"{
 //Clear all the commands in the ASCII command buffer, to make sure we have room for abort commands.
 void clear_command_queue()
 {
-    bufindr = bufindw - 1;
-    buflen = 1;
-    cmdbuffer[bufindr][0] = '\0';
+    //bufindw = (bufindr + 1)%BUFSIZE;
+    //buflen = 1;
 }
 
 //adds an command to the main command buffer

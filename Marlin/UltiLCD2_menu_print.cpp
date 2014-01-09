@@ -551,7 +551,6 @@ static void lcd_menu_print_ready()
             c = int_to_string(current_temperature[e], buffer, PSTR("C "));
         int_to_string(current_temperature_bed, c, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
-        lcd_lib_draw_string_center(35, buffer);
     }else{
         LED_GLOW();
         lcd_lib_draw_string_centerP(10, PSTR("Print finished"));
