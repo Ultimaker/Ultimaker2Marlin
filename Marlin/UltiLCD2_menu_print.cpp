@@ -545,7 +545,7 @@ static void lcd_menu_print_ready()
             minProgress = progress;
             
         lcd_progressbar(progress);
-        char buffer[8];
+        char buffer[16];
         char* c = buffer;
         for(uint8_t e=0; e<EXTRUDERS; e++)
             c = int_to_string(current_temperature[e], buffer, PSTR("C "));
