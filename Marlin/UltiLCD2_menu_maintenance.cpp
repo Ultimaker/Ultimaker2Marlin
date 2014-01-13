@@ -303,7 +303,10 @@ static void lcd_menu_maintenance_retraction()
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
+        {
+            Config_StoreSettings();
             lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(6 + EXTRUDERS * 2));
+        }
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
         else if (IS_SELECTED_SCROLL(2))
@@ -354,7 +357,10 @@ static void lcd_menu_maintenance_motion()
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
+        {
+            Config_StoreSettings();
             lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7));
+        }
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec^2", 0, 20000);
         else if (IS_SELECTED_SCROLL(2))
