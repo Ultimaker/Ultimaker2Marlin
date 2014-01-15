@@ -2159,6 +2159,7 @@ void process_commands()
     SERIAL_ECHO(cmdbuffer[bufindr]);
     SERIAL_ECHOLNPGM("\"");
   }
+  printing_state = PRINT_STATE_NORMAL;
 
   ClearToSend();
 }
