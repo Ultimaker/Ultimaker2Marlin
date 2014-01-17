@@ -122,6 +122,9 @@ MCU              ?= atmega2560
 else ifeq  ($(HARDWARE_MOTHERBOARD),71)
 HARDWARE_VARIANT ?= arduino
 MCU              ?= atmega1280
+else ifeq  ($(HARDWARE_MOTHERBOARD),72)
+HARDWARE_VARIANT ?= arduino
+MCU              ?= atmega2560
 
 #Teensylu
 else ifeq  ($(HARDWARE_MOTHERBOARD),8)
@@ -214,6 +217,9 @@ CXXSRC = WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
 	stepper.cpp temperature.cpp cardreader.cpp ConfigurationStore.cpp \
 	watchdog.cpp
 CXXSRC += LiquidCrystal.cpp ultralcd.cpp SPI.cpp Servo.cpp Tone.cpp
+CXXSRC += UltiLCD2.cpp UltiLCD2_gfx.cpp UltiLCD2_hi_lib.cpp UltiLCD2_low_lib.cpp \
+	UltiLCD2_menu_first_run.cpp UltiLCD2_menu_maintenance.cpp UltiLCD2_menu_material.cpp \
+	UltiLCD2_menu_print.cpp
 
 #Check for Arduino 1.0.0 or higher and use the correct sourcefiles for that version
 ifeq ($(shell [ $(ARDUINO_VERSION) -ge 100 ] && echo true), true)
