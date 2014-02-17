@@ -350,7 +350,7 @@ void checkExtruderAutoFans()
     if (current_temperature[0] > EXTRUDER_AUTO_FAN_TEMPERATURE) 
       fanState |= 1;
   #endif
-  #if defined(EXTRUDER_1_AUTO_FAN_PIN) && EXTRUDER_1_AUTO_FAN_PIN > -1
+  #if defined(EXTRUDER_1_AUTO_FAN_PIN) && EXTRUDER_1_AUTO_FAN_PIN > -1 && EXTRUDERS > 1
     if (current_temperature[1] > EXTRUDER_AUTO_FAN_TEMPERATURE) 
     {
       if (EXTRUDER_1_AUTO_FAN_PIN == EXTRUDER_0_AUTO_FAN_PIN) 
@@ -359,7 +359,7 @@ void checkExtruderAutoFans()
         fanState |= 2;
     }
   #endif
-  #if defined(EXTRUDER_2_AUTO_FAN_PIN) && EXTRUDER_2_AUTO_FAN_PIN > -1
+  #if defined(EXTRUDER_2_AUTO_FAN_PIN) && EXTRUDER_2_AUTO_FAN_PIN > -1 && EXTRUDERS > 2
     if (current_temperature[2] > EXTRUDER_AUTO_FAN_TEMPERATURE) 
     {
       if (EXTRUDER_2_AUTO_FAN_PIN == EXTRUDER_0_AUTO_FAN_PIN) 
@@ -375,11 +375,11 @@ void checkExtruderAutoFans()
   #if defined(EXTRUDER_0_AUTO_FAN_PIN) && EXTRUDER_0_AUTO_FAN_PIN > -1
     setExtruderAutoFanState(EXTRUDER_0_AUTO_FAN_PIN, (fanState & 1) != 0);
   #endif 
-  #if defined(EXTRUDER_1_AUTO_FAN_PIN) && EXTRUDER_1_AUTO_FAN_PIN > -1
+  #if defined(EXTRUDER_1_AUTO_FAN_PIN) && EXTRUDER_1_AUTO_FAN_PIN > -1 && EXTRUDERS > 1
     if (EXTRUDER_1_AUTO_FAN_PIN != EXTRUDER_0_AUTO_FAN_PIN) 
       setExtruderAutoFanState(EXTRUDER_1_AUTO_FAN_PIN, (fanState & 2) != 0);
   #endif 
-  #if defined(EXTRUDER_2_AUTO_FAN_PIN) && EXTRUDER_2_AUTO_FAN_PIN > -1
+  #if defined(EXTRUDER_2_AUTO_FAN_PIN) && EXTRUDER_2_AUTO_FAN_PIN > -1 && EXTRUDERS > 2
     if (EXTRUDER_2_AUTO_FAN_PIN != EXTRUDER_0_AUTO_FAN_PIN 
         && EXTRUDER_2_AUTO_FAN_PIN != EXTRUDER_1_AUTO_FAN_PIN)
       setExtruderAutoFanState(EXTRUDER_2_AUTO_FAN_PIN, (fanState & 4) != 0);
@@ -502,6 +502,24 @@ void manage_heater()
     extruder_autofan_last_check = millis();
   }  
   #endif       
+  
+  {
+    //For the UM2 the head fan is connected to PJ6, which does not have an Arduino PIN definition. So use direct register access.
+    DDRJ |= _BV(6);
+    if (current_temperature[0] > EXTRUDER_AUTO_FAN_TEMPERATURE
+#if EXTRUDERS > 1
+        || current_temperature[1] > EXTRUDER_AUTO_FAN_TEMPERATURE
+#endif
+#if EXTRUDERS > 2
+        || current_temperature[2] > EXTRUDER_AUTO_FAN_TEMPERATURE
+#endif
+        )
+    {
+        PORTJ |= _BV(6);
+    }else{
+        PORTJ &=~_BV(6);
+    }
+  }
   
   #ifndef PIDTEMPBED
   if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
