@@ -37,6 +37,7 @@ static void lcd_menu_change_material_insert_wait_user();
 static void lcd_menu_change_material_insert_wait_user_ready();
 static void lcd_menu_change_material_insert_forward();
 static void lcd_menu_change_material_insert();
+static void lcd_menu_change_material_select_material();
 static void lcd_menu_material_select();
 static void lcd_menu_material_selected();
 static void lcd_menu_material_settings();
@@ -264,7 +265,7 @@ static void lcd_menu_change_material_insert()
 {
     LED_GLOW();
     
-    lcd_question_screen(lcd_menu_main, materialInsertReady, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
     lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
 
@@ -276,6 +277,51 @@ static void lcd_menu_change_material_insert()
     
     lcd_lib_update_screen();
 }
+
+static char* lcd_menu_change_material_select_material_callback(uint8_t nr)
+{
+    eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+    card.longFilename[8] = '\0';
+    return card.longFilename;
+}
+
+static void lcd_menu_change_material_select_material_details_callback(uint8_t nr)
+{
+    char buffer[32];
+    char* c = buffer;
+    
+    if (led_glow_dir)
+    {
+        c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
+        while(c < buffer + 10) *c++ = ' ';
+        strcpy_P(c, PSTR("Flow:"));
+        c += 5;
+        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
+    }else{
+        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+        *c++ = ' ';
+        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+        while(c < buffer + 10) *c++ = ' ';
+        strcpy_P(c, PSTR("Fan: "));
+        c += 5;
+        c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
+    }
+    lcd_lib_draw_string(5, 53, buffer);
+}
+
+static void lcd_menu_change_material_select_material()
+{
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    
+    lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_menu_change_material_select_material_callback, lcd_menu_change_material_select_material_details_callback);
+    if (lcd_lib_button_pressed)
+    {
+        lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), active_extruder);
+        
+        lcd_change_to_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
+    }
+}
+
 
 static char* lcd_material_select_callback(uint8_t nr)
 {
