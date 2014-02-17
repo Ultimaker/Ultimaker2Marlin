@@ -136,7 +136,7 @@ void lcd_menu_startup()
     if (led_glow_dir || lcd_lib_button_pressed)
     {
         if (led_mode == LED_MODE_ALWAYS_ON)
-            analogWrite(LED_PIN, 255);
+            analogWrite(LED_PIN, 255 * led_brightness_level / 100);
         led_glow = led_glow_dir = 0;
         LED_NORMAL();
         if (lcd_lib_button_pressed)
@@ -255,9 +255,13 @@ static void lcd_menu_breakout()
             lcd_cache[x+y*5]--;
             ball_dy = abs(ball_dy);
             for(y=0; y<3;y++)
+            {
                 for(x=0; x<5;x++)
                     if (lcd_cache[x+y*5])
                         break;
+                if (x != 5)
+                    break;
+            }
             if (x==5 && y==3)
             {
                 for(y=0; y<3;y++)
