@@ -80,6 +80,7 @@ public:
   bool saving;
   bool logging;
   bool sdprinting;
+  bool pause;
   bool sdInserted;
   char filename[13];
   char longFilename[LONG_FILENAME_LENGTH];

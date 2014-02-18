@@ -138,7 +138,7 @@ void sdcardSimulation::read_sd_block(int nr)
             dir->firstClusterHigh = 0;
             dir->firstClusterLow = 256;
             if (simFile == NULL)
-                simFile = fopen("c:/models/UltimakerRobot_support.gcode", "rb");
+                simFile = fopen("c:/models/Box_20x20x10.gcode", "rb");
             fseek(simFile, 0, SEEK_END);
             dir->fileSize = ftell(simFile);
             fseek(simFile, 0, SEEK_SET);

@@ -616,6 +616,11 @@ void get_command()
   if(!card.sdprinting || serial_count!=0){
     return;
   }
+  if (card.pause)
+  {
+    
+    return;
+  }
   static uint32_t endOfLineFilePosition = 0;
   while( !card.eof()  && buflen < BUFSIZE) {
     int16_t n=card.get();
@@ -1980,6 +1985,72 @@ void process_commands()
     }
     break;
     #endif //FILAMENTCHANGEENABLE
+    #ifdef ENABLE_ULTILCD2
+    case 601: //Pause in UltiLCD2, X[pos] Y[pos] Z[relative lift] L[later retract distance]
+    {
+        float target[4];
+        float lastpos[4];
+        target[X_AXIS]=current_position[X_AXIS];
+        target[Y_AXIS]=current_position[Y_AXIS];
+        target[Z_AXIS]=current_position[Z_AXIS];
+        target[E_AXIS]=current_position[E_AXIS];
+        lastpos[X_AXIS]=current_position[X_AXIS];
+        lastpos[Y_AXIS]=current_position[Y_AXIS];
+        lastpos[Z_AXIS]=current_position[Z_AXIS];
+        lastpos[E_AXIS]=current_position[E_AXIS];
+
+        target[E_AXIS] -= retract_length/volume_to_filament_length[active_extruder];
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], retract_feedrate/60, active_extruder);
+
+        //lift Z
+        if(code_seen('Z'))
+        {
+          target[Z_AXIS]+= code_value();
+        }
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder);
+
+        //move xy
+        if(code_seen('X'))
+        {
+          target[X_AXIS] = code_value();
+        }
+        if(code_seen('Y'))
+        {
+          target[Y_AXIS] = code_value();
+        }
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder);
+
+        if(code_seen('L'))
+        {
+          target[E_AXIS] -= code_value()/volume_to_filament_length[active_extruder];
+        }
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], retract_feedrate/60, active_extruder);
+
+        //finish moves
+        st_synchronize();
+        //disable extruder steppers so filament can be removed
+        disable_e0();
+        disable_e1();
+        disable_e2();
+        while(card.pause){
+          manage_heater();
+          manage_inactivity();
+          lcd_update();
+        }
+
+        //return to normal
+        if(code_seen('L'))
+        {
+          target[E_AXIS] += code_value()/volume_to_filament_length[active_extruder];
+        }
+        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], retract_feedrate/60, active_extruder); //Move back the L feed.
+        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder); //move xy back
+        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder); //move z back
+        plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], retract_feedrate/60, active_extruder); //final untretract
+    }
+    break;
+    #endif//ENABLE_ULTILCD2
+
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
       #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1

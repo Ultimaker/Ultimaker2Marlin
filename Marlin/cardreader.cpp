@@ -15,6 +15,7 @@ CardReader::CardReader()
    filesize = 0;
    sdpos = 0;
    sdprinting = false;
+   pause = false;
    cardOK = false;
    saving = false;
    logging = false;
@@ -199,6 +200,7 @@ void CardReader::setroot()
 void CardReader::release()
 {
   sdprinting = false;
+  pause = false;
   cardOK = false;
 }
 
@@ -207,6 +209,7 @@ void CardReader::startFileprint()
   if(cardOK)
   {
     sdprinting = true;
+    pause = false;
   }
 }
 
@@ -214,7 +217,7 @@ void CardReader::pauseSDPrint()
 {
   if(sdprinting)
   {
-    sdprinting = false;
+    pause = true;
   }
 }
 
@@ -231,6 +234,7 @@ void CardReader::openFile(char* name,bool read)
     return;
   file.close();
   sdprinting = false;
+  pause = false;
   
   
   SdFile myDir;
@@ -327,6 +331,7 @@ void CardReader::removeFile(char* name)
     return;
   file.close();
   sdprinting = false;
+  pause = false;
   
   
   SdFile myDir;
@@ -556,6 +561,7 @@ void CardReader::printingHasFinished()
     quickStop();
     file.close();
     sdprinting = false;
+    pause = false;
     if(SD_FINISHED_STEPPERRELEASE)
     {
         //finishAndDisableSteppers();
