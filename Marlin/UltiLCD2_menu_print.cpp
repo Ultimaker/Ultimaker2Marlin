@@ -569,7 +569,10 @@ static char* tune_item_callback(uint8_t nr)
     {
         if (!card.pause)
         {
-            strcpy_P(c, PSTR("Pause"));
+            if (movesplanned() > 0)
+                strcpy_P(c, PSTR("Pause"));
+            else
+                strcpy_P(c, PSTR("Can not pause"));
         }
         else
         {
@@ -715,14 +718,23 @@ static void lcd_menu_print_tune()
                 if (card.pause)
                 {
                     if (movesplanned() < 1)
+                    {
                         card.pause = false;
+                        lcd_lib_beep();
+                    }
                 }
                 else
                 {
-                    if (movesplanned() > 0)
+                    if (movesplanned() > 0 && commands_queued() < BUFSIZE)
                     {
+                        lcd_lib_beep();
                         card.pause = true;
-                        enquecommand_P(PSTR("M601 X10 Y20 Z5 L20"));
+                        if (current_position[Z_AXIS] < 170)
+                            enquecommand_P(PSTR("M601 X10 Y20 Z20 L30"));
+                        else if (current_position[Z_AXIS] < 200)
+                            enquecommand_P(PSTR("M601 X10 Y20 Z2 L30"));
+                        else
+                            enquecommand_P(PSTR("M601 X10 Y20 Z0 L30"));
                     }
                 }
             }

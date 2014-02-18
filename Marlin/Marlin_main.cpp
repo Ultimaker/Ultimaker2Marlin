@@ -328,6 +328,11 @@ bool is_command_queued()
     return buflen > 0;
 }
 
+uint8_t commands_queued()
+{
+    return buflen;
+}
+
 void setup_killpin()
 {
   #if defined(KILL_PIN) && KILL_PIN > -1
