@@ -1125,7 +1125,8 @@ void process_commands()
       starttime=millis();
       break;
     case 25: //M25 - Pause SD print
-      card.pauseSDPrint();
+      //card.pauseSDPrint();
+      card.closefile();
       break;
     case 26: //M26 - Set SD index
       if(card.isOk() && code_seen('S')) {
