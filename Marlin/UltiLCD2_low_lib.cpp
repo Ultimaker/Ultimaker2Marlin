@@ -206,7 +206,9 @@ void lcd_lib_update_screen()
     
     i2c_restart();    
     i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+#if USE_TWI_INTERUPT
     lcd_update_pos = 0;
+#endif
     i2c_send_raw(I2C_LCD_SEND_DATA);
 #if USE_TWI_INTERRUPT
     TWCR |= _BV(TWIE);
