@@ -1046,7 +1046,7 @@ void process_commands()
              plan_set_e_position(current_position[E_AXIS]);
            }
            else {
-             current_position[i] = code_value() + add_homeing[i];
+             current_position[i] = code_value();
              plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
            }
         }
