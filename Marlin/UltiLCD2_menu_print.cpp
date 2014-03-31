@@ -2,7 +2,7 @@
 
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
-#include "marlin.h"
+#include "Marlin.h"
 #include "cardreader.h"
 #include "temperature.h"
 #include "UltiLCD2.h"

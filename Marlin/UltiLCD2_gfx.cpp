@@ -1,4 +1,4 @@
-#include "configuration.h"
+#include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
 #include "UltiLCD2_gfx.h"
 
