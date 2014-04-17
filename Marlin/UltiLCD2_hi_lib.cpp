@@ -1,7 +1,7 @@
 #include <avr/pgmspace.h>
 #include <string.h>
 
-#include "configuration.h"
+#include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
 #include "UltiLCD2_hi_lib.h"
 
