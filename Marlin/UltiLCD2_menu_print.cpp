@@ -74,6 +74,9 @@ static void checkPrintFinished()
 
 static void doStartPrint()
 {
+    plan_set_e_position(0);
+    current_position[Z_AXIS] = 20.0;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], 0);
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
         if (!LCD_DETAIL_CACHE_MATERIAL(e))
