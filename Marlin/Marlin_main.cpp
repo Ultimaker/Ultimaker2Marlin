@@ -1089,6 +1089,35 @@ void process_commands()
     }
     break;
 #endif
+#ifdef ENABLE_ULTILCD2
+    case 0: // M0 - Unconditional stop - Wait for user button press on LCD
+    case 1: // M1 - Conditional stop - Wait for user button press on LCD
+    {
+      printing_state = PRINT_STATE_WAIT_USER;
+
+      codenum = 0;
+      if(code_seen('P')) codenum = code_value(); // milliseconds to wait
+      if(code_seen('S')) codenum = code_value() * 1000; // seconds to wait
+
+      st_synchronize();
+      previous_millis_cmd = millis();
+      if (codenum > 0){
+        codenum += millis();  // keep track of when we started waiting
+        while(millis()  < codenum && !lcd_lib_button_down){
+          manage_heater();
+          manage_inactivity();
+          lcd_update();
+        }
+      }else{
+        while(!lcd_lib_button_down){
+          manage_heater();
+          manage_inactivity();
+          lcd_update();
+        }
+      }
+    }
+    break;
+#endif
     case 17:
         LCD_MESSAGEPGM(MSG_NO_MOVE);
         enable_x();

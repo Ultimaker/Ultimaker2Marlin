@@ -435,6 +435,11 @@ static void lcd_menu_print_printing()
         lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
         lcd_lib_draw_string_center(30, card.longFilename);
         break;
+    case PRINT_STATE_WAIT_USER:
+        lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
+        lcd_lib_draw_string_centerP(20, PSTR("Press button"));
+        lcd_lib_draw_string_centerP(30, PSTR("to continue"));
+        break;
     case PRINT_STATE_HEATING:
         lcd_lib_draw_string_centerP(20, PSTR("Heating"));
         c = int_to_string(current_temperature[0], buffer, PSTR("C"));
