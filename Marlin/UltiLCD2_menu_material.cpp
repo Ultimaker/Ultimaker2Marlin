@@ -524,6 +524,7 @@ void lcd_material_reset_defaults()
     //Fill in the defaults
     char buffer[8];
 
+    // no glue stick; no retraction; no cool head
     strcpy_P(buffer, PSTR("PLA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
@@ -532,6 +533,7 @@ void lcd_material_reset_defaults()
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(0), 2.85);
 
+    // glue stick; no retraction; no cool head
     strcpy_P(buffer, PSTR("ABS"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(1), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(1), 260);
@@ -540,20 +542,22 @@ void lcd_material_reset_defaults()
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(1), 105);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(1), 2.85);
 
+    // ABS cement; retraction; cool head
     strcpy_P(buffer, PSTR("PC"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(2), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(2), 280);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(2), 110);
-    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(2), 50);
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(2), 0);
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(2), 107);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(2), 2.85);
 
+    // glue stick; no retraction; no cool head
     strcpy_P(buffer, PSTR("PA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(3), 4);
-    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(3), 260);
-    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(3), 90);
-    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(3), 50);
-    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(3), 107);
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(3), 270);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(3), 70);
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(3), 0);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(3), 100);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(3), 2.85);
 
     strcpy_P(buffer, PSTR("POM"));
