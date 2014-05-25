@@ -547,8 +547,8 @@ void lcd_material_reset_defaults()
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(2), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(2), 280);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(2), 110);
-    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(2), 0);
-    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(2), 107);
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(2), 60);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(2), 104);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(2), 2.85);
 
     // glue stick; no retraction; no cool head
