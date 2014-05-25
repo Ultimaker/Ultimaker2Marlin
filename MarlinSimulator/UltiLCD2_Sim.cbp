@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="UltiLCD2_Sim" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output=".bin/Debug/UltiLCD2_Sim" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output=".bin/Release/UltiLCD2_Sim" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wno-strict-aliasing" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-D__AVR_ATmega2560__=1" />
+			<Add option="-DARDUINO=100" />
+			<Add option="-DF_CPU=16000000" />
+			<Add directory="arduino_sim" />
+			<Add directory="avr_sim" />
+			<Add directory="C:/Software/SecretMarlin/UltiLCD2_Sim/" />
+		</Compiler>
+		<Linker>
+			<Add library="SDLmain" />
+			<Add library="SDL" />
+		</Linker>
+		<Unit filename="../Marlin/Configuration.h" />
+		<Unit filename="../Marlin/ConfigurationStore.cpp" />
+		<Unit filename="../Marlin/ConfigurationStore.h" />
+		<Unit filename="../Marlin/Configuration_adv.h" />
+		<Unit filename="../Marlin/Marlin.h" />
+		<Unit filename="../Marlin/MarlinSerial.cpp" />
+		<Unit filename="../Marlin/MarlinSerial.h" />
+		<Unit filename="../Marlin/Marlin_main.cpp" />
+		<Unit filename="../Marlin/Sd2Card.cpp" />
+		<Unit filename="../Marlin/Sd2Card.h" />
+		<Unit filename="../Marlin/Sd2PinMap.h" />
+		<Unit filename="../Marlin/SdBaseFile.cpp" />
+		<Unit filename="../Marlin/SdBaseFile.h" />
+		<Unit filename="../Marlin/SdFatConfig.h" />
+		<Unit filename="../Marlin/SdFatStructs.h" />
+		<Unit filename="../Marlin/SdFatUtil.cpp" />
+		<Unit filename="../Marlin/SdFatUtil.h" />
+		<Unit filename="../Marlin/SdFile.cpp" />
+		<Unit filename="../Marlin/SdFile.h" />
+		<Unit filename="../Marlin/SdInfo.h" />
+		<Unit filename="../Marlin/SdVolume.cpp" />
+		<Unit filename="../Marlin/SdVolume.h" />
+		<Unit filename="../Marlin/UltiLCD2.cpp" />
+		<Unit filename="../Marlin/UltiLCD2.h" />
+		<Unit filename="../Marlin/UltiLCD2_gfx.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_gfx.h" />
+		<Unit filename="../Marlin/UltiLCD2_hi_lib.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_hi_lib.h" />
+		<Unit filename="../Marlin/UltiLCD2_low_lib.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_low_lib.h" />
+		<Unit filename="../Marlin/UltiLCD2_menu_first_run.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_menu_first_run.h" />
+		<Unit filename="../Marlin/UltiLCD2_menu_maintenance.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_menu_maintenance.h" />
+		<Unit filename="../Marlin/UltiLCD2_menu_material.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_menu_material.h" />
+		<Unit filename="../Marlin/UltiLCD2_menu_print.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_menu_print.h" />
+		<Unit filename="../Marlin/cardreader.cpp" />
+		<Unit filename="../Marlin/cardreader.h" />
+		<Unit filename="../Marlin/fastio.h" />
+		<Unit filename="../Marlin/motion_control.cpp" />
+		<Unit filename="../Marlin/motion_control.h" />
+		<Unit filename="../Marlin/pins.h" />
+		<Unit filename="../Marlin/planner.cpp" />
+		<Unit filename="../Marlin/planner.h" />
+		<Unit filename="../Marlin/speed_lookuptable.h" />
+		<Unit filename="../Marlin/stepper.cpp" />
+		<Unit filename="../Marlin/stepper.h" />
+		<Unit filename="../Marlin/temperature.cpp" />
+		<Unit filename="../Marlin/temperature.h" />
+		<Unit filename="../Marlin/thermistortables.h" />
+		<Unit filename="../Marlin/ultralcd.cpp" />
+		<Unit filename="../Marlin/ultralcd.h" />
+		<Unit filename="../Marlin/ultralcd_implementation_hitachi_HD44780.h" />
+		<Unit filename="../Marlin/ultralcd_implementation_ultiboard_v2.h" />
+		<Unit filename="../Marlin/ultralcd_st7920_u8glib_rrd.h" />
+		<Unit filename="../Marlin/watchdog.cpp" />
+		<Unit filename="../Marlin/watchdog.h" />
+		<Unit filename="arduino_sim/Arduino.h" />
+		<Unit filename="arduino_sim/HardwareSerial.cpp" />
+		<Unit filename="arduino_sim/HardwareSerial.h" />
+		<Unit filename="arduino_sim/LiquidCrystal.cpp" />
+		<Unit filename="arduino_sim/LiquidCrystal.h" />
+		<Unit filename="arduino_sim/Print.cpp" />
+		<Unit filename="arduino_sim/Print.h" />
+		<Unit filename="arduino_sim/Printable.h" />
+		<Unit filename="arduino_sim/Stream.cpp" />
+		<Unit filename="arduino_sim/Stream.h" />
+		<Unit filename="arduino_sim/Tone.cpp" />
+		<Unit filename="arduino_sim/WCharacter.h" />
+		<Unit filename="arduino_sim/WString.cpp" />
+		<Unit filename="arduino_sim/WString.h" />
+		<Unit filename="arduino_sim/binary.h" />
+		<Unit filename="arduino_sim/main.cpp" />
+		<Unit filename="arduino_sim/new.cpp" />
+		<Unit filename="arduino_sim/new.h" />
+		<Unit filename="arduino_sim/pins_arduino.h" />
+		<Unit filename="arduino_sim/wiring.cpp">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="arduino_sim/wiring_analog.cpp">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="arduino_sim/wiring_digital.cpp">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="arduino_sim/wiring_private.h" />
+		<Unit filename="arduino_sim/wiring_pulse.cpp">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="arduino_sim/wiring_shift.cpp">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="avr_sim/avr/eeprom.h" />
+		<Unit filename="avr_sim/avr/interrupt.h" />
+		<Unit filename="avr_sim/avr/io.h" />
+		<Unit filename="avr_sim/avr/iom2560.h" />
+		<Unit filename="avr_sim/avr/iomxx0_1.h" />
+		<Unit filename="avr_sim/avr/pgmspace.h" />
+		<Unit filename="avr_sim/avr/sim_io.cpp" />
+		<Unit filename="avr_sim/avr/wdt.h" />
+		<Unit filename="avr_sim/util/delay.h" />
+		<Unit filename="component/adc.cpp" />
+		<Unit filename="component/adc.h" />
+		<Unit filename="component/arduinoIO.cpp" />
+		<Unit filename="component/arduinoIO.h" />
+		<Unit filename="component/base.cpp" />
+		<Unit filename="component/base.h" />
+		<Unit filename="component/delegate.h" />
+		<Unit filename="component/display_HD44780.cpp" />
+		<Unit filename="component/display_HD44780.h" />
+		<Unit filename="component/display_SSD1309.cpp" />
+		<Unit filename="component/display_SSD1309.h" />
+		<Unit filename="component/heater.cpp" />
+		<Unit filename="component/heater.h" />
+		<Unit filename="component/i2c.cpp" />
+		<Unit filename="component/i2c.h" />
+		<Unit filename="component/led_PCA9632.cpp" />
+		<Unit filename="component/led_PCA9632.h" />
+		<Unit filename="component/sdcard.cpp" />
+		<Unit filename="component/sdcard.h" />
+		<Unit filename="component/serial.cpp" />
+		<Unit filename="component/serial.h" />
+		<Unit filename="component/stepper.cpp" />
+		<Unit filename="component/stepper.h" />
+		<Unit filename="sim_main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

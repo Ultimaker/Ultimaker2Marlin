@@ -74,6 +74,9 @@ static void checkPrintFinished()
 
 static void doStartPrint()
 {
+    plan_set_e_position(0);
+    current_position[Z_AXIS] = 20.0;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], 0);
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
         if (!LCD_DETAIL_CACHE_MATERIAL(e))
@@ -431,6 +434,11 @@ static void lcd_menu_print_printing()
     default:
         lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
         lcd_lib_draw_string_center(30, card.longFilename);
+        break;
+    case PRINT_STATE_WAIT_USER:
+        lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
+        lcd_lib_draw_string_centerP(20, PSTR("Press button"));
+        lcd_lib_draw_string_centerP(30, PSTR("to continue"));
         break;
     case PRINT_STATE_HEATING:
         lcd_lib_draw_string_centerP(20, PSTR("Heating"));
