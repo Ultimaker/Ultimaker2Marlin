@@ -68,7 +68,7 @@ void lcd_menu_first_run_start_bed_leveling()
 {
     lcd_question_screen(lcd_menu_first_run_bed_level_center_adjust, homeAndParkHeadForCenterAdjustment2, PSTR("CONTINUE"), lcd_menu_main, NULL, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(10, PSTR("I will guide you"));
-    lcd_lib_draw_string_centerP(20, PSTR("trought the process"));
+    lcd_lib_draw_string_centerP(20, PSTR("through the process"));
     lcd_lib_draw_string_centerP(30, PSTR("of adjusting your"));
     lcd_lib_draw_string_centerP(40, PSTR("buildplate."));
     lcd_lib_update_screen();
