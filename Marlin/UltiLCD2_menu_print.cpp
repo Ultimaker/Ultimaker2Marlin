@@ -82,14 +82,14 @@ static void doStartPrint()
         if (!LCD_DETAIL_CACHE_MATERIAL(e))
             continue;
         active_extruder = e;
-        plan_set_e_position(-25.0 / volume_to_filament_length[e]);
+        plan_set_e_position(-30.0 / volume_to_filament_length[e]);
         current_position[E_AXIS] = 0.0;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25, e);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 10, e);
         
         if (e > 0)
         {
             plan_set_e_position(20.0 / volume_to_filament_length[e]);
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 35, e);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 20, e);
         }
     }
     active_extruder = 0;
