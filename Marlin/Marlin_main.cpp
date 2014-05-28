@@ -38,6 +38,7 @@
 #include "cardreader.h"
 #include "watchdog.h"
 #include "ConfigurationStore.h"
+#include "lifetime_stats.h"
 #include "language.h"
 #include "pins_arduino.h"
 
@@ -440,6 +441,7 @@ void setup()
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
+  lifetime_stats_init();
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
   watchdog_init();
@@ -503,6 +505,7 @@ void loop()
   manage_inactivity();
   checkHitEndstops();
   lcd_update();
+  lifetime_stats_tick();
 }
 
 void get_command()
@@ -829,6 +832,7 @@ void process_commands()
         manage_heater();
         manage_inactivity();
         lcd_update();
+        lifetime_stats_tick();
       }
       break;
       #ifdef FWRETRACT
@@ -1077,12 +1081,14 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
         }
       }else{
         while(!lcd_clicked()){
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
         }
       }
       LCD_MESSAGEPGM(MSG_RESUMING);
@@ -1107,12 +1113,14 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
         }
       }else{
         while(!lcd_lib_button_down){
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
         }
       }
     }
@@ -1353,6 +1361,7 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
         #ifdef TEMP_RESIDENCY_TIME
             /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
               or when current temp falls outside the hysteresis after target temp was reached */
@@ -1392,6 +1401,7 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
         }
         LCD_MESSAGEPGM(MSG_BED_DONE);
         previous_millis_cmd = millis();
@@ -1985,6 +1995,7 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
           if(cnt==0)
           {
           #if BEEPER > 0
@@ -2071,6 +2082,7 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          lifetime_stats_tick();
         }
 
         //return to normal

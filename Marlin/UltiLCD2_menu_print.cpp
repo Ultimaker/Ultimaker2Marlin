@@ -5,6 +5,7 @@
 #include "Marlin.h"
 #include "cardreader.h"
 #include "temperature.h"
+#include "lifetime_stats.h"
 #include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_print.h"
@@ -41,6 +42,7 @@ void lcd_clear_cache()
 static void abortPrint()
 {
     postMenuCheck = NULL;
+    lifetime_stats_print_end();
     doCooldown();
 
     clear_command_queue();
@@ -96,6 +98,7 @@ static void doStartPrint()
     
     postMenuCheck = checkPrintFinished;
     card.startFileprint();
+    lifetime_stats_print_start();
     starttime = millis();
 }
 

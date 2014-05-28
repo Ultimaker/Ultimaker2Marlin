@@ -28,6 +28,7 @@
 #include "ultralcd.h"
 #include "UltiLCD2.h"
 #include "language.h"
+#include "lifetime_stats.h"
 #include "cardreader.h"
 #include "speed_lookuptable.h"
 #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
@@ -875,6 +876,7 @@ void st_synchronize()
     manage_heater();
     manage_inactivity();
     lcd_update();
+    lifetime_stats_tick();
   }
 }
 

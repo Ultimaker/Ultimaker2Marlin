@@ -7,6 +7,7 @@
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_material.h"
 #include "cardreader.h"
+#include "lifetime_stats.h"
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
@@ -19,6 +20,7 @@ static void lcd_menu_maintenance_led();
 static void lcd_menu_maintenance_extrude();
 static void lcd_menu_maintenance_retraction();
 static void lcd_menu_advanced_version();
+static void lcd_menu_advanced_stats();
 static void lcd_menu_maintenance_motion();
 static void lcd_menu_advanced_factory_reset();
 
@@ -76,6 +78,8 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 8 + EXTRUDERS * 2)
         strcpy_P(card.longFilename, PSTR("Version"));
     else if (nr == 9 + EXTRUDERS * 2)
+        strcpy_P(card.longFilename, PSTR("Runtime stats"));
+    else if (nr == 10 + EXTRUDERS * 2)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -88,7 +92,7 @@ static void lcd_advanced_details(uint8_t nr)
 
 static void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu(PSTR("ADVANCED"), 10 + EXTRUDERS * 2, lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu(PSTR("ADVANCED"), 11 + EXTRUDERS * 2, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -148,6 +152,8 @@ static void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(8 + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(9 + EXTRUDERS * 2))
+            lcd_change_to_menu(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(10 + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, SCROLL_MENU_ITEM_POS(1));
     }
 }
@@ -234,6 +240,29 @@ void lcd_menu_advanced_version()
     lcd_info_screen(previousMenu, NULL, PSTR("Return"));
     lcd_lib_draw_string_centerP(30, PSTR(STRING_VERSION_CONFIG_H));
     lcd_lib_draw_string_centerP(40, PSTR(STRING_CONFIG_H_AUTHOR));
+    lcd_lib_update_screen();
+}
+
+void lcd_menu_advanced_stats()
+{
+    lcd_info_screen(previousMenu, NULL, PSTR("Return"));
+    lcd_lib_draw_string_centerP(10, PSTR("Machine on for:"));
+    char buffer[16];
+    char* c = int_to_string(lifetime_minutes / 60, buffer, PSTR(":"));
+    if (lifetime_minutes % 60 < 10)
+        *c++ = '0';
+    c = int_to_string(lifetime_minutes % 60, c);
+    lcd_lib_draw_string_center(20, buffer);
+
+    lcd_lib_draw_string_centerP(30, PSTR("Printing:"));
+    c = int_to_string(lifetime_print_minutes / 60, buffer, PSTR(":"));
+    if (lifetime_print_minutes % 60 < 10)
+        *c++ = '0';
+    c = int_to_string(lifetime_print_minutes % 60, c);
+    *c++ = ' ';
+    *c++ = ' ';
+    c = int_to_string(lifetime_print_centimeters / 100, c, PSTR("m"));
+    lcd_lib_draw_string_center(40, buffer);
     lcd_lib_update_screen();
 }
 
