@@ -38,7 +38,7 @@
 // 65 = Azteeg X1
 // 7  = Ultimaker
 // 71 = Ultimaker (Older electronics. Pre 1.5.4. This is rare)
-// 72 = Ultiboard v2.0
+// 72 = Ultiboard v2.0 (includes Ultimaker 2)
 // 77 = 3Drag Controller
 // 8  = Teensylu
 // 80 = Rumba
