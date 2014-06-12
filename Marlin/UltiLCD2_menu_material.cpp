@@ -256,9 +256,10 @@ static void lcd_menu_change_material_insert_forward()
 
 static void materialInsertReady()
 {
-    current_position[E_AXIS] -= 20;
+    current_position[E_AXIS] -= END_OF_PRINT_RETRACTION;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, active_extruder);
     cancelMaterialInsert();
+
 }
 
 static void lcd_menu_change_material_insert()
@@ -527,7 +528,7 @@ void lcd_material_reset_defaults()
     strcpy_P(buffer, PSTR("PLA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
-    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(0), 75);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(0), 60);
     eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(0), 100);
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(0), 2.85);

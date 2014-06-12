@@ -67,7 +67,7 @@
 // G28 - Home all Axis
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
-// G92 - Set current position to cordinates given
+// G92 - Set current position to coordinates given
 
 //RepRap M Codes
 // M0   - Unconditional stop - Wait for user to press a button on the LCD (Only if ULTRA_LCD is enabled)
@@ -1618,7 +1618,7 @@ void process_commands()
         if(code_seen(axis_codes[i])) max_feedrate[i] = code_value();
       }
       break;
-    case 204: // M204 acclereration S normal moves T filmanent only moves
+    case 204: // M204 acceleration: S - normal moves;  T - filament only moves
       {
         if(code_seen('S')) acceleration = code_value() ;
         if(code_seen('T')) retract_acceleration = code_value() ;
@@ -1634,14 +1634,14 @@ void process_commands()
       if(code_seen('E')) max_e_jerk = code_value() ;
     }
     break;
-    case 206: // M206 additional homeing offset
+    case 206: // M206 additional homing offset
       for(int8_t i=0; i < 3; i++)
       {
         if(code_seen(axis_codes[i])) add_homeing[i] = code_value();
       }
       break;
     #ifdef FWRETRACT
-    case 207: //M207 - set retract length S[positive mm] F[feedrate mm/sec] Z[additional zlift/hop]
+    case 207: //M207 - set retract length S[positive mm] F[feedrate mm/min] Z[additional zlift/hop]
     {
       if(code_seen('S'))
       {
@@ -1656,7 +1656,7 @@ void process_commands()
         retract_zlift = code_value() ;
       }
     }break;
-    case 208: // M208 - set retract recover length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
+    case 208: // M208 - set retract recover length S[positive mm surplus to the M207 S*] F[feedrate mm/min]
     {
       if(code_seen('S'))
       {
