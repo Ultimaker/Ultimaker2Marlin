@@ -111,7 +111,7 @@ static void doStartPrint()
 
         // perform additional priming
         plan_set_e_position(-PRIMING_MM3);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], (PRIMING_MM3_PER_SEC * volume_to_filament_length[e]), e);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], PRIMING_MM3_PER_SEC, e);
 
         // for extruders other than the first one, perform end of print retraction
         if (e > 0)
