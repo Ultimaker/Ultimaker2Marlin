@@ -51,14 +51,15 @@ static void abortPrint()
     {
     	// we're not printing any more
         card.sdprinting = false;
+        
+        // Only retract at the end of the print when we where SD printing, this to prevent retraction if the print is aborted during heating.
+        // set up the end of print retraction
+        sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+        enquecommand(buffer);
+        // perform the retraction at the standard retract speed
+        sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
+        enquecommand(buffer);
     }
-
-    // set up the end of print retraction
-    sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
-    enquecommand(buffer);
-    // perform the retraction at the standard retract speed
-    sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
-    enquecommand(buffer);
 
     enquecommand_P(PSTR("G28"));
     enquecommand_P(PSTR("M84"));
@@ -99,6 +100,7 @@ static void doStartPrint()
         {
         	// don't prime the extruder if it isn't used in the (Ulti)gcode
         	// traditional gcode files typically won't have the Material lines at start, so we won't prime for those
+        	// Also, on dual/multi extrusion files, only prime the extruders that are used in the gcode-file.
             continue;
         }
         active_extruder = e;
