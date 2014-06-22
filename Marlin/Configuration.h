@@ -571,11 +571,14 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 // Configuration of behaviors at the start and end of prints
 #define END_OF_PRINT_RETRACTION 20		// number of mm to retract when printer goes idle
 #define END_OF_PRINT_RECOVERY_SPEED 5 	// speed to recover that assumed retraction at (mm/s)
-#define PRIMING_MM3	30					// number of mm^3 of plastic to extrude when priming
+#define PRIMING_MM3	50					// number of mm^3 of plastic to extrude when priming
 										// (Ultimaker 2 hot end capacity is approx 80 mm^3)
 #define PRIMING_MM3_PER_SEC 5			// Rate at which to prime head (in mm^3/s)
 										// (Ultimaker 2 upper limit is 8-10)
 #define PRIMING_HEIGHT 20				// Height at which to perform the priming extrusions
+
+// Bed leveling wizard configuration
+#define LEVELING_OFFSET 0.1				// Assumed thickness of feeler gauge/paper used in leveling (mm)
 
 #include "Configuration_adv.h"
 #include "thermistortables.h"
