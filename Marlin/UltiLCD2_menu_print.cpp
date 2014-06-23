@@ -111,6 +111,7 @@ static void doStartPrint()
         {
         	// don't prime the extruder if it isn't used in the (Ulti)gcode
         	// traditional gcode files typically won't have the Material lines at start, so we won't prime for those
+        	// Also, on dual/multi extrusion files, only prime the extruders that are used in the gcode-file.
             continue;
         }
         active_extruder = e;
