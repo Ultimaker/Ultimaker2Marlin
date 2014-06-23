@@ -31,6 +31,9 @@ static void lcd_menu_print_ready();
 static void lcd_menu_print_tune();
 static void lcd_menu_print_tune_retraction();
 
+bool primed = false;
+
+
 void lcd_clear_cache()
 {
     for(uint8_t n=0; n<LCD_CACHE_COUNT; n++)
@@ -51,15 +54,20 @@ static void abortPrint()
     {
     	// we're not printing any more
         card.sdprinting = false;
-        
-        // Only retract at the end of the print when we where SD printing, this to prevent retraction if the print is aborted during heating.
-        // set up the end of print retraction
-        sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
-        enquecommand(buffer);
-        // perform the retraction at the standard retract speed
-        sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
-        enquecommand(buffer);
     }
+
+    if (primed)
+    	{
+    	// set up the end of print retraction
+    	sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+    	enquecommand(buffer);
+    	// perform the retraction at the standard retract speed
+    	sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
+    	enquecommand(buffer);
+
+    	// no longer primed
+    	primed = false;
+    	}
 
     enquecommand_P(PSTR("G28"));
     enquecommand_P(PSTR("M84"));
@@ -90,6 +98,9 @@ static void doStartPrint()
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
 
+	// note that we have primed, so that we know to de-prime at the end
+	primed = true;
+
 	// move to priming height
     current_position[Z_AXIS] = PRIMING_HEIGHT;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], 0);
@@ -111,7 +122,7 @@ static void doStartPrint()
 
         // perform additional priming
         plan_set_e_position(-PRIMING_MM3);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], PRIMING_MM3_PER_SEC, e);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], (PRIMING_MM3_PER_SEC * volume_to_filament_length[e]), e);
 
         // for extruders other than the first one, perform end of print retraction
         if (e > 0)

@@ -12,4 +12,6 @@ void lcd_menu_print_select();
 void lcd_clear_cache();
 void doCancelPrint();
 
+extern bool primed;
+
 #endif//ULTI_LCD2_MENU_PRINT_H

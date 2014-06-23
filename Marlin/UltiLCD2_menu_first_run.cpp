@@ -114,10 +114,9 @@ static void lcd_menu_first_run_init_3()
     lcd_lib_update_screen();
 }
 
-static void storeHomingZ_parkHeadForLeftAdjustment()
+static void parkHeadForLeftAdjustment()
 {
     add_homeing[Z_AXIS] -= current_position[Z_AXIS];
-    Config_StoreSettings();
     current_position[Z_AXIS] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
@@ -147,7 +146,7 @@ static void lcd_menu_first_run_bed_level_center_adjust()
     if (movesplanned() > 0)
         lcd_info_screen(NULL, NULL, PSTR("CONTINUE"));
     else
-        lcd_info_screen(lcd_menu_first_run_bed_level_left_adjust, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
+        lcd_info_screen(lcd_menu_first_run_bed_level_left_adjust, parkHeadForLeftAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(4);
     lcd_lib_draw_string_centerP(10, PSTR("Rotate the button"));
     lcd_lib_draw_string_centerP(20, PSTR("until the nozzle is"));
@@ -236,7 +235,7 @@ static void lcd_menu_first_run_bed_level_paper_center()
     if (movesplanned() > 0)
         lcd_info_screen(NULL, NULL, PSTR("CONTINUE"));
     else
-        lcd_info_screen(lcd_menu_first_run_bed_level_paper_left, storeHomingZ_parkHeadForLeftAdjustment, PSTR("CONTINUE"));
+        lcd_info_screen(lcd_menu_first_run_bed_level_paper_left, parkHeadForLeftAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(8);
     lcd_lib_draw_string_centerP(10, PSTR("Slide a paper between"));
     lcd_lib_draw_string_centerP(20, PSTR("buildplate and nozzle"));
@@ -259,7 +258,9 @@ static void lcd_menu_first_run_bed_level_paper_left()
 
 static void homeBed()
 {
-    add_homeing[Z_AXIS] += 0.2;//Adjust the Z homing position to account for the thickness of the paper.
+    add_homeing[Z_AXIS] += LEVELING_OFFSET;  //Adjust the Z homing position to account for the thickness of the paper.
+    // now that we are finished, save the settings to EEPROM
+    Config_StoreSettings();
     enquecommand_P(PSTR("G28 Z0"));
 }
 
