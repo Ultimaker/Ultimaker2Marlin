@@ -363,6 +363,12 @@ static char* lcd_motion_item(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Max speed Y"));
     else if (nr == 5)
         strcpy_P(card.longFilename, PSTR("Max speed Z"));
+    else if (nr == 6)
+        strcpy_P(card.longFilename, PSTR("Current X/Y"));
+    else if (nr == 7)
+        strcpy_P(card.longFilename, PSTR("Current Z"));
+    else if (nr == 8)
+        strcpy_P(card.longFilename, PSTR("Current E"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
     return card.longFilename;
@@ -383,16 +389,25 @@ static void lcd_motion_details(uint8_t nr)
         int_to_string(max_feedrate[Y_AXIS], buffer, PSTR("mm/sec"));
     else if(nr == 5)
         int_to_string(max_feedrate[Z_AXIS], buffer, PSTR("mm/sec"));
+    else if(nr == 6)
+        int_to_string(motor_current_setting[0], buffer, PSTR("mA"));
+    else if(nr == 7)
+        int_to_string(motor_current_setting[1], buffer, PSTR("mA"));
+    else if(nr == 8)
+        int_to_string(motor_current_setting[2], buffer, PSTR("mA"));
     lcd_lib_draw_string(5, 53, buffer);
 }
 
 static void lcd_menu_maintenance_motion()
 {
-    lcd_scroll_menu(PSTR("MOTION"), 6, lcd_motion_item, lcd_motion_details);
+    lcd_scroll_menu(PSTR("MOTION"), 9, lcd_motion_item, lcd_motion_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
         {
+            digipot_current(0, motor_current_setting[0]);
+            digipot_current(1, motor_current_setting[1]);
+            digipot_current(2, motor_current_setting[2]);
             Config_StoreSettings();
             lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7));
         }
@@ -406,6 +421,12 @@ static void lcd_menu_maintenance_motion()
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Y_AXIS], "Max speed Y", "mm/sec", 0, 1000);
         else if (IS_SELECTED_SCROLL(5))
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Z_AXIS], "Max speed Z", "mm/sec", 0, 1000);
+        else if (IS_SELECTED_SCROLL(6))
+            LCD_EDIT_SETTING(motor_current_setting[0], "Current X/Y", "mA", 0, 1300);
+        else if (IS_SELECTED_SCROLL(7))
+            LCD_EDIT_SETTING(motor_current_setting[1], "Current Z", "mA", 0, 1300);
+        else if (IS_SELECTED_SCROLL(8))
+            LCD_EDIT_SETTING(motor_current_setting[2], "Current E", "mA", 0, 1300);
     }
 }
 
