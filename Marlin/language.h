@@ -25,7 +25,7 @@
 
 #if MOTHERBOARD == 7 || MOTHERBOARD == 71 || MOTHERBOARD == 72
 	#define MACHINE_NAME "Ultimaker"
-	#define FIRMWARE_URL "http://firmware.ultimaker.com"
+	#define FIRMWARE_URL "http://github.com/Ultimaker"
 #elif MOTHERBOARD == 80
 	#define MACHINE_NAME "Rumba"
 	#define FIRMWARE_URL "https://github.com/ErikZalm/Marlin/"
