@@ -265,8 +265,8 @@ void lcd_menu_advanced_stats()
     if (lifetime_print_minutes % 60 < 10)
         *c++ = '0';
     c = int_to_string(lifetime_print_minutes % 60, c);
-    *c++ = ' ';
-    *c++ = ' ';
+    strcpy_P(c, PSTR(" Mat:"));
+    c += 5;
     c = int_to_string(lifetime_print_centimeters / 100, c, PSTR("m"));
     lcd_lib_draw_string_center(40, buffer);
     lcd_lib_update_screen();
