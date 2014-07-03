@@ -439,6 +439,7 @@ static void lcd_menu_first_run_material_select_pla_abs()
             lcd_material_reset_defaults();
             for(uint8_t e=0; e<EXTRUDERS; e++)
                 lcd_material_set_material(0, e);
+            SET_FIRST_RUN_DONE();
             lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_pla);
         }
         else if (IS_SELECTED_MAIN(1))
@@ -446,6 +447,7 @@ static void lcd_menu_first_run_material_select_pla_abs()
             lcd_material_reset_defaults();
             for(uint8_t e=0; e<EXTRUDERS; e++)
                 lcd_material_set_material(1, e);
+            SET_FIRST_RUN_DONE();
             lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_abs);
         }
     }
@@ -471,11 +473,6 @@ static void lcd_menu_first_run_material_select_confirm_abs()
     lcd_lib_draw_string_centerP(30, PSTR("ABS as material,"));
     lcd_lib_draw_string_centerP(40, PSTR("is this right?"));
     lcd_lib_update_screen();
-}
-
-static void setFirstRunDone()
-{
-    SET_FIRST_RUN_DONE();
 }
 
 static void lcd_menu_first_run_material_select_2()
@@ -525,7 +522,7 @@ static void lcd_menu_first_run_print_card_detect()
     }
     
     SELECT_MAIN_MENU_ITEM(0);
-    lcd_info_screen(lcd_menu_print_select, setFirstRunDone, PSTR("LET'S PRINT"));
+    lcd_info_screen(lcd_menu_print_select, NULL, PSTR("LET'S PRINT"));
     DRAW_PROGRESS_NR(21);
     lcd_lib_draw_string_centerP(10, PSTR("Select a print file"));
     lcd_lib_draw_string_centerP(20, PSTR("on the SD-card"));
