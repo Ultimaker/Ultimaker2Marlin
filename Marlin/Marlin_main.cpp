@@ -39,6 +39,7 @@
 #include "watchdog.h"
 #include "ConfigurationStore.h"
 #include "lifetime_stats.h"
+#include "electronics_test.h"
 #include "language.h"
 #include "pins_arduino.h"
 
@@ -2269,7 +2270,10 @@ void process_commands()
       SERIAL_PROTOCOLLN((int)active_extruder);
     }
   }
-
+  else if (strcmp_P(cmdbuffer[bufindr], PSTR("Electronics_test")) == 0)
+  {
+    run_electronics_test();
+  }
   else
   {
     SERIAL_ECHO_START;
