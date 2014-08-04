@@ -41,7 +41,7 @@ void handleCommand(char* command)
     {
         int nr = atoi(&command[1]);
         char* param_ptr = strchr(command, ' ');
-        uint8_t param = 0;
+        int param = -1;
         if (param_ptr)
             param = param_ptr[1];
         switch(nr)
@@ -49,24 +49,24 @@ void handleCommand(char* command)
         case 0:
             send_P(PSTR(STRING_CONFIG_H_AUTHOR));
             break;
-        case 1: DDRA = param; break;
-        case 2: DDRB = param; break;
-        case 3: DDRC = param; break;
-        case 4: DDRD = param; break;
-        case 5: DDRE = param; break;
-        case 7: DDRG = param; break;
-        case 8: DDRH = param; break;
-        case 9: DDRJ = param; break;
-        case 11: DDRL = param | 0x38; break; //Make sure the motor PWMs are always outputs.
-        case 12: PORTA = param; send(PINA); break;
-        case 13: PORTB = param; send(PINB); break;
-        case 14: PORTC = param; send(PINC); break;
-        case 15: PORTD = param; send(PIND); break;
-        case 16: PORTE = param; send(PINE); break;
-        case 18: PORTG = param; send(PING); break;
-        case 19: PORTH = param; send(PINH); break;
-        case 20: PORTJ = param; send(PINJ); break;
-        case 22: PORTL = param; send(PINL); break;
+        case 1: if (param > -1) DDRA = param; break;
+        case 2: if (param > -1) DDRB = param; break;
+        case 3: if (param > -1) DDRC = param; break;
+        case 4: if (param > -1) DDRD = param; break;
+        case 5: if (param > -1) DDRE = param; break;
+        case 7: if (param > -1) DDRG = param; break;
+        case 8: if (param > -1) DDRH = param; break;
+        case 9: if (param > -1) DDRJ = param; break;
+        case 11: if (param > -1) DDRL = param | 0x38; break; //Make sure the motor PWMs are always outputs.
+        case 12: if (param > -1) PORTA = param; send(PINA); break;
+        case 13: if (param > -1) PORTB = param; send(PINB); break;
+        case 14: if (param > -1) PORTC = param; send(PINC); break;
+        case 15: if (param > -1) PORTD = param; send(PIND); break;
+        case 16: if (param > -1) PORTE = param; send(PINE); break;
+        case 18: if (param > -1) PORTG = param; send(PING); break;
+        case 19: if (param > -1) PORTH = param; send(PINH); break;
+        case 20: if (param > -1) PORTJ = param; send(PINJ); break;
+        case 22: if (param > -1) PORTL = param; send(PINL); break;
         case 23: sendADC(0); break;
         case 24: sendADC(1); break;
         case 25: sendADC(2); break;
