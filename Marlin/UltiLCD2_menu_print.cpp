@@ -55,6 +55,8 @@ static void abortPrint()
     	// we're not printing any more
         card.sdprinting = false;
     }
+    //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
+    card.pause = false;
 
     if (primed)
     	{
