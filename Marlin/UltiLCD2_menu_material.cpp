@@ -33,6 +33,7 @@ static void lcd_menu_change_material_preheat();
 static void lcd_menu_change_material_remove();
 static void lcd_menu_change_material_remove_wait_user();
 static void lcd_menu_change_material_remove_wait_user_ready();
+static void lcd_menu_insert_material_preheat();
 static void lcd_menu_change_material_insert_wait_user();
 static void lcd_menu_change_material_insert_wait_user_ready();
 static void lcd_menu_change_material_insert_forward();
@@ -190,6 +191,47 @@ static void lcd_menu_change_material_remove_wait_user()
     lcd_lib_update_screen();
 }
 
+void lcd_menu_insert_material()
+{
+    char buffer[32];
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+    enquecommand(buffer);
+    
+    currentMenu = lcd_menu_insert_material_preheat;
+}
+
+static void lcd_menu_insert_material_preheat()
+{
+    setTargetHotend(material[active_extruder].temperature, active_extruder);
+    int16_t temp = degHotend(active_extruder) - 20;
+    int16_t target = degTargetHotend(active_extruder) - 20 - 10;
+    if (temp < 0) temp = 0;
+    if (temp > target && !is_command_queued())
+    {
+        set_extrude_min_temp(0);
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+            volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
+
+        currentMenu = lcd_menu_change_material_insert_wait_user;
+        temp = target;
+    }
+
+    uint8_t progress = uint8_t(temp * 125 / target);
+    if (progress < minProgress)
+        progress = minProgress;
+    else
+        minProgress = progress;
+    
+    lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
+    lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead for"));
+    lcd_lib_draw_stringP(3, 20, PSTR("material insertion"));
+
+    lcd_progressbar(progress);
+    
+    lcd_lib_update_screen();
+}
+
 static void lcd_menu_change_material_insert_wait_user()
 {
     LED_GLOW();
@@ -256,9 +298,10 @@ static void lcd_menu_change_material_insert_forward()
 
 static void materialInsertReady()
 {
-    current_position[E_AXIS] -= 20;
+    current_position[E_AXIS] -= END_OF_PRINT_RETRACTION;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, active_extruder);
     cancelMaterialInsert();
+
 }
 
 static void lcd_menu_change_material_insert()

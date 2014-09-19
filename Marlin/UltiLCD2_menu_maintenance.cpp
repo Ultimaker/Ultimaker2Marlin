@@ -7,6 +7,7 @@
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_material.h"
 #include "cardreader.h"
+#include "lifetime_stats.h"
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
@@ -19,6 +20,7 @@ static void lcd_menu_maintenance_led();
 static void lcd_menu_maintenance_extrude();
 static void lcd_menu_maintenance_retraction();
 static void lcd_menu_advanced_version();
+static void lcd_menu_advanced_stats();
 static void lcd_menu_maintenance_motion();
 static void lcd_menu_advanced_factory_reset();
 
@@ -62,20 +64,24 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 5 + EXTRUDERS)
         strcpy_P(card.longFilename, PSTR("Raise buildplate"));
     else if (nr == 6 + EXTRUDERS)
+        strcpy_P(card.longFilename, PSTR("Insert material"));
+    else if (nr == 7 + EXTRUDERS)
 #if EXTRUDERS < 2
         strcpy_P(card.longFilename, PSTR("Move material"));
 #else
         strcpy_P(card.longFilename, PSTR("Move material (1)"));
-    else if (nr == 7 + EXTRUDERS)
+    else if (nr == 8 + EXTRUDERS)
         strcpy_P(card.longFilename, PSTR("Move material (2)"));
 #endif
-    else if (nr == 6 + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Retraction settings"));
     else if (nr == 7 + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Motion settings"));
+        strcpy_P(card.longFilename, PSTR("Retraction settings"));
     else if (nr == 8 + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Version"));
+        strcpy_P(card.longFilename, PSTR("Motion settings"));
     else if (nr == 9 + EXTRUDERS * 2)
+        strcpy_P(card.longFilename, PSTR("Version"));
+    else if (nr == 10 + EXTRUDERS * 2)
+        strcpy_P(card.longFilename, PSTR("Runtime stats"));
+    else if (nr == 11 + EXTRUDERS * 2)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -88,7 +94,7 @@ static void lcd_advanced_details(uint8_t nr)
 
 static void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu(PSTR("ADVANCED"), 10 + EXTRUDERS * 2, lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu(PSTR("ADVANCED"), 12 + EXTRUDERS * 2, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -127,13 +133,17 @@ static void lcd_menu_maintenance_advanced()
         }
         else if (IS_SELECTED_SCROLL(6 + EXTRUDERS))
         {
+            lcd_change_to_menu(lcd_menu_insert_material, 0);
+        }
+        else if (IS_SELECTED_SCROLL(7 + EXTRUDERS))
+        {
             set_extrude_min_temp(0);
             active_extruder = 0;
             target_temperature[active_extruder] = material[active_extruder].temperature;
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
 #if EXTRUDERS > 1
-        else if (IS_SELECTED_SCROLL(7 + EXTRUDERS))
+        else if (IS_SELECTED_SCROLL(8 + EXTRUDERS))
         {
             set_extrude_min_temp(0);
             active_extruder = 1;
@@ -141,13 +151,15 @@ static void lcd_menu_maintenance_advanced()
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
 #endif
-        else if (IS_SELECTED_SCROLL(6 + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(7 + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(8 + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(9 + EXTRUDERS * 2))
+            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(10 + EXTRUDERS * 2))
+            lcd_change_to_menu(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(11 + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, SCROLL_MENU_ITEM_POS(1));
     }
 }
@@ -234,6 +246,29 @@ void lcd_menu_advanced_version()
     lcd_info_screen(previousMenu, NULL, PSTR("Return"));
     lcd_lib_draw_string_centerP(30, PSTR(STRING_VERSION_CONFIG_H));
     lcd_lib_draw_string_centerP(40, PSTR(STRING_CONFIG_H_AUTHOR));
+    lcd_lib_update_screen();
+}
+
+void lcd_menu_advanced_stats()
+{
+    lcd_info_screen(previousMenu, NULL, PSTR("Return"));
+    lcd_lib_draw_string_centerP(10, PSTR("Machine on for:"));
+    char buffer[16];
+    char* c = int_to_string(lifetime_minutes / 60, buffer, PSTR(":"));
+    if (lifetime_minutes % 60 < 10)
+        *c++ = '0';
+    c = int_to_string(lifetime_minutes % 60, c);
+    lcd_lib_draw_string_center(20, buffer);
+
+    lcd_lib_draw_string_centerP(30, PSTR("Printing:"));
+    c = int_to_string(lifetime_print_minutes / 60, buffer, PSTR(":"));
+    if (lifetime_print_minutes % 60 < 10)
+        *c++ = '0';
+    c = int_to_string(lifetime_print_minutes % 60, c);
+    strcpy_P(c, PSTR(" Mat:"));
+    c += 5;
+    c = int_to_string(lifetime_print_centimeters / 100, c, PSTR("m"));
+    lcd_lib_draw_string_center(40, buffer);
     lcd_lib_update_screen();
 }
 
@@ -328,6 +363,12 @@ static char* lcd_motion_item(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Max speed Y"));
     else if (nr == 5)
         strcpy_P(card.longFilename, PSTR("Max speed Z"));
+    else if (nr == 6)
+        strcpy_P(card.longFilename, PSTR("Current X/Y"));
+    else if (nr == 7)
+        strcpy_P(card.longFilename, PSTR("Current Z"));
+    else if (nr == 8)
+        strcpy_P(card.longFilename, PSTR("Current E"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
     return card.longFilename;
@@ -348,16 +389,25 @@ static void lcd_motion_details(uint8_t nr)
         int_to_string(max_feedrate[Y_AXIS], buffer, PSTR("mm/sec"));
     else if(nr == 5)
         int_to_string(max_feedrate[Z_AXIS], buffer, PSTR("mm/sec"));
+    else if(nr == 6)
+        int_to_string(motor_current_setting[0], buffer, PSTR("mA"));
+    else if(nr == 7)
+        int_to_string(motor_current_setting[1], buffer, PSTR("mA"));
+    else if(nr == 8)
+        int_to_string(motor_current_setting[2], buffer, PSTR("mA"));
     lcd_lib_draw_string(5, 53, buffer);
 }
 
 static void lcd_menu_maintenance_motion()
 {
-    lcd_scroll_menu(PSTR("MOTION"), 6, lcd_motion_item, lcd_motion_details);
+    lcd_scroll_menu(PSTR("MOTION"), 9, lcd_motion_item, lcd_motion_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
         {
+            digipot_current(0, motor_current_setting[0]);
+            digipot_current(1, motor_current_setting[1]);
+            digipot_current(2, motor_current_setting[2]);
             Config_StoreSettings();
             lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7));
         }
@@ -371,6 +421,12 @@ static void lcd_menu_maintenance_motion()
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Y_AXIS], "Max speed Y", "mm/sec", 0, 1000);
         else if (IS_SELECTED_SCROLL(5))
             LCD_EDIT_SETTING_FLOAT1(max_feedrate[Z_AXIS], "Max speed Z", "mm/sec", 0, 1000);
+        else if (IS_SELECTED_SCROLL(6))
+            LCD_EDIT_SETTING(motor_current_setting[0], "Current X/Y", "mA", 0, 1300);
+        else if (IS_SELECTED_SCROLL(7))
+            LCD_EDIT_SETTING(motor_current_setting[1], "Current Z", "mA", 0, 1300);
+        else if (IS_SELECTED_SCROLL(8))
+            LCD_EDIT_SETTING(motor_current_setting[2], "Current E", "mA", 0, 1300);
     }
 }
 

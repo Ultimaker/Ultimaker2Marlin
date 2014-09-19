@@ -55,6 +55,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "temperature.h"
+#include "lifetime_stats.h"
 #include "ultralcd.h"
 #include "UltiLCD2.h"
 #include "language.h"
@@ -529,6 +530,7 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
     manage_heater(); 
     manage_inactivity(); 
     lcd_update();
+    lifetime_stats_tick();
   }
 
   // The target position of the tool in absolute steps
