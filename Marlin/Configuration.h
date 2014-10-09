@@ -181,7 +181,7 @@
                                   // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
   #define PID_INTEGRAL_DRIVE_MAX 255  //limit for the integral term
   #define K1 0.99 //smoothing factor within the PID
-  #define PID_dT ((16.0 * 8.0)/(F_CPU / 64.0 / 256.0)) //sampling period of the temperature routine
+  #define PID_dT ((OVERSAMPLENR * 4.0)/(F_CPU / 64.0 / 256.0)) //sampling period of the temperature routine
 
 // If you are using a preconfigured hotend then you can use one of the value sets by uncommenting it
 // Ultimaker
@@ -190,9 +190,9 @@
     //#define  DEFAULT_Kd 114
 
 // Ultimaker2
-    #define  DEFAULT_Kp 12.15
-    #define  DEFAULT_Ki 1.0
-    #define  DEFAULT_Kd 37.02
+    #define  DEFAULT_Kp 17.0
+    #define  DEFAULT_Ki 2.0
+    #define  DEFAULT_Kd 37.0
 
 // Makergear
 //    #define  DEFAULT_Kp 7.0
