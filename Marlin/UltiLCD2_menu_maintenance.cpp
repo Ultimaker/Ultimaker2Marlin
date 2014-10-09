@@ -74,14 +74,16 @@ static char* lcd_advanced_item(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Move material (2)"));
 #endif
     else if (nr == 7 + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Retraction settings"));
+        strcpy_P(card.longFilename, PSTR("Set fan speed"));
     else if (nr == 8 + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Motion settings"));
+        strcpy_P(card.longFilename, PSTR("Retraction settings"));
     else if (nr == 9 + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Version"));
+        strcpy_P(card.longFilename, PSTR("Motion settings"));
     else if (nr == 10 + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Runtime stats"));
+        strcpy_P(card.longFilename, PSTR("Version"));
     else if (nr == 11 + EXTRUDERS * 2)
+        strcpy_P(card.longFilename, PSTR("Runtime stats"));
+    else if (nr == 12 + EXTRUDERS * 2)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -94,7 +96,7 @@ static void lcd_advanced_details(uint8_t nr)
 
 static void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu(PSTR("ADVANCED"), 12 + EXTRUDERS * 2, lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu(PSTR("ADVANCED"), 13 + EXTRUDERS * 2, lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -152,14 +154,16 @@ static void lcd_menu_maintenance_advanced()
         }
 #endif
         else if (IS_SELECTED_SCROLL(7 + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0));
+            LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
         else if (IS_SELECTED_SCROLL(8 + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(9 + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(10 + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(11 + EXTRUDERS * 2))
+            lcd_change_to_menu(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(12 + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, SCROLL_MENU_ITEM_POS(1));
     }
 }
