@@ -123,6 +123,9 @@ static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 16383, 16383, 16383 );
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
 #endif
 
+static unsigned long max_heating_start_millis[EXTRUDERS];
+static float max_heating_start_temperature[EXTRUDERS];
+
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   static void *heater_ttbl_map[2] = {(void *)HEATER_0_TEMPTABLE, (void *)HEATER_1_TEMPTABLE };
   static uint8_t heater_ttbllen_map[2] = { HEATER_0_TEMPTABLE_LEN, HEATER_1_TEMPTABLE_LEN };
@@ -493,6 +496,27 @@ void manage_heater()
         #endif
       }
     #endif
+    if (pid_output == PID_MAX)
+    {
+        if (current_temperature[e] - max_heating_start_temperature[e] > MAX_HEATING_TEMPERATURE_INCREASE)
+        {
+            max_heating_start_millis[e] = 0;
+        }
+        if (max_heating_start_millis[e] == 0)
+        {
+            max_heating_start_millis[e] = millis();
+            max_heating_start_temperature[e] = current_temperature[e];
+        }
+        if (millis() > max_heating_start_millis[e] + MAX_HEATING_CHECK_MILLIS)
+        {
+            //Did not heat up MAX_HEATING_TEMPERATURE_INCREASE in MAX_HEATING_CHECK_MILLIS while the PID was at the maximum.
+            //Potential problems could be that the heater is not working, or the temperature sensor is not measuring what the heater is heating.
+            disable_heater();
+            Stop(STOP_REASON_HEATER_ERROR);
+        }
+    }else{
+        max_heating_start_millis[e] = 0;
+    }
   } // End extruder for loop
 
   #if (defined(EXTRUDER_0_AUTO_FAN_PIN) && EXTRUDER_0_AUTO_FAN_PIN > -1) || \

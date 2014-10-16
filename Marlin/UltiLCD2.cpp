@@ -71,6 +71,9 @@ void lcd_update()
         case STOP_REASON_MAXTEMP_BED:
             lcd_lib_draw_stringP(15, 20, PSTR("Temp sensor BED"));
             break;
+        case STOP_REASON_HEATER_ERROR:
+            lcd_lib_draw_stringP(15, 20, PSTR("Heater error"));
+            break;
         case STOP_REASON_SAFETY_TRIGGER:
             lcd_lib_draw_stringP(15, 20, PSTR("Safety circuit"));
             break;
