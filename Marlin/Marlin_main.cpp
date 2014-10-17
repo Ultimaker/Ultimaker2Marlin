@@ -182,6 +182,16 @@ float extruder_offset[2][EXTRUDERS] = {
 uint8_t active_extruder = 0;
 uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
+
+struct machinesettings {
+ int feedmultiply;
+ int HETemperature[EXTRUDERS];
+ int BedTemperature;
+ uint8_t fanSpeed;
+ int extrudemultiply[EXTRUDERS];
+} saved_settings;
+int values_saved = 0;
+
 #ifdef SERVO_ENDSTOPS
   int servo_endstops[] = SERVO_ENDSTOPS;
   int servo_endstop_angles[] = SERVO_ENDSTOP_ANGLES;
@@ -2098,6 +2108,36 @@ void process_commands()
     }
     break;
     #endif//ENABLE_ULTILCD2
+
+    case 605: // M605 store current set values
+    {
+      saved_settings.feedmultiply = feedmultiply;
+      saved_settings.BedTemperature = target_temperature_bed;
+      saved_settings.fanSpeed = fanSpeed;
+      for (int i=0; i<EXTRUDERS; i++)
+      {
+        saved_settings.HETemperature[i] = target_temperature[i];
+        saved_settings.extrudemultiply[i] = extrudemultiply[i];
+      }
+      values_saved = 1;
+    }
+    break;
+
+    case 606: // M606 recall saved values
+    {
+      if (values_saved > 0)
+      {
+        feedmultiply = saved_settings.feedmultiply;
+        target_temperature_bed = saved_settings.BedTemperature;
+        fanSpeed = saved_settings.fanSpeed;
+        for (int i=0; i<EXTRUDERS; i++)
+        {
+          target_temperature[i] = saved_settings.HETemperature[i];
+          extrudemultiply[i] = saved_settings.extrudemultiply[i];
+        }
+      }
+    }
+    break;
 
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
