@@ -2107,7 +2107,6 @@ void process_commands()
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], retract_feedrate/60, active_extruder); //final untretract
     }
     break;
-    #endif//ENABLE_ULTILCD2
 
     case 605: // M605 store current set values
     {
@@ -2138,6 +2137,7 @@ void process_commands()
       }
     }
     break;
+    #endif//ENABLE_ULTILCD2
 
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
