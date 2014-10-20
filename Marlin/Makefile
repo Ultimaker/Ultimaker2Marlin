@@ -5,7 +5,7 @@
 # Arduino adaptation by mellis, eighthave, oli.keller
 # Marlin adaption by Daid
 #
-# This has been tested with Arduino 0022.
+# This has been tested with Arduino 1.0.5.
 #
 # This makefile allows you to build sketches from the command line
 # without the Arduino environment (or Java).
@@ -40,15 +40,15 @@
 HARDWARE_MOTHERBOARD ?= 72
 
 # Arduino source install directory, and version number
-ARDUINO_INSTALL_DIR  ?= ../../arduino-1.0.1
-ARDUINO_VERSION      ?= 101
+ARDUINO_INSTALL_DIR  ?= /usr/share/arduino
+ARDUINO_VERSION      ?= 105
 
 # You can optionally set a path to the avr-gcc tools. Requires a trailing slash. (ex: /usr/local/avr-gcc/bin)
 AVR_TOOLS_PATH ?= $(ARDUINO_INSTALL_DIR)/hardware/tools/avr/bin/
 
 #Programmer configuration
 UPLOAD_RATE        ?= 115200
-AVRDUDE_PROGRAMMER ?= arduino
+AVRDUDE_PROGRAMMER ?= wiring
 UPLOAD_PORT        ?= /dev/arduino
 
 #Directory used to build files in, contains all the build files, from object files to the final hex file.
@@ -293,7 +293,7 @@ LDFLAGS = -lm
 # Programming support using avrdude. Settings and variables.
 AVRDUDE_PORT = $(UPLOAD_PORT)
 AVRDUDE_WRITE_FLASH = -U flash:w:$(BUILD_DIR)/$(TARGET).hex:i
-AVRDUDE_FLAGS = -D -C $(ARDUINO_INSTALL_DIR)/hardware/tools/avr/etc/avrdude.conf \
+AVRDUDE_FLAGS = -D -C $(ARDUINO_INSTALL_DIR)/hardware/tools/avrdude.conf \
 	-p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) \
 	-b $(UPLOAD_RATE)
 
