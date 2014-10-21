@@ -184,13 +184,15 @@ uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
 
 struct machinesettings {
- int feedmultiply;
- int HETemperature[EXTRUDERS];
- int BedTemperature;
- uint8_t fanSpeed;
- int extrudemultiply[EXTRUDERS];
-} saved_settings;
-int values_saved = 0;
+  machinesettings() : has_saved_settings(0) {}
+  int feedmultiply;
+  int HotendTemperature[EXTRUDERS];
+  int BedTemperature;
+  uint8_t fanSpeed;
+  int extrudemultiply[EXTRUDERS];
+  uint8_t has_saved_settings;
+} machinesettings_tempsave;
+
 
 #ifdef SERVO_ENDSTOPS
   int servo_endstops[] = SERVO_ENDSTOPS;
@@ -2110,29 +2112,29 @@ void process_commands()
 
     case 605: // M605 store current set values
     {
-      saved_settings.feedmultiply = feedmultiply;
-      saved_settings.BedTemperature = target_temperature_bed;
-      saved_settings.fanSpeed = fanSpeed;
+      machinesettings_tempsave.feedmultiply = feedmultiply;
+      machinesettings_tempsave.BedTemperature = target_temperature_bed;
+      machinesettings_tempsave.fanSpeed = fanSpeed;
       for (int i=0; i<EXTRUDERS; i++)
       {
-        saved_settings.HETemperature[i] = target_temperature[i];
-        saved_settings.extrudemultiply[i] = extrudemultiply[i];
+        machinesettings_tempsave.HotendTemperature[i] = target_temperature[i];
+        machinesettings_tempsave.extrudemultiply[i] = extrudemultiply[i];
       }
-      values_saved = 1;
+      machinesettings_tempsave.has_saved_settings = 1;
     }
     break;
 
     case 606: // M606 recall saved values
     {
-      if (values_saved > 0)
+      if (machinesettings_tempsave.has_saved_settings > 0)
       {
-        feedmultiply = saved_settings.feedmultiply;
-        target_temperature_bed = saved_settings.BedTemperature;
-        fanSpeed = saved_settings.fanSpeed;
+        feedmultiply = machinesettings_tempsave.feedmultiply;
+        target_temperature_bed = machinesettings_tempsave.BedTemperature;
+        fanSpeed = machinesettings_tempsave.fanSpeed;
         for (int i=0; i<EXTRUDERS; i++)
         {
-          target_temperature[i] = saved_settings.HETemperature[i];
-          extrudemultiply[i] = saved_settings.extrudemultiply[i];
+          target_temperature[i] = machinesettings_tempsave.HotendTemperature[i];
+          extrudemultiply[i] = machinesettings_tempsave.extrudemultiply[i];
         }
       }
     }
