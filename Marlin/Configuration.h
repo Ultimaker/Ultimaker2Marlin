@@ -9,7 +9,7 @@
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
-#define STRING_CONFIG_H_AUTHOR "Version 14.07.0" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Version 14.09.1" // Who made the changes.
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
 // This allows the connection of wireless adapters (for instance) to non-default port pins.
@@ -164,6 +164,11 @@
 #define HEATER_2_MAXTEMP 315
 #define BED_MAXTEMP 200
 
+//Check if the heater heats up MAX_HEATING_TEMPERATURE_INCREASE within MAX_HEATING_CHECK_MILLIS while the PID was at the maximum.
+// If not, raise an error because most likely the heater is not heating up the temperature sensor. Indicating an issue in the system.
+#define MAX_HEATING_TEMPERATURE_INCREASE 20
+#define MAX_HEATING_CHECK_MILLIS (20 * 1000)
+
 // If your bed has low resistance e.g. .6 ohm and throws the fuse you can duty cycle it to reduce the
 // average current. The value should be an integer and the heat bed will be turned on for 1 interval of
 // HEATER_BED_DUTY_CYCLE_DIVIDER intervals.
@@ -181,7 +186,7 @@
                                   // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
   #define PID_INTEGRAL_DRIVE_MAX 255  //limit for the integral term
   #define K1 0.99 //smoothing factor within the PID
-  #define PID_dT ((16.0 * 8.0)/(F_CPU / 64.0 / 256.0)) //sampling period of the temperature routine
+  #define PID_dT ((OVERSAMPLENR * 4.0)/(F_CPU / 64.0 / 256.0)) //sampling period of the temperature routine
 
 // If you are using a preconfigured hotend then you can use one of the value sets by uncommenting it
 // Ultimaker
@@ -190,9 +195,9 @@
     //#define  DEFAULT_Kd 114
 
 // Ultimaker2
-    #define  DEFAULT_Kp 12.15
-    #define  DEFAULT_Ki 1.0
-    #define  DEFAULT_Kd 37.02
+    #define  DEFAULT_Kp 10.0
+    #define  DEFAULT_Ki 2.5
+    #define  DEFAULT_Kd 100.0
 
 // Makergear
 //    #define  DEFAULT_Kp 7.0

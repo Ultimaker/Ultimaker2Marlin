@@ -3,7 +3,7 @@
 
 #include "Marlin.h"
 
-#define OVERSAMPLENR 16
+#define OVERSAMPLENR 8
 
 #if (THERMISTORHEATER_0 == 1) || (THERMISTORHEATER_1 == 1)  || (THERMISTORHEATER_2 == 1) || (THERMISTORBED == 1) //100k bed thermistor
 
@@ -434,45 +434,25 @@ This does not match the normal thermistor behaviour so we need to set the follow
 const short temptable_20[][2] PROGMEM = {
 {         0*OVERSAMPLENR ,       0     },
 {       227*OVERSAMPLENR ,       1     },
-{       236*OVERSAMPLENR ,       10     },
 {       245*OVERSAMPLENR ,       20     },
-{       253*OVERSAMPLENR ,       30     },
 {       262*OVERSAMPLENR ,       40     },
-{       270*OVERSAMPLENR ,       50     },
 {       279*OVERSAMPLENR ,       60     },
-{       287*OVERSAMPLENR ,       70     },
 {       295*OVERSAMPLENR ,       80     },
-{       304*OVERSAMPLENR ,       90     },
 {       312*OVERSAMPLENR ,       100     },
-{       320*OVERSAMPLENR ,       110     },
 {       329*OVERSAMPLENR ,       120     },
-{       337*OVERSAMPLENR ,       130     },
 {       345*OVERSAMPLENR ,       140     },
-{       353*OVERSAMPLENR ,       150     },
 {       361*OVERSAMPLENR ,       160     },
-{       369*OVERSAMPLENR ,       170     },
 {       377*OVERSAMPLENR ,       180     },
-{       385*OVERSAMPLENR ,       190     },
 {       393*OVERSAMPLENR ,       200     },
-{       401*OVERSAMPLENR ,       210     },
 {       409*OVERSAMPLENR ,       220     },
-{       417*OVERSAMPLENR ,       230     },
 {       424*OVERSAMPLENR ,       240     },
-{       432*OVERSAMPLENR ,       250     },
 {       440*OVERSAMPLENR ,       260     },
-{       447*OVERSAMPLENR ,       270     },
 {       455*OVERSAMPLENR ,       280     },
-{       463*OVERSAMPLENR ,       290     },
 {       470*OVERSAMPLENR ,       300     },
-{       478*OVERSAMPLENR ,       310     },
 {       485*OVERSAMPLENR ,       320     },
-{       493*OVERSAMPLENR ,       330     },
 {       500*OVERSAMPLENR ,       340     },
-{       507*OVERSAMPLENR ,       350     },
 {       515*OVERSAMPLENR ,       360     },
-{       522*OVERSAMPLENR ,       370     },
 {       529*OVERSAMPLENR ,       380     },
-{       537*OVERSAMPLENR ,       390     },
 {       544*OVERSAMPLENR ,       400     },
 {       614*OVERSAMPLENR ,       500     },
 {       681*OVERSAMPLENR ,       600     },
