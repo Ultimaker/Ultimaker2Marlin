@@ -111,21 +111,21 @@ static void lcd_menu_change_material_preheat()
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
 
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 20.0, retract_feedrate/60.0, active_extruder);
-        
+
         float old_max_feedrate_e = max_feedrate[E_AXIS];
         float old_retract_acceleration = retract_acceleration;
         max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
         retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
-        
+
         current_position[E_AXIS] = 0;
         plan_set_e_position(current_position[E_AXIS]);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -1.0, FILAMENT_REVERSAL_SPEED, active_extruder);
         for(uint8_t n=0;n<6;n++)
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (n+1)*-FILAMENT_REVERSAL_LENGTH/6, FILAMENT_REVERSAL_SPEED, active_extruder);
-        
+
         max_feedrate[E_AXIS] = old_max_feedrate_e;
         retract_acceleration = old_retract_acceleration;
-        
+
         currentMenu = lcd_menu_change_material_remove;
         temp = target;
     }
@@ -135,13 +135,13 @@ static void lcd_menu_change_material_preheat()
         progress = minProgress;
     else
         minProgress = progress;
-    
+
     lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead"));
     lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
 
     lcd_progressbar(progress);
-    
+
     lcd_lib_update_screen();
 }
 
@@ -149,7 +149,7 @@ static void lcd_menu_change_material_remove()
 {
     lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Reversing material"));
-    
+
     if (!blocks_queued())
     {
         lcd_lib_beep();
@@ -166,7 +166,7 @@ static void lcd_menu_change_material_remove()
     long targetPos = lround(FILAMENT_REVERSAL_LENGTH*axis_steps_per_unit[E_AXIS]);
     uint8_t progress = (pos * 125 / targetPos);
     lcd_progressbar(progress);
-    
+
     lcd_lib_update_screen();
 }
 
@@ -175,7 +175,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
     current_position[E_AXIS] = 0;
     plan_set_e_position(current_position[E_AXIS]);
     lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0));
-    
+
     char buffer[32];
     enquecommand_P(PSTR("G28 X0 Y0"));
     sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
@@ -241,7 +241,7 @@ static void lcd_menu_change_material_insert_wait_user()
         current_position[E_AXIS] += 0.5;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, active_extruder);
     }
-    
+
     lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
     lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
@@ -257,7 +257,7 @@ static void lcd_menu_change_material_insert_wait_user_ready()
     float old_retract_acceleration = retract_acceleration;
     max_feedrate[E_AXIS] = FILAMENT_INSERT_FAST_SPEED;
     retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
-    
+
     current_position[E_AXIS] = 0;
     plan_set_e_position(current_position[E_AXIS]);
     for(uint8_t n=0;n<6;n++)
@@ -265,11 +265,11 @@ static void lcd_menu_change_material_insert_wait_user_ready()
         current_position[E_AXIS] += FILAMENT_FORWARD_LENGTH / 6;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, active_extruder);
     }
-    
+
     //Put back origonal values.
     max_feedrate[E_AXIS] = old_max_feedrate_e;
     retract_acceleration = old_retract_acceleration;
-    
+
     lcd_change_to_menu(lcd_menu_change_material_insert_forward);
 }
 
@@ -277,12 +277,12 @@ static void lcd_menu_change_material_insert_forward()
 {
     lcd_info_screen(lcd_menu_main, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Forwarding material"));
-    
+
     if (!blocks_queued())
     {
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
-        
+
         digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.
         currentMenu = lcd_menu_change_material_insert;
         SELECT_MAIN_MENU_ITEM(0);
@@ -292,7 +292,7 @@ static void lcd_menu_change_material_insert_forward()
     long targetPos = lround(FILAMENT_FORWARD_LENGTH*axis_steps_per_unit[E_AXIS]);
     uint8_t progress = (pos * 125 / targetPos);
     lcd_progressbar(progress);
-    
+
     lcd_lib_update_screen();
 }
 
@@ -307,7 +307,7 @@ static void materialInsertReady()
 static void lcd_menu_change_material_insert()
 {
     LED_GLOW();
-    
+
     lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
     lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
@@ -317,7 +317,7 @@ static void lcd_menu_change_material_insert()
         current_position[E_AXIS] += 0.5;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
     }
-    
+
     lcd_lib_update_screen();
 }
 
@@ -332,7 +332,7 @@ static void lcd_menu_change_material_select_material_details_callback(uint8_t nr
 {
     char buffer[32];
     char* c = buffer;
-    
+
     if (led_glow_dir)
     {
         c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
@@ -355,12 +355,12 @@ static void lcd_menu_change_material_select_material_details_callback(uint8_t nr
 static void lcd_menu_change_material_select_material()
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
-    
+
     lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_menu_change_material_select_material_callback, lcd_menu_change_material_select_material_details_callback);
     if (lcd_lib_button_pressed)
     {
         lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), active_extruder);
-        
+
         lcd_change_to_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
     }
 }
@@ -385,14 +385,14 @@ static void lcd_material_select_details_callback(uint8_t nr)
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (nr == 0)
     {
-        
+
     }
     else if (nr <= count)
     {
         char buffer[32];
         char* c = buffer;
         nr -= 1;
-        
+
         if (led_glow_dir)
         {
             c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
@@ -418,7 +418,7 @@ static void lcd_material_select_details_callback(uint8_t nr)
 static void lcd_menu_material_select()
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
-    
+
     lcd_scroll_menu(PSTR("MATERIAL"), count + 2, lcd_material_select_callback, lcd_material_select_details_callback);
     if (lcd_lib_button_pressed)
     {
@@ -428,7 +428,7 @@ static void lcd_menu_material_select()
             lcd_change_to_menu(lcd_menu_material_settings);
         else{
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM() - 1, active_extruder);
-            
+
             lcd_change_to_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
         }
     }
@@ -566,7 +566,8 @@ void lcd_material_reset_defaults()
 {
     //Fill in the defaults
     char buffer[8];
-    
+
+    // no glue stick; no retraction; no cool head
     strcpy_P(buffer, PSTR("PLA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(0), 210);
@@ -575,15 +576,42 @@ void lcd_material_reset_defaults()
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(0), 2.85);
 
+    // glue stick; no retraction; no cool head
     strcpy_P(buffer, PSTR("ABS"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(1), 4);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(1), 260);
-    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(1), 90);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(1), 100);
     eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(1), 50);
-    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(1), 107);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(1), 105);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(1), 2.85);
-    
-    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 2);
+
+    // ABS cement; retraction; cool head
+    strcpy_P(buffer, PSTR("PC"));
+    eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(2), 4);
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(2), 280);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(2), 110);
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(2), 60);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(2), 104);
+    eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(2), 2.85);
+
+    // glue stick; no retraction; no cool head
+    strcpy_P(buffer, PSTR("PA"));
+    eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(3), 4);
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(3), 255);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(3), 70);
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(3), 0);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(3), 100);
+    eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(3), 2.85);
+
+    strcpy_P(buffer, PSTR("POM"));
+    eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(4), 4);
+    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(4), 260);
+    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(4), 90);
+    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(4), 50);
+    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(4), 107);
+    eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(4), 2.85);
+
+    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 5);
 }
 
 void lcd_material_set_material(uint8_t nr, uint8_t e)
@@ -600,7 +628,7 @@ void lcd_material_set_material(uint8_t nr, uint8_t e)
         material[e].temperature = HEATER_0_MAXTEMP - 15;
     if (material[e].bed_temperature > BED_MAXTEMP - 15)
         material[e].bed_temperature = BED_MAXTEMP - 15;
-    
+
     lcd_material_store_current_material();
 }
 
