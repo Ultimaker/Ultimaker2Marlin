@@ -365,14 +365,186 @@ static void lcd_menu_change_material_select_material()
     }
 }
 
+static void lcd_menu_material_export_done()
+{
+    lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
+    lcd_info_screen(lcd_menu_material_select, NULL, PSTR("Ok"));
+    lcd_lib_draw_string_centerP(20, PSTR("Saved materials"));
+    lcd_lib_draw_string_centerP(30, PSTR("to the SD card"));
+    lcd_lib_draw_string_centerP(40, PSTR("in MATERIAL.TXT"));
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_material_export()
+{
+    if (!card.sdInserted)
+    {
+        LED_GLOW();
+        lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
+        lcd_info_screen(lcd_menu_material_select);
+        lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
+        lcd_lib_draw_string_centerP(25, PSTR("Please insert card"));
+        lcd_lib_update_screen();
+        card.release();
+        return;
+    }
+    if (!card.isOk())
+    {
+        lcd_info_screen(lcd_menu_material_select);
+        lcd_lib_draw_string_centerP(16, PSTR("Reading card..."));
+        lcd_lib_update_screen();
+        card.initsd();
+        return;
+    }
+    
+    card.setroot();
+    card.openFile("MATERIAL.TXT", false);
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    for(uint8_t n=0; n<count; n++)
+    {
+        char buffer[32];
+        strcpy_P(buffer, PSTR("[material]\n"));
+        card.write_string(buffer);
+        
+        strcpy_P(buffer, PSTR("name="));
+        char* ptr = buffer + strlen(buffer);
+        eeprom_read_block(ptr, EEPROM_MATERIAL_NAME_OFFSET(n), 8);
+        ptr[8] = '\0';
+        strcat_P(buffer, PSTR("\n"));
+        card.write_string(buffer);
+
+        strcpy_P(buffer, PSTR("temperature="));
+        ptr = buffer + strlen(buffer);
+        int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(n)), ptr, PSTR("\n"));
+        card.write_string(buffer);
+
+        strcpy_P(buffer, PSTR("bed_temperature="));
+        ptr = buffer + strlen(buffer);
+        int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(n)), ptr, PSTR("\n"));
+        card.write_string(buffer);
+
+        strcpy_P(buffer, PSTR("fan_speed="));
+        ptr = buffer + strlen(buffer);
+        int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(n)), ptr, PSTR("\n"));
+        card.write_string(buffer);
+
+        strcpy_P(buffer, PSTR("flow="));
+        ptr = buffer + strlen(buffer);
+        int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(n)), ptr, PSTR("\n"));
+        card.write_string(buffer);
+
+        strcpy_P(buffer, PSTR("diameter="));
+        ptr = buffer + strlen(buffer);
+        float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(n)), ptr, PSTR("\n\n"));
+        card.write_string(buffer);
+    }
+    card.closefile();
+    
+    currentMenu = lcd_menu_material_export_done;
+}
+
+static void lcd_menu_material_import_done()
+{
+    lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
+    lcd_info_screen(lcd_menu_material_select, NULL, PSTR("Ok"));
+    lcd_lib_draw_string_centerP(20, PSTR("Loaded materials"));
+    lcd_lib_draw_string_centerP(30, PSTR("from the SD card"));
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_material_import()
+{
+    if (!card.sdInserted)
+    {
+        LED_GLOW();
+        lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
+        lcd_info_screen(lcd_menu_material_select);
+        lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
+        lcd_lib_draw_string_centerP(25, PSTR("Please insert card"));
+        lcd_lib_update_screen();
+        card.release();
+        return;
+    }
+    if (!card.isOk())
+    {
+        lcd_info_screen(lcd_menu_material_select);
+        lcd_lib_draw_string_centerP(16, PSTR("Reading card..."));
+        lcd_lib_update_screen();
+        card.initsd();
+        return;
+    }
+    
+    card.setroot();
+    card.openFile("MATERIAL.TXT", true);
+    if (!card.isFileOpen())
+    {
+        lcd_info_screen(lcd_menu_material_select);
+        lcd_lib_draw_string_centerP(15, PSTR("No export file"));
+        lcd_lib_draw_string_centerP(25, PSTR("Found on card."));
+        lcd_lib_update_screen();
+        return;
+    }
+    
+    char buffer[32];
+    uint8_t count = 0xFF;
+    while(card.fgets(buffer, sizeof(buffer)) > 0)
+    {
+        buffer[sizeof(buffer)-1] = '\0';
+        char* c = strchr(buffer, '\n');
+        if (c) *c = '\0';
+        
+        if(strcmp_P(buffer, PSTR("[material]")) == 0)
+        {
+            count++;
+        }else if (count < EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
+        {
+            c = strchr(buffer, '=');
+            if (c)
+            {
+                *c++ = '\0';
+                if (strcmp_P(buffer, PSTR("name")) == 0)
+                {
+                    eeprom_write_block(c, EEPROM_MATERIAL_NAME_OFFSET(count), 8);
+                }else if (strcmp_P(buffer, PSTR("temperature")) == 0)
+                {
+                    eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(count), strtol(c, NULL, 10));
+                }else if (strcmp_P(buffer, PSTR("bed_temperature")) == 0)
+                {
+                    eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(count), strtol(c, NULL, 10));
+                }else if (strcmp_P(buffer, PSTR("fan_speed")) == 0)
+                {
+                    eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(count), strtol(c, NULL, 10));
+                }else if (strcmp_P(buffer, PSTR("flow")) == 0)
+                {
+                    eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(count), strtol(c, NULL, 10));
+                }else if (strcmp_P(buffer, PSTR("diameter")) == 0)
+                {
+                    eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(count), strtod(c, NULL));
+                }
+            }
+        }
+    }
+    count++;
+    if (count > 0)
+    {
+        eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), count);
+    }
+    card.closefile();
+    
+    currentMenu = lcd_menu_material_import_done;
+}
 
 static char* lcd_material_select_callback(uint8_t nr)
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (nr == 0)
         strcpy_P(card.longFilename, PSTR("< RETURN"));
-    else if (nr > count)
+    else if (nr == count + 1)
         strcpy_P(card.longFilename, PSTR("Customize"));
+    else if (nr == count + 2)
+        strcpy_P(card.longFilename, PSTR("Export to SD"));
+    else if (nr == count + 3)
+        strcpy_P(card.longFilename, PSTR("Import from SD"));
     else{
         eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
         card.longFilename[8] = '\0';
@@ -410,8 +582,15 @@ static void lcd_material_select_details_callback(uint8_t nr)
             c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
         }
         lcd_lib_draw_string(5, 53, buffer);
-    }else{
+    }else if (nr == count + 1)
+    {
         lcd_lib_draw_string_centerP(53, PSTR("Modify the settings"));
+    }else if (nr == count + 2)
+    {
+        lcd_lib_draw_string_centerP(53, PSTR("Saves all materials"));
+    }else if (nr == count + 3)
+    {
+        lcd_lib_draw_string_centerP(53, PSTR("Loads all materials"));
     }
 }
 
@@ -419,13 +598,17 @@ static void lcd_menu_material_select()
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     
-    lcd_scroll_menu(PSTR("MATERIAL"), count + 2, lcd_material_select_callback, lcd_material_select_details_callback);
+    lcd_scroll_menu(PSTR("MATERIAL"), count + 4, lcd_material_select_callback, lcd_material_select_details_callback);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
             lcd_change_to_menu(lcd_menu_material_main);
         else if (IS_SELECTED_SCROLL(count + 1))
             lcd_change_to_menu(lcd_menu_material_settings);
+        else if (IS_SELECTED_SCROLL(count + 2))
+            lcd_change_to_menu(lcd_menu_material_export);
+        else if (IS_SELECTED_SCROLL(count + 3))
+            lcd_change_to_menu(lcd_menu_material_import);
         else{
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM() - 1, active_extruder);
             

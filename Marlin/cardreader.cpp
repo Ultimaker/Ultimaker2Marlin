@@ -222,13 +222,13 @@ void CardReader::pauseSDPrint()
 }
 
 
-void CardReader::openLogFile(char* name)
+void CardReader::openLogFile(const char* name)
 {
   logging = true;
   openFile(name, false);
 }
 
-void CardReader::openFile(char* name,bool read)
+void CardReader::openFile(const char* name,bool read)
 {
   if(!cardOK)
     return;
@@ -239,7 +239,7 @@ void CardReader::openFile(char* name,bool read)
   
   SdFile myDir;
   curDir=&root;
-  char *fname=name;
+  const char *fname=name;
   
   char *dirname_start,*dirname_end;
   if(name[0]=='/')
@@ -325,7 +325,7 @@ void CardReader::openFile(char* name,bool read)
   
 }
 
-void CardReader::removeFile(char* name)
+void CardReader::removeFile(const char* name)
 {
   if(!cardOK)
     return;
@@ -336,7 +336,7 @@ void CardReader::removeFile(char* name)
   
   SdFile myDir;
   curDir=&root;
-  char *fname=name;
+  const char *fname=name;
   
   char *dirname_start,*dirname_end;
   if(name[0]=='/')
@@ -435,6 +435,12 @@ void CardReader::write_command(char *buf)
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM(MSG_SD_ERR_WRITE_TO_FILE);
   }
+}
+
+bool CardReader::write_string(char* buffer)
+{
+    file.write(buffer);
+    return file.writeError;
 }
 
 
