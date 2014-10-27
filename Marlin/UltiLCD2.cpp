@@ -77,6 +77,9 @@ void lcd_update()
         case STOP_REASON_SAFETY_TRIGGER:
             lcd_lib_draw_stringP(15, 20, PSTR("Safety circuit"));
             break;
+        case STOP_REASON_ENDSTOP_ERROR:
+            lcd_lib_draw_stringP(15, 20, PSTR("Z switch stuck"));
+            break;
         }
         lcd_lib_draw_stringP(1, 40, PSTR("Contact:"));
         lcd_lib_draw_stringP(1, 50, PSTR("support@ultimaker.com"));

@@ -770,6 +770,23 @@ static void homeaxis(int axis) {
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
 
+    bool endstop_still_pressed = false;
+    if (axis==Z_AXIS)
+    {
+        #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
+        endstop_still_pressed = endstop_still_pressed || (READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING);
+        #endif
+        #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
+        endstop_still_pressed = endstop_still_pressed || (READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING);
+        #endif
+    }
+    if (endstop_still_pressed)
+    {
+        SERIAL_ERROR_START;
+        SERIAL_ERRORLNPGM("Endstop still pressed after backing off. Endstop stuck?");
+        Stop(STOP_REASON_ENDSTOP_ERROR);
+    }
+
     destination[axis] = 2*home_retract_mm(axis) * home_dir(axis);
     feedrate = homing_feedrate[axis]/3;
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
