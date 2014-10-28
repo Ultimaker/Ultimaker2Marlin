@@ -42,6 +42,7 @@
 #include "electronics_test.h"
 #include "language.h"
 #include "pins_arduino.h"
+#include "i2c_driver.h"
 
 #if NUM_SERVOS > 0
 #include "Servo.h"
@@ -443,13 +444,13 @@ void setup()
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
   lifetime_stats_init();
+  i2cDriverInit();
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
   watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
   setup_photpin();
   servo_init();
-
   lcd_init();
   
   #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
