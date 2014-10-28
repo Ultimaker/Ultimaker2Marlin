@@ -52,6 +52,10 @@ static void i2cDriverExecuteNextCommand()
 
 void i2cDriverPlan(i2cCommand* command)
 {
+    if (!command->finished)
+        return;
+    MSerial.print(int(command));
+    MSerial.println("P");
     command->finished = false;
     
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -69,7 +73,7 @@ void i2cDriverPlan(i2cCommand* command)
         }else{
             if (command_queue == NULL || command_queue->priority < command->priority)
             {
-                command->next = NULL;
+                command->next = command_queue;
                 command_queue = command;
             }else{
                 for(i2cCommand* c = command_queue; ; c = c->next)
@@ -103,7 +107,7 @@ ISR(TWI_vect, ISR_BLOCK)
     //Called after the TWI has received a data byte
     //Called after a STOP or REPEATED START has been received while still addressed as a Slave
     //Called when a bus error has occurred due to an illegal START or STOP condition
-    switch(TWSR & TW_STATUS_MASK)
+    switch(TW_STATUS)
     {
         /* Master */
     case TW_START: //0x08
@@ -128,18 +132,20 @@ ISR(TWI_vect, ISR_BLOCK)
             TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT); //Data byte will be transmitted and ACK or NOT ACK will be received
         }else{
             //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
+            MSerial.print(int(current_command));
+            MSerial.println("WD");
             current_command->finished = true;
             i2cDriverExecuteNextCommand();
+            MSerial.print(int(current_command));
+            MSerial.println("N");
         }
         break;
         /* Master Receiver */
     case TW_MR_SLA_ACK: //0x40
-        /** SLA+R transmitted, ACK received */
-        TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT) | _BV(TWEA); //Data byte will be received and ACK will be returned
-        break;
     case TW_MR_SLA_NACK: //0x48
+        /** SLA+R transmitted, ACK received */
         /** SLA+R transmitted, NACK received */
-        TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWSTA) | _BV(TWINT); //Repeated START will be transmitted
+        TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT) | _BV(TWEA); //Data byte will be received and ACK will be returned
         break;
     case TW_MR_DATA_ACK: //0x50
     case TW_MR_DATA_NACK: //0x58
@@ -151,8 +157,12 @@ ISR(TWI_vect, ISR_BLOCK)
             TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT) | _BV(TWEA); //Data byte will be received and ACK will be returned
         }else{
             //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
+            MSerial.print(int(current_command));
+            MSerial.println("RD");
             current_command->finished = true;
             i2cDriverExecuteNextCommand();
+            MSerial.print(int(current_command));
+            MSerial.println("N");
         }
         break;
 

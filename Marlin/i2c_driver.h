@@ -1,6 +1,7 @@
 #ifndef I2C_DRIVER_H
 #define I2C_DRIVER_H
 
+#include <stdint.h>
 /**
 A AVR I2C driver using the TWI hardware in the AVR controller.
 
