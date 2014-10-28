@@ -53,6 +53,8 @@ void lcd_lib_init()
 {
     i2cCommand lcd_init_command;
     uint8_t lcd_init_buffer[24];
+    i2cCommand led_init_command;
+    uint8_t led_init_buffer[10];
 
     i2cDriverCommandSetup(led_command, I2C_LED_ADDRESS << 1 | i2cWriteBit, 1, led_command_buffer, sizeof(led_command_buffer));
     i2cDriverCommandSetup(lcd_position_command, I2C_LCD_ADDRESS << 1 | i2cWriteBit, 11, lcd_position_command_buffer, sizeof(lcd_position_command_buffer));
@@ -60,6 +62,7 @@ void lcd_lib_init()
         i2cDriverCommandSetup(lcd_data_command[n], I2C_LCD_ADDRESS << 1 | i2cWriteBit, 10, &lcd_buffer[(LCD_GFX_WIDTH + 1) * n], LCD_GFX_WIDTH + 1);
 
     i2cDriverCommandSetup(lcd_init_command, I2C_LCD_ADDRESS << 1 | i2cWriteBit, 10, lcd_init_buffer, sizeof(lcd_init_buffer));
+    i2cDriverCommandSetup(led_init_command, I2C_LED_ADDRESS << 1 | i2cWriteBit, 1, led_init_buffer, sizeof(led_init_buffer));
 
     SET_OUTPUT(LCD_CS_PIN);
     SET_OUTPUT(LCD_RESET_PIN);
@@ -85,16 +88,17 @@ void lcd_lib_init()
     WRITE(LCD_RESET_PIN, 1);
     _delay_ms(1);
     
-    i2c_led_write(0, 0x80);//MODE1
-    i2c_led_write(1, 0x1C);//MODE2
-    i2c_led_write(2, 0);//PWM0=Red
-    i2c_led_write(3, 0);//PWM1=Green
-    i2c_led_write(4, 0);//PWM2=Blue
-    i2c_led_write(5, 0x00);//PWM3
-    i2c_led_write(6, 0xFF);//GRPPWM
-    i2c_led_write(7, 0x00);//GRPFREQ
-    i2c_led_write(8, 0xAA);//LEDOUT
-    led_command.buffer_size = 4;
+    led_init_buffer[0] = 0x80;//Write from address 0 with auto-increase.
+    led_init_buffer[1] = 0x80;//MODE1
+    led_init_buffer[2] = 0x1C;//MODE2
+    led_init_buffer[3] = 0;//PWM0=Red
+    led_init_buffer[4] = 0;//PWM1=Green
+    led_init_buffer[5] = 0;//PWM2=Blue
+    led_init_buffer[6] = 0x00;//PWM3
+    led_init_buffer[7] = 0xFF;//GRPPWM
+    led_init_buffer[8] = 0x00;//GRPFREQ
+    led_init_buffer[9] = 0xAA;//LEDOUT
+    i2cDriverExecuteAndWait(&led_init_command);
     
     lcd_init_buffer[0] = I2C_LCD_SEND_COMMAND;
     lcd_init_buffer[1] = LCD_COMMAND_LOCK_COMMANDS;
@@ -130,10 +134,6 @@ void lcd_lib_init()
 
 void lcd_lib_update_screen()
 {
-    char buffer[16];
-    int_to_string(millis(), buffer);
-    lcd_lib_draw_string(0, 0, buffer);
-
     //Set the drawin position to 0,0
     lcd_position_command_buffer[0] = I2C_LCD_SEND_COMMAND;
     lcd_position_command_buffer[1] = 0x00 | (0 & 0x0F);
