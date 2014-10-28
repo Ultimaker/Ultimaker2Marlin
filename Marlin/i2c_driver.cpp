@@ -54,8 +54,6 @@ void i2cDriverPlan(i2cCommand* command)
 {
     if (!command->finished)
         return;
-    MSerial.print(int(command));
-    MSerial.println("P");
     command->finished = false;
     
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -132,12 +130,8 @@ ISR(TWI_vect, ISR_BLOCK)
             TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT); //Data byte will be transmitted and ACK or NOT ACK will be received
         }else{
             //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
-            MSerial.print(int(current_command));
-            MSerial.println("WD");
             current_command->finished = true;
             i2cDriverExecuteNextCommand();
-            MSerial.print(int(current_command));
-            MSerial.println("N");
         }
         break;
         /* Master Receiver */
@@ -157,12 +151,8 @@ ISR(TWI_vect, ISR_BLOCK)
             TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT) | _BV(TWEA); //Data byte will be received and ACK will be returned
         }else{
             //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
-            MSerial.print(int(current_command));
-            MSerial.println("RD");
             current_command->finished = true;
             i2cDriverExecuteNextCommand();
-            MSerial.print(int(current_command));
-            MSerial.println("N");
         }
         break;
 
