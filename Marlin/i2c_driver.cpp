@@ -14,8 +14,8 @@
 #endif
 
 static uint8_t current_command_buffer_index;
-static i2cCommand* current_command;
-static i2cCommand* command_queue;
+static i2cCommand* volatile current_command;
+static i2cCommand* volatile command_queue;
 
 void i2cDriverInit()
 {
@@ -67,7 +67,7 @@ void i2cDriverPlan(i2cCommand* command)
             
             current_command = command;
             current_command_buffer_index = 0;
-            TWCR = _BV(TWIE) | _BV(TWIE) | _BV(TWEN) | _BV(TWSTA) | _BV(TWINT); //START will be transmitted, interrupt will be generated.
+            TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWSTA) | _BV(TWINT); //START will be transmitted, interrupt will be generated.
         }else{
             if (command_queue == NULL || command_queue->priority < command->priority)
             {
@@ -136,10 +136,15 @@ ISR(TWI_vect, ISR_BLOCK)
         break;
         /* Master Receiver */
     case TW_MR_SLA_ACK: //0x40
-    case TW_MR_SLA_NACK: //0x48
         /** SLA+R transmitted, ACK received */
-        /** SLA+R transmitted, NACK received */
         TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT) | _BV(TWEA); //Data byte will be received and ACK will be returned
+        break;
+    case TW_MR_SLA_NACK: //0x48
+        /** SLA+R transmitted, NACK received */
+        //Failed to address slave. Clear the buffer and mark command as finished.
+        memset(current_command->buffer, 0xFF, current_command->buffer_size);
+        current_command->finished = true;
+        i2cDriverExecuteNextCommand();
         break;
     case TW_MR_DATA_ACK: //0x50
     case TW_MR_DATA_NACK: //0x58

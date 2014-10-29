@@ -25,7 +25,7 @@ struct i2cCommand {
     volatile uint8_t finished;  //false when the i2c command is being executed. During executing all other fields should not be accessed. True when the execution is finished.
     
     //Private, do not access, used by the priority queue
-    i2cCommand* next;
+    i2cCommand* volatile next;
 };
 
 /**
