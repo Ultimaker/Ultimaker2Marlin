@@ -41,14 +41,6 @@ static uint8_t lcd_position_command_buffer[4];
 static uint8_t lcd_buffer[(1+LCD_GFX_WIDTH) * LCD_GFX_HEIGHT / 8];
 static i2cCommand lcd_data_command[LCD_GFX_HEIGHT / 8];
 
-static void i2c_led_write(uint8_t addr, uint8_t data)
-{
-    led_command_buffer[0] = addr;
-    led_command_buffer[1] = data;
-    led_command.buffer_size = 2;
-    i2cDriverExecuteAndWait(&led_command);
-}
-
 void lcd_lib_init()
 {
     i2cCommand lcd_init_command;
