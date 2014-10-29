@@ -216,6 +216,11 @@ void checkHitEndstops()
  }
 }
 
+bool isEndstopHit()
+{
+    return endstop_x_hit || endstop_y_hit || endstop_z_hit;
+}
+
 void endstops_hit_on_purpose()
 {
   endstop_x_hit=false;

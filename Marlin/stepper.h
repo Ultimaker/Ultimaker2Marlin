@@ -69,6 +69,7 @@ void endstops_hit_on_purpose(); //avoid creation of the message, i.e. after home
 void enable_endstops(bool check); // Enable/disable endstop checking
 
 void checkStepperErrors(); //Print errors detected by the stepper
+bool isEndstopHit();
 
 void finishAndDisableSteppers();
 

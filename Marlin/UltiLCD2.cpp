@@ -77,7 +77,10 @@ void lcd_update()
         case STOP_REASON_SAFETY_TRIGGER:
             lcd_lib_draw_stringP(15, 20, PSTR("Safety circuit"));
             break;
-        case STOP_REASON_ENDSTOP_ERROR:
+        case STOP_REASON_ENDSTOP_BROKEN_ERROR:
+            lcd_lib_draw_stringP(15, 20, PSTR("Z switch broken"));
+            break;
+        case STOP_REASON_ENDSTOP_STUCK_ERROR:
             lcd_lib_draw_stringP(15, 20, PSTR("Z switch stuck"));
             break;
         }
