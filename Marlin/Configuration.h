@@ -134,7 +134,7 @@
 // 52 is 200k thermistor - ATC Semitec 204GT-2 (1k pullup)
 // 55 is 100k thermistor - ATC Semitec 104GT-2 (Used in ParCan) (1k pullup)
 
-#define TEMP_SENSOR_0 20
+#define TEMP_SENSOR_0 20 //5 for e3d
 #define TEMP_SENSOR_1 20
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_BED 20
@@ -331,9 +331,9 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 #define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
 // Travel limits after homing
-#define X_MAX_POS 230
+#define X_MAX_POS 200
 #define X_MIN_POS 0
-#define Y_MAX_POS 230
+#define Y_MAX_POS 200
 #define Y_MIN_POS 0
 #define Z_MAX_POS 230
 #define Z_MIN_POS 0
