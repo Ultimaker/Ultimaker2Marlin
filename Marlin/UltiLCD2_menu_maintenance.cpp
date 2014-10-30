@@ -481,15 +481,29 @@ static void lcd_menu_maintenance_led()
             lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(1));
         }
         else if (IS_SELECTED_SCROLL(1))
+        {
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
+        }
         else if (IS_SELECTED_SCROLL(2))
+        {
             led_mode = LED_MODE_ALWAYS_ON;
+            lcd_lib_beep();
+        }
         else if (IS_SELECTED_SCROLL(3))
+        {
             led_mode = LED_MODE_ALWAYS_OFF;
+            lcd_lib_beep();
+        }
         else if (IS_SELECTED_SCROLL(4))
+        {
             led_mode = LED_MODE_WHILE_PRINTING;
+            lcd_lib_beep();
+        }
         else if (IS_SELECTED_SCROLL(5))
+        {
             led_mode = LED_MODE_BLINK_ON_DONE;
+            lcd_lib_beep();
+        }
     }
 }
 
