@@ -132,10 +132,10 @@ static void parkHeadForLeftAdjustment()
 static void lcd_menu_first_run_bed_level_center_adjust()
 {
     LED_GLOW();
-    
+
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
-    
+
     if (printing_state == PRINT_STATE_NORMAL && lcd_lib_encoder_pos != 0 && movesplanned() < 4)
     {
         current_position[Z_AXIS] -= float(lcd_lib_encoder_pos) * 0.05;
@@ -170,14 +170,14 @@ static void lcd_menu_first_run_bed_level_left_adjust()
 {
     LED_GLOW();
     SELECT_MAIN_MENU_ITEM(0);
-        
+
     lcd_info_screen(lcd_menu_first_run_bed_level_right_adjust, parkHeadForRightAdjustment, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(5);
     lcd_lib_draw_string_centerP(10, PSTR("Turn left buildplate"));
     lcd_lib_draw_string_centerP(20, PSTR("screw till the nozzle"));
     lcd_lib_draw_string_centerP(30, PSTR("is a millimeter away"));
     lcd_lib_draw_string_centerP(40, PSTR("from the buildplate."));
-    
+
     lcd_lib_update_screen();
 }
 
@@ -191,7 +191,7 @@ static void lcd_menu_first_run_bed_level_right_adjust()
     lcd_lib_draw_string_centerP(20, PSTR("screw till the nozzle"));
     lcd_lib_draw_string_centerP(30, PSTR("is a millimeter away"));
     lcd_lib_draw_string_centerP(40, PSTR("from the buildplate."));
-    
+
     lcd_lib_update_screen();
 }
 
@@ -221,10 +221,10 @@ static void lcd_menu_first_run_bed_level_paper()
 static void lcd_menu_first_run_bed_level_paper_center()
 {
     LED_GLOW();
-    
+
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
-    
+
     if (printing_state == PRINT_STATE_NORMAL && lcd_lib_encoder_pos != 0 && movesplanned() < 4)
     {
         current_position[Z_AXIS] -= float(lcd_lib_encoder_pos) * 0.05;
@@ -307,7 +307,7 @@ static void lcd_menu_first_run_material_load_heatup()
     {
         for(uint8_t e=0; e<EXTRUDERS; e++)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
-        
+
         currentMenu = lcd_menu_first_run_material_load_insert;
         temp = target;
     }
@@ -317,7 +317,7 @@ static void lcd_menu_first_run_material_load_heatup()
         progress = minProgress;
     else
         minProgress = progress;
-    
+
     lcd_basic_screen();
     DRAW_PROGRESS_NR(12);
     lcd_lib_draw_string_centerP(10, PSTR("Please wait,"));
@@ -325,7 +325,7 @@ static void lcd_menu_first_run_material_load_heatup()
     lcd_lib_draw_string_centerP(30, PSTR("material loading"));
 
     lcd_progressbar(progress);
-    
+
     lcd_lib_update_screen();
 }
 
@@ -336,7 +336,7 @@ static void runMaterialForward()
     float old_retract_acceleration = retract_acceleration;
     max_feedrate[E_AXIS] = FILAMENT_INSERT_FAST_SPEED;
     retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
-    
+
     current_position[E_AXIS] = 0;
     plan_set_e_position(current_position[E_AXIS]);
     for(uint8_t n=0;n<6;n++)
@@ -344,7 +344,7 @@ static void runMaterialForward()
         current_position[E_AXIS] += FILAMENT_FORWARD_LENGTH / 6;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, 0);
     }
-    
+
     //Put back origonal values.
     max_feedrate[E_AXIS] = old_max_feedrate_e;
     retract_acceleration = old_retract_acceleration;
@@ -353,13 +353,13 @@ static void runMaterialForward()
 static void lcd_menu_first_run_material_load_insert()
 {
     LED_GLOW();
-    
+
     if (movesplanned() < 2)
     {
         current_position[E_AXIS] += 0.5;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, 0);
     }
-    
+
     SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_load_forward, runMaterialForward, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(13);
@@ -375,7 +375,7 @@ static void lcd_menu_first_run_material_load_forward()
     lcd_basic_screen();
     DRAW_PROGRESS_NR(14);
     lcd_lib_draw_string_centerP(20, PSTR("Loading material..."));
-    
+
     if (!blocks_queued())
     {
         lcd_lib_beep();
@@ -389,14 +389,14 @@ static void lcd_menu_first_run_material_load_forward()
     long targetPos = lround(FILAMENT_FORWARD_LENGTH*axis_steps_per_unit[E_AXIS]);
     uint8_t progress = (pos * 125 / targetPos);
     lcd_progressbar(progress);
-    
+
     lcd_lib_update_screen();
 }
 
 static void lcd_menu_first_run_material_load_wait()
 {
     LED_GLOW();
-    
+
     lcd_info_screen(lcd_menu_first_run_material_select_1, doCooldown, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(15);
     lcd_lib_draw_string_centerP(10, PSTR("Push button when"));
@@ -408,7 +408,7 @@ static void lcd_menu_first_run_material_load_wait()
         current_position[E_AXIS] += 0.5;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_EXTRUDE_SPEED, 0);
     }
-    
+
     lcd_lib_update_screen();
 }
 
@@ -430,7 +430,7 @@ static void lcd_menu_first_run_material_select_pla_abs()
     lcd_tripple_menu(PSTR("PLA"), PSTR("ABS"), NULL);
     DRAW_PROGRESS_NR(17);
     lcd_lib_update_screen();
-    
+
     if (lcd_lib_button_pressed)
     {
         digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
@@ -510,7 +510,7 @@ static void lcd_menu_first_run_print_card_detect()
         card.release();
         return;
     }
-    
+
     if (!card.isOk())
     {
         lcd_info_screen(lcd_menu_main);
@@ -520,7 +520,7 @@ static void lcd_menu_first_run_print_card_detect()
         card.initsd();
         return;
     }
-    
+
     SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_print_select, NULL, PSTR("LET'S PRINT"));
     DRAW_PROGRESS_NR(21);

@@ -26,11 +26,11 @@ static void sendADC(uint8_t nr)
     ADMUX = ((1 << REFS0) | (nr & 0x07));
     ADCSRA = _BV(ADEN) | _BV(ADIF) | 0x07;
     ADCSRB = (nr & 0x08) ? _BV(MUX5) : 0;
-    
+
     ADCSRA |= _BV(ADSC);//Start conversion
-    
+
     while(ADCSRA & _BV(ADSC)) {}
-    
+
     send(ADCL);
     send(ADCH);
 }
@@ -99,13 +99,13 @@ void handleCommand(char* command)
 void run_electronics_test()
 {
     cli();
-    
+
     //Disable times and PWM, except for timer5, which controls the motor current PWM levels.
     TCCR1A = 0;
     TCCR2A = 0;
     TCCR3A = 0;
     TCCR4A = 0;
-    
+
     uint8_t idx = 0;
     char command_buffer[32];
     send_P(PSTR("TEST\r\n"));
@@ -119,7 +119,7 @@ void run_electronics_test()
             {
                 command_buffer[idx] = 0;
                 idx = 0;
-                
+
                 handleCommand(command_buffer);
             }
             else

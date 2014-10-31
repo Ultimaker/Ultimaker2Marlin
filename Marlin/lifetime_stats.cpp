@@ -39,26 +39,26 @@ void lifetime_stats_init()
     minute_counter_millis = startup_millis + MILLIS_MINUTE;
     is_printing = false;
     last_e_pos = current_position[E_AXIS];
-    
+
     load_lifetime_stats();
 }
 
 void lifetime_stats_tick()
 {
     unsigned long m = millis();
-    
+
     //Every minute, increase the minute counters that are active.
     if (minute_counter_millis < m)
     {
         minute_counter_millis += MILLIS_MINUTE;
-        
+
         lifetime_minutes++;
         triptime_minutes++;
         if (is_printing)
         {
             lifetime_print_minutes++;
             triptime_print_minutes++;
-            
+
             float diff = current_position[E_AXIS] - last_e_pos;
             if (diff > 0 && diff < 60 * 30)
             {
@@ -73,8 +73,8 @@ void lifetime_stats_tick()
             last_e_pos = current_position[E_AXIS];
         }
     }
-    
-    //Every hour, save the data to EEPROM. 
+
+    //Every hour, save the data to EEPROM.
     if (hour_save_millis < m)
     {
         hour_save_millis = m + MILLIS_HOUR;

@@ -6,7 +6,7 @@
 #define MAX_DIR_DEPTH 10
 
 #if (SDCARDDETECT > -1)
-# ifdef SDCARDDETECTINVERTED 
+# ifdef SDCARDDETECTINVERTED
 #  define IS_SD_INSERTED (READ(SDCARDDETECT)!=0)
 # else
 #  define IS_SD_INSERTED (READ(SDCARDDETECT)==0)
@@ -22,14 +22,14 @@ class CardReader
 {
 public:
   CardReader();
-  
+
   void initsd();
   void write_command(char *buf);
   bool write_string(char* buffer);
   //files auto[0-9].g on the sd card are performed in a row
   //this is to delay autostart and hence the initialisaiton of the sd card to some seconds after the normal init, so the device is available quick after a reset
 
-  void checkautostart(bool x); 
+  void checkautostart(bool x);
   void openFile(const char* name,bool read);
   void openLogFile(const char* name);
   void removeFile(const char* name);
@@ -42,7 +42,7 @@ public:
 
   void getfilename(const uint8_t nr);
   uint16_t getnrfilenames();
-  
+
 
   void ls();
   void chdir(const char * relpath);
@@ -101,7 +101,7 @@ private:
   uint32_t sdpos ;
 
   bool autostart_stilltocheck; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
-  
+
   LsAction lsAction; //stored for recursion.
   int16_t nrFiles; //counter for the files in the current directory and recycled as position counter for getting the nrFiles'th name in the directory.
   char* diveDirName;
