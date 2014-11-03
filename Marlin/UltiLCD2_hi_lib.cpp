@@ -54,7 +54,7 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     }else{
         lcd_lib_draw_string_center_atP(33, 22, left);
     }
-    
+
     if (IS_SELECTED_MAIN(1))
     {
         lcd_lib_draw_box(64+3+2, 5+2, 125-2, 45-2);
@@ -63,7 +63,7 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     }else{
         lcd_lib_draw_string_center_atP(64 + 33, 22, right);
     }
-    
+
     if (bottom != NULL)
     {
         if (IS_SELECTED_MAIN(2))
@@ -156,7 +156,7 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
 void lcd_progressbar(uint8_t progress)
 {
     lcd_lib_draw_box(3, 38, 124, 46);
-    
+
     for(uint8_t n=0; n<progress;n++)
     {
         if (n>120) break;
@@ -218,9 +218,9 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
     lcd_lib_draw_hline(3, 124, 48);
 
     lcd_lib_clear_string_centerP(1, menuNameP);
-    
+
 	entryDetailsCallback(selIndex);
-	
+
     lcd_lib_update_screen();
 }
 

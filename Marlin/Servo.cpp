@@ -41,7 +41,7 @@
  detach()    - Stops an attached servos from pulsing its i/o pin.
 
 */
-#include "Configuration.h" 
+#include "Configuration.h"
 
 #ifdef NUM_SERVOS
 #include <avr/interrupt.h>

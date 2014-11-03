@@ -35,6 +35,10 @@
 #ifndef _AVR_EEPROM_H_
 #define _AVR_EEPROM_H_ 1
 
+#include <stdint.h>
+#include <sys/types.h>
+#include <string.h>
+
 extern uint8_t __eeprom__storage[4096];
 
 static inline uint8_t eeprom_read_byte (const uint8_t *__p)

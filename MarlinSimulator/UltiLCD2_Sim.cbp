@@ -82,7 +82,11 @@
 		<Unit filename="../Marlin/UltiLCD2_menu_print.h" />
 		<Unit filename="../Marlin/cardreader.cpp" />
 		<Unit filename="../Marlin/cardreader.h" />
+		<Unit filename="../Marlin/electronics_test.cpp" />
+		<Unit filename="../Marlin/electronics_test.h" />
 		<Unit filename="../Marlin/fastio.h" />
+		<Unit filename="../Marlin/lifetime_stats.cpp" />
+		<Unit filename="../Marlin/lifetime_stats.h" />
 		<Unit filename="../Marlin/motion_control.cpp" />
 		<Unit filename="../Marlin/motion_control.h" />
 		<Unit filename="../Marlin/pins.h" />
