@@ -15,7 +15,7 @@
   You should have received a copy of the GNU Lesser General Public
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  
+
   Modified 23 November 2006 by David A. Mellis
   Modified 28 September 2010 by Mark Sproul
 */
@@ -24,7 +24,7 @@
 #include "MarlinSerial.h"
 
 #ifndef AT90USB
-// this next line disables the entire HardwareSerial.cpp, 
+// this next line disables the entire HardwareSerial.cpp,
 // this is so I can support Attiny series and any other chip without a uart
 #if defined(UBRRH) || defined(UBRR0H) || defined(UBRR1H) || defined(UBRR2H) || defined(UBRR3H)
 
@@ -80,7 +80,7 @@ void MarlinSerial::begin(long baud)
     useU2X = false;
   }
 #endif
-  
+
   if (useU2X) {
     M_UCSRxA = 1 << M_U2Xx;
     baud_setting = (F_CPU / 4 / baud - 1) / 2;
@@ -102,7 +102,7 @@ void MarlinSerial::end()
 {
   cbi(M_UCSRxB, M_RXENx);
   cbi(M_UCSRxB, M_TXENx);
-  cbi(M_UCSRxB, M_RXCIEx);  
+  cbi(M_UCSRxB, M_RXCIEx);
 }
 
 
@@ -199,7 +199,7 @@ void MarlinSerial::print(double n, int digits)
 void MarlinSerial::println(void)
 {
   print('\r');
-  print('\n');  
+  print('\n');
 }
 
 void MarlinSerial::println(const String &s)
@@ -260,13 +260,13 @@ void MarlinSerial::println(double n, int digits)
 
 void MarlinSerial::printNumber(unsigned long n, uint8_t base)
 {
-  unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars. 
+  unsigned char buf[8 * sizeof(long)]; // Assumes 8-bit chars.
   unsigned long i = 0;
 
   if (n == 0) {
     print('0');
     return;
-  } 
+  }
 
   while (n > 0) {
     buf[i++] = n % base;
@@ -279,8 +279,8 @@ void MarlinSerial::printNumber(unsigned long n, uint8_t base)
       'A' + buf[i - 1] - 10));
 }
 
-void MarlinSerial::printFloat(double number, uint8_t digits) 
-{ 
+void MarlinSerial::printFloat(double number, uint8_t digits)
+{
   // Handle negative numbers
   if (number < 0.0)
   {
@@ -292,7 +292,7 @@ void MarlinSerial::printFloat(double number, uint8_t digits)
   double rounding = 0.5;
   for (uint8_t i=0; i<digits; ++i)
     rounding /= 10.0;
-  
+
   number += rounding;
 
   // Extract the integer part of the number and print it
@@ -302,7 +302,7 @@ void MarlinSerial::printFloat(double number, uint8_t digits)
 
   // Print the decimal point, but only if there are digits beyond
   if (digits > 0)
-    print("."); 
+    print(".");
 
   // Extract digits from the remainder one at a time
   while (digits-- > 0)
@@ -310,8 +310,8 @@ void MarlinSerial::printFloat(double number, uint8_t digits)
     remainder *= 10.0;
     int toPrint = int(remainder);
     print(toPrint);
-    remainder -= toPrint; 
-  } 
+    remainder -= toPrint;
+  }
 }
 // Preinstantiate Objects //////////////////////////////////////////////////////
 

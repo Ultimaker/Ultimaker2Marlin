@@ -48,7 +48,7 @@ void lcd_update()
     if (!lcd_lib_update_ready()) return;
     lcd_lib_buttons_update();
     card.updateSDInserted();
-    
+
     if (led_glow_dir)
     {
         led_glow-=2;
@@ -57,7 +57,7 @@ void lcd_update()
         led_glow+=2;
         if (led_glow == 126) led_glow_dir = 1;
     }
-    
+
     if (IsStopped())
     {
         lcd_lib_clear();
@@ -109,10 +109,10 @@ void lcd_update()
 void lcd_menu_startup()
 {
     lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
-    
+
     LED_GLOW();
     lcd_lib_clear();
-    
+
     if (led_glow < 84)
     {
         lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
@@ -168,7 +168,7 @@ void lcd_menu_startup()
 static void lcd_menu_special_startup()
 {
     LED_GLOW();
-    
+
     lcd_lib_clear();
     lcd_lib_draw_gfx(7, 12, specialStartupGfx);
     lcd_lib_draw_stringP(3, 2, PSTR("Welcome"));
@@ -194,7 +194,7 @@ void doCooldown()
         setTargetHotend(0, n);
     setTargetBed(0);
     fanSpeed = 0;
-    
+
     //quickStop();         //Abort all moves already in the planner
 }
 
@@ -247,7 +247,7 @@ static void lcd_menu_breakout()
         ball_dx = 0;
         ball_dy = 0;
     }
-    
+
     if (lcd_lib_encoder_pos < 0) lcd_lib_encoder_pos = 0;
     if (lcd_lib_encoder_pos * 2 > 128 - BREAKOUT_PADDLE_WIDTH - 1) lcd_lib_encoder_pos = (128 - BREAKOUT_PADDLE_WIDTH - 1) / 2;
     ball_x += ball_dx;
@@ -296,9 +296,9 @@ static void lcd_menu_breakout()
             ball_dy = -512 + abs(ball_dx);
         }
     }
-    
+
     lcd_lib_clear();
-    
+
     for(uint8_t y=0; y<3;y++)
         for(uint8_t x=0; x<5;x++)
         {
@@ -309,7 +309,7 @@ static void lcd_menu_breakout()
             if (lcd_cache[x+y*5] == 3)
                 lcd_lib_set(4 + x*25, 3 + y * 10, 22 + x*25, 9 + y * 10);
         }
-    
+
     lcd_lib_draw_box(ball_x >> 8, ball_y >> 8, (ball_x >> 8) + 2, (ball_y >> 8) + 2);
     lcd_lib_draw_box(lcd_lib_encoder_pos * 2, 60, lcd_lib_encoder_pos * 2 + BREAKOUT_PADDLE_WIDTH, 63);
     lcd_lib_update_screen();

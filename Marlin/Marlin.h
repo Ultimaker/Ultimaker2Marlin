@@ -168,7 +168,7 @@ void kill();
 #define STOP_REASON_HEATER_ERROR         4
 #define STOP_REASON_ENDSTOP_BROKEN_ERROR 5
 #define STOP_REASON_ENDSTOP_STUCK_ERROR  6
-#define STOP_REASON_SAFETY_TRIGGER 10
+#define STOP_REASON_SAFETY_TRIGGER       10
 void Stop(uint8_t reasonNr);
 
 bool IsStopped();

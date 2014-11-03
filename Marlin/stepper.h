@@ -19,7 +19,7 @@
 */
 
 #ifndef stepper_h
-#define stepper_h 
+#define stepper_h
 
 #include "planner.h"
 
@@ -62,7 +62,7 @@ long st_get_position(uint8_t axis);
 // to notify the subsystem that it is time to go to work.
 void st_wake_up();
 
-  
+
 void checkHitEndstops(); //call from somwhere to create an serial error message with the locations the endstops where hit, in case they were triggered
 void endstops_hit_on_purpose(); //avoid creation of the message, i.e. after homeing and before a routine call of checkHitEndstops();
 
