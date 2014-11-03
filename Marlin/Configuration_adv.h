@@ -12,7 +12,7 @@
 
 //// Heating sanity check:
 // This waits for the watchperiod in milliseconds whenever an M104 or M109 increases the target temperature
-// If the temperature has not increased at the end of that period, the target temperature is set to zero. 
+// If the temperature has not increased at the end of that period, the target temperature is set to zero.
 // It can be reset with another M104/M109. This check is also only triggered if the target temperature and the current temperature
 //  differ by at least 2x WATCH_TEMP_INCREASE
 //#define WATCH_TEMP_PERIOD 40000 //40 seconds
@@ -20,14 +20,14 @@
 
 // Wait for Cooldown
 // This defines if the M109 call should not block if it is cooling down.
-// example: From a current temp of 220, you set M109 S200. 
+// example: From a current temp of 220, you set M109 S200.
 // if CooldownNoWait is defined M109 will not wait for the cooldown to finish
 #define CooldownNoWait true
 
 #ifdef PIDTEMP
   // this adds an experimental additional term to the heatingpower, proportional to the extrusion speed.
   // if Kc is choosen well, the additional required power due to increased melting should be compensated.
-  #define PID_ADD_EXTRUSION_RATE  
+  #define PID_ADD_EXTRUSION_RATE
   #ifdef PID_ADD_EXTRUSION_RATE
     #define  DEFAULT_Kc (1) //heatingpower=Kc*(e_speed)
   #endif
@@ -46,10 +46,10 @@
   #define AUTOTEMP_OLDWEIGHT 0.98
 #endif
 
-//  extruder run-out prevention. 
+//  extruder run-out prevention.
 //if the machine is idle, and the temperature over MINTEMP, every couple of SECONDS some filament is extruded
-//#define EXTRUDER_RUNOUT_PREVENT  
-#define EXTRUDER_RUNOUT_MINTEMP 190  
+//#define EXTRUDER_RUNOUT_PREVENT
+#define EXTRUDER_RUNOUT_MINTEMP 190
 #define EXTRUDER_RUNOUT_SECONDS 30.
 #define EXTRUDER_RUNOUT_ESTEPS 14. //mm filament
 #define EXTRUDER_RUNOUT_SPEED 1500.  //extrusion speed
@@ -75,7 +75,7 @@
 // Extruder cooling fans
 // Configure fan pin outputs to automatically turn on/off when the associated
 // extruder temperature is above/below EXTRUDER_AUTO_FAN_TEMPERATURE.
-// Multiple extruders can be assigned to the same pin in which case 
+// Multiple extruders can be assigned to the same pin in which case
 // the fan will turn on when any selected extruder is above the threshold.
 #define EXTRUDER_0_AUTO_FAN_PIN   -1
 #define EXTRUDER_1_AUTO_FAN_PIN   -1
@@ -105,14 +105,14 @@
     #else
       #define X_HOME_POS X_MIN_POS
     #endif //BED_CENTER_AT_0_0
-  #else    
+  #else
     #ifdef BED_CENTER_AT_0_0
       #define X_HOME_POS X_MAX_LENGTH * 0.5
     #else
       #define X_HOME_POS X_MAX_POS
     #endif //BED_CENTER_AT_0_0
   #endif //X_HOME_DIR == -1
-  
+
   //Y axis
   #if Y_HOME_DIR == -1
     #ifdef BED_CENTER_AT_0_0
@@ -120,18 +120,18 @@
     #else
       #define Y_HOME_POS Y_MIN_POS
     #endif //BED_CENTER_AT_0_0
-  #else    
+  #else
     #ifdef BED_CENTER_AT_0_0
       #define Y_HOME_POS Y_MAX_LENGTH * 0.5
     #else
       #define Y_HOME_POS Y_MAX_POS
     #endif //BED_CENTER_AT_0_0
   #endif //Y_HOME_DIR == -1
-  
+
   // Z axis
   #if Z_HOME_DIR == -1 //BED_CENTER_AT_0_0 not used
     #define Z_HOME_POS Z_MIN_POS
-  #else    
+  #else
     #define Z_HOME_POS Z_MAX_POS
   #endif //Z_HOME_DIR == -1
 #endif //End auto min/max positions
@@ -252,10 +252,10 @@
 const unsigned int dropsegments=5; //everything with less than this number of steps will be ignored as move and joined with the next movement
 
 // If you are using a RAMPS board or cheap E-bay purchased boards that do not detect when an SD card is inserted
-// You can get round this by connecting a push button or single throw switch to the pin defined as SDCARDCARDDETECT 
+// You can get round this by connecting a push button or single throw switch to the pin defined as SDCARDCARDDETECT
 // in the pins.h file.  When using a push button pulling the pin to ground this will need inverted.  This setting should
 // be commented out otherwise
-#define SDCARDDETECTINVERTED 
+#define SDCARDDETECTINVERTED
 
 #if defined(ULTIPANEL) || defined(ENABLE_ULTILCD2)
  #undef SDCARDDETECTINVERTED
@@ -267,12 +267,12 @@ const unsigned int dropsegments=5; //everything with less than this number of st
   #define POWER_SUPPLY 1
 #endif
 // 1 = ATX
-#if (POWER_SUPPLY == 1) 
+#if (POWER_SUPPLY == 1)
   #define PS_ON_AWAKE  LOW
   #define PS_ON_ASLEEP HIGH
 #endif
 // 2 = X-Box 360 203W
-#if (POWER_SUPPLY == 2) 
+#if (POWER_SUPPLY == 2)
   #define PS_ON_AWAKE  HIGH
   #define PS_ON_ASLEEP LOW
 #endif
@@ -281,7 +281,7 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 //=============================Buffers           ============================
 //===========================================================================
 
-// The number of linear motions that can be in the plan at any give time.  
+// The number of linear motions that can be in the plan at any give time.
 // THE BLOCK_BUFFER_SIZE NEEDS TO BE A POWER OF 2, i.g. 8,16,32 because shifts and ors are used to do the ringbuffering.
 #if defined SDSUPPORT
   #define BLOCK_BUFFER_SIZE 16   // SD,LCD,Buttons take more memory, block buffer needs to be smaller
@@ -296,9 +296,9 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 
 
 // Firmware based and LCD controled retract
-// M207 and M208 can be used to define parameters for the retraction. 
+// M207 and M208 can be used to define parameters for the retraction.
 // The retraction can be called by the slicer using G10 and G11
-// until then, intended retractions can be detected by moves that only extrude and the direction. 
+// until then, intended retractions can be detected by moves that only extrude and the direction.
 // the moves are than replaced by the firmware controlled ones.
 
 #define FWRETRACT  //ONLY PARTIALLY TESTED
@@ -316,7 +316,7 @@ const unsigned int dropsegments=5; //everything with less than this number of st
     #define FILAMENTCHANGE_FINALRETRACT -100
   #endif
 #endif
- 
+
 //===========================================================================
 //=============================  Define Defines  ============================
 //===========================================================================

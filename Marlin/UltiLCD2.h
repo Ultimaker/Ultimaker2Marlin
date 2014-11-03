@@ -13,8 +13,8 @@ void lcd_buttons_update();
 FORCE_INLINE void lcd_reset_alert_level() {}
 FORCE_INLINE void lcd_buzz(long duration,uint16_t freq) {}
 
-#define LCD_MESSAGEPGM(x) 
-#define LCD_ALERTMESSAGEPGM(x) 
+#define LCD_MESSAGEPGM(x)
+#define LCD_ALERTMESSAGEPGM(x)
 
 extern unsigned long lastSerialCommandTime;
 extern uint8_t led_brightness_level;

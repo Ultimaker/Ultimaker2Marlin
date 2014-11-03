@@ -181,7 +181,7 @@ static void lcd_menu_maintenance_advanced_heatup()
     }
     if (lcd_lib_button_pressed)
         lcd_change_to_menu(previousMenu, previousEncoderPos);
-    
+
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
     lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
@@ -209,7 +209,7 @@ void lcd_menu_maintenance_extrude()
         target_temperature[active_extruder] = 0;
         lcd_change_to_menu(previousMenu, previousEncoderPos);
     }
-    
+
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
     lcd_lib_draw_string_centerP(40, PSTR("Rotate to extrude"));
@@ -234,7 +234,7 @@ void lcd_menu_maintenance_advanced_bed_heatup()
     }
     if (lcd_lib_button_pressed)
         lcd_change_to_menu(previousMenu, previousEncoderPos);
-    
+
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Buildplate temp.:"));
     lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
@@ -284,7 +284,7 @@ static void doFactoryReset()
     eeprom_write_byte((uint8_t*)102, 0);
     eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
     eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
-    
+
     cli();
     //NOTE: Jumping to address 0 is not a fully proper way to reset.
     // Letting the watchdog timeout is a better reset, but the bootloader does not continue on a watchdog timeout.
@@ -304,7 +304,7 @@ static void doFactoryReset()
 static void lcd_menu_advanced_factory_reset()
 {
     lcd_question_screen(NULL, doFactoryReset, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
-    
+
     lcd_lib_draw_string_centerP(10, PSTR("Reset everything"));
     lcd_lib_draw_string_centerP(20, PSTR("to default?"));
     lcd_lib_update_screen();
@@ -481,15 +481,29 @@ static void lcd_menu_maintenance_led()
             lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(1));
         }
         else if (IS_SELECTED_SCROLL(1))
+        {
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
+        }
         else if (IS_SELECTED_SCROLL(2))
+        {
             led_mode = LED_MODE_ALWAYS_ON;
+            lcd_lib_beep();
+        }
         else if (IS_SELECTED_SCROLL(3))
+        {
             led_mode = LED_MODE_ALWAYS_OFF;
+            lcd_lib_beep();
+        }
         else if (IS_SELECTED_SCROLL(4))
+        {
             led_mode = LED_MODE_WHILE_PRINTING;
+            lcd_lib_beep();
+        }
         else if (IS_SELECTED_SCROLL(5))
+        {
             led_mode = LED_MODE_BLINK_ON_DONE;
+            lcd_lib_beep();
+        }
     }
 }
 
