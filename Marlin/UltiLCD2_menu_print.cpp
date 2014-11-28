@@ -515,11 +515,17 @@ static void lcd_menu_print_printing()
         if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
         {
             float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
+            if (f > 1.0)
+                f = 1.0;
             totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
         }else{
             totalTimeSec = totalTimeSmoothSec;
         }
-        unsigned long timeLeftSec = totalTimeSec - printTimeSec;
+        unsigned long timeLeftSec;
+        if (printTimeSec > totalTimeSec)
+            timeLeftSec = 1;
+        else
+            timeLeftSec = totalTimeSec - printTimeSec;
         int_to_time_string(timeLeftSec, buffer);
         lcd_lib_draw_stringP(5, 10, PSTR("Time left"));
         lcd_lib_draw_string(65, 10, buffer);

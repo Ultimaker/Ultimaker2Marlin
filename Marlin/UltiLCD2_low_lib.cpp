@@ -818,7 +818,7 @@ char* int_to_string(int i, char* temp_buffer, const char* p_postfix)
 char* int_to_time_string(unsigned long i, char* temp_buffer)
 {
     char* c = temp_buffer;
-    uint8_t hours = (i / 60 / 60) % 60;
+    uint8_t hours = i / 60 / 60;
     uint8_t mins = (i / 60) % 60;
     uint8_t secs = i % 60;
 
