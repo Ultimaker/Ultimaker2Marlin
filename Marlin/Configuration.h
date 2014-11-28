@@ -71,7 +71,7 @@
 // 1 = ATX
 // 2 = X-Box 360 203Watts (the blue wire connected to PS_ON and the red wire to VCC)
 
-#define POWER_SUPPLY 1
+#define POWER_SUPPLY 2
 
 
 //===========================================================================
