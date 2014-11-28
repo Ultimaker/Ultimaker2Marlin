@@ -786,15 +786,22 @@ static void homeaxis(int axis) {
     st_synchronize();
     if (!isEndstopHit())
     {
-        current_position[axis] = 0;
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-        destination[axis] = -home_retract_mm(axis) * home_dir(axis) * 10.0;
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-        st_synchronize();
+        if (axis == Z_AXIS)
+        {
+            current_position[axis] = 0;
+            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+            destination[axis] = -home_retract_mm(axis) * home_dir(axis) * 10.0;
+            plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+            st_synchronize();
 
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
-        Stop(STOP_REASON_ENDSTOP_BROKEN_ERROR);
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
+            Stop(STOP_REASON_Z_ENDSTOP_BROKEN_ERROR);
+        }else{
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
+            Stop(STOP_REASON_XY_ENDSTOP_BROKEN_ERROR);
+        }
         return;
     }
 
@@ -805,20 +812,41 @@ static void homeaxis(int axis) {
     st_synchronize();
 
     bool endstop_pressed = false;
-    if (axis==Z_AXIS)
+    switch(axis)
     {
+    case X_AXIS:
+        #if defined(X_MIN_PIN) && X_MIN_PIN > -1 && X_HOME_DIR == -1
+        endstop_pressed = (READ(X_MIN_PIN) != X_ENDSTOPS_INVERTING);
+        #endif
+        #if defined(X_MAX_PIN) && X_MAX_PIN > -1 && X_HOME_DIR == 1
+        endstop_pressed = (READ(X_MAX_PIN) != X_ENDSTOPS_INVERTING);
+        #endif
+        break;
+    case Y_AXIS:
+        #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1 && Y_HOME_DIR == -1
+        endstop_pressed = (READ(Y_MIN_PIN) != Y_ENDSTOPS_INVERTING);
+        #endif
+        #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1 && Y_HOME_DIR == 1
+        endstop_pressed = (READ(Y_MAX_PIN) != Y_ENDSTOPS_INVERTING);
+        #endif
+        break;
+    case Z_AXIS:
         #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1 && Z_HOME_DIR == -1
         endstop_pressed = (READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING);
         #endif
         #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1 && Z_HOME_DIR == 1
         endstop_pressed = (READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING);
         #endif
+        break;
     }
     if (endstop_pressed)
     {
         SERIAL_ERROR_START;
         SERIAL_ERRORLNPGM("Endstop still pressed after backing off. Endstop stuck?");
-        Stop(STOP_REASON_ENDSTOP_STUCK_ERROR);
+        if (axis == Z_AXIS)
+            Stop(STOP_REASON_Z_ENDSTOP_STUCK_ERROR);
+        else
+            Stop(STOP_REASON_XY_ENDSTOP_STUCK_ERROR);
         endstops_hit_on_purpose();
         return;
     }
