@@ -75,8 +75,6 @@ void initTemperatureADS101X()
     
     i2cDriverExecuteAndWait(&i2c_adc_read_command);
     int adc_offset = int(i2c_adc_read_buffer[0]) << 4 | int(i2c_adc_read_buffer[1]) >> 4;
-    
-    MSerial.println(adc_offset);
 }
 
 void temperatureADS101XSetupAIN0()
