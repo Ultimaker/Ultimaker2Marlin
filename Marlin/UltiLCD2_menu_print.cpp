@@ -60,17 +60,17 @@ static void abortPrint()
     card.pause = false;
 
     if (primed)
-    	{
-    	// set up the end of print retraction
-    	sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
-    	enquecommand(buffer);
-    	// perform the retraction at the standard retract speed
-    	sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
-    	enquecommand(buffer);
+    {
+        // set up the end of print retraction
+        sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+        enquecommand(buffer);
+        // perform the retraction at the standard retract speed
+        sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
+        enquecommand(buffer);
 
-    	// no longer primed
-    	primed = false;
-    	}
+        // no longer primed
+        primed = false;
+    }
 
     enquecommand_P(PSTR("G28"));
     enquecommand_P(PSTR("M84"));
@@ -83,8 +83,7 @@ static void checkPrintFinished()
         abortPrint();
         currentMenu = lcd_menu_print_ready;
         SELECT_MAIN_MENU_ITEM(0);
-    }
-    if (card.errorCode())
+    }else if (card.errorCode() || !card.isFileOpen())
     {
         abortPrint();
         currentMenu = lcd_menu_print_error;
