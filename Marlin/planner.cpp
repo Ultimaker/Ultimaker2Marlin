@@ -59,6 +59,7 @@
 #include "ultralcd.h"
 #include "UltiLCD2.h"
 #include "language.h"
+#include "fan_driver.h"
 
 //===========================================================================
 //=============================public variables ============================
@@ -492,11 +493,7 @@ void check_axes_activity()
       fan_kick_end = 0;
     }
   #endif//FAN_KICKSTART_TIME
-  #ifdef FAN_SOFT_PWM
-  fanSpeedSoftPwm = tail_fan_speed;
-  #else
-  analogWrite(FAN_PIN,tail_fan_speed);
-  #endif//!FAN_SOFT_PWM
+  setCoolingFanSpeed(tail_fan_speed);
 #endif//FAN_PIN > -1
 #ifdef AUTOTEMP
   getHighESpeed();

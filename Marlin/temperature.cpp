@@ -35,6 +35,8 @@
 #include "UltiLCD2.h"
 #include "temperature.h"
 #include "watchdog.h"
+#include "temperature_ADS101X.h"
+#include "fan_driver.h"
 
 //===========================================================================
 //=============================public variables============================
@@ -528,24 +530,12 @@ void manage_heater()
     extruder_autofan_last_check = millis();
   }
   #endif
-
-  {
-    //For the UM2 the head fan is connected to PJ6, which does not have an Arduino PIN definition. So use direct register access.
-    DDRJ |= _BV(6);
-    if (current_temperature[0] > EXTRUDER_AUTO_FAN_TEMPERATURE
-#if EXTRUDERS > 1
-        || current_temperature[1] > EXTRUDER_AUTO_FAN_TEMPERATURE
-#endif
-#if EXTRUDERS > 2
-        || current_temperature[2] > EXTRUDER_AUTO_FAN_TEMPERATURE
-#endif
-        )
-    {
-        PORTJ |= _BV(6);
-    }else{
-        PORTJ &=~_BV(6);
-    }
-  }
+  // which fan pins need to be turned on?
+  uint8_t fanState = 0;
+  for(uint8_t e=0; e<EXTRUDERS; e++)
+    if (current_temperature[e] > EXTRUDER_AUTO_FAN_TEMPERATURE)
+      fanState = 255;
+  setHotendCoolingFanSpeed(fanState);
 
   #ifndef PIDTEMPBED
   if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
@@ -724,6 +714,10 @@ static void updateTemperaturesFromRawValues()
 
 void tp_init()
 {
+#if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+    initTemperatureADS101X();
+#endif
+    
 #if (MOTHERBOARD == 80) && ((TEMP_SENSOR_0==-1)||(TEMP_SENSOR_1==-1)||(TEMP_SENSOR_2==-1)||(TEMP_SENSOR_BED==-1))
   //disable RUMBA JTAG in case the thermocouple extension is plugged on top of JTAG connector
   MCUCR=(1<<JTD);
@@ -1122,8 +1116,13 @@ ISR(TIMER0_COMPB_vect)
 
   switch(temp_state) {
     case 1: // Measure TEMP_0
-      #if defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
+      #ifdef HEATER_0_USES_ADS101X
+        raw_temp_0_value += temperatureADS101XGetResult();
+      #elif defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
         raw_temp_0_value += ADC;
+      #endif
+      #ifdef HEATER_1_USER_ADS101X
+        temperatureADS101XSetupAIN1();
       #endif
       #ifdef HEATER_0_USES_MAX6675 // TODO remove the blocking
         raw_temp_0_value = read_max6675();
@@ -1142,6 +1141,9 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 2;
       break;
     case 2: // Measure TEMP_BED
+      #ifdef HEATER_1_USER_ADS101X
+        temperatureADS101XRequestResult();
+      #endif
       #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
         raw_temp_bed_value += ADC;
       #endif
@@ -1159,8 +1161,13 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 3;
       break;
     case 3: // Measure TEMP_1
-      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1) && EXTRUDERS > 1
+      #ifdef HEATER_1_USER_ADS101X
+        raw_temp_1_value += temperatureADS101XGetResult();
+      #elif defined(TEMP_1_PIN) && (TEMP_1_PIN > -1) && EXTRUDERS > 1
         raw_temp_1_value += ADC;
+      #endif
+      #ifdef HEATER_0_USES_ADS101X
+        temperatureADS101XSetupAIN0();
       #endif
       // Prepare TEMP_2
       #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1) && EXTRUDERS > 2
@@ -1191,11 +1198,17 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_0_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
+      #ifdef HEATER_0_USES_ADS101X
+        temperatureADS101XRequestResult();
+      #endif
       lcd_buttons_update();
       temp_state = 1;
       break;
     case 5: //Startup, delay initial temp reading a tiny bit so the hardware can settle.
       temp_state = 0;
+      #ifdef HEATER_0_USES_ADS101X
+        temperatureADS101XSetupAIN0();
+      #endif
       break;
 //    default:
 //      SERIAL_ERROR_START;

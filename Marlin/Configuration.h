@@ -71,7 +71,7 @@
 // 1 = ATX
 // 2 = X-Box 360 203Watts (the blue wire connected to PS_ON and the red wire to VCC)
 
-#define POWER_SUPPLY 1
+#define POWER_SUPPLY 2
 
 
 //===========================================================================
@@ -131,6 +131,7 @@
 // 9 is 100k GE Sensing AL03006-58.2K-97-G1 (4.7k pullup)
 // 10 is 100k RS thermistor 198-961 (4.7k pullup)
 // 20 is PT100 with INA826 amp in Ultiboard v2.0
+// 21 is ADS101X with Ultiboard v2.x
 //
 //    1k ohm pullup tables - This is not normal, you would have to have changed out your 4.7k for 1k
 //                          (but gives greater accuracy and more stable PID)
@@ -138,8 +139,8 @@
 // 52 is 200k thermistor - ATC Semitec 204GT-2 (1k pullup)
 // 55 is 100k thermistor - ATC Semitec 104GT-2 (Used in ParCan) (1k pullup)
 
-#define TEMP_SENSOR_0 20
-#define TEMP_SENSOR_1 20
+#define TEMP_SENSOR_0 21
+#define TEMP_SENSOR_1 21
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_BED 20
 

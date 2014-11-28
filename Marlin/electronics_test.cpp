@@ -105,6 +105,7 @@ void run_electronics_test()
     TCCR2A = 0;
     TCCR3A = 0;
     TCCR4A = 0;
+
     //Disable I2C and SPI
     SPCR = 0;
     TWCR = 0;
