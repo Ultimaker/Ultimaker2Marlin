@@ -183,6 +183,27 @@ float extruder_offset[2][EXTRUDERS] = {
 uint8_t active_extruder = 0;
 uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
+
+struct machinesettings {
+  machinesettings() : has_saved_settings(0) {}
+  int feedmultiply;
+  int HotendTemperature[EXTRUDERS];
+  int BedTemperature;
+  uint8_t fanSpeed;
+  int extrudemultiply[EXTRUDERS];
+  long max_acceleration_units_per_sq_second[NUM_AXIS];
+  float max_feedrate[NUM_AXIS];
+  float acceleration;
+  float minimumfeedrate;
+  float mintravelfeedrate;
+  long minsegmenttime;
+  float max_xy_jerk;
+  float max_z_jerk;
+  float max_e_jerk;
+  uint8_t has_saved_settings;
+};
+machinesettings machinesettings_tempsave[10];
+
 #ifdef SERVO_ENDSTOPS
   int servo_endstops[] = SERVO_ENDSTOPS;
   int servo_endstop_angles[] = SERVO_ENDSTOP_ANGLES;
@@ -766,15 +787,22 @@ static void homeaxis(int axis) {
     st_synchronize();
     if (!isEndstopHit())
     {
-        current_position[axis] = 0;
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-        destination[axis] = -home_retract_mm(axis) * home_dir(axis) * 10.0;
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-        st_synchronize();
+        if (axis == Z_AXIS)
+        {
+            current_position[axis] = 0;
+            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+            destination[axis] = -home_retract_mm(axis) * home_dir(axis) * 10.0;
+            plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
+            st_synchronize();
 
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
-        Stop(STOP_REASON_ENDSTOP_BROKEN_ERROR);
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
+            Stop(STOP_REASON_Z_ENDSTOP_BROKEN_ERROR);
+        }else{
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
+            Stop(STOP_REASON_XY_ENDSTOP_BROKEN_ERROR);
+        }
         return;
     }
 
@@ -785,20 +813,41 @@ static void homeaxis(int axis) {
     st_synchronize();
 
     bool endstop_pressed = false;
-    if (axis==Z_AXIS)
+    switch(axis)
     {
+    case X_AXIS:
+        #if defined(X_MIN_PIN) && X_MIN_PIN > -1 && X_HOME_DIR == -1
+        endstop_pressed = (READ(X_MIN_PIN) != X_ENDSTOPS_INVERTING);
+        #endif
+        #if defined(X_MAX_PIN) && X_MAX_PIN > -1 && X_HOME_DIR == 1
+        endstop_pressed = (READ(X_MAX_PIN) != X_ENDSTOPS_INVERTING);
+        #endif
+        break;
+    case Y_AXIS:
+        #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1 && Y_HOME_DIR == -1
+        endstop_pressed = (READ(Y_MIN_PIN) != Y_ENDSTOPS_INVERTING);
+        #endif
+        #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1 && Y_HOME_DIR == 1
+        endstop_pressed = (READ(Y_MAX_PIN) != Y_ENDSTOPS_INVERTING);
+        #endif
+        break;
+    case Z_AXIS:
         #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1 && Z_HOME_DIR == -1
         endstop_pressed = (READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING);
         #endif
         #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1 && Z_HOME_DIR == 1
         endstop_pressed = (READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING);
         #endif
+        break;
     }
     if (endstop_pressed)
     {
         SERIAL_ERROR_START;
         SERIAL_ERRORLNPGM("Endstop still pressed after backing off. Endstop stuck?");
-        Stop(STOP_REASON_ENDSTOP_STUCK_ERROR);
+        if (axis == Z_AXIS)
+            Stop(STOP_REASON_Z_ENDSTOP_STUCK_ERROR);
+        else
+            Stop(STOP_REASON_XY_ENDSTOP_STUCK_ERROR);
         endstops_hit_on_purpose();
         return;
     }
@@ -2128,6 +2177,76 @@ void process_commands()
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder); //move xy back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder); //move z back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], retract_feedrate/60, active_extruder); //final untretract
+    }
+    break;
+
+    case 605: // M605 store current set values
+    {
+      uint8_t tmp_select;
+      if (code_seen('S')) 
+      {
+        tmp_select = code_value();
+        if (tmp_select>9) tmp_select=9;
+      }
+      else
+        tmp_select = 0;
+      machinesettings_tempsave[tmp_select].feedmultiply = feedmultiply;
+      machinesettings_tempsave[tmp_select].BedTemperature = target_temperature_bed;
+      machinesettings_tempsave[tmp_select].fanSpeed = fanSpeed;
+      for (int i=0; i<EXTRUDERS; i++)
+      {
+        machinesettings_tempsave[tmp_select].HotendTemperature[i] = target_temperature[i];
+        machinesettings_tempsave[tmp_select].extrudemultiply[i] = extrudemultiply[i];
+      }
+      for (int i=0; i<NUM_AXIS; i++)
+      {
+        machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i] = max_acceleration_units_per_sq_second[i];
+        machinesettings_tempsave[tmp_select].max_feedrate[i] = max_feedrate[i];
+      }
+      machinesettings_tempsave[tmp_select].acceleration = acceleration;
+      machinesettings_tempsave[tmp_select].minimumfeedrate = minimumfeedrate;
+      machinesettings_tempsave[tmp_select].mintravelfeedrate = mintravelfeedrate;
+      machinesettings_tempsave[tmp_select].minsegmenttime = minsegmenttime;
+      machinesettings_tempsave[tmp_select].max_xy_jerk = max_xy_jerk;
+      machinesettings_tempsave[tmp_select].max_z_jerk = max_z_jerk;
+      machinesettings_tempsave[tmp_select].max_e_jerk = max_e_jerk;
+      machinesettings_tempsave[tmp_select].has_saved_settings = 1;
+    }
+    break;
+
+    case 606: // M606 recall saved values
+    {
+      uint8_t tmp_select;
+      if (code_seen('S')) 
+      {
+        tmp_select = code_value();
+        if (tmp_select>9) tmp_select=9;
+      }
+      else
+        tmp_select = 0;
+      if (machinesettings_tempsave[tmp_select].has_saved_settings > 0)
+      {
+        feedmultiply = machinesettings_tempsave[tmp_select].feedmultiply;
+        target_temperature_bed = machinesettings_tempsave[tmp_select].BedTemperature;
+        fanSpeed = machinesettings_tempsave[tmp_select].fanSpeed;
+        for (int i=0; i<EXTRUDERS; i++)
+        {
+          target_temperature[i] = machinesettings_tempsave[tmp_select].HotendTemperature[i];
+          extrudemultiply[i] = machinesettings_tempsave[tmp_select].extrudemultiply[i];
+        }
+        for (int i=0; i<NUM_AXIS; i++)
+        {
+          max_acceleration_units_per_sq_second[i] = machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i];
+          max_feedrate[i] = machinesettings_tempsave[tmp_select].max_feedrate[i];
+        }
+        acceleration = machinesettings_tempsave[tmp_select].acceleration;
+        minimumfeedrate = machinesettings_tempsave[tmp_select].minimumfeedrate;
+        mintravelfeedrate = machinesettings_tempsave[tmp_select].mintravelfeedrate;
+        minsegmenttime = machinesettings_tempsave[tmp_select].minsegmenttime;
+        max_xy_jerk = machinesettings_tempsave[tmp_select].max_xy_jerk;
+        max_z_jerk = machinesettings_tempsave[tmp_select].max_z_jerk;
+        max_e_jerk = machinesettings_tempsave[tmp_select].max_e_jerk;
+      }
     }
     break;
     #endif//ENABLE_ULTILCD2

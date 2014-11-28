@@ -28,6 +28,7 @@ static void lcd_menu_print_error();
 static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
+static void lcd_menu_print_ready_cooled_down();
 static void lcd_menu_print_tune();
 static void lcd_menu_print_tune_retraction();
 
@@ -59,17 +60,17 @@ static void abortPrint()
     card.pause = false;
 
     if (primed)
-    	{
-    	// set up the end of print retraction
-    	sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
-    	enquecommand(buffer);
-    	// perform the retraction at the standard retract speed
-    	sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
-    	enquecommand(buffer);
+    {
+        // set up the end of print retraction
+        sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+        enquecommand(buffer);
+        // perform the retraction at the standard retract speed
+        sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
+        enquecommand(buffer);
 
-    	// no longer primed
-    	primed = false;
-    	}
+        // no longer primed
+        primed = false;
+    }
 
     enquecommand_P(PSTR("G28"));
     enquecommand_P(PSTR("M84"));
@@ -82,8 +83,7 @@ static void checkPrintFinished()
         abortPrint();
         currentMenu = lcd_menu_print_ready;
         SELECT_MAIN_MENU_ITEM(0);
-    }
-    if (card.errorCode())
+    }else if (card.errorCode() || !card.isFileOpen())
     {
         abortPrint();
         currentMenu = lcd_menu_print_error;
@@ -514,11 +514,17 @@ static void lcd_menu_print_printing()
         if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
         {
             float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
+            if (f > 1.0)
+                f = 1.0;
             totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
         }else{
             totalTimeSec = totalTimeSmoothSec;
         }
-        unsigned long timeLeftSec = totalTimeSec - printTimeSec;
+        unsigned long timeLeftSec;
+        if (printTimeSec > totalTimeSec)
+            timeLeftSec = 1;
+        else
+            timeLeftSec = totalTimeSec - printTimeSec;
         int_to_time_string(timeLeftSec, buffer);
         lcd_lib_draw_stringP(5, 10, PSTR("Time left"));
         lcd_lib_draw_string(65, 10, buffer);
@@ -602,11 +608,24 @@ static void lcd_menu_print_ready()
         int_to_string(current_temperature_bed, c, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
     }else{
-        LED_GLOW();
-        lcd_lib_draw_string_centerP(10, PSTR("Print finished"));
-        lcd_lib_draw_string_centerP(30, PSTR("You can remove"));
-        lcd_lib_draw_string_centerP(40, PSTR("the print."));
+        currentMenu = lcd_menu_print_ready_cooled_down;
     }
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_print_ready_cooled_down()
+{
+    if (led_mode == LED_MODE_WHILE_PRINTING)
+        analogWrite(LED_PIN, 0);
+    else if (led_mode == LED_MODE_BLINK_ON_DONE)
+        analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
+    lcd_info_screen(lcd_menu_main, postPrintReady, PSTR("BACK TO MENU"));
+
+    LED_GLOW();
+    lcd_lib_draw_string_centerP(10, PSTR("Print finished"));
+    lcd_lib_draw_string_centerP(30, PSTR("You can remove"));
+    lcd_lib_draw_string_centerP(40, PSTR("the print."));
+
     lcd_lib_update_screen();
 }
 
