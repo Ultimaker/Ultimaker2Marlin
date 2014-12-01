@@ -441,6 +441,11 @@ void setup()
   if(mcu & 32) SERIAL_ECHOLNPGM(MSG_SOFTWARE_RESET);
   MCUSR=0;
 
+  //Read ADC14, this is connected to the main power and helps in detecting which board we have
+  // Connected to 24V - 100k -|- 4k7 - GND = ADC ~221 on Ultimaker 2.0 board with 8 microsteps on the Z
+  // Connected to 24V - 100k -|- 10k - GND = ADC ~447 ADC on Ultimaker 2.x board with 16 microsteps on the Z
+  int main_board_power = analogRead(14);
+
   SERIAL_ECHOPGM(MSG_MARLIN);
   SERIAL_ECHOLNPGM(VERSION_STRING);
   #ifdef STRING_VERSION_CONFIG_H
@@ -466,6 +471,8 @@ void setup()
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
+  if (main_board_power > 300)//HACKERDYHACK, set the steps per unit for Z to 400 for the 16 microstep board.
+    axis_steps_per_unit[Z_AXIS] = 400;
   lifetime_stats_init();
   i2cDriverInit();
   initFans();   // Initialize the fan driver
