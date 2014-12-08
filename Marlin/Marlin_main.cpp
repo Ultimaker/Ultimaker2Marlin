@@ -643,8 +643,13 @@ void get_command()
     }
   }
   #ifdef SDSUPPORT
-  if(!card.sdprinting || serial_count!=0){
+  if(!card.sdprinting)
     return;
+  if (serial_count!=0)
+  {
+    if (millis() - lastSerialCommandTime < 5000)
+      return;
+    serial_count = 0;
   }
   if (card.pause)
   {
