@@ -858,6 +858,7 @@ bool lcd_material_verify_material_settings()
         if (strcmp_P(card.longFilename, PSTR("UPET")) == 0)
             hasUPET = true;
     }
+    cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (!hasUPET && cnt < EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
     {
         strcpy_P(card.longFilename, PSTR("UPET"));

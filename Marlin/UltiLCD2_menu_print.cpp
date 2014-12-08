@@ -83,7 +83,7 @@ static void checkPrintFinished()
         abortPrint();
         currentMenu = lcd_menu_print_ready;
         SELECT_MAIN_MENU_ITEM(0);
-    }else if (card.errorCode() || !card.isFileOpen())
+    }else if (card.errorCode())
     {
         abortPrint();
         currentMenu = lcd_menu_print_error;
