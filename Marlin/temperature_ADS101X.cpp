@@ -100,6 +100,17 @@ void temperatureADS101XRequestResult()
     i2cDriverPlan(&i2c_adc_read_command);
 }
 
+bool temperatureADS101XReady()
+{
+    if (!i2c_adc_setup_command.finished)
+        return false;
+    if (!i2c_adc_pointer_command.finished)
+        return false;
+    if (!i2c_adc_read_command.finished)
+        return false;
+    return true;
+}
+
 int16_t temperatureADS101XGetResult()
 {
     int16_t result = int(i2c_adc_read_buffer[0]) << 4 | int(i2c_adc_read_buffer[1]) >> 4;

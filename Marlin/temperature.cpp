@@ -1076,6 +1076,9 @@ ISR(TIMER0_COMPB_vect)
   #if HEATER_BED_PIN > -1
   static unsigned char soft_pwm_b;
   #endif
+  #if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+  static uint8_t ads101x_state = 0;
+  #endif
 
   if(pwm_count == 0){
     soft_pwm_0 = soft_pwm[0];
@@ -1114,15 +1117,49 @@ ISR(TIMER0_COMPB_vect)
   pwm_count += (1 << SOFT_PWM_SCALE);
   pwm_count &= 0x7f;
 
+  #if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+  if (temperatureADS101XReady())
+  {
+    switch(ads101x_state)
+    {
+    case 0:
+      temperatureADS101XSetupAIN0();
+      ads101x_state = 1;
+      break;
+    case 1:
+      //Make sure the ADS101X has time to get a sample.
+      ads101x_state = 2;
+      break;
+    case 2:
+      temperatureADS101XRequestResult();
+      temperatureADS101XSetupAIN1();
+      ads101x_state = 3;
+      break;
+    case 3:
+      #ifdef HEATER_0_USES_ADS101X
+      raw_temp_0_value = long(temperatureADS101XGetResult()) * OVERSAMPLENR;
+      #endif
+      ads101x_state = 4;
+      break;
+    case 4:
+      temperatureADS101XRequestResult();
+      ads101x_state = 5;
+      break;
+    case 5:
+      #ifdef HEATER_1_USES_ADS101X
+      raw_temp_1_value = long(temperatureADS101XGetResult()) * OVERSAMPLENR;
+      #endif
+      ads101x_state = 6;
+      break;
+    }
+  }
+  #endif
+
   switch(temp_state) {
     case 1: // Measure TEMP_0
       #ifdef HEATER_0_USES_ADS101X
-        raw_temp_0_value += temperatureADS101XGetResult();
       #elif defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
         raw_temp_0_value += ADC;
-      #endif
-      #ifdef HEATER_1_USER_ADS101X
-        temperatureADS101XSetupAIN1();
       #endif
       #ifdef HEATER_0_USES_MAX6675 // TODO remove the blocking
         raw_temp_0_value = read_max6675();
@@ -1141,9 +1178,6 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 2;
       break;
     case 2: // Measure TEMP_BED
-      #ifdef HEATER_1_USER_ADS101X
-        temperatureADS101XRequestResult();
-      #endif
       #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
         raw_temp_bed_value += ADC;
       #endif
@@ -1161,13 +1195,9 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 3;
       break;
     case 3: // Measure TEMP_1
-      #ifdef HEATER_1_USER_ADS101X
-        raw_temp_1_value += temperatureADS101XGetResult();
+      #ifdef HEATER_1_USES_ADS101X
       #elif defined(TEMP_1_PIN) && (TEMP_1_PIN > -1) && EXTRUDERS > 1
         raw_temp_1_value += ADC;
-      #endif
-      #ifdef HEATER_0_USES_ADS101X
-        temperatureADS101XSetupAIN0();
       #endif
       // Prepare TEMP_2
       #if defined(TEMP_2_PIN) && (TEMP_2_PIN > -1) && EXTRUDERS > 2
@@ -1198,17 +1228,11 @@ ISR(TIMER0_COMPB_vect)
         ADMUX = ((1 << REFS0) | (TEMP_0_PIN & 0x07));
         ADCSRA |= 1<<ADSC; // Start conversion
       #endif
-      #ifdef HEATER_0_USES_ADS101X
-        temperatureADS101XRequestResult();
-      #endif
       lcd_buttons_update();
       temp_state = 1;
       break;
     case 5: //Startup, delay initial temp reading a tiny bit so the hardware can settle.
       temp_state = 0;
-      #ifdef HEATER_0_USES_ADS101X
-        temperatureADS101XSetupAIN0();
-      #endif
       break;
 //    default:
 //      SERIAL_ERROR_START;
@@ -1239,6 +1263,9 @@ ISR(TIMER0_COMPB_vect)
     raw_temp_1_value = 0;
     raw_temp_2_value = 0;
     raw_temp_bed_value = 0;
+    #if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+    ads101x_state = 0;
+    #endif
 
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
     if(current_temperature_raw[0] <= maxttemp_raw[0]) {

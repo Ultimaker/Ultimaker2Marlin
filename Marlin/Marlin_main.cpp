@@ -945,7 +945,7 @@ float probeWithCapacitiveSensor()
                             max_diff = diff;
                     }
                     previous_sensor_value = sensor_value_total;
-/*
+
                     MSerial.print(z_position_total);
                     MSerial.print(' ');
                     MSerial.print(float(sensor_value_total) / 100.0f);
@@ -956,7 +956,7 @@ float probeWithCapacitiveSensor()
                     MSerial.print(' ');
                     MSerial.print(float(max_diff) / 100.0f);
                     MSerial.println();
-*/
+
                     cnt = 0;
                     sensor_value_total = 0;
                     z_position_total = 0;
@@ -1227,20 +1227,6 @@ void process_commands()
       destination[Z_AXIS] = probeWithCapacitiveSensor();
       plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
       MSerial.println(destination[Z_AXIS]);
-      break;
-    case 129:
-      {
-        i2cCapacitanceStart();
-        uint16_t value;
-        while(!i2cCapacitanceDone(value))
-        {
-            manage_heater();
-            manage_inactivity();
-            lcd_update();
-            lifetime_stats_tick();
-        }
-        MSerial.println(value, HEX);
-      }
       break;
     case 30:
       for(int x=0; x<200; x++)
@@ -2090,6 +2076,20 @@ void process_commands()
       if (code_seen('C')) c=code_value();
       PID_autotune(temp, e, c);
     }
+    break;
+    case 310://M310, single cap sensor read.
+      {
+        i2cCapacitanceStart();
+        uint16_t value;
+        while(!i2cCapacitanceDone(value))
+        {
+            manage_heater();
+            manage_inactivity();
+            lcd_update();
+            lifetime_stats_tick();
+        }
+        MSerial.println(value, HEX);
+      }
     break;
     case 400: // M400 finish all moves
     {

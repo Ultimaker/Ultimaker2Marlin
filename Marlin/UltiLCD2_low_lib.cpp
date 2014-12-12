@@ -51,9 +51,9 @@ void lcd_lib_init()
     i2cDriverCommandSetup(led_command, I2C_LED_ADDRESS << 1 | i2cWriteBit, 1, led_command_buffer, sizeof(led_command_buffer));
     i2cDriverCommandSetup(lcd_position_command, I2C_LCD_ADDRESS << 1 | i2cWriteBit, 11, lcd_position_command_buffer, sizeof(lcd_position_command_buffer));
     for(uint8_t n=0; n<LCD_GFX_HEIGHT / 8; n++)
-        i2cDriverCommandSetup(lcd_data_command[n], I2C_LCD_ADDRESS << 1 | i2cWriteBit, 10, &lcd_buffer[(LCD_GFX_WIDTH + 1) * n], LCD_GFX_WIDTH + 1);
+        i2cDriverCommandSetup(lcd_data_command[n], I2C_LCD_ADDRESS << 1 | i2cWriteBit, 0, &lcd_buffer[(LCD_GFX_WIDTH + 1) * n], LCD_GFX_WIDTH + 1);
 
-    i2cDriverCommandSetup(lcd_init_command, I2C_LCD_ADDRESS << 1 | i2cWriteBit, 10, lcd_init_buffer, sizeof(lcd_init_buffer));
+    i2cDriverCommandSetup(lcd_init_command, I2C_LCD_ADDRESS << 1 | i2cWriteBit, 1, lcd_init_buffer, sizeof(lcd_init_buffer));
     i2cDriverCommandSetup(led_init_command, I2C_LED_ADDRESS << 1 | i2cWriteBit, 1, led_init_buffer, sizeof(led_init_buffer));
 
     SET_OUTPUT(LCD_CS_PIN);

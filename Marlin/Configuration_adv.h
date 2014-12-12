@@ -358,10 +358,10 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 #if TEMP_SENSOR_0 == 21
   #define HEATER_0_USES_ADS101X
 #endif
-#if TEMP_SENSOR_1 == 21
+#if TEMP_SENSOR_1 == 21 && EXTRUDERS > 1
   #define HEATER_1_USES_ADS101X
 #endif
-#if TEMP_SENSOR_2 == 21
+#if TEMP_SENSOR_2 == 21 && EXTRUDERS > 2
   #define HEATER_2_USES_ADS101X
   #error ADS101X currently cannot be used to measure heater 2
 #endif
