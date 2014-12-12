@@ -883,97 +883,112 @@ static void homeaxis(int axis) {
 
 float probeWithCapacitiveSensor()
 {//G28;G1 F9000 X20 Y20 Z0;G92 Z25;G29;G92 Z0;G1 F9000 Z3.6
-    float z_target = 5.0;
+    float z_target = 0.0;
     float z_distance = 5.0;
 
     feedrate = 2;
-    for(unsigned int n=0; n<3; n++)
+
+    destination[Z_AXIS] = z_target + z_distance;
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+    st_synchronize();
+    destination[Z_AXIS] = z_target - z_distance;
+    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate, active_extruder);
+    uint16_t cnt = 0;
+    long sensor_value_total = 0;
+    float z_position_total = 0.0;
+    
+    int16_t max_diff = 0;
+    int16_t max_sensor_value = 0;
+    int16_t previous_sensor_value = 0;
+    uint8_t steady_counter = 0;
+
+    float sensor_value_list[6];
+    float z_position_list[6];
+    for(uint8_t n=0; n<6; n++)
     {
-        destination[Z_AXIS] = z_target + z_distance;
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
-        st_synchronize();
-        destination[Z_AXIS] = z_target - z_distance;
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate, active_extruder);
-        uint8_t cnt = 0;
-        long sensor_value_total = 0;
-        float z_position_total = 0.0;
-        
-        int16_t max_diff = 0;
-        int16_t max_sensor_value = 0;
-        float max_sensor_value_z = 0.0;
-        int16_t previous_sensor_value = 0;
-        uint8_t steady_counter = 0;
-        i2cCapacitanceStart();
-        while(blocks_queued())
-        {
-            manage_heater();
-            manage_inactivity();
-            lcd_update();
-            lifetime_stats_tick();
-            uint16_t value = 0;
-            if (i2cCapacitanceDone(value))
-            {
-                z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-                sensor_value_total += value;
-                cnt++;
-                if (cnt == 50)
-                {
-                    z_position_total /= 50;
-                    sensor_value_total /= 50;
-                    
-                    if (previous_sensor_value != 0)
-                    {
-                        if (sensor_value_total > previous_sensor_value + max_diff / 3 && steady_counter < 2)
-                        {
-                            max_sensor_value = sensor_value_total;
-                            max_sensor_value_z = z_position_total;
-                            steady_counter = 0;
-                        }else{
-                            steady_counter++;
-                            if (steady_counter > 2)
-                            {
-                                quickStop();
-                                current_position[X_AXIS] = destination[X_AXIS];
-                                current_position[Y_AXIS] = destination[Y_AXIS];
-                                current_position[Z_AXIS] = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-                                plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-                            }
-                        }
-
-                        int16_t diff = sensor_value_total - previous_sensor_value;
-                        if (diff > max_diff)
-                            max_diff = diff;
-                    }
-                    previous_sensor_value = sensor_value_total;
-
-                    MSerial.print(z_position_total);
-                    MSerial.print(' ');
-                    MSerial.print(float(sensor_value_total) / 100.0f);
-                    MSerial.print(' ');
-                    MSerial.print(float(max_sensor_value) / 100.0f);
-                    MSerial.print(' ');
-                    MSerial.print(max_sensor_value_z);
-                    MSerial.print(' ');
-                    MSerial.print(float(max_diff) / 100.0f);
-                    MSerial.println();
-
-                    cnt = 0;
-                    sensor_value_total = 0;
-                    z_position_total = 0;
-                }
-                i2cCapacitanceStart();
-            }
-        }
-/*
-        MSerial.println();
-        MSerial.println(max_sensor_value_z);
-        MSerial.println();
-*/
-        z_target = max_sensor_value_z;
-        z_distance /= 4.0;
-        feedrate /= 4.0;
+        sensor_value_list[n] = 0;
+        z_position_list[n] = 0;
     }
-    return z_target;
+
+    i2cCapacitanceStart();
+    while(blocks_queued())
+    {
+        manage_heater();
+        manage_inactivity();
+        //lcd_update(); //Not updating the LCD during this loop improves the performance of the i2cCapacitance sensor, allowing for a much higher sample right, as the display no longer keeps the i2c bus busy.
+        lifetime_stats_tick();
+        uint16_t value = 0;
+        if (i2cCapacitanceDone(value))
+        {
+            z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
+            sensor_value_total += value;
+            cnt++;
+            if (cnt == 1000)
+            {
+                z_position_total /= 1000;
+                sensor_value_total /= 1000;
+                
+                if (previous_sensor_value != 0)
+                {
+                    for(uint8_t n=1; n<6; n++)
+                    {
+                        sensor_value_list[n - 1] = sensor_value_list[n];
+                        z_position_list[n - 1] = z_position_list[n];
+                    }
+                    sensor_value_list[5] = sensor_value_total;
+                    z_position_list[5] = z_position_total;
+
+                    if (sensor_value_total > previous_sensor_value + max_diff / 3)
+                    {
+                        max_sensor_value = sensor_value_total;
+                        steady_counter = 0;
+                    }else{
+                        steady_counter++;
+                        if (steady_counter > 2)
+                        {
+                            quickStop();
+                            current_position[X_AXIS] = destination[X_AXIS];
+                            current_position[Y_AXIS] = destination[Y_AXIS];
+                            current_position[Z_AXIS] = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
+                            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+                        }
+                    }
+
+                    int16_t diff = sensor_value_total - previous_sensor_value;
+                    if (diff > max_diff)
+                        max_diff = diff;
+                }
+                previous_sensor_value = sensor_value_total;
+/*
+                MSerial.print(z_position_total);
+                MSerial.print(' ');
+                MSerial.print(float(sensor_value_total) / 100.0f);
+                MSerial.print(' ');
+                MSerial.print(float(max_sensor_value) / 100.0f);
+                MSerial.print(' ');
+                MSerial.print(float(max_diff) / 100.0f);
+                MSerial.println();
+*/
+                cnt = 0;
+                sensor_value_total = 0;
+                z_position_total = 0;
+            }
+            i2cCapacitanceStart();
+        }
+    }
+/*
+    MSerial.println();
+    for(uint8_t n=0; n<6; n++)
+    {
+        MSerial.print(z_position_list[n]);
+        MSerial.print(' ');
+        MSerial.print(float(sensor_value_list[n]) / 100.0f);
+        MSerial.println();
+    }
+*/
+    //Solve the line-line intersection to get the proper position where the bed was hit. At index [1] we are sure to be above the bed. At index[2] we are already on the bed. So the intersection point is somewhere between [1] and [2].
+    float f = float((sensor_value_list[2]-(sensor_value_list[3]-sensor_value_list[2]))-sensor_value_list[1])/float((sensor_value_list[1]-sensor_value_list[0])-(sensor_value_list[3]-sensor_value_list[2]));
+    return z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
 }
 
 void process_commands()
