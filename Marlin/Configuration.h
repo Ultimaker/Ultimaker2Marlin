@@ -171,7 +171,7 @@
 
 //Check if the heater heats up MAX_HEATING_TEMPERATURE_INCREASE within MAX_HEATING_CHECK_MILLIS while the PID was at the maximum.
 // If not, raise an error because most likely the heater is not heating up the temperature sensor. Indicating an issue in the system.
-#define MAX_HEATING_TEMPERATURE_INCREASE 20
+#define MAX_HEATING_TEMPERATURE_INCREASE 10
 #define MAX_HEATING_CHECK_MILLIS (20 * 1000)
 
 // If your bed has low resistance e.g. .6 ohm and throws the fuse you can duty cycle it to reduce the
