@@ -886,7 +886,7 @@ float probeWithCapacitiveSensor()
     float z_target = 0.0;
     float z_distance = 5.0;
 
-    feedrate = 2;
+    feedrate = 1;
 
     destination[Z_AXIS] = z_target + z_distance;
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
@@ -1248,7 +1248,7 @@ void process_commands()
       {
           destination[Z_AXIS] = 10;
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
-          destination[X_AXIS] = x;
+          destination[X_AXIS] = 100;
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
           MSerial.println(probeWithCapacitiveSensor());
       }
