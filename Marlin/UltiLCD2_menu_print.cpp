@@ -604,7 +604,7 @@ static void lcd_menu_print_ready()
         char buffer[16];
         char* c = buffer;
         for(uint8_t e=0; e<EXTRUDERS; e++)
-            c = int_to_string(current_temperature[e], buffer, PSTR("C "));
+            c = int_to_string(current_temperature[e], c, PSTR("C "));
         int_to_string(current_temperature_bed, c, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
     }else{
