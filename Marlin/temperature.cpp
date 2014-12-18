@@ -533,9 +533,16 @@ void manage_heater()
   // which fan pins need to be turned on?
   uint8_t fanState = 0;
   for(uint8_t e=0; e<EXTRUDERS; e++)
+  {
     if (current_temperature[e] > EXTRUDER_AUTO_FAN_TEMPERATURE)
-      fanState = 255;
-  setHotendCoolingFanSpeed(fanState);
+      fanState |= 1;
+    if (current_temperature[e] < EXTRUDER_AUTO_FAN_TEMPERATURE - 5)
+      fanState |= 2;
+  }
+  if (fanState & 1)
+    setHotendCoolingFanSpeed(255);
+  else if (fanState & 2)
+    setHotendCoolingFanSpeed(0);
 
   #ifndef PIDTEMPBED
   if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
