@@ -264,7 +264,7 @@
 #define PREVENT_LENGTHY_EXTRUDE
 
 #define EXTRUDE_MINTEMP 170
-#define EXTRUDE_MAXLENGTH (X_MAX_LENGTH+Y_MAX_LENGTH) //prevent extrusion of very large distances.
+#define EXTRUDE_MAXLENGTH 1000.0 //prevent extrusion of very large distances.
 
 //===========================================================================
 //=============================Mechanical Settings===========================
