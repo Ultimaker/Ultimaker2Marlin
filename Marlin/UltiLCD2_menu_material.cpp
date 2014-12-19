@@ -338,8 +338,10 @@ static void lcd_menu_change_material_select_material_details_callback(uint8_t nr
         c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
     }else{
         c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+#if TEMP_SENSOR_BED != 0
         *c++ = ' ';
         c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+#endif
         while(c < buffer + 10) *c++ = ' ';
         strcpy_P(c, PSTR("Fan: "));
         c += 5;
@@ -414,10 +416,12 @@ static void lcd_menu_material_export()
         int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(n)), ptr, PSTR("\n"));
         card.write_string(buffer);
 
+#if TEMP_SENSOR_BED != 0
         strcpy_P(buffer, PSTR("bed_temperature="));
         ptr = buffer + strlen(buffer);
         int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(n)), ptr, PSTR("\n"));
         card.write_string(buffer);
+#endif
 
         strcpy_P(buffer, PSTR("fan_speed="));
         ptr = buffer + strlen(buffer);
@@ -570,8 +574,10 @@ static void lcd_material_select_details_callback(uint8_t nr)
             c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
         }else{
             c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+#if TEMP_SENSOR_BED != 0
             *c++ = ' ';
             c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+#endif
             while(c < buffer + 10) *c++ = ' ';
             strcpy_P(c, PSTR("Fan: "));
             c += 5;
