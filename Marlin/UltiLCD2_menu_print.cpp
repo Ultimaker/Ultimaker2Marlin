@@ -372,7 +372,9 @@ void lcd_menu_print_select()
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
                                 continue;
                             target_temperature[e] = 0;//material[e].temperature;
+#if TEMP_SENSOR_BED != 0
                             target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
+#endif
                             fanSpeedPercent = max(fanSpeedPercent, material[0].fan_speed);
                             volume_to_filament_length[e] = 1.0 / (M_PI * (material[e].diameter / 2.0) * (material[e].diameter / 2.0));
                             extrudemultiply[e] = material[e].flow;
@@ -659,19 +661,21 @@ static char* tune_item_callback(uint8_t nr)
     else if (nr == 4)
         strcpy_P(c, PSTR("Temperature 2"));
 #endif
+#if TEMP_SENSOR_BED != 0
     else if (nr == 3 + EXTRUDERS)
         strcpy_P(c, PSTR("Buildplate temp."));
-    else if (nr == 4 + EXTRUDERS)
+#endif
+    else if (nr == 3 + BED_MENU_OFFSET + EXTRUDERS)
         strcpy_P(c, PSTR("Fan speed"));
-    else if (nr == 5 + EXTRUDERS)
+    else if (nr == 4 + BED_MENU_OFFSET + EXTRUDERS)
         strcpy_P(c, PSTR("Material flow"));
 #if EXTRUDERS > 1
-    else if (nr == 6 + EXTRUDERS)
+    else if (nr == 5 + BED_MENU_OFFSET + EXTRUDERS)
         strcpy_P(c, PSTR("Material flow 2"));
 #endif
-    else if (nr == 5 + EXTRUDERS * 2)
+    else if (nr == 4 + BED_MENU_OFFSET + EXTRUDERS * 2)
         strcpy_P(c, PSTR("Retraction"));
-    else if (nr == 6 + EXTRUDERS * 2)
+    else if (nr == 5 + BED_MENU_OFFSET + EXTRUDERS * 2)
         strcpy_P(c, PSTR("LED Brightness"));
     return c;
 }
@@ -695,21 +699,23 @@ static void tune_item_details_callback(uint8_t nr)
         c = int_to_string(target_temperature[1], c, PSTR("C"));
     }
 #endif
+#if TEMP_SENSOR_BED != 0
     else if (nr == 3 + EXTRUDERS)
     {
         c = int_to_string(current_temperature_bed, c, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature_bed, c, PSTR("C"));
     }
-    else if (nr == 4 + EXTRUDERS)
+#endif
+    else if (nr == 3 + BED_MENU_OFFSET + EXTRUDERS)
         c = int_to_string(int(fanSpeed) * 100 / 255, c, PSTR("%"));
-    else if (nr == 5 + EXTRUDERS)
+    else if (nr == 4 + BED_MENU_OFFSET + EXTRUDERS)
         c = int_to_string(extrudemultiply[0], c, PSTR("%"));
 #if EXTRUDERS > 1
-    else if (nr == 6 + EXTRUDERS)
+    else if (nr == 5 + BED_MENU_OFFSET + EXTRUDERS)
         c = int_to_string(extrudemultiply[1], c, PSTR("%"));
 #endif
-    else if (nr == 7 + EXTRUDERS)
+    else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS)
     {
         c = int_to_string(led_brightness_level, c, PSTR("%"));
         if (led_mode == LED_MODE_ALWAYS_ON ||  led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
@@ -768,10 +774,10 @@ void lcd_menu_print_tune_heatup_nozzle1()
     lcd_lib_update_screen();
 }
 #endif
-extern void lcd_menu_maintenance_advanced_bed_heatup();//TODO
+
 static void lcd_menu_print_tune()
 {
-    lcd_scroll_menu(PSTR("TUNE"), 7 + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
+    lcd_scroll_menu(PSTR("TUNE"), 6 + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -815,19 +821,21 @@ static void lcd_menu_print_tune()
         else if (IS_SELECTED_SCROLL(4))
             lcd_change_to_menu(lcd_menu_print_tune_heatup_nozzle1, 0);
 #endif
+#if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(3 + EXTRUDERS))
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);//Use the maintainace heatup menu, which shows the current temperature.
-        else if (IS_SELECTED_SCROLL(4 + EXTRUDERS))
+#endif
+        else if (IS_SELECTED_SCROLL(3 + BED_MENU_OFFSET + EXTRUDERS))
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
-        else if (IS_SELECTED_SCROLL(5 + EXTRUDERS))
+        else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET + EXTRUDERS))
             LCD_EDIT_SETTING(extrudemultiply[0], "Material flow", "%", 10, 1000);
 #if EXTRUDERS > 1
-        else if (IS_SELECTED_SCROLL(6 + EXTRUDERS))
+        else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET + EXTRUDERS))
             LCD_EDIT_SETTING(extrudemultiply[1], "Material flow 2", "%", 10, 1000);
 #endif
-        else if (IS_SELECTED_SCROLL(5 + EXTRUDERS * 2))
+        else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_print_tune_retraction);
-        else if (IS_SELECTED_SCROLL(6 + EXTRUDERS * 2))
+        else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET + EXTRUDERS * 2))
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
     }
 }
