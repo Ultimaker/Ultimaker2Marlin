@@ -61,33 +61,33 @@ void lcd_update()
     if (IsStopped())
     {
         lcd_lib_clear();
-        lcd_lib_draw_stringP(15, 10, PSTR("ERROR - STOPPED"));
+        lcd_lib_draw_string_centerP(10, PSTR("ERROR - STOPPED"));
         switch(StoppedReason())
         {
         case STOP_REASON_MAXTEMP:
         case STOP_REASON_MINTEMP:
-            lcd_lib_draw_stringP(15, 20, PSTR("Temp sensor"));
+            lcd_lib_draw_string_centerP(20, PSTR("Temp sensor"));
             break;
         case STOP_REASON_MAXTEMP_BED:
-            lcd_lib_draw_stringP(15, 20, PSTR("Temp sensor BED"));
+            lcd_lib_draw_string_centerP(20, PSTR("Temp sensor BED"));
             break;
         case STOP_REASON_HEATER_ERROR:
-            lcd_lib_draw_stringP(15, 20, PSTR("Heater error"));
+            lcd_lib_draw_string_centerP(20, PSTR("Heater error"));
             break;
         case STOP_REASON_SAFETY_TRIGGER:
-            lcd_lib_draw_stringP(15, 20, PSTR("Safety circuit"));
+            lcd_lib_draw_string_centerP(20, PSTR("Safety circuit"));
             break;
         case STOP_REASON_Z_ENDSTOP_BROKEN_ERROR:
-            lcd_lib_draw_stringP(15, 20, PSTR("Z switch broken"));
+            lcd_lib_draw_string_centerP(20, PSTR("Z switch broken"));
             break;
         case STOP_REASON_Z_ENDSTOP_STUCK_ERROR:
-            lcd_lib_draw_stringP(15, 20, PSTR("Z switch stuck"));
+            lcd_lib_draw_string_centerP(20, PSTR("Z switch stuck"));
             break;
         case STOP_REASON_XY_ENDSTOP_BROKEN_ERROR:
-            lcd_lib_draw_stringP(15, 20, PSTR("X or Y switch broken"));
+            lcd_lib_draw_string_centerP(20, PSTR("X or Y switch broken"));
             break;
         case STOP_REASON_XY_ENDSTOP_STUCK_ERROR:
-            lcd_lib_draw_stringP(15, 20, PSTR("X or Y switch stuck"));
+            lcd_lib_draw_string_centerP(20, PSTR("X or Y switch stuck"));
             break;
         }
         lcd_lib_draw_stringP(1, 40, PSTR("Contact:"));
