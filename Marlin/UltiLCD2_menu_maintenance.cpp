@@ -93,6 +93,38 @@ static char* lcd_advanced_item(uint8_t nr)
 
 static void lcd_advanced_details(uint8_t nr)
 {
+    char buffer[16];
+    buffer[0] = '\0';
+    if (nr == 1)
+    {
+        int_to_string(led_brightness_level, buffer, PSTR("%"));
+    }else if (nr == 2)
+    {
+        int_to_string(int(current_temperature[0]), buffer, PSTR("C/"));
+        int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
+#if EXTRUDERS > 1
+    }else if (nr == 3)
+    {
+        int_to_string(int(current_temperature[1]), buffer, PSTR("C/"));
+        int_to_string(int(target_temperature[1]), buffer+strlen(buffer), PSTR("C"));
+#endif
+#if TEMP_SENSOR_BED != 0
+    }else if (nr == 2 + EXTRUDERS)
+    {
+        int_to_string(int(current_temperature_bed), buffer, PSTR("C/"));
+        int_to_string(int(target_temperature_bed), buffer+strlen(buffer), PSTR("C"));
+#endif
+    }else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS * 2)
+    {
+        int_to_string(int(fanSpeed) * 100 / 255, buffer, PSTR("%"));
+    }else if (nr == 9 + BED_MENU_OFFSET + EXTRUDERS * 2)
+    {
+        lcd_lib_draw_stringP(5, 53, PSTR(STRING_CONFIG_H_AUTHOR));
+        return;
+    }else{
+        return;
+    }
+    lcd_lib_draw_string(5, 53, buffer);
 }
 
 static void lcd_menu_maintenance_advanced()
