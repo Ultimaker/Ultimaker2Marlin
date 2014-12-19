@@ -12,6 +12,13 @@
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_print.h"
 
+#define BED_CENTER_ADJUST_X (X_MAX_POS/2)
+#define BED_CENTER_ADJUST_Y (Y_MAX_LENGTH - 10)
+#define BED_LEFT_ADJUST_X 10
+#define BED_LEFT_ADJUST_Y 20
+#define BED_RIGHT_ADJUST_X (X_MAX_POS - 10)
+#define BED_RIGHT_ADJUST_Y 20
+
 void doCooldown();//TODO
 
 static void lcd_menu_first_run_init_2();
@@ -98,7 +105,7 @@ static void homeAndParkHeadForCenterAdjustment()
 {
     enquecommand_P(PSTR("G28 X0 Y0"));
     char buffer[32];
-    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH - 10);
+    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, BED_CENTER_ADJUST_X, BED_CENTER_ADJUST_Y);
     enquecommand(buffer);
 }
 
@@ -123,7 +130,7 @@ static void parkHeadForLeftAdjustment()
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z5"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), 35, 20);
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), BED_LEFT_ADJUST_X, BED_LEFT_ADJUST_Y);
     enquecommand(buffer);
     sprintf_P(buffer, PSTR("G1 F%i Z0"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
@@ -160,7 +167,7 @@ static void parkHeadForRightAdjustment()
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z5"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), X_MAX_POS - 10, 20);
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), BED_RIGHT_ADJUST_X, BED_RIGHT_ADJUST_Y);
     enquecommand(buffer);
     sprintf_P(buffer, PSTR("G1 F%i Z0"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);

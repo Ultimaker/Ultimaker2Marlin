@@ -4,7 +4,9 @@
 struct materialSettings
 {
     int16_t temperature;
+#if TEMP_SENSOR_BED != 0
     int16_t bed_temperature;
+#endif
     uint8_t fan_speed; //0-100% of requested speed by GCode
     int16_t flow;      //Flow modification in %
     float diameter; //Filament diameter in mm
@@ -18,7 +20,7 @@ extern struct materialSettings material[EXTRUDERS];
 
 #define FILAMENT_FORWARD_LENGTH       650
 #define FILAMENT_INSERT_SPEED         2     //Initial insert speed to grab the filament.
-#define FILAMENT_INSERT_FAST_SPEED    200   //Speed during the forward length
+#define FILAMENT_INSERT_FAST_SPEED    180   //Speed during the forward length
 #define FILAMENT_INSERT_EXTRUDE_SPEED 2     //Final speed when extruding
 
 #define EEPROM_MATERIAL_SETTINGS_OFFSET 0x800

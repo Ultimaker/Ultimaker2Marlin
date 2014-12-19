@@ -112,4 +112,11 @@ extern uint8_t led_glow_dir;
 #define LED_GLOW() lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow)
 #define LED_GLOW_ERROR() lcd_lib_led_color(led_glow,128-led_glow,led_glow);
 
+//If we have a heated bed, then the heated bed menu entries have a size of 1, else they have a size of 0.
+#if TEMP_SENSOR_BED != 0
+#define BED_MENU_OFFSET 1
+#else
+#define BED_MENU_OFFSET 0
+#endif
+
 #endif//ULTI_LCD2_HI_LIB_H

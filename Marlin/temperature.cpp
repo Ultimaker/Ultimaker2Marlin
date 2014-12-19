@@ -37,6 +37,7 @@
 #include "watchdog.h"
 #include "temperature_ADS101X.h"
 #include "fan_driver.h"
+#include "Sd2Card.h"
 
 //===========================================================================
 //=============================public variables============================
@@ -69,6 +70,7 @@ float current_temperature_bed = 0.0;
 #ifdef FAN_SOFT_PWM
   unsigned char fanSpeedSoftPwm;
 #endif
+
 
 //===========================================================================
 //=============================private variables============================
@@ -121,6 +123,10 @@ static int maxttemp_raw[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_RAW_HI_TEMP , 
 static int minttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 0, 0, 0 );
 static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 16383, 16383, 16383 );
 //static int bed_minttemp_raw = HEATER_BED_RAW_LO_TEMP; /* No bed mintemp error implemented?!? */
+
+static void min_temp_error(uint8_t e);
+static void max_temp_error(uint8_t e);
+
 #ifdef BED_MAXTEMP
 static int bed_maxttemp_raw = HEATER_BED_RAW_HI_TEMP;
 #endif
@@ -148,7 +154,10 @@ unsigned long watchmillis[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
 #ifndef SOFT_PWM_SCALE
 #define SOFT_PWM_SCALE 0
 #endif
-
+	
+#ifdef HEATER_0_USES_MAX6675
+static int read_max6675();
+#endif
 //===========================================================================
 //=============================   functions      ============================
 //===========================================================================
@@ -405,6 +414,16 @@ void manage_heater()
 
   updateTemperaturesFromRawValues();
 
+  #ifdef HEATER_0_USES_MAX6675
+  if (current_temperature[0] > 1023 || current_temperature[0] > HEATER_0_MAXTEMP)
+  {
+	  max_temp_error(0);
+  }
+  if (current_temperature[0] == 0  || current_temperature[0] < HEATER_0_MINTEMP)
+  {
+	  min_temp_error(0);
+  }
+  #endif
   for(int e = 0; e < EXTRUDERS; e++)
   {
 
@@ -703,6 +722,10 @@ static float analog2tempBed(int raw) {
     and this function is called from normal context as it is too slow to run in interrupts and will block the stepper routine otherwise */
 static void updateTemperaturesFromRawValues()
 {
+#ifdef HEATER_0_USES_MAX6675
+	current_temperature_raw[0] = read_max6675();
+#endif
+
     for(uint8_t e=0;e<EXTRUDERS;e++)
     {
         current_temperature[e] = analog2temp(current_temperature_raw[e], e);
@@ -777,6 +800,9 @@ void tp_init()
 
       SET_INPUT(MAX_MISO_PIN);
       WRITE(MAX_MISO_PIN,1);
+    #else
+	  pinMode(SS_PIN, OUTPUT);
+	  digitalWrite(SS_PIN, HIGH);
     #endif
 
     SET_OUTPUT(MAX6675_SS);
@@ -1007,10 +1033,10 @@ void bed_max_temp_error(void) {
 
 #ifdef HEATER_0_USES_MAX6675
 #define MAX6675_HEAT_INTERVAL 250
-long max6675_previous_millis = -HEAT_INTERVAL;
-int max6675_temp = 2000;
+long max6675_previous_millis = -MAX6675_HEAT_INTERVAL;
+int max6675_temp = 4000;
 
-int read_max6675()
+static int read_max6675()
 {
   if (millis() - max6675_previous_millis < MAX6675_HEAT_INTERVAL)
     return max6675_temp;
@@ -1047,10 +1073,11 @@ int read_max6675()
   // disable TT_MAX6675
   WRITE(MAX6675_SS, 1);
 
+
   if (max6675_temp & 4)
   {
     // thermocouple open
-    max6675_temp = 2000;
+    max6675_temp = 4000;
   }
   else
   {
@@ -1168,9 +1195,6 @@ ISR(TIMER0_COMPB_vect)
       #elif defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
         raw_temp_0_value += ADC;
       #endif
-      #ifdef HEATER_0_USES_MAX6675 // TODO remove the blocking
-        raw_temp_0_value = read_max6675();
-      #endif
       // Prepare TEMP_BED
       #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
         #if TEMP_BED_PIN > 7
@@ -1251,7 +1275,9 @@ ISR(TIMER0_COMPB_vect)
   {
     if (!temp_meas_ready) //Only update the raw values if they have been read. Else we could be updating them during reading.
     {
+#ifndef HEATER_0_USES_MAX6675
       current_temperature_raw[0] = raw_temp_0_value;
+#endif
 #if EXTRUDERS > 1
       current_temperature_raw[1] = raw_temp_1_value;
 #endif
@@ -1279,14 +1305,18 @@ ISR(TIMER0_COMPB_vect)
 #else
     if(current_temperature_raw[0] >= maxttemp_raw[0]) {
 #endif
-        max_temp_error(0);
+#ifndef HEATER_0_USES_MAX6675
+       max_temp_error(0);
+#endif
     }
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
     if(current_temperature_raw[0] >= minttemp_raw[0]) {
 #else
     if(current_temperature_raw[0] <= minttemp_raw[0]) {
 #endif
-        min_temp_error(0);
+#ifndef HEATER_0_USES_MAX6675
+       min_temp_error(0);
+#endif
     }
 #if EXTRUDERS > 1
 #if HEATER_1_RAW_LO_TEMP > HEATER_1_RAW_HI_TEMP
