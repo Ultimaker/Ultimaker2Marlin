@@ -365,7 +365,9 @@ void lcd_menu_print_select()
                     {
                         //New style GCode flavor without start/end code.
                         // Temperature settings, filament settings, fan settings, start and end-code are machine controlled.
+#if TEMP_SENSOR_BED != 0
                         target_temperature_bed = 0;
+#endif
                         fanSpeedPercent = 0;
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
@@ -414,8 +416,10 @@ static void lcd_menu_print_heatup()
 {
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
 
+#if TEMP_SENSOR_BED != 0
     if (current_temperature_bed > target_temperature_bed - 10)
     {
+#endif
         for(uint8_t e=0; e<EXTRUDERS; e++)
         {
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
@@ -436,7 +440,9 @@ static void lcd_menu_print_heatup()
                 currentMenu = lcd_menu_print_printing;
             }
         }
+#if TEMP_SENSOR_BED != 0
     }
+#endif
 
     uint8_t progress = 125;
     for(uint8_t e=0; e<EXTRUDERS; e++)
@@ -448,10 +454,12 @@ static void lcd_menu_print_heatup()
         else
             progress = 0;
     }
+#if TEMP_SENSOR_BED != 0
     if (current_temperature_bed > 20)
         progress = min(progress, (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW));
-    else
+    else if (target_temperature_bed > current_temperature_bed - 20)
         progress = 0;
+#endif
 
     if (progress < minProgress)
         progress = minProgress;
