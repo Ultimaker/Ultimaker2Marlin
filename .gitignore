@@ -3,3 +3,13 @@ applet/
 *~
 *.orig
 *.rej
+Marlin/debug.log
+Marlin/Marlin.sdf
+Marlin/Marlin.sln
+Marlin/Marlin.v11.suo
+Marlin/Marlin.vcxproj
+Marlin/Marlin.vcxproj.filters
+Marlin/Visual Micro/Upload.vmps.xml
+Marlin/Visual Micro/.Marlin.vsarduino.h
+Marlin/Visual Micro/Compile.vmps.xml
+Marlin/Visual Micro/Configuration.Debug.vmps.xml
