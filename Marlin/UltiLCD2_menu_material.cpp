@@ -637,15 +637,17 @@ static char* lcd_material_settings_callback(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("< RETURN"));
     else if (nr == 1)
         strcpy_P(card.longFilename, PSTR("Temperature"));
+#if TEMP_SENSOR_BED != 0
     else if (nr == 2)
         strcpy_P(card.longFilename, PSTR("Heated buildplate"));
-    else if (nr == 3)
+#endif
+    else if (nr == 2 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Diameter"));
-    else if (nr == 4)
+    else if (nr == 3 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Fan"));
-    else if (nr == 5)
+    else if (nr == 4 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Flow %"));
-    else if (nr == 6)
+    else if (nr == 5 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Store as preset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -695,13 +697,13 @@ static void lcd_menu_material_settings()
         else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING(material[active_extruder].bed_temperature, "Buildplate Temp.", "C", 0, BED_MAXTEMP - 15);
 #endif
-        else if (IS_SELECTED_SCROLL(3))
+        else if (IS_SELECTED_SCROLL(2 + BED_MENU_OFFSET))
             LCD_EDIT_SETTING_FLOAT001(material[active_extruder].diameter, "Material Diameter", "mm", 0, 100);
-        else if (IS_SELECTED_SCROLL(4))
+        else if (IS_SELECTED_SCROLL(3 + BED_MENU_OFFSET))
             LCD_EDIT_SETTING(material[active_extruder].fan_speed, "Fan speed", "%", 0, 100);
-        else if (IS_SELECTED_SCROLL(5))
+        else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET))
             LCD_EDIT_SETTING(material[active_extruder].flow, "Material flow", "%", 1, 1000);
-        else if (IS_SELECTED_SCROLL(6))
+        else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET))
             lcd_change_to_menu(lcd_menu_material_settings_store);
     }
 }
