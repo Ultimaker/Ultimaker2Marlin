@@ -58,7 +58,7 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 2 + EXTRUDERS)
         strcpy_P(card.longFilename, PSTR("Heatup buildplate"));
 #endif
-    else if (nr == 2 + BED_MENU_OFFSET + BED_MENU_OFFSET + EXTRUDERS)
+    else if (nr == 2 + BED_MENU_OFFSET + EXTRUDERS)
         strcpy_P(card.longFilename, PSTR("Home head"));
     else if (nr == 3 + BED_MENU_OFFSET + EXTRUDERS)
         strcpy_P(card.longFilename, PSTR("Lower buildplate"));
