@@ -346,11 +346,8 @@ static void runMaterialForward()
 
     current_position[E_AXIS] = 0;
     plan_set_e_position(current_position[E_AXIS]);
-    for(uint8_t n=0;n<6;n++)
-    {
-        current_position[E_AXIS] += FILAMENT_FORWARD_LENGTH / 6;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, 0);
-    }
+    current_position[E_AXIS] = FILAMENT_FORWARD_LENGTH;
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, 0);
 
     //Put back origonal values.
     max_feedrate[E_AXIS] = old_max_feedrate_e;

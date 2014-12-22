@@ -10,6 +10,7 @@
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_material.h"
+#include "UltiLCD2_menu_maintenance.h"
 
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
