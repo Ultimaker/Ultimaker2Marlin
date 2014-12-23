@@ -67,6 +67,11 @@ typedef struct {
   volatile char busy;
 } block_t;
 
+#ifdef ENABLE_BED_LEVELING_PROBE
+// this holds the required transform to compensate for bed level
+extern float planner_bed_leveling_factor[2];
+#endif
+
 // Initialize the motion plan subsystem
 void plan_init();
 

@@ -483,7 +483,9 @@ void setup()
   setup_photpin();
   servo_init();
   lcd_init();
+#ifdef ENABLE_BED_LEVELING_PROBE
   i2cCapacitanceInit();
+#endif
   
   #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
     SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
@@ -886,115 +888,124 @@ static void homeaxis(int axis) {
 }
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
 
+#ifdef ENABLE_BED_LEVELING_PROBE
 float probeWithCapacitiveSensor()
-{//G28;G1 F9000 X20 Y20 Z0;G92 Z25;G29;G92 Z0;G1 F9000 Z3.6
+{
+    float total_z_height = 0.0;
     float z_target = 0.0;
     float z_distance = 5.0;
 
     feedrate = 1;
-
-    destination[Z_AXIS] = z_target + z_distance;
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
-    st_synchronize();
-    destination[Z_AXIS] = z_target - z_distance;
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate, active_extruder);
-    uint16_t cnt = 0;
-    long sensor_value_total = 0;
-    float z_position_total = 0.0;
-    
-    int16_t max_diff = 0;
-    int16_t max_sensor_value = 0;
-    int16_t previous_sensor_value = 0;
-    uint8_t steady_counter = 0;
-
-    float sensor_value_list[6];
-    float z_position_list[6];
-    for(uint8_t n=0; n<6; n++)
+    for(uint8_t loop_counter = 0; loop_counter < CONFIG_BED_LEVEL_PROBE_REPEAT; loop_counter++)
     {
-        sensor_value_list[n] = 0;
-        z_position_list[n] = 0;
-    }
+        destination[Z_AXIS] = z_target + z_distance;
+        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+        st_synchronize();
+        destination[Z_AXIS] = z_target - z_distance;
+        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate, active_extruder);
+        uint16_t cnt = 0;
+        long sensor_value_total = 0;
+        float z_position_total = 0.0;
+        
+        int16_t max_diff = 0;
+        int16_t max_sensor_value = 0;
+        int16_t previous_sensor_value = 0;
+        uint8_t steady_counter = 0;
 
-    i2cCapacitanceStart();
-    while(blocks_queued())
-    {
-        manage_heater();
-        manage_inactivity();
-        //lcd_update(); //Not updating the LCD during this loop improves the performance of the i2cCapacitance sensor, allowing for a much higher sample right, as the display no longer keeps the i2c bus busy.
-        lifetime_stats_tick();
-        uint16_t value = 0;
-        if (i2cCapacitanceDone(value))
+        float sensor_value_list[6];
+        float z_position_list[6];
+        for(uint8_t n=0; n<6; n++)
         {
-            z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-            sensor_value_total += value;
-            cnt++;
-            if (cnt == 1000)
-            {
-                z_position_total /= 1000;
-                sensor_value_total /= 1000;
-                
-                if (previous_sensor_value != 0)
-                {
-                    for(uint8_t n=1; n<6; n++)
-                    {
-                        sensor_value_list[n - 1] = sensor_value_list[n];
-                        z_position_list[n - 1] = z_position_list[n];
-                    }
-                    sensor_value_list[5] = sensor_value_total;
-                    z_position_list[5] = z_position_total;
-
-                    if (sensor_value_total > previous_sensor_value + max_diff / 3)
-                    {
-                        max_sensor_value = sensor_value_total;
-                        steady_counter = 0;
-                    }else{
-                        steady_counter++;
-                        if (steady_counter > 2)
-                        {
-                            quickStop();
-                            current_position[X_AXIS] = destination[X_AXIS];
-                            current_position[Y_AXIS] = destination[Y_AXIS];
-                            current_position[Z_AXIS] = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-                            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-                        }
-                    }
-
-                    int16_t diff = sensor_value_total - previous_sensor_value;
-                    if (diff > max_diff)
-                        max_diff = diff;
-                }
-                previous_sensor_value = sensor_value_total;
-/*
-                MSerial.print(z_position_total);
-                MSerial.print(' ');
-                MSerial.print(float(sensor_value_total) / 100.0f);
-                MSerial.print(' ');
-                MSerial.print(float(max_sensor_value) / 100.0f);
-                MSerial.print(' ');
-                MSerial.print(float(max_diff) / 100.0f);
-                MSerial.println();
-*/
-                cnt = 0;
-                sensor_value_total = 0;
-                z_position_total = 0;
-            }
-            i2cCapacitanceStart();
+            sensor_value_list[n] = 0;
+            z_position_list[n] = 0;
         }
-    }
-/*
-    MSerial.println();
-    for(uint8_t n=0; n<6; n++)
-    {
-        MSerial.print(z_position_list[n]);
-        MSerial.print(' ');
-        MSerial.print(float(sensor_value_list[n]) / 100.0f);
+
+        i2cCapacitanceStart();
+        while(blocks_queued())
+        {
+            manage_heater();
+            manage_inactivity();
+            //lcd_update(); //Not updating the LCD during this loop improves the performance of the i2cCapacitance sensor, allowing for a much higher sample right, as the display no longer keeps the i2c bus busy.
+            lifetime_stats_tick();
+            uint16_t value = 0;
+            if (i2cCapacitanceDone(value))
+            {
+                z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
+                sensor_value_total += value;
+                cnt++;
+                if (cnt == 1000)
+                {
+                    z_position_total /= 1000;
+                    sensor_value_total /= 1000;
+                    
+                    if (previous_sensor_value != 0)
+                    {
+                        for(uint8_t n=1; n<6; n++)
+                        {
+                            sensor_value_list[n - 1] = sensor_value_list[n];
+                            z_position_list[n - 1] = z_position_list[n];
+                        }
+                        sensor_value_list[5] = sensor_value_total;
+                        z_position_list[5] = z_position_total;
+
+                        if (sensor_value_total > previous_sensor_value + max_diff / 3)
+                        {
+                            max_sensor_value = sensor_value_total;
+                            steady_counter = 0;
+                        }else{
+                            steady_counter++;
+                            if (steady_counter > 2)
+                            {
+                                quickStop();
+                                current_position[X_AXIS] = destination[X_AXIS];
+                                current_position[Y_AXIS] = destination[Y_AXIS];
+                                current_position[Z_AXIS] = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
+                                plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+                            }
+                        }
+
+                        int16_t diff = sensor_value_total - previous_sensor_value;
+                        if (diff > max_diff)
+                            max_diff = diff;
+                    }
+                    previous_sensor_value = sensor_value_total;
+    /*
+                    MSerial.print(z_position_total);
+                    MSerial.print(' ');
+                    MSerial.print(float(sensor_value_total) / 100.0f);
+                    MSerial.print(' ');
+                    MSerial.print(float(max_sensor_value) / 100.0f);
+                    MSerial.print(' ');
+                    MSerial.print(float(max_diff) / 100.0f);
+                    MSerial.println();
+    */
+                    cnt = 0;
+                    sensor_value_total = 0;
+                    z_position_total = 0;
+                }
+                i2cCapacitanceStart();
+            }
+        }
+    /*
         MSerial.println();
+        for(uint8_t n=0; n<6; n++)
+        {
+            MSerial.print(z_position_list[n]);
+            MSerial.print(' ');
+            MSerial.print(float(sensor_value_list[n]) / 100.0f);
+            MSerial.println();
+        }
+    */
+        //Solve the line-line intersection to get the proper position where the bed was hit. At index [1] we are sure to be above the bed. At index[2] we are already on the bed. So the intersection point is somewhere between [1] and [2].
+        float f = float((sensor_value_list[2]-(sensor_value_list[3]-sensor_value_list[2]))-sensor_value_list[1])/float((sensor_value_list[1]-sensor_value_list[0])-(sensor_value_list[3]-sensor_value_list[2]));
+        float z_height = z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
+        z_target = z_height;
+        z_distance = 1.0;
+        total_z_height += z_height;
     }
-*/
-    //Solve the line-line intersection to get the proper position where the bed was hit. At index [1] we are sure to be above the bed. At index[2] we are already on the bed. So the intersection point is somewhere between [1] and [2].
-    float f = float((sensor_value_list[2]-(sensor_value_list[3]-sensor_value_list[2]))-sensor_value_list[1])/float((sensor_value_list[1]-sensor_value_list[0])-(sensor_value_list[3]-sensor_value_list[2]));
-    return z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
+    return total_z_height / CONFIG_BED_LEVEL_PROBE_REPEAT;
 }
+#endif//ENABLE_BED_LEVELING_PROBE
 
 void process_commands()
 {
@@ -1243,21 +1254,61 @@ void process_commands()
       previous_millis_cmd = millis();
       endstops_hit_on_purpose();
       break;
-    case 29:
+#ifdef ENABLE_BED_LEVELING_PROBE
+    case 29://G29 - Automatic bed leveling with probing.
+      {
+          planner_bed_leveling_factor[X_AXIS] = 0.0;
+          planner_bed_leveling_factor[Y_AXIS] = 0.0;
+          
+          destination[Z_AXIS] = CONFIG_BED_LEVELING_Z_HEIGHT;
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+          destination[X_AXIS] = CONFIG_BED_LEVELING_POINT1_X;
+          destination[Y_AXIS] = CONFIG_BED_LEVELING_POINT1_Y;
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
+          st_synchronize();
+          float height_1 = probeWithCapacitiveSensor();
+
+          destination[Z_AXIS] = CONFIG_BED_LEVELING_Z_HEIGHT;
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+          destination[X_AXIS] = CONFIG_BED_LEVELING_POINT2_X;
+          destination[Y_AXIS] = CONFIG_BED_LEVELING_POINT2_Y;
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
+          st_synchronize();
+          float height_2 = probeWithCapacitiveSensor();
+
+          destination[Z_AXIS] = CONFIG_BED_LEVELING_Z_HEIGHT;
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+          destination[X_AXIS] = CONFIG_BED_LEVELING_POINT3_X;
+          destination[Y_AXIS] = CONFIG_BED_LEVELING_POINT3_Y;
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
+          st_synchronize();
+          float height_3 = probeWithCapacitiveSensor();
+          destination[Z_AXIS] = height_3;
+          //Position the head at exactly the height, so we can use this as Z0 later.
+          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
+
+          MSerial.println(height_1, 5);
+          MSerial.println(height_2, 5);
+          MSerial.println(height_3, 5);
+          
+          //Set the X and Y skew factors for how skewed the bed is (this assumes the leveling points are 1 in the back, and 2 at the front)
+          planner_bed_leveling_factor[X_AXIS] = (height_3 - height_2) / (CONFIG_BED_LEVELING_POINT3_X - CONFIG_BED_LEVELING_POINT2_X);
+          planner_bed_leveling_factor[Y_AXIS] = ((height_2 + height_3) / 2.0 - height_1) / (CONFIG_BED_LEVELING_POINT3_Y - CONFIG_BED_LEVELING_POINT1_Y);
+          
+          MSerial.println(planner_bed_leveling_factor[X_AXIS], 5);
+          MSerial.println(planner_bed_leveling_factor[Y_AXIS], 5);
+          
+          //Correct the Z position. So Z0 is always on top of the bed. We are currently positioned at point 3, on top of the bed.
+          destination[Z_AXIS] = 0.0;
+          plan_set_position(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS]);
+      }
+      break;
+    case 30: // G30 Probe Z at current position and report result.
       destination[Z_AXIS] = probeWithCapacitiveSensor();
       plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
       MSerial.println(destination[Z_AXIS]);
       break;
-    case 30:
-      for(int x=0; x<200; x++)
-      {
-          destination[Z_AXIS] = 10;
-          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
-          destination[X_AXIS] = 100;
-          plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
-          MSerial.println(probeWithCapacitiveSensor());
-      }
-      break;
+#endif
     case 90: // G90
       relative_mode = false;
       break;
@@ -2097,6 +2148,7 @@ void process_commands()
       PID_autotune(temp, e, c);
     }
     break;
+#ifdef ENABLE_BED_LEVELING_PROBE
     case 310://M310, single cap sensor read.
       {
         i2cCapacitanceStart();
@@ -2111,6 +2163,7 @@ void process_commands()
         MSerial.println(value, HEX);
       }
     break;
+#endif//ENABLE_BED_LEVELING_PROBE
     case 400: // M400 finish all moves
     {
       st_synchronize();

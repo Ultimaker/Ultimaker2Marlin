@@ -593,6 +593,20 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 // Bed leveling wizard configuration
 #define LEVELING_OFFSET 0.1				// Assumed thickness of feeler gauge/paper used in leveling (mm)
 
+#define ENABLE_BED_LEVELING_PROBE
+#ifdef ENABLE_BED_LEVELING_PROBE
+# define CONFIG_BED_LEVELING_Z_HEIGHT 10
+# define CONFIG_BED_LEVELING_POINT1_X 123
+# define CONFIG_BED_LEVELING_POINT1_Y 200
+# define CONFIG_BED_LEVELING_POINT2_X 10
+# define CONFIG_BED_LEVELING_POINT2_Y 20
+# define CONFIG_BED_LEVELING_POINT3_X 220
+# define CONFIG_BED_LEVELING_POINT3_Y 20
+# define CONFIG_FALL_OFF_BED_LEVELING_HEIGHT 10.0
+# define CONFIG_MAX_BED_LEVELING_HEIGHT 20.0
+# define CONFIG_BED_LEVEL_PROBE_REPEAT 3
+#endif//ENABLE_BED_LEVELING_PROBE
+
 #include "Configuration_adv.h"
 #include "thermistortables.h"
 

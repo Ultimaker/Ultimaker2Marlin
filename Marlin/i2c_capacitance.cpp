@@ -1,5 +1,8 @@
+#include "Configuration.h"
 #include "i2c_driver.h"
 #include "i2c_capacitance.h"
+
+#ifdef ENABLE_BED_LEVELING_PROBE
 
 //FDC1004 4-Channel Capacitance-to-Digital Converter
 static const uint8_t i2cSensorAddress = 0b1010000;
@@ -74,3 +77,5 @@ bool i2cCapacitanceDone(uint16_t& value)
     value = uint16_t(i2cSensorReadBuffer[0]) << 8 | uint16_t(i2cSensorReadBuffer[1]);
     return true;
 }
+
+#endif//ENABLE_BED_LEVELING_PROBE
