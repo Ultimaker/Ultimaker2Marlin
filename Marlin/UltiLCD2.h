@@ -19,6 +19,8 @@ FORCE_INLINE void lcd_buzz(long duration,uint16_t freq) {}
 extern unsigned long lastSerialCommandTime;
 extern uint8_t led_brightness_level;
 extern uint8_t led_mode;
+extern float dsp_temperature[EXTRUDERS];
+extern float dsp_temperature_bed;
 #define LED_MODE_ALWAYS_ON      0
 #define LED_MODE_ALWAYS_OFF     1
 #define LED_MODE_WHILE_PRINTING 2
