@@ -11,6 +11,7 @@
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
+#include "tinkergnome.h"
 
 #define SERIAL_CONTROL_TIMEOUT 5000
 // coefficient for the exponential moving average
@@ -46,6 +47,8 @@ void lcd_init()
     currentMenu = lcd_menu_startup;
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
+
+    tinkergnome_init();
 }
 
 void lcd_update()
@@ -230,7 +233,14 @@ void lcd_menu_main()
         else if (IS_SELECTED_MAIN(1))
             lcd_change_to_menu(lcd_menu_material);
         else if (IS_SELECTED_MAIN(2))
-            lcd_change_to_menu(lcd_menu_maintenance);
+        {
+            if (ui_mode == UI_MODE_TINKERGNOME)
+            {
+                lcd_change_to_menu(lcd_menu_maintenance_tg);
+            }else{
+                lcd_change_to_menu(lcd_menu_maintenance);
+            }
+        }
     }
     if (lcd_lib_button_down && lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
     {

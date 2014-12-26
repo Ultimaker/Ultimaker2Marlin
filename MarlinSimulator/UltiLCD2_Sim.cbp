@@ -37,10 +37,12 @@
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="C:/Software/SecretMarlin/UltiLCD2_Sim/" />
+			<Add directory="../../SDL-1.2.15/include" />
 		</Compiler>
 		<Linker>
 			<Add library="SDLmain" />
 			<Add library="SDL" />
+			<Add directory="../../SDL-1.2.15/lib" />
 		</Linker>
 		<Unit filename="../Marlin/Configuration.h" />
 		<Unit filename="../Marlin/ConfigurationStore.cpp" />
@@ -98,6 +100,8 @@
 		<Unit filename="../Marlin/temperature.cpp" />
 		<Unit filename="../Marlin/temperature.h" />
 		<Unit filename="../Marlin/thermistortables.h" />
+		<Unit filename="../Marlin/tinkergnome.cpp" />
+		<Unit filename="../Marlin/tinkergnome.h" />
 		<Unit filename="../Marlin/ultralcd.cpp" />
 		<Unit filename="../Marlin/ultralcd.h" />
 		<Unit filename="../Marlin/ultralcd_implementation_hitachi_HD44780.h" />

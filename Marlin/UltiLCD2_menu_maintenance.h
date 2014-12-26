@@ -6,4 +6,13 @@ void lcd_menu_maintenance();
 void lcd_menu_maintenance_advanced_bed_heatup();
 #endif
 
+void lcd_menu_maintenance_advanced_heatup();
+void lcd_menu_maintenance_led();
+void lcd_menu_maintenance_extrude();
+void lcd_menu_maintenance_retraction();
+void lcd_menu_advanced_version();
+void lcd_menu_advanced_stats();
+void lcd_menu_maintenance_motion();
+void lcd_menu_advanced_factory_reset();
+
 #endif//ULTI_LCD2_MENU_MAINTENANCE_H

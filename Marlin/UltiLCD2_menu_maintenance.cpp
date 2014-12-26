@@ -11,17 +11,18 @@
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
+#include "tinkergnome.h"
 
 
 static void lcd_menu_maintenance_advanced();
-static void lcd_menu_maintenance_advanced_heatup();
-static void lcd_menu_maintenance_led();
-static void lcd_menu_maintenance_extrude();
-static void lcd_menu_maintenance_retraction();
-static void lcd_menu_advanced_version();
-static void lcd_menu_advanced_stats();
-static void lcd_menu_maintenance_motion();
-static void lcd_menu_advanced_factory_reset();
+//static void lcd_menu_maintenance_advanced_heatup();
+//static void lcd_menu_maintenance_led();
+//static void lcd_menu_maintenance_extrude();
+//static void lcd_menu_maintenance_retraction();
+//static void lcd_menu_advanced_version();
+//static void lcd_menu_advanced_stats();
+//static void lcd_menu_maintenance_motion();
+//static void lcd_menu_advanced_factory_reset();
 
 void lcd_menu_maintenance()
 {
@@ -81,10 +82,12 @@ static char* lcd_advanced_item(uint8_t nr)
     else if (nr == 8 + BED_MENU_OFFSET + EXTRUDERS * 2)
         strcpy_P(card.longFilename, PSTR("Motion settings"));
     else if (nr == 9 + BED_MENU_OFFSET + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Version"));
+        strcpy_P(card.longFilename, PSTR("Expert settings"));
     else if (nr == 10 + BED_MENU_OFFSET + EXTRUDERS * 2)
-        strcpy_P(card.longFilename, PSTR("Runtime stats"));
+        strcpy_P(card.longFilename, PSTR("Version"));
     else if (nr == 11 + BED_MENU_OFFSET + EXTRUDERS * 2)
+        strcpy_P(card.longFilename, PSTR("Runtime stats"));
+    else if (nr == 12 + BED_MENU_OFFSET + EXTRUDERS * 2)
         strcpy_P(card.longFilename, PSTR("Factory reset"));
     else
         strcpy_P(card.longFilename, PSTR("???"));
@@ -117,7 +120,7 @@ static void lcd_advanced_details(uint8_t nr)
     }else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS * 2)
     {
         int_to_string(int(fanSpeed) * 100 / 255, buffer, PSTR("%"));
-    }else if (nr == 9 + BED_MENU_OFFSET + EXTRUDERS * 2)
+    }else if (nr == 10 + BED_MENU_OFFSET + EXTRUDERS * 2)
     {
         lcd_lib_draw_stringP(5, 53, PSTR(STRING_CONFIG_H_AUTHOR));
         return;
@@ -195,15 +198,17 @@ static void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(8 + BED_MENU_OFFSET + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(9 + BED_MENU_OFFSET + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_maintenance_uimode, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(10 + BED_MENU_OFFSET + EXTRUDERS * 2))
-            lcd_change_to_menu(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0));
+            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0));
         else if (IS_SELECTED_SCROLL(11 + BED_MENU_OFFSET + EXTRUDERS * 2))
+            lcd_change_to_menu(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0));
+        else if (IS_SELECTED_SCROLL(12 + BED_MENU_OFFSET + EXTRUDERS * 2))
             lcd_change_to_menu(lcd_menu_advanced_factory_reset, SCROLL_MENU_ITEM_POS(1));
     }
 }
 
-static void lcd_menu_maintenance_advanced_heatup()
+void lcd_menu_maintenance_advanced_heatup()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
@@ -338,7 +343,7 @@ static void doFactoryReset()
 #endif
 }
 
-static void lcd_menu_advanced_factory_reset()
+void lcd_menu_advanced_factory_reset()
 {
     lcd_question_screen(NULL, doFactoryReset, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
 
@@ -373,7 +378,7 @@ static void lcd_retraction_details(uint8_t nr)
     lcd_lib_draw_string(5, 53, buffer);
 }
 
-static void lcd_menu_maintenance_retraction()
+void lcd_menu_maintenance_retraction()
 {
     lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
     if (lcd_lib_button_pressed)
@@ -439,7 +444,7 @@ static void lcd_motion_details(uint8_t nr)
     lcd_lib_draw_string(5, 53, buffer);
 }
 
-static void lcd_menu_maintenance_motion()
+void lcd_menu_maintenance_motion()
 {
     lcd_scroll_menu(PSTR("MOTION"), 9, lcd_motion_item, lcd_motion_details);
     if (lcd_lib_button_pressed)
@@ -504,7 +509,7 @@ static void lcd_led_details(uint8_t nr)
     }
 }
 
-static void lcd_menu_maintenance_led()
+void lcd_menu_maintenance_led()
 {
     analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
     lcd_scroll_menu(PSTR("LED"), 6, lcd_led_item, lcd_led_details);

@@ -12,6 +12,15 @@ void lcd_menu_print_select();
 void lcd_clear_cache();
 void doCancelPrint();
 
+void lcd_menu_print_abort();
+void lcd_menu_print_tune();
+void lcd_menu_print_tune_heatup_nozzle0();
+#if EXTRUDERS > 1
+void lcd_menu_print_tune_heatup_nozzle1();
+#endif
+// void lcd_menu_print_printing();
+void doStartPrint();
+
 extern bool primed;
 
 #endif//ULTI_LCD2_MENU_PRINT_H

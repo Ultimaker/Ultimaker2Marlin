@@ -11,6 +11,7 @@
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_maintenance.h"
+#include "tinkergnome.h"
 
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
@@ -27,10 +28,10 @@ static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error();
 static void lcd_menu_print_classic_warning();
-static void lcd_menu_print_abort();
+//static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
 static void lcd_menu_print_ready_cooled_down();
-static void lcd_menu_print_tune();
+//static void lcd_menu_print_tune();
 static void lcd_menu_print_tune_retraction();
 
 bool primed = false;
@@ -92,7 +93,7 @@ static void checkPrintFinished()
     }
 }
 
-static void doStartPrint()
+void doStartPrint()
 {
 	// zero the extruder position
 	current_position[E_AXIS] = 0.0;
@@ -386,7 +387,10 @@ void lcd_menu_print_select()
                         fanSpeed = 0;
                         enquecommand_P(PSTR("G28"));
                         enquecommand_P(PSTR("G1 F12000 X5 Y10"));
-                        lcd_change_to_menu(lcd_menu_print_heatup);
+                        if (ui_mode == UI_MODE_TINKERGNOME)
+                            lcd_change_to_menu(lcd_menu_print_heatup_tg);
+                        else
+                            lcd_change_to_menu(lcd_menu_print_heatup);
                     }else{
                         //Classic gcode file
 
@@ -438,7 +442,12 @@ static void lcd_menu_print_heatup()
             if (ready)
             {
                 doStartPrint();
-                currentMenu = lcd_menu_print_printing;
+                if (ui_mode == UI_MODE_TINKERGNOME)
+                {
+                    currentMenu = lcd_menu_printing_tg;
+                }else{
+                    currentMenu = lcd_menu_print_printing;
+                }
             }
         }
 #if TEMP_SENSOR_BED != 0
@@ -574,7 +583,7 @@ static void lcd_menu_print_classic_warning()
     lcd_lib_update_screen();
 }
 
-static void lcd_menu_print_abort()
+void lcd_menu_print_abort()
 {
     LED_GLOW();
     lcd_question_screen(lcd_menu_print_ready, abortPrint, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
@@ -784,17 +793,25 @@ void lcd_menu_print_tune_heatup_nozzle1()
 }
 #endif
 
-static void lcd_menu_print_tune()
+void lcd_menu_print_tune()
 {
     lcd_scroll_menu(PSTR("TUNE"), 6 + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
         {
-            if (card.sdprinting)
-                lcd_change_to_menu(lcd_menu_print_printing);
-            else
-                lcd_change_to_menu(lcd_menu_print_heatup);
+            if (ui_mode == UI_MODE_TINKERGNOME)
+            {
+                if (card.sdprinting)
+                    lcd_change_to_menu(lcd_menu_printing_tg);
+                else
+                    lcd_change_to_menu(lcd_menu_print_heatup_tg);
+            }else{
+                if (card.sdprinting)
+                    lcd_change_to_menu(lcd_menu_print_printing);
+                else
+                    lcd_change_to_menu(lcd_menu_print_heatup);
+            }
         }else if (IS_SELECTED_SCROLL(1))
         {
             if (card.sdprinting)
