@@ -6,6 +6,7 @@ void lcd_menu_maintenance();
 void lcd_menu_maintenance_advanced_bed_heatup();
 #endif
 
+void lcd_menu_maintenance_advanced();
 void lcd_menu_maintenance_advanced_heatup();
 void lcd_menu_maintenance_led();
 void lcd_menu_maintenance_extrude();

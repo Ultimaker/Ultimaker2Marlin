@@ -2187,7 +2187,7 @@ void process_commands()
     case 605: // M605 store current set values
     {
       uint8_t tmp_select;
-      if (code_seen('S')) 
+      if (code_seen('S'))
       {
         tmp_select = code_value();
         if (tmp_select>9) tmp_select=9;
@@ -2221,7 +2221,7 @@ void process_commands()
     case 606: // M606 recall saved values
     {
       uint8_t tmp_select;
-      if (code_seen('S')) 
+      if (code_seen('S'))
       {
         tmp_select = code_value();
         if (tmp_select>9) tmp_select=9;

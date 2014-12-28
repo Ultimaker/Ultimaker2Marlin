@@ -12,14 +12,23 @@
 #define LCD_GFX_HEIGHT 64
 #define LCD_CHAR_MARGIN_LEFT 4
 #define LCD_CHAR_MARGIN_RIGHT 4
-#define LCD_CHAR_MARGIN_TOP 10
-#define LCD_CHAR_HEIGHT 10
+#define LCD_CHAR_HEIGHT 7
 #define LCD_CHAR_WIDTH 6
+#define LCD_LINE_HEIGHT 9
 
 // menu option states
 #define STATE_NONE 0
 #define STATE_SELECTED 4
 #define STATE_ACTIVE 8
+
+// text alignment
+#define ALIGN_TOP 1
+#define ALIGN_BOTTOM 2
+#define ALIGN_VCENTER 4
+#define ALIGN_LEFT 8
+#define ALIGN_RIGHT 16
+#define ALIGN_HCENTER 32
+#define ALIGN_CENTER 36
 
 // UI Mode
 #define UI_MODE_STANDARD 0
@@ -29,27 +38,30 @@ extern uint8_t ui_mode;
 
 struct menuoption_t;
 
-typedef void (*optionCallback_t) (const menuoption_t &option);
+typedef void (*optionCallback_t) (menuoption_t **option);
 
 struct menuoption_t {
     char             *title;
-    uint8_t           centerX;
-    uint8_t           centerY;
+    uint8_t           left;
+    uint8_t           top;
     uint8_t           width;
     uint8_t           height;
-    menuFunc_t        menuFunc;
+//    menuFunc_t        menuFunc;
     optionCallback_t  callbackFunc;
     uint8_t           state;
+    uint8_t           textalign;
+
+    bool isActive() { return (state & STATE_ACTIVE) == STATE_ACTIVE; }
 };
 
-void lcd_draw_menu_option(const menuoption_t &);
-void lcd_process_menu_options(menuoption_t options[], uint8_t len);
+//void lcd_draw_menu_option(const menuoption_t &);
+//void lcd_process_menu_options(menuoption_t options[], uint8_t len);
 
 void tinkergnome_init();
-void lcd_menu_maintenance_tg();
 void lcd_menu_maintenance_uimode();
 void lcd_menu_print_heatup_tg();
 void lcd_menu_printing_tg();
+
 
 #endif//ULTI_LCD2_MENU_TINKERGNOME_H
 

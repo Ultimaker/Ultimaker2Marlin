@@ -44,7 +44,8 @@ void lcd_init()
             lcd_material_set_material(0, e);
     }
     lcd_material_read_current_material();
-    currentMenu = lcd_menu_startup;
+    // currentMenu = lcd_menu_startup;
+    lcd_add_menu(lcd_menu_startup, ENCODER_NO_SELECTION);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
 
@@ -121,7 +122,7 @@ void lcd_update()
             dsp_temperature[e] = (ALPHA * current_temperature[e]) + (ONE_MINUS_ALPHA * dsp_temperature[e]);
         }
         dsp_temperature_bed = (ALPHA * current_temperature_bed) + (ONE_MINUS_ALPHA * dsp_temperature_bed);
-        currentMenu();
+        currentMenu().menuFunc();
         if (postMenuCheck) postMenuCheck();
     }
 }
@@ -172,13 +173,13 @@ void lcd_menu_startup()
             lcd_lib_beep();
 
 #ifdef SPECIAL_STARTUP
-        currentMenu = lcd_menu_special_startup;
+        lcd_replace_menu(lcd_menu_special_startup);
 #else
         if (!IS_FIRST_RUN_DONE())
         {
-            currentMenu = lcd_menu_first_run_init;
+            lcd_replace_menu(lcd_menu_first_run_init);
         }else{
-            currentMenu = lcd_menu_main;
+            lcd_replace_menu(lcd_menu_main);
         }
 #endif//SPECIAL_STARTUP
     }
@@ -200,9 +201,9 @@ static void lcd_menu_special_startup()
     {
         if (!IS_FIRST_RUN_DONE())
         {
-            lcd_change_to_menu(lcd_menu_first_run_init);
+            lcd_replace_menu(lcd_menu_first_run_init);
         }else{
-            lcd_change_to_menu(lcd_menu_main);
+            lcd_replace_menu(lcd_menu_main);
         }
     }
 }
@@ -236,7 +237,7 @@ void lcd_menu_main()
         {
             if (ui_mode == UI_MODE_TINKERGNOME)
             {
-                lcd_change_to_menu(lcd_menu_maintenance_tg);
+                lcd_change_to_menu(lcd_menu_maintenance_advanced);
             }else{
                 lcd_change_to_menu(lcd_menu_maintenance);
             }
@@ -309,7 +310,7 @@ static void lcd_menu_breakout()
     if (ball_y > (58 << 8))
     {
         if (ball_x < (lcd_lib_encoder_pos * 2 - 2) << 8 || ball_x > (lcd_lib_encoder_pos * 2 + BREAKOUT_PADDLE_WIDTH) << 8)
-            lcd_change_to_menu(lcd_menu_main);
+            lcd_change_to_previous_menu();
         ball_dx += (ball_x - ((lcd_lib_encoder_pos * 2 + BREAKOUT_PADDLE_WIDTH / 2) * 256)) / 64;
         ball_dy = -512 + abs(ball_dx);
     }

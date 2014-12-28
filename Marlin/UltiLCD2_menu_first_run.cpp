@@ -73,7 +73,7 @@ static void homeAndParkHeadForCenterAdjustment2()
 //Started bed leveling from the calibration menu
 void lcd_menu_first_run_start_bed_leveling()
 {
-    lcd_question_screen(lcd_menu_first_run_bed_level_center_adjust, homeAndParkHeadForCenterAdjustment2, PSTR("CONTINUE"), lcd_menu_main, NULL, PSTR("CANCEL"));
+    lcd_question_screen(lcd_menu_first_run_bed_level_center_adjust, homeAndParkHeadForCenterAdjustment2, PSTR("CONTINUE"), NULL, lcd_change_to_previous_menu, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(10, PSTR("I will guide you"));
     lcd_lib_draw_string_centerP(20, PSTR("through the process"));
     lcd_lib_draw_string_centerP(30, PSTR("of adjusting your"));
@@ -271,13 +271,19 @@ static void homeBed()
     enquecommand_P(PSTR("G28 Z0"));
 }
 
+static void lcd_menu_first_run_bed_level_done()
+{
+    lcd_change_to_previous_menu();
+    homeBed();
+}
+
 static void lcd_menu_first_run_bed_level_paper_right()
 {
     LED_GLOW();
 
     SELECT_MAIN_MENU_ITEM(0);
     if (IS_FIRST_RUN_DONE())
-        lcd_info_screen(lcd_menu_main, homeBed, PSTR("DONE"));
+        lcd_info_screen(NULL, lcd_menu_first_run_bed_level_done, PSTR("DONE"));
     else
         lcd_info_screen(lcd_menu_first_run_material_load, homeBed, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(10);
@@ -315,7 +321,7 @@ static void lcd_menu_first_run_material_load_heatup()
         for(uint8_t e=0; e<EXTRUDERS; e++)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
 
-        currentMenu = lcd_menu_first_run_material_load_insert;
+        lcd_replace_menu(lcd_menu_first_run_material_load_insert);
         temp = target;
     }
 
@@ -385,7 +391,7 @@ static void lcd_menu_first_run_material_load_forward()
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
         digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
-        currentMenu = lcd_menu_first_run_material_load_wait;
+        lcd_replace_menu(lcd_menu_first_run_material_load_wait);
         SELECT_MAIN_MENU_ITEM(0);
     }
 
@@ -444,7 +450,7 @@ static void lcd_menu_first_run_material_select_pla_abs()
             for(uint8_t e=0; e<EXTRUDERS; e++)
                 lcd_material_set_material(0, e);
             SET_FIRST_RUN_DONE();
-            lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_pla);
+            lcd_replace_menu(lcd_menu_first_run_material_select_confirm_pla, ENCODER_NO_SELECTION);
         }
         else if (IS_SELECTED_MAIN(1))
         {
@@ -452,7 +458,7 @@ static void lcd_menu_first_run_material_select_pla_abs()
             for(uint8_t e=0; e<EXTRUDERS; e++)
                 lcd_material_set_material(1, e);
             SET_FIRST_RUN_DONE();
-            lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_abs);
+            lcd_replace_menu(lcd_menu_first_run_material_select_confirm_abs, ENCODER_NO_SELECTION);
         }
     }
 }

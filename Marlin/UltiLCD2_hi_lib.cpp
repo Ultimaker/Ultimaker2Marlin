@@ -4,11 +4,14 @@
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
 #include "UltiLCD2_hi_lib.h"
+#include "StackList.h"
 
-menuFunc_t currentMenu;
-menuFunc_t previousMenu;
+static StackList<menu_t> menuStack;
+
+//menuFunc_t currentMenu;
+//menuFunc_t previousMenu;
 menuFunc_t postMenuCheck;
-int16_t previousEncoderPos;
+// int16_t previousEncoderPos;
 uint8_t led_glow = 0;
 uint8_t led_glow_dir;
 uint8_t minProgress;
@@ -20,16 +23,55 @@ uint8_t lcd_setting_type;
 int16_t lcd_setting_min;
 int16_t lcd_setting_max;
 
-void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
+
+static void lcd_start_menu()
 {
     minProgress = 0;
     led_glow = led_glow_dir = 0;
     LED_NORMAL();
     lcd_lib_beep();
-    previousMenu = currentMenu;
-    previousEncoderPos = lcd_lib_encoder_pos;
-    currentMenu = nextMenu;
+}
+
+void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
+{
+    menuStack.push(menu_t(nextMenu, newEncoderPos));
+}
+
+void lcd_replace_menu(menuFunc_t nextMenu)
+{
+    lcd_start_menu();
+    menuStack.peek().menuFunc = nextMenu;
+}
+
+void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
+{
+    lcd_start_menu();
+    menuStack.peek().menuFunc = nextMenu;
+    menuStack.peek().encoderPos = newEncoderPos;
     lcd_lib_encoder_pos = newEncoderPos;
+}
+
+void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos, int16_t oldEncoderPos)
+{
+    lcd_start_menu();
+    menuStack.peek().encoderPos = oldEncoderPos;
+    lcd_add_menu(nextMenu, newEncoderPos);
+    lcd_lib_encoder_pos = newEncoderPos;
+}
+
+void lcd_change_to_previous_menu()
+{
+    lcd_start_menu();
+    if (menuStack.count()>1)
+    {
+        menuStack.pop();
+    }
+    lcd_lib_encoder_pos = menuStack.peek().encoderPos;
+}
+
+menu_t & currentMenu()
+{
+    return menuStack.peek();
 }
 
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
@@ -43,8 +85,8 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     }
 
     lcd_lib_clear();
-    lcd_lib_draw_vline(64, 5, 45);
-    lcd_lib_draw_hline(3, 124, 48);
+    lcd_lib_draw_vline(64, 5, 46);
+    lcd_lib_draw_hline(3, 124, 50);
 
     if (IS_SELECTED_MAIN(0))
     {
@@ -68,11 +110,11 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     {
         if (IS_SELECTED_MAIN(2))
         {
-            lcd_lib_draw_box(3+2, 49+2, 125-2, 63-2);
-            lcd_lib_set(3+3, 49+3, 125-3, 63-3);
-            lcd_lib_clear_string_centerP(53, bottom);
+            lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-2, 125-2, BOTTOM_MENU_YPOS+8);
+            lcd_lib_set(3+3, BOTTOM_MENU_YPOS-1, 125-3, BOTTOM_MENU_YPOS+7);
+            lcd_lib_clear_string_centerP(BOTTOM_MENU_YPOS, bottom);
         }else{
-            lcd_lib_draw_string_centerP(53, bottom);
+            lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, bottom);
         }
     }
 }
@@ -80,7 +122,7 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
 void lcd_basic_screen()
 {
     lcd_lib_clear();
-    lcd_lib_draw_hline(3, 124, 48);
+    lcd_lib_draw_hline(3, 124, 50);
 }
 
 void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const char* cancelButtonText)
@@ -95,7 +137,7 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     if (lcd_lib_button_pressed && IS_SELECTED_MAIN(0))
     {
         if (callbackOnCancel) callbackOnCancel();
-        if (cancelMenu) lcd_change_to_menu(cancelMenu);
+        if (cancelMenu) lcd_replace_menu(cancelMenu, ENCODER_NO_SELECTION);
     }
 
     lcd_basic_screen();
@@ -103,11 +145,11 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     if (!cancelButtonText) cancelButtonText = PSTR("CANCEL");
     if (IS_SELECTED_MAIN(0))
     {
-        lcd_lib_draw_box(3+2, 49+2, 125-2, 63-2);
-        lcd_lib_set(3+3, 49+3, 125-3, 63-3);
-        lcd_lib_clear_stringP(65 - strlen_P(cancelButtonText) * 3, 53, cancelButtonText);
+        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-2, 125-2, BOTTOM_MENU_YPOS+8);
+        lcd_lib_set(3+3, BOTTOM_MENU_YPOS-1, 125-3, BOTTOM_MENU_YPOS+7);
+        lcd_lib_clear_stringP(65 - strlen_P(cancelButtonText) * 3, BOTTOM_MENU_YPOS, cancelButtonText);
     }else{
-        lcd_lib_draw_stringP(65 - strlen_P(cancelButtonText) * 3, 53, cancelButtonText);
+        lcd_lib_draw_stringP(65 - strlen_P(cancelButtonText) * 3, BOTTOM_MENU_YPOS, cancelButtonText);
     }
 }
 
@@ -125,11 +167,11 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
         if (IS_SELECTED_MAIN(0))
         {
             if (callbackOnA) callbackOnA();
-            if (optionAMenu) lcd_change_to_menu(optionAMenu);
+            if (optionAMenu) lcd_replace_menu(optionAMenu, ENCODER_NO_SELECTION);
         }else if (IS_SELECTED_MAIN(1))
         {
             if (callbackOnB) callbackOnB();
-            if (optionBMenu) lcd_change_to_menu(optionBMenu);
+            if (optionBMenu) lcd_replace_menu(optionBMenu, ENCODER_NO_SELECTION);
         }
     }
 
@@ -137,19 +179,19 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
 
     if (IS_SELECTED_MAIN(0))
     {
-        lcd_lib_draw_box(3+2, 49+2, 64-2, 63-2);
-        lcd_lib_set(3+3, 49+3, 64-3, 63-3);
-        lcd_lib_clear_stringP(35 - strlen_P(AButtonText) * 3, 53, AButtonText);
+        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-2, 64-2, BOTTOM_MENU_YPOS+8);
+        lcd_lib_set(3+3, BOTTOM_MENU_YPOS-1, 64-3, BOTTOM_MENU_YPOS+7);
+        lcd_lib_clear_stringP(35 - strlen_P(AButtonText) * 3, BOTTOM_MENU_YPOS, AButtonText);
     }else{
-        lcd_lib_draw_stringP(35 - strlen_P(AButtonText) * 3, 53, AButtonText);
+        lcd_lib_draw_stringP(35 - strlen_P(AButtonText) * 3, BOTTOM_MENU_YPOS, AButtonText);
     }
     if (IS_SELECTED_MAIN(1))
     {
-        lcd_lib_draw_box(64+2, 49+2, 64+60-2, 63-2);
-        lcd_lib_set(64+3, 49+3, 64+60-3, 63-3);
-        lcd_lib_clear_stringP(64+31 - strlen_P(BButtonText) * 3, 53, BButtonText);
+        lcd_lib_draw_box(64+2, BOTTOM_MENU_YPOS-2, 64+60-2, BOTTOM_MENU_YPOS+8);
+        lcd_lib_set(64+3, BOTTOM_MENU_YPOS-1, 64+60-3, BOTTOM_MENU_YPOS+7);
+        lcd_lib_clear_stringP(64+31 - strlen_P(BButtonText) * 3, BOTTOM_MENU_YPOS, BButtonText);
     }else{
-        lcd_lib_draw_stringP(64+31 - strlen_P(BButtonText) * 3, 53, BButtonText);
+        lcd_lib_draw_stringP(64+31 - strlen_P(BButtonText) * 3, BOTTOM_MENU_YPOS, BButtonText);
     }
 }
 
@@ -215,7 +257,7 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
     lcd_lib_clear(3, 47, 124, 63);
     lcd_lib_clear(3, 9, 124, 9);
 
-    lcd_lib_draw_hline(3, 124, 48);
+    lcd_lib_draw_hline(3, 124, 50);
 
     lcd_lib_clear_string_centerP(1, menuNameP);
 
@@ -259,6 +301,6 @@ void lcd_menu_edit_setting()
     lcd_lib_update_screen();
 
     if (lcd_lib_button_pressed)
-        lcd_change_to_menu(previousMenu, previousEncoderPos);
+        lcd_change_to_previous_menu();
 }
 #endif//ENABLE_ULTILCD2

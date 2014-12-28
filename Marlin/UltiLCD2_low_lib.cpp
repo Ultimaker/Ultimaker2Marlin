@@ -881,7 +881,8 @@ char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
         *c++ = ((i/1000)%10)+'0';
     *c++ = ((i/100)%10)+'0';
     *c++ = '.';
-    *c++ = ((i/10)%10)+'0';
+    if (i >= 10)
+        *c++ = ((i/10)%10)+'0';
     *c++ = ((i)%10)+'0';
     *c = '\0';
     if (p_postfix)

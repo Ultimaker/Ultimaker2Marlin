@@ -83,12 +83,12 @@ static void checkPrintFinished()
     if (!card.sdprinting && !is_command_queued())
     {
         abortPrint();
-        currentMenu = lcd_menu_print_ready;
+        lcd_replace_menu(lcd_menu_print_ready);
         SELECT_MAIN_MENU_ITEM(0);
     }else if (card.errorCode())
     {
         abortPrint();
-        currentMenu = lcd_menu_print_error;
+        lcd_replace_menu(lcd_menu_print_error);
         SELECT_MAIN_MENU_ITEM(0);
     }
 }
@@ -204,7 +204,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
         {
             if (LCD_CACHE_TYPE(idx) == 1)
             {
-                lcd_lib_draw_string_centerP(53, PSTR("Folder"));
+                lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Folder"));
             }else{
                 char buffer[64];
                 if (LCD_DETAIL_CACHE_ID() != nr)
@@ -271,9 +271,9 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                         }
 #endif
                     }
-                    lcd_lib_draw_string(3, 53, buffer);
+                    lcd_lib_draw_string(3, BOTTOM_MENU_YPOS, buffer);
                 }else{
-                    lcd_lib_draw_stringP(3, 53, PSTR("No info available"));
+                    lcd_lib_draw_stringP(3, BOTTOM_MENU_YPOS, PSTR("No info available"));
                 }
             }
         }
@@ -314,7 +314,7 @@ void lcd_menu_print_select()
     if (nrOfFiles == 0)
     {
         if (card.atRoot())
-            lcd_info_screen(lcd_menu_main, NULL, PSTR("OK"));
+            lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("OK"));
         else
             lcd_info_screen(lcd_menu_print_select, cardUpdir, PSTR("OK"));
         lcd_lib_draw_string_centerP(25, PSTR("No files found!"));
@@ -330,7 +330,7 @@ void lcd_menu_print_select()
         {
             if (card.atRoot())
             {
-                lcd_change_to_menu(lcd_menu_main);
+                lcd_change_to_previous_menu();
             }else{
                 lcd_clear_cache();
                 lcd_lib_beep();
@@ -402,7 +402,7 @@ void lcd_menu_print_select()
                             extrudemultiply[e] = 100;
                         }
 
-                        lcd_change_to_menu(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0));
+                        lcd_replace_menu(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0));
                     }
                 }
             }else{
@@ -444,9 +444,9 @@ static void lcd_menu_print_heatup()
                 doStartPrint();
                 if (ui_mode == UI_MODE_TINKERGNOME)
                 {
-                    currentMenu = lcd_menu_printing_tg;
+                    lcd_replace_menu(lcd_menu_printing_tg);
                 }else{
-                    currentMenu = lcd_menu_print_printing;
+                    lcd_replace_menu(lcd_menu_print_printing);
                 }
             }
         }
@@ -586,7 +586,7 @@ static void lcd_menu_print_classic_warning()
 void lcd_menu_print_abort()
 {
     LED_GLOW();
-    lcd_question_screen(lcd_menu_print_ready, abortPrint, PSTR("YES"), previousMenu, NULL, PSTR("NO"));
+    lcd_question_screen(lcd_menu_print_ready, abortPrint, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
 
     lcd_lib_draw_string_centerP(20, PSTR("Abort the print?"));
 
@@ -628,7 +628,7 @@ static void lcd_menu_print_ready()
         int_to_string(dsp_temperature_bed, c, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
     }else{
-        currentMenu = lcd_menu_print_ready_cooled_down;
+        lcd_replace_menu(lcd_menu_print_ready_cooled_down);
     }
     lcd_lib_update_screen();
 }
@@ -741,7 +741,7 @@ static void tune_item_details_callback(uint8_t nr)
     }
     else
         return;
-    lcd_lib_draw_string(5, 53, (char*)lcd_cache);
+    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, (char*)lcd_cache);
 }
 
 void lcd_menu_print_tune_heatup_nozzle0()
@@ -756,11 +756,11 @@ void lcd_menu_print_tune_heatup_nozzle0()
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
-        lcd_change_to_menu(previousMenu, previousEncoderPos);
+        lcd_change_to_previous_menu();
 
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
-    lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
+    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
     char buffer[16];
     int_to_string(int(dsp_temperature[0]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
@@ -780,11 +780,11 @@ void lcd_menu_print_tune_heatup_nozzle1()
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
-        lcd_change_to_menu(previousMenu, previousEncoderPos);
+        lcd_change_to_previous_menu();
 
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle2 temperature:"));
-    lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
+    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
     char buffer[16];
     int_to_string(int(dsp_temperature[1]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[1]), buffer+strlen(buffer), PSTR("C"));
@@ -800,18 +800,7 @@ void lcd_menu_print_tune()
     {
         if (IS_SELECTED_SCROLL(0))
         {
-            if (ui_mode == UI_MODE_TINKERGNOME)
-            {
-                if (card.sdprinting)
-                    lcd_change_to_menu(lcd_menu_printing_tg);
-                else
-                    lcd_change_to_menu(lcd_menu_print_heatup_tg);
-            }else{
-                if (card.sdprinting)
-                    lcd_change_to_menu(lcd_menu_print_printing);
-                else
-                    lcd_change_to_menu(lcd_menu_print_heatup);
-            }
+            lcd_change_to_previous_menu();
         }else if (IS_SELECTED_SCROLL(1))
         {
             if (card.sdprinting)
@@ -896,7 +885,7 @@ static void lcd_retraction_details(uint8_t nr)
     else if(nr == 3)
         int_to_string(extruder_swap_retract_length, buffer, PSTR("mm"));
 #endif
-    lcd_lib_draw_string(5, 53, buffer);
+    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
 }
 
 static void lcd_menu_print_tune_retraction()
@@ -905,7 +894,7 @@ static void lcd_menu_print_tune_retraction()
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
-            lcd_change_to_menu(lcd_menu_print_tune, SCROLL_MENU_ITEM_POS(6));
+            lcd_change_to_previous_menu();
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
         else if (IS_SELECTED_SCROLL(2))
