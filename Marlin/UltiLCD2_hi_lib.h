@@ -33,6 +33,8 @@ void lcd_replace_menu(menuFunc_t nextMenu);
 void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos);
 void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos = ENCODER_NO_SELECTION, int16_t oldEncoderPos = ENCODER_NO_SELECTION);
 void lcd_change_to_previous_menu();
+void lcd_remove_menu();
+
 menu_t & currentMenu();
 
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom);

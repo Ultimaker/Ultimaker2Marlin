@@ -300,6 +300,7 @@ static void lcd_menu_change_material_insert_forward()
 
 static void materialInsertReady()
 {
+    lcd_remove_menu();
     current_position[E_AXIS] -= END_OF_PRINT_RETRACTION;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, active_extruder);
     cancelMaterialInsert();

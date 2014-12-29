@@ -232,6 +232,7 @@ void lcd_menu_maintenance_advanced_heatup()
     int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[active_extruder]), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_draw_heater(LCD_GFX_WIDTH/2-2, 40, getHeaterPower(active_extruder));
     lcd_lib_update_screen();
 }
 
@@ -254,13 +255,14 @@ void lcd_menu_maintenance_extrude()
     }
 
     lcd_lib_clear();
-    lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
+    lcd_lib_draw_string_centerP(10, PSTR("Nozzle temperature:"));
     lcd_lib_draw_string_centerP(40, PSTR("Rotate to extrude"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
     char buffer[16];
     int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[active_extruder]), buffer+strlen(buffer), PSTR("C"));
-    lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_draw_string_center(20, buffer);
+    lcd_lib_draw_heater(LCD_GFX_WIDTH/2-2, 30, getHeaterPower(active_extruder));
     lcd_lib_update_screen();
 }
 
@@ -286,6 +288,7 @@ void lcd_menu_maintenance_advanced_bed_heatup()
     int_to_string(int(dsp_temperature_bed), buffer, PSTR("C/"));
     int_to_string(int(target_temperature_bed), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_draw_heater(LCD_GFX_WIDTH/2-2, 40, getHeaterPower(-1));
     lcd_lib_update_screen();
 }
 #endif
@@ -323,11 +326,13 @@ void lcd_menu_advanced_stats()
 
 static void doFactoryReset()
 {
+    lcd_change_to_previous_menu();
     //Clear the EEPROM settings so they get read from default.
     eeprom_write_byte((uint8_t*)100, 0);
     eeprom_write_byte((uint8_t*)101, 0);
     eeprom_write_byte((uint8_t*)102, 0);
     eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
+    eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, 0);
     eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
 
     cli();

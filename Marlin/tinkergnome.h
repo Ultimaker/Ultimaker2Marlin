@@ -46,7 +46,6 @@ struct menuoption_t {
     uint8_t           top;
     uint8_t           width;
     uint8_t           height;
-//    menuFunc_t        menuFunc;
     optionCallback_t  callbackFunc;
     uint8_t           state;
     uint8_t           textalign;
@@ -54,14 +53,11 @@ struct menuoption_t {
     bool isActive() { return (state & STATE_ACTIVE) == STATE_ACTIVE; }
 };
 
-//void lcd_draw_menu_option(const menuoption_t &);
-//void lcd_process_menu_options(menuoption_t options[], uint8_t len);
-
 void tinkergnome_init();
 void lcd_menu_maintenance_uimode();
 void lcd_menu_print_heatup_tg();
 void lcd_menu_printing_tg();
-
+void lcd_lib_draw_heater(uint8_t x, uint8_t y, uint8_t heaterPower);
 
 #endif//ULTI_LCD2_MENU_TINKERGNOME_H
 

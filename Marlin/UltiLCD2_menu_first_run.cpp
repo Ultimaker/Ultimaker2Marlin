@@ -69,6 +69,7 @@ static void homeAndParkHeadForCenterAdjustment2()
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH - 10);
     enquecommand(buffer);
+    lcd_remove_menu();
 }
 //Started bed leveling from the calibration menu
 void lcd_menu_first_run_start_bed_leveling()
@@ -466,7 +467,7 @@ static void lcd_menu_first_run_material_select_pla_abs()
 static void lcd_menu_first_run_material_select_confirm_pla()
 {
     LED_GLOW();
-    lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, NULL, PSTR("NO"));
+    lcd_question_screen(lcd_menu_first_run_material_select_2, lcd_remove_menu, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, lcd_remove_menu, PSTR("NO"));
     DRAW_PROGRESS_NR(18);
     lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
     lcd_lib_draw_string_centerP(30, PSTR("PLA as material,"));
@@ -477,7 +478,7 @@ static void lcd_menu_first_run_material_select_confirm_pla()
 static void lcd_menu_first_run_material_select_confirm_abs()
 {
     LED_GLOW();
-    lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, NULL, PSTR("NO"));
+    lcd_question_screen(lcd_menu_first_run_material_select_2, lcd_remove_menu, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, lcd_remove_menu, PSTR("NO"));
     DRAW_PROGRESS_NR(18);
     lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
     lcd_lib_draw_string_centerP(30, PSTR("ABS as material,"));

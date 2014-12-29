@@ -24,12 +24,15 @@ int16_t lcd_setting_min;
 int16_t lcd_setting_max;
 
 
-static void lcd_start_menu()
+static void lcd_start_menu(bool beep)
 {
     minProgress = 0;
     led_glow = led_glow_dir = 0;
     LED_NORMAL();
-    lcd_lib_beep();
+    if (beep)
+    {
+        lcd_lib_beep();
+    }
 }
 
 void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
@@ -39,13 +42,13 @@ void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 
 void lcd_replace_menu(menuFunc_t nextMenu)
 {
-    lcd_start_menu();
+    lcd_start_menu(true);
     menuStack.peek().menuFunc = nextMenu;
 }
 
 void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 {
-    lcd_start_menu();
+    lcd_start_menu(true);
     menuStack.peek().menuFunc = nextMenu;
     menuStack.peek().encoderPos = newEncoderPos;
     lcd_lib_encoder_pos = newEncoderPos;
@@ -53,7 +56,7 @@ void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 
 void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos, int16_t oldEncoderPos)
 {
-    lcd_start_menu();
+    lcd_start_menu(true);
     menuStack.peek().encoderPos = oldEncoderPos;
     lcd_add_menu(nextMenu, newEncoderPos);
     lcd_lib_encoder_pos = newEncoderPos;
@@ -61,7 +64,18 @@ void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos, int16_t oldE
 
 void lcd_change_to_previous_menu()
 {
-    lcd_start_menu();
+    lcd_start_menu(true);
+    if (menuStack.count()>1)
+    {
+        menuStack.pop();
+    }
+    lcd_lib_encoder_pos = menuStack.peek().encoderPos;
+}
+
+void lcd_remove_menu()
+{
+    // go one step back (without "beep")
+    lcd_start_menu(false);
     if (menuStack.count()>1)
     {
         menuStack.pop();
@@ -167,11 +181,11 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
         if (IS_SELECTED_MAIN(0))
         {
             if (callbackOnA) callbackOnA();
-            if (optionAMenu) lcd_replace_menu(optionAMenu, ENCODER_NO_SELECTION);
+            if (optionAMenu) lcd_change_to_menu(optionAMenu, ENCODER_NO_SELECTION);
         }else if (IS_SELECTED_MAIN(1))
         {
             if (callbackOnB) callbackOnB();
-            if (optionBMenu) lcd_replace_menu(optionBMenu, ENCODER_NO_SELECTION);
+            if (optionBMenu) lcd_change_to_menu(optionBMenu, ENCODER_NO_SELECTION);
         }
     }
 

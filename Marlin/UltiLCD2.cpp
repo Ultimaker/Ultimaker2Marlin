@@ -121,7 +121,9 @@ void lcd_update()
         {
             dsp_temperature[e] = (ALPHA * current_temperature[e]) + (ONE_MINUS_ALPHA * dsp_temperature[e]);
         }
+#if TEMP_SENSOR_BED != 0
         dsp_temperature_bed = (ALPHA * current_temperature_bed) + (ONE_MINUS_ALPHA * dsp_temperature_bed);
+#endif
         currentMenu().menuFunc();
         if (postMenuCheck) postMenuCheck();
     }
