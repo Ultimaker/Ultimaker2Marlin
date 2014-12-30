@@ -575,55 +575,11 @@ void lcd_menu_printing_tg()
     switch(printing_state)
     {
     default:
-        // z position
-        lcd_lib_draw_string_leftP(15, PSTR("Z"));
-        float_to_string(current_position[Z_AXIS], buffer, NULL);
-        lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_WIDTH+LCD_CHAR_WIDTH/2, 15, buffer);
-
-        // speed
-        lcd_lib_draw_string_leftP(printOptions[2].top, PSTR("Speed"));
-        if (!printOptions[2].isActive())
-        {
-            int_to_string(feedmultiply, printOptions[2].title, PSTR("%"));
-        }
-
-        // fan speed
-        lcd_lib_draw_string_leftP(printOptions[3].top, PSTR("Fan"));
-        if (!printOptions[3].isActive())
-        {
-            int_to_string(int(fanSpeed) * 100 / 255, printOptions[3].title, PSTR("%"));
-        }
-
-        // temperature first extruder
-        if (!printOptions[4].isActive())
-        {
-            // lcd_lib_draw_heater(printOptions[4].left-8, printOptions[4].top, getHeaterPower(0));
-            int_to_string(dsp_temperature[0], printOptions[4].title, PSTR("C"));
-        }
-#if EXTRUDERS > 1
-        // temperature second extruder
-        if (!printOptions[5].isActive())
-        {
-            // lcd_lib_draw_heater(printOptions[5].left-8, printOptions[5].top, getHeaterPower(1));
-            int_to_string(dsp_temperature[1], printOptions[5].title, PSTR("C"));
-        }
-#endif
-#if TEMP_SENSOR_BED != 0
-        // temperature build-plate
-        index = 3+EXTRUDERS+BED_MENU_OFFSET;
-        if (!printOptions[index].isActive())
-        {
-            // lcd_lib_draw_heater(printOptions[index].left-8, printOptions[index].top, getHeaterPower(-1));
-            int_to_string(dsp_temperature_bed, printOptions[index].title, PSTR("C"));
-        }
-#endif
-
-        for (uint8_t index=2; index<sizeof(printOptions)/sizeof(printOptions[0]); ++index) {
-            lcd_draw_menu_option(printOptions[index]);
-        }
-
         lcd_lib_draw_string_left(5, card.longFilename);
-        lcd_lib_draw_hline(3, 124, 13);
+        // draw progress string right aligned
+        int_to_string(progress*100/124, buffer, PSTR("%"));
+        lcd_lib_draw_string_right(15, buffer);
+        lcd_progressline(progress);
         break;
     case PRINT_STATE_WAIT_USER:
         lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
@@ -631,20 +587,74 @@ void lcd_menu_printing_tg()
         lcd_lib_draw_string_centerP(30, PSTR("to continue"));
         break;
     case PRINT_STATE_HEATING:
-        lcd_lib_draw_string_centerP(20, PSTR("Heating"));
-        c = int_to_string(dsp_temperature[0], buffer, PSTR("C"));
-        *c++ = '/';
-        c = int_to_string(target_temperature[0], c, PSTR("C"));
-        lcd_lib_draw_string_center(30, buffer);
+        lcd_lib_draw_string_leftP(5, PSTR("Heating"));
+        // lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-LCD_CHAR_WIDTH, 5, getHeaterPower(0));
         break;
     case PRINT_STATE_HEATING_BED:
-        lcd_lib_draw_string_centerP(20, PSTR("Heating buildplate"));
-        c = int_to_string(dsp_temperature_bed, buffer, PSTR("C"));
-        *c++ = '/';
-        c = int_to_string(target_temperature_bed, c, PSTR("C"));
-        lcd_lib_draw_string_center(30, buffer);
+        lcd_lib_draw_string_leftP(5, PSTR("Heating buildplate"));
+        // lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-LCD_CHAR_WIDTH, 5, getHeaterPower(-1));
         break;
     }
+
+    // all printing states
+    lcd_lib_draw_hline(3, 124, 13);
+
+    // z position
+    lcd_lib_draw_string_leftP(15, PSTR("Z"));
+    float_to_string(current_position[Z_AXIS], buffer, NULL);
+    lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_WIDTH+LCD_CHAR_WIDTH/2, 15, buffer);
+
+    // speed
+    lcd_lib_draw_string_leftP(printOptions[2].top, PSTR("Speed"));
+    if (!printOptions[2].isActive())
+    {
+        int_to_string(feedmultiply, printOptions[2].title, PSTR("%"));
+    }
+
+    // fan speed
+    lcd_lib_draw_string_leftP(printOptions[3].top, PSTR("Fan"));
+    if (!printOptions[3].isActive())
+    {
+        int_to_string(int(fanSpeed) * 100 / 255, printOptions[3].title, PSTR("%"));
+    }
+
+    // temperature first extruder
+    if (!printOptions[4].isActive())
+    {
+        if (printing_state == PRINT_STATE_HEATING)
+        {
+            lcd_lib_draw_heater(printOptions[4].left-8, printOptions[4].top, getHeaterPower(0));
+        }
+        int_to_string(dsp_temperature[0], printOptions[4].title, PSTR("C"));
+    }
+#if EXTRUDERS > 1
+    // temperature second extruder
+    if (!printOptions[5].isActive())
+    {
+        if (printing_state == PRINT_STATE_HEATING)
+        {
+            lcd_lib_draw_heater(printOptions[5].left-8, printOptions[5].top, getHeaterPower(1));
+        }
+        int_to_string(dsp_temperature[1], printOptions[5].title, PSTR("C"));
+    }
+#endif
+#if TEMP_SENSOR_BED != 0
+    // temperature build-plate
+    index = 3+EXTRUDERS+BED_MENU_OFFSET;
+    if (!printOptions[index].isActive())
+    {
+        if (printing_state == PRINT_STATE_HEATING_BED)
+        {
+            lcd_lib_draw_heater(printOptions[index].left-8, printOptions[index].top, getHeaterPower(-1));
+        }
+        int_to_string(dsp_temperature_bed, printOptions[index].title, PSTR("C"));
+    }
+#endif
+
+    for (uint8_t index=2; index<sizeof(printOptions)/sizeof(printOptions[0]); ++index) {
+        lcd_draw_menu_option(printOptions[index]);
+    }
+
     float printTimeMs = (millis() - starttime);
     float printTimeSec = printTimeMs / 1000L;
     float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
@@ -657,7 +667,6 @@ void lcd_menu_printing_tg()
     {
         totalTimeSmoothSec = totalTimeMs / 1000;
         // lcd_lib_draw_stringP(5, 10, PSTR("Time left unknown"));
-
     }else{
         unsigned long totalTimeSec;
         if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
@@ -682,12 +691,6 @@ void lcd_menu_printing_tg()
         lcd_lib_draw_string(58, 15, buffer);
 
     }
-
-    int_to_string(progress*100/124, buffer, PSTR("%"));
-    // draw string right aligned
-    lcd_lib_draw_string_right(15, buffer);
-
-    lcd_progressline(progress);
 
     lcd_draw_menu_option(printOptions[0]);
     lcd_draw_menu_option(printOptions[1]);

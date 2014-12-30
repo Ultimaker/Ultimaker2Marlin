@@ -29,13 +29,13 @@ int stoppedValue;
 
 void setupGui()
 {
-    if ( SDL_Init(SDL_INIT_VIDEO) < 0 ) 
+    if ( SDL_Init(SDL_INIT_VIDEO) < 0 )
     {
         fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
         exit(1);
     }
     atexit(SDL_Quit);
-    
+
     screen = SDL_SetVideoMode(1024, 600, 32, SDL_SWSURFACE);
 }
 
@@ -47,16 +47,16 @@ void guiUpdate()
 {
     for(unsigned int n=0; n<simComponentList.size(); n++)
         simComponentList[n]->tick();
-    
+
     if (SDL_GetTicks() - lastUpdate < 25)
         return;
     lastUpdate = SDL_GetTicks();
-    
+
     int clickX = -1, clickY = -1;
     SDL_Event event;
-    while (SDL_PollEvent(&event)) 
+    while (SDL_PollEvent(&event))
     {
-        switch (event.type) 
+        switch (event.type)
         {
         case SDL_KEYDOWN:
             key_delay = 0;
@@ -135,17 +135,17 @@ void guiUpdate()
         }else
             key_delay--;
     }
-    
+
     SDL_FillRect(screen, NULL, 0x000000);
     for(unsigned int n=0; n<simComponentList.size(); n++)
         simComponentList[n]->doDraw();
-    
+
     SDL_Rect rect;
     rect.w = 32;
     rect.h = 32;
     rect.x = 128 * SCALE + 32;
     rect.y = 32;
-    
+
     if (clickX >= rect.x && clickX <= rect.x + rect.w && clickY >= rect.y && clickY <= rect.y + rect.h)
         cardInserted = !cardInserted;
     SDL_FillRect(screen, &rect, cardInserted ? 0x00FF00 : 0xFF0000);
@@ -155,7 +155,7 @@ void guiUpdate()
     if (clickX >= rect.x && clickX <= rect.x + rect.w && clickY >= rect.y && clickY <= rect.y + rect.h)
         stoppedValue = !stoppedValue;
     writeInput(SAFETY_TRIGGERED_PIN, stoppedValue);
-    
+
     SDL_FillRect(screen, &rect, stoppedValue ? 0x00FF00 : 0xFF0000);
     rect.y += 48;
 
@@ -184,7 +184,7 @@ public:
     virtual ~printerSim()
     {
     }
-    
+
     void draw(int _x, int _y)
     {
         drawRect(_x, _y, X_MAX_LENGTH / PRINTER_DOWN_SCALE + 1, Y_MAX_LENGTH / PRINTER_DOWN_SCALE + 1, 0x202020);
@@ -199,7 +199,7 @@ public:
         pos[0] = x->getPosition() / stepsPerUnit[X_AXIS];
         pos[1] = Y_MAX_POS - y->getPosition() / stepsPerUnit[Y_AXIS];
         pos[2] = z->getPosition() / stepsPerUnit[Z_AXIS];
-        
+
         map[int(pos[0]/PRINTER_DOWN_SCALE)][int(pos[1]/PRINTER_DOWN_SCALE)] += e0->getPosition() - e0stepPos;
         map[int(pos[0]/PRINTER_DOWN_SCALE)][int(pos[1]/PRINTER_DOWN_SCALE)] += e1->getPosition() - e1stepPos;
 
@@ -233,11 +233,12 @@ void sim_setup_main()
     (new printerSim(xStep, yStep, zStep, e0Step, e1Step))->setDrawPosition(5, 70);
     e0Step->setDrawPosition(130, 100);
     e1Step->setDrawPosition(130, 110);
-    
+
     (new heaterSim(HEATER_0_PIN, adc, TEMP_0_PIN))->setDrawPosition(130, 70);
     (new heaterSim(HEATER_1_PIN, adc, TEMP_1_PIN))->setDrawPosition(130, 80);
     (new heaterSim(HEATER_BED_PIN, adc, TEMP_BED_PIN, 0.2))->setDrawPosition(130, 90);
-    new sdcardSimulation("c:/models/", 5000);
+    // new sdcardSimulation("c:/models/", 5000);
+    new sdcardSimulation("d:/gcode/", 5000);
     (new serialSim())->setDrawPosition(150, 0);
 #if defined(ULTIBOARD_V2_CONTROLLER) || defined(ENABLE_ULTILCD2)
     i2cSim* i2c = new i2cSim();
