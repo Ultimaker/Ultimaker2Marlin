@@ -74,7 +74,8 @@ void lcd_menu_material()
 
     lcd_lib_update_screen();
 #else
-    lcd_replace_menu(lcd_menu_material_main);
+    lcd_remove_menu();
+    lcd_add_menu(lcd_menu_material_main, ENCODER_NO_SELECTION);
 #endif
 }
 

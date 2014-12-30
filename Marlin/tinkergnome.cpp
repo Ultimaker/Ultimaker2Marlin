@@ -53,8 +53,8 @@ static void lcd_print_tune_bed(menuoption_t **pOption);
 //This code uses the lcd_cache as buffer to store the filename, to save memory.
 
 menuoption_t printOptions[] = {
-                                  {"TUNE", LCD_CHAR_MARGIN_LEFT+2, BOTTOM_MENU_YPOS, 52, LCD_CHAR_HEIGHT, lcd_print_tune, STATE_NONE, ALIGN_CENTER}
-                                 ,{"ABORT", LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+2, BOTTOM_MENU_YPOS, 52, LCD_CHAR_HEIGHT, lcd_print_abort, STATE_NONE, ALIGN_CENTER}
+                                  {(char *)"TUNE", LCD_CHAR_MARGIN_LEFT+2, BOTTOM_MENU_YPOS, 52, LCD_CHAR_HEIGHT, lcd_print_tune, STATE_NONE, ALIGN_CENTER}
+                                 ,{(char *)"ABORT", LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+2, BOTTOM_MENU_YPOS, 52, LCD_CHAR_HEIGHT, lcd_print_abort, STATE_NONE, ALIGN_CENTER}
                                  ,{LCD_CACHE_FILENAME(0), LCD_CHAR_MARGIN_LEFT+33, 32, 24, LCD_CHAR_HEIGHT, lcd_print_tune_speed, STATE_NONE, ALIGN_RIGHT | ALIGN_VCENTER}
                                  ,{LCD_CACHE_FILENAME(1), LCD_CHAR_MARGIN_LEFT+33, 41, 24, LCD_CHAR_HEIGHT, lcd_print_tune_fan, STATE_NONE, ALIGN_RIGHT | ALIGN_VCENTER}
                                  ,{LCD_CACHE_FILENAME(2), LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_WIDTH, 50-(EXTRUDERS*9)-(BED_MENU_OFFSET*9), 24, LCD_CHAR_HEIGHT, lcd_print_tune_nozzle0, STATE_NONE, ALIGN_RIGHT | ALIGN_VCENTER}

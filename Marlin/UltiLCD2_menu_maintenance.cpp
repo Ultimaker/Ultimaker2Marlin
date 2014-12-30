@@ -15,20 +15,21 @@
 
 
 //static void lcd_menu_maintenance_advanced();
-//static void lcd_menu_maintenance_advanced_heatup();
-//static void lcd_menu_maintenance_led();
-//static void lcd_menu_maintenance_extrude();
-//static void lcd_menu_maintenance_retraction();
-//static void lcd_menu_advanced_version();
-//static void lcd_menu_advanced_stats();
-//static void lcd_menu_maintenance_motion();
-//static void lcd_menu_advanced_factory_reset();
+static void lcd_menu_maintenance_advanced_heatup();
+static void lcd_menu_maintenance_led();
+static void lcd_menu_maintenance_extrude();
+static void lcd_menu_maintenance_retraction();
+static void lcd_menu_advanced_version();
+static void lcd_menu_advanced_stats();
+static void lcd_menu_maintenance_motion();
+static void lcd_menu_advanced_factory_reset();
 
 void lcd_menu_maintenance()
 {
     if (ui_mode & UI_MODE_TINKERGNOME)
     {
-        lcd_replace_menu(lcd_menu_maintenance_advanced);
+        lcd_remove_menu();
+        lcd_add_menu(lcd_menu_maintenance_advanced, ENCODER_NO_SELECTION);
     }else{
         lcd_tripple_menu(PSTR("BUILD-|PLATE"), PSTR("ADVANCED"), PSTR("RETURN"));
 
@@ -211,7 +212,7 @@ void lcd_menu_maintenance_advanced()
     }
 }
 
-void lcd_menu_maintenance_advanced_heatup()
+static void lcd_menu_maintenance_advanced_heatup()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
@@ -236,7 +237,7 @@ void lcd_menu_maintenance_advanced_heatup()
     lcd_lib_update_screen();
 }
 
-void lcd_menu_maintenance_extrude()
+static void lcd_menu_maintenance_extrude()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
@@ -293,7 +294,7 @@ void lcd_menu_maintenance_advanced_bed_heatup()
 }
 #endif
 
-void lcd_menu_advanced_version()
+static void lcd_menu_advanced_version()
 {
     lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("Return"));
     lcd_lib_draw_string_centerP(30, PSTR(STRING_VERSION_CONFIG_H));
@@ -301,7 +302,7 @@ void lcd_menu_advanced_version()
     lcd_lib_update_screen();
 }
 
-void lcd_menu_advanced_stats()
+static void lcd_menu_advanced_stats()
 {
     lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("Return"));
     lcd_lib_draw_string_centerP(10, PSTR("Machine on for:"));
@@ -324,17 +325,8 @@ void lcd_menu_advanced_stats()
     lcd_lib_update_screen();
 }
 
-static void doFactoryReset()
+static void doMachineRestart()
 {
-    lcd_change_to_previous_menu();
-    //Clear the EEPROM settings so they get read from default.
-    eeprom_write_byte((uint8_t*)100, 0);
-    eeprom_write_byte((uint8_t*)101, 0);
-    eeprom_write_byte((uint8_t*)102, 0);
-    eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
-    eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, 0);
-    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
-
     cli();
     //NOTE: Jumping to address 0 is not a fully proper way to reset.
     // Letting the watchdog timeout is a better reset, but the bootloader does not continue on a watchdog timeout.
@@ -351,7 +343,20 @@ static void doFactoryReset()
 #endif
 }
 
-void lcd_menu_advanced_factory_reset()
+static void doFactoryReset()
+{
+    lcd_change_to_previous_menu();
+    //Clear the EEPROM settings so they get read from default.
+    eeprom_write_byte((uint8_t*)100, 0);
+    eeprom_write_byte((uint8_t*)101, 0);
+    eeprom_write_byte((uint8_t*)102, 0);
+    eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
+    eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, 0);
+    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
+    doMachineRestart();
+}
+
+static void lcd_menu_advanced_factory_reset()
 {
     lcd_question_screen(NULL, doFactoryReset, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
 
@@ -359,7 +364,6 @@ void lcd_menu_advanced_factory_reset()
     lcd_lib_draw_string_centerP(20, PSTR("to default?"));
     lcd_lib_update_screen();
 }
-
 
 static char* lcd_retraction_item(uint8_t nr)
 {
@@ -386,7 +390,7 @@ static void lcd_retraction_details(uint8_t nr)
     lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
 }
 
-void lcd_menu_maintenance_retraction()
+static void lcd_menu_maintenance_retraction()
 {
     lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
     if (lcd_lib_button_pressed)
@@ -452,7 +456,7 @@ static void lcd_motion_details(uint8_t nr)
     lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
 }
 
-void lcd_menu_maintenance_motion()
+static void lcd_menu_maintenance_motion()
 {
     lcd_scroll_menu(PSTR("MOTION"), 9, lcd_motion_item, lcd_motion_details);
     if (lcd_lib_button_pressed)
@@ -517,7 +521,7 @@ static void lcd_led_details(uint8_t nr)
     }
 }
 
-void lcd_menu_maintenance_led()
+static void lcd_menu_maintenance_led()
 {
     analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
     lcd_scroll_menu(PSTR("LED"), 6, lcd_led_item, lcd_led_details);

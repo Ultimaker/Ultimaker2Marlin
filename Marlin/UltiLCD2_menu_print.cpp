@@ -134,12 +134,14 @@ void doStartPrint()
         plan_set_e_position(-PRIMING_MM3);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], (PRIMING_MM3_PER_SEC * volume_to_filament_length[e]), e);
 
+#if EXTRUDERS > 1
         // for extruders other than the first one, perform end of print retraction
         if (e > 0)
         {
             plan_set_e_position((END_OF_PRINT_RETRACTION) / volume_to_filament_length[e]);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, e);
         }
+#endif
     }
     active_extruder = 0;
 

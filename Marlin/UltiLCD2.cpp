@@ -44,7 +44,9 @@ void lcd_init()
             lcd_material_set_material(0, e);
     }
     lcd_material_read_current_material();
-    // currentMenu = lcd_menu_startup;
+
+    // initialize menu stack and show start animation
+    lcd_add_menu(lcd_menu_main, ENCODER_NO_SELECTION);
     lcd_add_menu(lcd_menu_startup, ENCODER_NO_SELECTION);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
@@ -174,14 +176,13 @@ void lcd_menu_startup()
         if (lcd_lib_button_pressed)
             lcd_lib_beep();
 
+        lcd_remove_menu();
 #ifdef SPECIAL_STARTUP
-        lcd_replace_menu(lcd_menu_special_startup);
+        lcd_add_menu(lcd_menu_special_startup, ENCODER_NO_SELECTION);
 #else
         if (!IS_FIRST_RUN_DONE())
         {
-            lcd_replace_menu(lcd_menu_first_run_init);
-        }else{
-            lcd_replace_menu(lcd_menu_main);
+            lcd_add_menu(lcd_menu_first_run_init, ENCODER_NO_SELECTION);
         }
 #endif//SPECIAL_STARTUP
     }
