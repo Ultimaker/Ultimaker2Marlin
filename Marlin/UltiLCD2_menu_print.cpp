@@ -495,14 +495,14 @@ static void lcd_menu_print_printing()
         break;
     case PRINT_STATE_HEATING:
         lcd_lib_draw_string_centerP(20, PSTR("Heating"));
-        c = int_to_string(current_temperature[0], buffer, PSTR("C"));
+        c = int_to_string(dsp_temperature[0], buffer, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature[0], c, PSTR("C"));
         lcd_lib_draw_string_center(30, buffer);
         break;
     case PRINT_STATE_HEATING_BED:
         lcd_lib_draw_string_centerP(20, PSTR("Heating buildplate"));
-        c = int_to_string(current_temperature_bed, buffer, PSTR("C"));
+        c = int_to_string(dsp_temperature_bed, buffer, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature_bed, c, PSTR("C"));
         lcd_lib_draw_string_center(30, buffer);
@@ -615,8 +615,8 @@ static void lcd_menu_print_ready()
         char buffer[16];
         char* c = buffer;
         for(uint8_t e=0; e<EXTRUDERS; e++)
-            c = int_to_string(current_temperature[e], c, PSTR("C "));
-        int_to_string(current_temperature_bed, c, PSTR("C"));
+            c = int_to_string(dsp_temperature[e], c, PSTR("C "));
+        int_to_string(dsp_temperature_bed, c, PSTR("C"));
         lcd_lib_draw_string_center(25, buffer);
     }else{
         currentMenu = lcd_menu_print_ready_cooled_down;
@@ -696,14 +696,14 @@ static void tune_item_details_callback(uint8_t nr)
         c = int_to_string(feedmultiply, c, PSTR("%"));
     else if (nr == 3)
     {
-        c = int_to_string(current_temperature[0], c, PSTR("C"));
+        c = int_to_string(dsp_temperature[0], c, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature[0], c, PSTR("C"));
     }
 #if EXTRUDERS > 1
     else if (nr == 4)
     {
-        c = int_to_string(current_temperature[1], c, PSTR("C"));
+        c = int_to_string(dsp_temperature[1], c, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature[1], c, PSTR("C"));
     }
@@ -711,7 +711,7 @@ static void tune_item_details_callback(uint8_t nr)
 #if TEMP_SENSOR_BED != 0
     else if (nr == 3 + EXTRUDERS)
     {
-        c = int_to_string(current_temperature_bed, c, PSTR("C"));
+        c = int_to_string(dsp_temperature_bed, c, PSTR("C"));
         *c++ = '/';
         c = int_to_string(target_temperature_bed, c, PSTR("C"));
     }
@@ -753,7 +753,7 @@ void lcd_menu_print_tune_heatup_nozzle0()
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
     lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
     char buffer[16];
-    int_to_string(int(current_temperature[0]), buffer, PSTR("C/"));
+    int_to_string(int(dsp_temperature[0]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
@@ -777,7 +777,7 @@ void lcd_menu_print_tune_heatup_nozzle1()
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle2 temperature:"));
     lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
     char buffer[16];
-    int_to_string(int(current_temperature[1]), buffer, PSTR("C/"));
+    int_to_string(int(dsp_temperature[1]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[1]), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
     lcd_lib_update_screen();
