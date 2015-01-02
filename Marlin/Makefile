@@ -289,6 +289,9 @@ CFLAGS := $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) $(CWARN) $(CEXTRA) $(CTUNING)
 CXXFLAGS :=         $(CDEFS) $(CINCS) -O$(OPT) -Wall    $(CEXTRA) $(CTUNING)
 #ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs
 LDFLAGS = -lm
+ifeq ($(MCU),atmega2560)
+LDFLAGS += -Wl,--relax
+endif
 
 
 # Programming support using avrdude. Settings and variables.
