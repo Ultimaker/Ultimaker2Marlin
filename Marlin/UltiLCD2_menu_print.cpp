@@ -385,6 +385,8 @@ void lcd_menu_print_select()
                         target_temperature_bed = 0;
 #endif
                         fanSpeedPercent = 0;
+                        feedmultiply = 100;
+                        lcd_clearstatus();
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
@@ -410,6 +412,8 @@ void lcd_menu_print_select()
 
                         //Set the settings to defaults so the classic GCode has full control
                         fanSpeedPercent = 100;
+                        feedmultiply = 100;
+                        lcd_clearstatus();
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
                             volume_to_filament_length[e] = 1.0;

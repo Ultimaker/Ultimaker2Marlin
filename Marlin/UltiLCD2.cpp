@@ -360,6 +360,11 @@ void lcd_setstatus(const char* message)
     strncpy(lcd_status_message, message, LCD_CHARS_PER_LINE);
 }
 
+void lcd_clearstatus()
+{
+    *lcd_status_message = '\0';
+}
+
 const char * lcd_getstatus()
 {
     return lcd_status_message;
