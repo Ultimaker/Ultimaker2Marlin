@@ -3,7 +3,7 @@
 
 #include "cardreader.h"
 
-#define LCD_CACHE_COUNT 6
+#define LCD_CACHE_COUNT 8
 #define LCD_DETAIL_CACHE_SIZE (5+4*EXTRUDERS)
 #define LCD_CACHE_SIZE (1 + (2 + LONG_FILENAME_LENGTH) * LCD_CACHE_COUNT + LCD_DETAIL_CACHE_SIZE)
 extern uint8_t lcd_cache[LCD_CACHE_SIZE];

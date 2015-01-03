@@ -20,6 +20,7 @@
 #define STATE_NONE 0
 #define STATE_SELECTED 4
 #define STATE_ACTIVE 8
+#define STATE_DISABLED 16
 
 // text alignment
 #define ALIGN_TOP 1
@@ -38,7 +39,7 @@ extern uint8_t ui_mode;
 
 struct menuoption_t;
 
-typedef void (*optionCallback_t) (menuoption_t **option);
+typedef void (*optionCallback_t) (menuoption_t &option, char *detail, uint8_t n);
 
 struct menuoption_t {
     char             *title;
@@ -50,7 +51,8 @@ struct menuoption_t {
     uint8_t           state;
     uint8_t           textalign;
 
-    bool isActive() { return (state & STATE_ACTIVE) == STATE_ACTIVE; }
+    bool isActive()  { return (state & STATE_ACTIVE) == STATE_ACTIVE; }
+    bool isEnabled() { return !((state & STATE_DISABLED) == STATE_DISABLED); }
 };
 
 void tinkergnome_init();

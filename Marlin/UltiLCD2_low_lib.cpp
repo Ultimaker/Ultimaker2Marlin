@@ -235,7 +235,18 @@ void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b)
     led_b = b;
 }
 
+// norpchen
+// the baseline ASCII->font table offset.  Was 32 (space) but shifted down by four as I added four custom characters to the font
+// had to add them to the start of the table, because we're using char, which are signed and top out at 128, which is already the max table value.
+#define FONT_BASE_CHAR 29
+
 static const uint8_t lcd_font_7x5[] PROGMEM = {
+	0x11, 0x15, 0x0A, 0x00, 0x00,       // ^3 " CUBED_SYMBOL "
+	0x19, 0x15, 0x12, 0x00, 0x00,       // ^2 " SQUARED_SYMBOL "
+	// 0x02, 0x05, 0x72, 0x88, 0x88,    	// deg C  " DEGREE_C_SYMBOL "
+	0x06, 0x09, 0x09, 0x06, 0x00,
+//	0x30, 0x0C, 0x43, 0xA8, 0x90,		//s " PER_SECOND_SYMBOL "   -- fugly, dont use
+
     0x00, 0x00, 0x00, 0x00, 0x00,// (space)
 	0x00, 0x00, 0x5F, 0x00, 0x00,// !
 	0x00, 0x07, 0x00, 0x07, 0x00,// "
@@ -342,7 +353,7 @@ void lcd_lib_draw_string(uint8_t x, uint8_t y, const char* str)
     uint8_t yshift2 = 8 - yshift;
     while(*str)
     {
-        const uint8_t* src = lcd_font_7x5 + (*str - ' ') * 5;
+        const uint8_t* src = lcd_font_7x5 + (*str - FONT_BASE_CHAR) * 5;
 
         *dst = (*dst) | pgm_read_byte(src++) << yshift; dst++;
         *dst = (*dst) | pgm_read_byte(src++) << yshift; dst++;
@@ -353,7 +364,7 @@ void lcd_lib_draw_string(uint8_t x, uint8_t y, const char* str)
 
         if (yshift != 0)
         {
-            src = lcd_font_7x5 + (*str - ' ') * 5;
+            src = lcd_font_7x5 + (*str - FONT_BASE_CHAR) * 5;
             *dst2 = (*dst2) | pgm_read_byte(src++) >> yshift2; dst2++;
             *dst2 = (*dst2) | pgm_read_byte(src++) >> yshift2; dst2++;
             *dst2 = (*dst2) | pgm_read_byte(src++) >> yshift2; dst2++;
@@ -373,7 +384,7 @@ void lcd_lib_clear_string(uint8_t x, uint8_t y, const char* str)
     uint8_t yshift2 = 8 - yshift;
     while(*str)
     {
-        const uint8_t* src = lcd_font_7x5 + (*str - ' ') * 5;
+        const uint8_t* src = lcd_font_7x5 + (*str - FONT_BASE_CHAR) * 5;
 
         *dst = (*dst) &~(pgm_read_byte(src++) << yshift); dst++;
         *dst = (*dst) &~(pgm_read_byte(src++) << yshift); dst++;
@@ -384,7 +395,7 @@ void lcd_lib_clear_string(uint8_t x, uint8_t y, const char* str)
 
         if (yshift != 0)
         {
-            src = lcd_font_7x5 + (*str - ' ') * 5;
+            src = lcd_font_7x5 + (*str - FONT_BASE_CHAR) * 5;
             *dst2 = (*dst2) &~(pgm_read_byte(src++) >> yshift2); dst2++;
             *dst2 = (*dst2) &~(pgm_read_byte(src++) >> yshift2); dst2++;
             *dst2 = (*dst2) &~(pgm_read_byte(src++) >> yshift2); dst2++;
@@ -415,7 +426,7 @@ void lcd_lib_draw_stringP(uint8_t x, uint8_t y, const char* pstr)
 
     for(char c = pgm_read_byte(pstr); c; c = pgm_read_byte(++pstr))
     {
-        const uint8_t* src = lcd_font_7x5 + (c - ' ') * 5;
+        const uint8_t* src = lcd_font_7x5 + (c - FONT_BASE_CHAR) * 5;
 
         *dst = (*dst) | pgm_read_byte(src++) << yshift; dst++;
         *dst = (*dst) | pgm_read_byte(src++) << yshift; dst++;
@@ -426,7 +437,7 @@ void lcd_lib_draw_stringP(uint8_t x, uint8_t y, const char* pstr)
 
         if (yshift != 0)
         {
-            src = lcd_font_7x5 + (c - ' ') * 5;
+            src = lcd_font_7x5 + (c - FONT_BASE_CHAR) * 5;
             *dst2 = (*dst2) | pgm_read_byte(src++) >> yshift2; dst2++;
             *dst2 = (*dst2) | pgm_read_byte(src++) >> yshift2; dst2++;
             *dst2 = (*dst2) | pgm_read_byte(src++) >> yshift2; dst2++;
@@ -446,7 +457,7 @@ void lcd_lib_clear_stringP(uint8_t x, uint8_t y, const char* pstr)
 
     for(char c = pgm_read_byte(pstr); c; c = pgm_read_byte(++pstr))
     {
-        const uint8_t* src = lcd_font_7x5 + (c - ' ') * 5;
+        const uint8_t* src = lcd_font_7x5 + (c - FONT_BASE_CHAR) * 5;
 
         *dst = (*dst) &~(pgm_read_byte(src++) << yshift); dst++;
         *dst = (*dst) &~(pgm_read_byte(src++) << yshift); dst++;
@@ -457,7 +468,7 @@ void lcd_lib_clear_stringP(uint8_t x, uint8_t y, const char* pstr)
 
         if (yshift != 0)
         {
-            src = lcd_font_7x5 + (c - ' ') * 5;
+            src = lcd_font_7x5 + (c - FONT_BASE_CHAR) * 5;
             *dst2 = (*dst2) &~(pgm_read_byte(src++) >> yshift2); dst2++;
             *dst2 = (*dst2) &~(pgm_read_byte(src++) >> yshift2); dst2++;
             *dst2 = (*dst2) &~(pgm_read_byte(src++) >> yshift2); dst2++;
@@ -866,7 +877,7 @@ char* int_to_time_string(unsigned long i, char* temp_buffer)
     */
 }
 
-char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
+char* float_to_string(float f, char* temp_buffer, const char* p_postfix, uint8_t decimals)
 {
     int32_t i = f * 100.0 + 0.5;
     char* c = temp_buffer;
@@ -880,9 +891,14 @@ char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
     if (i >= 1000)
         *c++ = ((i/1000)%10)+'0';
     *c++ = ((i/100)%10)+'0';
-    *c++ = '.';
-    *c++ = ((i/10)%10)+'0';
-    *c++ = ((i)%10)+'0';
+    if (decimals) {
+        *c++ = '.';
+        *c++ = ((i/10)%10)+'0';
+        if (--decimals)
+        {
+            *c++ = ((i)%10)+'0';
+        }
+    }
     *c = '\0';
     if (p_postfix)
     {

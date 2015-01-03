@@ -17,6 +17,7 @@
 // coefficient for the exponential moving average
 #define ALPHA 0.05f
 #define ONE_MINUS_ALPHA 0.95f
+#define LCD_CHARS_PER_LINE 20
 
 unsigned long lastSerialCommandTime;
 bool serialScreenShown;
@@ -24,6 +25,7 @@ uint8_t led_brightness_level = 100;
 uint8_t led_mode = LED_MODE_ALWAYS_ON;
 float dsp_temperature[EXTRUDERS] = { 20.0 };
 float dsp_temperature_bed = 20.0;
+char lcd_status_message[LCD_CHARS_PER_LINE+1];
 
 //#define SPECIAL_STARTUP
 
@@ -46,6 +48,7 @@ void lcd_init()
     lcd_material_read_current_material();
 
     // initialize menu stack and show start animation
+    *lcd_status_message = 0;
     lcd_add_menu(lcd_menu_main, ENCODER_NO_SELECTION);
     lcd_add_menu(lcd_menu_startup, ENCODER_NO_SELECTION);
     analogWrite(LED_PIN, 0);
@@ -350,6 +353,16 @@ static void lcd_menu_breakout()
 void lcd_buttons_update()
 {
     lcd_lib_buttons_update_interrupt();
+}
+
+void lcd_setstatus(const char* message)
+{
+    strncpy(lcd_status_message, message, LCD_CHARS_PER_LINE);
+}
+
+const char * lcd_getstatus()
+{
+    return lcd_status_message;
 }
 
 #endif//ENABLE_ULTILCD2

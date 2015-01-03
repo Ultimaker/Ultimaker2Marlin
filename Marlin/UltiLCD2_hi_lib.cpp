@@ -37,6 +37,7 @@ static void lcd_start_menu(bool beep)
 
 void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 {
+    lcd_start_menu(false);
     menuStack.push(menu_t(nextMenu, newEncoderPos));
 }
 
@@ -124,8 +125,8 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     {
         if (IS_SELECTED_MAIN(2))
         {
-            lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-2, 125-2, BOTTOM_MENU_YPOS+8);
-            lcd_lib_set(3+3, BOTTOM_MENU_YPOS-1, 125-3, BOTTOM_MENU_YPOS+7);
+            lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-1, 125-2, BOTTOM_MENU_YPOS+7);
+            lcd_lib_set(3+3, BOTTOM_MENU_YPOS, 125-3, BOTTOM_MENU_YPOS+6);
             lcd_lib_clear_string_centerP(BOTTOM_MENU_YPOS, bottom);
         }else{
             lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, bottom);
@@ -136,7 +137,7 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
 void lcd_basic_screen()
 {
     lcd_lib_clear();
-    lcd_lib_draw_hline(3, 124, 50);
+    lcd_lib_draw_hline(3, 124, 51);
 }
 
 void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const char* cancelButtonText)
@@ -159,8 +160,8 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     if (!cancelButtonText) cancelButtonText = PSTR("CANCEL");
     if (IS_SELECTED_MAIN(0))
     {
-        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-2, 125-2, BOTTOM_MENU_YPOS+8);
-        lcd_lib_set(3+3, BOTTOM_MENU_YPOS-1, 125-3, BOTTOM_MENU_YPOS+7);
+        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-1, 125-2, BOTTOM_MENU_YPOS+7);
+        lcd_lib_set(3+3, BOTTOM_MENU_YPOS, 125-3, BOTTOM_MENU_YPOS+6);
         lcd_lib_clear_stringP(65 - strlen_P(cancelButtonText) * 3, BOTTOM_MENU_YPOS, cancelButtonText);
     }else{
         lcd_lib_draw_stringP(65 - strlen_P(cancelButtonText) * 3, BOTTOM_MENU_YPOS, cancelButtonText);
@@ -193,16 +194,16 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
 
     if (IS_SELECTED_MAIN(0))
     {
-        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-2, 64-2, BOTTOM_MENU_YPOS+8);
-        lcd_lib_set(3+3, BOTTOM_MENU_YPOS-1, 64-3, BOTTOM_MENU_YPOS+7);
+        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-1, 64-2, BOTTOM_MENU_YPOS+7);
+        lcd_lib_set(3+3, BOTTOM_MENU_YPOS, 64-3, BOTTOM_MENU_YPOS+6);
         lcd_lib_clear_stringP(35 - strlen_P(AButtonText) * 3, BOTTOM_MENU_YPOS, AButtonText);
     }else{
         lcd_lib_draw_stringP(35 - strlen_P(AButtonText) * 3, BOTTOM_MENU_YPOS, AButtonText);
     }
     if (IS_SELECTED_MAIN(1))
     {
-        lcd_lib_draw_box(64+2, BOTTOM_MENU_YPOS-2, 64+60-2, BOTTOM_MENU_YPOS+8);
-        lcd_lib_set(64+3, BOTTOM_MENU_YPOS-1, 64+60-3, BOTTOM_MENU_YPOS+7);
+        lcd_lib_draw_box(64+2, BOTTOM_MENU_YPOS-1, 64+60-2, BOTTOM_MENU_YPOS+7);
+        lcd_lib_set(64+3, BOTTOM_MENU_YPOS, 64+60-3, BOTTOM_MENU_YPOS+6);
         lcd_lib_clear_stringP(64+31 - strlen_P(BButtonText) * 3, BOTTOM_MENU_YPOS, BButtonText);
     }else{
         lcd_lib_draw_stringP(64+31 - strlen_P(BButtonText) * 3, BOTTOM_MENU_YPOS, BButtonText);
@@ -211,7 +212,7 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
 
 void lcd_progressbar(uint8_t progress)
 {
-    lcd_lib_draw_box(3, 38, 124, 46);
+    lcd_lib_draw_box(3, 39, 124, 47);
 
     for(uint8_t n=0; n<progress;n++)
     {

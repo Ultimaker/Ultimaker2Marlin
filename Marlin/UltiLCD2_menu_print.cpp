@@ -393,7 +393,7 @@ void lcd_menu_print_select()
 #if TEMP_SENSOR_BED != 0
                             target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
 #endif
-                            fanSpeedPercent = max(fanSpeedPercent, material[0].fan_speed);
+                            fanSpeedPercent = max(fanSpeedPercent, material[e].fan_speed);
                             volume_to_filament_length[e] = 1.0 / (M_PI * (material[e].diameter / 2.0) * (material[e].diameter / 2.0));
                             extrudemultiply[e] = material[e].flow;
                         }
@@ -456,11 +456,12 @@ static void lcd_menu_print_heatup()
             if (ready)
             {
                 doStartPrint();
+                lcd_remove_menu();
                 if (ui_mode & UI_MODE_TINKERGNOME)
                 {
-                    lcd_replace_menu(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(3));
+                    lcd_add_menu(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(2));
                 }else{
-                    lcd_replace_menu(lcd_menu_print_printing);
+                    lcd_add_menu(lcd_menu_print_printing, ENCODER_NO_SELECTION);
                 }
             }
         }

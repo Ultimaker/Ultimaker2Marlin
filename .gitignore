@@ -16,3 +16,4 @@ Marlin/Visual Micro/Configuration.Debug.vmps.xml
 Marlin/_Ultimaker2Dual
 Marlin/_Ultimaker2
 *.bak
+*.patch
