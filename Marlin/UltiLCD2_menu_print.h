@@ -12,6 +12,9 @@ void lcd_menu_print_select();
 void lcd_clear_cache();
 void doCancelPrint();
 
+bool isPauseRequested();
+void lcd_menu_print_pause();
+
 void lcd_menu_print_abort();
 void lcd_menu_print_tune();
 void lcd_menu_print_tune_heatup_nozzle0();
