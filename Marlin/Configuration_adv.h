@@ -355,6 +355,20 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 #if TEMP_SENSOR_0 == -2
   #define HEATER_0_USES_MAX6675
 #endif
+#if TEMP_SENSOR_0 == 21
+  #define HEATER_0_USES_ADS101X
+#endif
+#if TEMP_SENSOR_1 == 21 && EXTRUDERS > 1
+  #define HEATER_1_USES_ADS101X
+#endif
+#if TEMP_SENSOR_2 == 21 && EXTRUDERS > 2
+  #define HEATER_2_USES_ADS101X
+  #error ADS101X currently cannot be used to measure heater 2
+#endif
+#if TEMP_SENSOR_BED == 21
+  #define BED_USES_ADS101X
+  #error ADS101X currently cannot be used to measure the heated bed
+#endif
 #if TEMP_SENSOR_0 == 0
   #undef HEATER_0_MINTEMP
   #undef HEATER_0_MAXTEMP

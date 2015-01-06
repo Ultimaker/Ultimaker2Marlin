@@ -35,8 +35,9 @@
 #include "UltiLCD2.h"
 #include "temperature.h"
 #include "watchdog.h"
+#include "temperature_ADS101X.h"
+#include "fan_driver.h"
 #include "Sd2Card.h"
-
 
 //===========================================================================
 //=============================public variables============================
@@ -548,24 +549,19 @@ void manage_heater()
     extruder_autofan_last_check = millis();
   }
   #endif
-
+  // which fan pins need to be turned on?
+  uint8_t fanState = 0;
+  for(uint8_t e=0; e<EXTRUDERS; e++)
   {
-    //For the UM2 the head fan is connected to PJ6, which does not have an Arduino PIN definition. So use direct register access.
-    DDRJ |= _BV(6);
-    if (current_temperature[0] > EXTRUDER_AUTO_FAN_TEMPERATURE
-#if EXTRUDERS > 1
-        || current_temperature[1] > EXTRUDER_AUTO_FAN_TEMPERATURE
-#endif
-#if EXTRUDERS > 2
-        || current_temperature[2] > EXTRUDER_AUTO_FAN_TEMPERATURE
-#endif
-        )
-    {
-        PORTJ |= _BV(6);
-    }else{
-        PORTJ &=~_BV(6);
-    }
+    if (current_temperature[e] > EXTRUDER_AUTO_FAN_TEMPERATURE)
+      fanState |= 1;
+    if (current_temperature[e] < EXTRUDER_AUTO_FAN_TEMPERATURE - 5)
+      fanState |= 2;
   }
+  if (fanState & 1)
+    setHotendCoolingFanSpeed(255);
+  else if (fanState & 2)
+    setHotendCoolingFanSpeed(0);
 
   #ifndef PIDTEMPBED
   if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
@@ -748,6 +744,10 @@ static void updateTemperaturesFromRawValues()
 
 void tp_init()
 {
+#if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+    initTemperatureADS101X();
+#endif
+    
 #if (MOTHERBOARD == 80) && ((TEMP_SENSOR_0==-1)||(TEMP_SENSOR_1==-1)||(TEMP_SENSOR_2==-1)||(TEMP_SENSOR_BED==-1))
   //disable RUMBA JTAG in case the thermocouple extension is plugged on top of JTAG connector
   MCUCR=(1<<JTD);
@@ -1110,6 +1110,9 @@ ISR(TIMER0_COMPB_vect)
   #if HEATER_BED_PIN > -1
   static unsigned char soft_pwm_b;
   #endif
+  #if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+  static uint8_t ads101x_state = 0;
+  #endif
 
   if(pwm_count == 0){
     soft_pwm_0 = soft_pwm[0];
@@ -1148,9 +1151,48 @@ ISR(TIMER0_COMPB_vect)
   pwm_count += (1 << SOFT_PWM_SCALE);
   pwm_count &= 0x7f;
 
+  #if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+  if (temperatureADS101XReady())
+  {
+    switch(ads101x_state)
+    {
+    case 0:
+      temperatureADS101XSetupAIN0();
+      ads101x_state = 1;
+      break;
+    case 1:
+      //Make sure the ADS101X has time to get a sample.
+      ads101x_state = 2;
+      break;
+    case 2:
+      temperatureADS101XRequestResult();
+      temperatureADS101XSetupAIN1();
+      ads101x_state = 3;
+      break;
+    case 3:
+      #ifdef HEATER_0_USES_ADS101X
+      raw_temp_0_value = long(temperatureADS101XGetResult()) * OVERSAMPLENR;
+      #endif
+      ads101x_state = 4;
+      break;
+    case 4:
+      temperatureADS101XRequestResult();
+      ads101x_state = 5;
+      break;
+    case 5:
+      #ifdef HEATER_1_USES_ADS101X
+      raw_temp_1_value = long(temperatureADS101XGetResult()) * OVERSAMPLENR;
+      #endif
+      ads101x_state = 6;
+      break;
+    }
+  }
+  #endif
+
   switch(temp_state) {
     case 1: // Measure TEMP_0
-      #if defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
+      #ifdef HEATER_0_USES_ADS101X
+      #elif defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
         raw_temp_0_value += ADC;
       #endif
       // Prepare TEMP_BED
@@ -1184,7 +1226,8 @@ ISR(TIMER0_COMPB_vect)
       temp_state = 3;
       break;
     case 3: // Measure TEMP_1
-      #if defined(TEMP_1_PIN) && (TEMP_1_PIN > -1) && EXTRUDERS > 1
+      #ifdef HEATER_1_USES_ADS101X
+      #elif defined(TEMP_1_PIN) && (TEMP_1_PIN > -1) && EXTRUDERS > 1
         raw_temp_1_value += ADC;
       #endif
       // Prepare TEMP_2
@@ -1253,6 +1296,9 @@ ISR(TIMER0_COMPB_vect)
     raw_temp_1_value = 0;
     raw_temp_2_value = 0;
     raw_temp_bed_value = 0;
+    #if defined(HEATER_0_USES_ADS101X) || defined(HEATER_1_USES_ADS101X) || defined(HEATER_2_USES_ADS101X) || defined(BED_USES_ADS101X)
+    ads101x_state = 0;
+    #endif
 
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
     if(current_temperature_raw[0] <= maxttemp_raw[0]) {

@@ -59,6 +59,7 @@
 #include "ultralcd.h"
 #include "UltiLCD2.h"
 #include "language.h"
+#include "fan_driver.h"
 
 //===========================================================================
 //=============================public variables ============================
@@ -88,6 +89,11 @@ float autotemp_max=250;
 float autotemp_min=210;
 float autotemp_factor=0.1;
 bool autotemp_enabled=false;
+#endif
+
+#ifdef ENABLE_BED_LEVELING_PROBE
+// this holds the required transform to compensate for bed level
+float planner_bed_leveling_factor[2];
 #endif
 
 //===========================================================================
@@ -492,11 +498,7 @@ void check_axes_activity()
       fan_kick_end = 0;
     }
   #endif//FAN_KICKSTART_TIME
-  #ifdef FAN_SOFT_PWM
-  fanSpeedSoftPwm = tail_fan_speed;
-  #else
-  analogWrite(FAN_PIN,tail_fan_speed);
-  #endif//!FAN_SOFT_PWM
+  setCoolingFanSpeed(tail_fan_speed);
 #endif//FAN_PIN > -1
 #ifdef AUTOTEMP
   getHighESpeed();
@@ -539,7 +541,16 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   long target[4];
   target[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   target[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
+#ifdef ENABLE_BED_LEVELING_PROBE
+  float bed_leveling_factor = 0.0;
+  if (z < CONFIG_FALL_OFF_BED_LEVELING_HEIGHT)
+    bed_leveling_factor = 1.0;
+  else if (z < CONFIG_MAX_BED_LEVELING_HEIGHT)
+    bed_leveling_factor = (z - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT) / (CONFIG_MAX_BED_LEVELING_HEIGHT - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT);
+  target[Z_AXIS] = lround((z+bed_leveling_factor*(x*planner_bed_leveling_factor[X_AXIS]+y*planner_bed_leveling_factor[Y_AXIS]))*axis_steps_per_unit[Z_AXIS]);
+#else
   target[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
+#endif
   target[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]*volume_to_filament_length[extruder]);
 
   #ifdef PREVENT_DANGEROUS_EXTRUDE
@@ -928,7 +939,16 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
 {
   position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   position[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
+#ifdef ENABLE_BED_LEVELING_PROBE
+  float bed_leveling_factor = 0.0;
+  if (z < CONFIG_FALL_OFF_BED_LEVELING_HEIGHT)
+    bed_leveling_factor = 1.0;
+  else if (z < CONFIG_MAX_BED_LEVELING_HEIGHT)
+    bed_leveling_factor = (z - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT) / (CONFIG_MAX_BED_LEVELING_HEIGHT - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT);
+  position[Z_AXIS] = lround((z+bed_leveling_factor*(x*planner_bed_leveling_factor[X_AXIS]+y*planner_bed_leveling_factor[Y_AXIS]))*axis_steps_per_unit[Z_AXIS]);
+#else
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
+#endif
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]*volume_to_filament_length[active_extruder]);
   st_set_position(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS]);
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
