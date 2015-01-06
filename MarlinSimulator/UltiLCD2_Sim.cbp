@@ -32,8 +32,9 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-D__AVR_ATmega2560__=1" />
-			<Add option="-DARDUINO=100" />
+			<Add option="-DARDUINO=106" />
 			<Add option="-DF_CPU=16000000" />
+			<Add option="-DEXTRUDERS=1" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="C:/Software/SecretMarlin/UltiLCD2_Sim/" />
@@ -66,6 +67,7 @@
 		<Unit filename="../Marlin/SdInfo.h" />
 		<Unit filename="../Marlin/SdVolume.cpp" />
 		<Unit filename="../Marlin/SdVolume.h" />
+		<Unit filename="../Marlin/StackList.h" />
 		<Unit filename="../Marlin/UltiLCD2.cpp" />
 		<Unit filename="../Marlin/UltiLCD2.h" />
 		<Unit filename="../Marlin/UltiLCD2_gfx.cpp" />

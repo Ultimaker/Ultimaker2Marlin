@@ -23,7 +23,7 @@
 #define LCD_DETAIL_CACHE_START ((LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))+1)
 // #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
-#define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
+// #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 #define LCD_CACHE_FILENAME(n) ((char*)&lcd_cache[2*LCD_CACHE_COUNT + (n) * LONG_FILENAME_LENGTH])
 
 //#define LED_NORMAL() lcd_lib_led_color(48,48,60)
@@ -61,18 +61,23 @@ const uint8_t thermometerGfx[] PROGMEM = {
 };
 
 const uint8_t bedTempGfx[] PROGMEM = {
-    5, 8, //size
-    0x3E, 0x22, 0x54, 0x22, 0x3E
+    7, 8, //size
+    0x40, 0x4A, 0x55, 0x40, 0x4A, 0x55, 0x40
 };
 
-const uint8_t feedrateGfx[] PROGMEM = {
-    5, 8, //size
-    0x0F, 0x05, 0x79, 0x28, 0x58
+const uint8_t flowGfx[] PROGMEM = {
+    7, 8, //size
+    0x07, 0x08, 0x13, 0x7F, 0x13, 0x08, 0x07
 };
 
-const uint8_t clockGfx[] PROGMEM = {
-    5, 8, //size
-    0x1C, 0x22, 0x2A, 0x26, 0x1C
+const uint8_t clockInverseGfx[] PROGMEM = {
+    7, 8, //size
+    0x1C, 0x3E, 0x7F, 0x71, 0x77, 0x3E, 0x1C
+};
+
+const uint8_t pauseGfx[] PROGMEM = {
+    7, 8, //size
+    0x7F, 0x5D, 0x49, 0x41, 0x49, 0x5D, 0x7F
 };
 
 const uint8_t degreeGfx[] PROGMEM = {
@@ -80,19 +85,14 @@ const uint8_t degreeGfx[] PROGMEM = {
     0x06, 0x09, 0x09, 0x06, 0x00
 };
 
-//const uint8_t fanGfx[] PROGMEM = {
-//    7, 8, //size
-//    0xE0, 0x77, 0x0f, 0x08, 0x18, 0x18, 0x10
-//};
-
-const uint8_t fanGfx[] PROGMEM = {
-    6, 8, //size
-    0x63, 0x77, 0x00, 0x08, 0x18, 0x18
+const uint8_t fan1Gfx[] PROGMEM = {
+    5, 8, //size
+    0x26, 0x34, 0x08, 0x16, 0x32
 };
 
-const uint8_t flowGfx[] PROGMEM = {
-    7, 8, //size
-    0x14, 0x3E, 0x63, 0x22, 0x63, 0x3E, 0x14
+const uint8_t speedGfx[] PROGMEM = {
+    6, 8, //size
+    0x22, 0x14, 0x08, 0x22, 0x14, 0x08
 };
 
 static void lcd_print_tune(menuoption_t &opt, char *detail, uint8_t n);
@@ -150,6 +150,31 @@ void tinkergnome_init()
         ui_mode = UI_MODE_TINKERGNOME;
     else
         ui_mode = UI_MODE_STANDARD;
+}
+
+// draws a bargraph
+void lcd_lib_draw_bargraph( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, float value )
+{
+	lcd_lib_draw_box(x0, y0, x1, y1);
+	value = constrain(value, 0.0, 1.0);
+    // draw scale
+    float segment = float(abs(x1-x0))/10;
+	uint8_t ymin = y0+1;
+	uint8_t ymax = y0+(y1-y0)/2-1;
+    for (uint8_t i=1; i<10; ++i)
+    {
+        lcd_lib_draw_vline(x0 + i*segment, ymin, ymax);
+    }
+
+    // draw graph
+	if (value<0.01) return;
+	uint8_t xmax = value*abs(x1-x0)+x0+0.5;
+	ymin = ymax+2;
+	ymax = y1-1;
+    for (uint8_t xpos=x0+1; xpos<xmax; xpos+=3)
+    {
+        lcd_lib_set (xpos, ymin, xpos+1, ymax);
+    }
 }
 
 
@@ -405,9 +430,9 @@ static void lcd_print_tune(menuoption_t &opt, char *detail, uint8_t n)
 static void lcd_print_abort(menuoption_t &opt, char *detail, uint8_t n)
 {
     if (opt.state & STATE_ACTIVE) {
-    // switch to abort menu
+        // switch to abort menu
         opt.state = STATE_NONE;
-        lcd_change_to_menu(lcd_menu_print_abort, SCROLL_MENU_ITEM_POS(1));
+        lcd_change_to_menu(lcd_menu_print_abort, MAIN_MENU_ITEM_POS(1));
     }
     if (detail) {
         *detail = 0;
@@ -437,12 +462,13 @@ static void lcd_print_tune_fan(menuoption_t &opt, char *detail, uint8_t n)
     }
     if (detail) {
         strncpy_P(detail, PSTR("Fan"), n);
+        lcd_lib_draw_bargraph(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_WIDTH, 5, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT, 11, float(fanSpeed)/255);
     }
 }
 
 static void lcd_print_tune_nozzle0(menuoption_t &opt, char *detail, uint8_t n)
 {
-    if (opt.isActive() && LCD_DETAIL_CACHE_MATERIAL(0) > 0 && target_temperature[0]>0) {
+    if (opt.isActive() && target_temperature[0]>0) {
         lcd_tune_temperature(opt.title, target_temperature[0], 0, HEATER_0_MAXTEMP - 15, PSTR(DEGREE_SYMBOL));
     }
     if (detail) {
@@ -452,7 +478,7 @@ static void lcd_print_tune_nozzle0(menuoption_t &opt, char *detail, uint8_t n)
 
 static void lcd_print_flow_nozzle0(menuoption_t &opt, char *detail, uint8_t n)
 {
-    if (opt.isActive() && LCD_DETAIL_CACHE_MATERIAL(0) > 0 && target_temperature[0]>0) {
+    if (opt.isActive() && target_temperature[0]>0) {
         lcd_tune_value(opt.title, extrudemultiply[0], 0, 999, PSTR("%"));
     }
     if (detail) {
@@ -470,7 +496,7 @@ static void lcd_print_flow_nozzle0(menuoption_t &opt, char *detail, uint8_t n)
 #if EXTRUDERS > 1
 static void lcd_print_tune_nozzle1(menuoption_t &opt, char *detail, uint8_t n)
 {
-    if (opt.isActive() && LCD_DETAIL_CACHE_MATERIAL(1) > 0 && target_temperature[1]>0)
+    if (opt.isActive() && target_temperature[1]>0)
     {
         lcd_tune_temperature(opt.title, target_temperature[1], 0, HEATER_1_MAXTEMP - 15, PSTR(DEGREE_SYMBOL));
     }
@@ -481,7 +507,7 @@ static void lcd_print_tune_nozzle1(menuoption_t &opt, char *detail, uint8_t n)
 
 static void lcd_print_flow_nozzle1(menuoption_t &opt, char *detail, uint8_t n)
 {
-    if (opt.isActive() && LCD_DETAIL_CACHE_MATERIAL(1) > 0 && target_temperature[1]>0)
+    if (opt.isActive() && target_temperature[1]>0)
     {
         lcd_tune_value(opt.title, extrudemultiply[1], 0, 999, PSTR("%"));
     }
@@ -614,7 +640,7 @@ void lcd_menu_print_heatup_tg()
 #endif
         for(uint8_t e=0; e<EXTRUDERS; e++)
         {
-            if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
+            if (target_temperature[e] > 0)
                 continue;
             target_temperature[e] = material[e].temperature;
         }
@@ -631,7 +657,7 @@ void lcd_menu_print_heatup_tg()
                 lcd_reset_menu_options();
                 doStartPrint();
                 lcd_remove_menu();
-                lcd_add_menu(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(2));
+                lcd_add_menu(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(0));
             }
         }
 #if TEMP_SENSOR_BED != 0
@@ -641,7 +667,7 @@ void lcd_menu_print_heatup_tg()
     uint8_t progress = 125;
     for(uint8_t e=0; e<EXTRUDERS; e++)
     {
-        if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] < 1)
+        if (target_temperature[e] < 1)
             continue;
         if (current_temperature[e] > 20)
             progress = min(progress, (current_temperature[e] - 20) * 125 / (target_temperature[e] - 20 - TEMP_WINDOW));
@@ -691,8 +717,7 @@ void lcd_menu_print_heatup_tg()
 //    lcd_lib_draw_string_right(ypos, buffer);
     if (!heatingOptions[3].isActive())
     {
-
-        if ((LCD_DETAIL_CACHE_MATERIAL(1) > 0) && (target_temperature[1] > 0))
+        if (target_temperature[1] > 0)
         {
             heatingOptions[3].state &= ~STATE_DISABLED;
         }
@@ -708,9 +733,6 @@ void lcd_menu_print_heatup_tg()
     ypos -= 9;
 #endif // EXTRUDERS
     // temperature first extruder
-
-//    int_to_string(target_temperature[0], buffer, PSTR("C"));
-//    lcd_lib_draw_string_right(ypos, buffer);
     if (!heatingOptions[2].isActive())
     {
         if (target_temperature[0] > 0)
@@ -735,18 +757,51 @@ void lcd_menu_print_heatup_tg()
     lcd_process_menu_options(heatingOptions, sizeof(heatingOptions)/sizeof(heatingOptions[0]));
 }
 
+
+unsigned long predictTimeLeft()
+{
+    float printTimeMs = (millis() - starttime);
+    float printTimeSec = printTimeMs / 1000L;
+    float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
+    static float totalTimeSmoothSec;
+    totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
+    if (isinf(totalTimeSmoothSec))
+        totalTimeSmoothSec = totalTimeMs;
+
+    if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
+    {
+        totalTimeSmoothSec = totalTimeMs / 1000;
+        return 0;
+    }else{
+        unsigned long totalTimeSec;
+        if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
+        {
+            float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
+            if (f > 1.0)
+                f = 1.0;
+            totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
+        }else{
+            totalTimeSec = totalTimeSmoothSec;
+        }
+
+        return (printTimeSec > totalTimeSec) ? 1 : totalTimeSec - printTimeSec;
+    }
+}
+
 void lcd_menu_printing_tg()
 {
     static block_t *lastBlock = 0;
-
 
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
     uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
+    unsigned long timeLeftSec;
     char buffer[16];
 
-//    float PI_R2 = 2.0306; // =((PI*((material[0].diameter/2)*(material[0].diameter/2))));
+    if (isPauseRequested()) {
+        lcd_menu_print_pause();
+    }
 
     switch(printing_state)
     {
@@ -764,24 +819,16 @@ void lcd_menu_printing_tg()
 
     //                float block_time = current_block->millimeters / current_block->nominal_speed;
     //                float mm_e = current_block->steps_e / axis_steps_per_unit[E_AXIS];
+
+                    // calculate live extrusion rate from e speed and filament area
                     float speed_e = current_block->steps_e / axis_steps_per_unit[E_AXIS] / current_block->millimeters * current_block->nominal_speed;
                     float volume = speed_e / volume_to_filament_length[current_block->active_extruder];
 
                     if (speed_e>0 && speed_e<15.0)
                     {
-                        // calculate live extrusion rate from e speed and filament area
-                        // float area = PI*((material[current_block->active_extruder].diameter/2)*(material[current_block->active_extruder].diameter/2));
                         e_smoothed_speed[current_block->active_extruder] = (e_smoothed_speed[current_block->active_extruder]*LOW_PASS_SMOOTHING) + ( volume *(1.0-LOW_PASS_SMOOTHING));
                     }
                 }
-            }
-            else {
-                // no current block -- we're paused, buffer has run out, ISR has not yet advanced to the next block, or we're not printing
-//                xy_speed *= LOW_PASS_SMOOTHING;
-//                for (uint8_t i = 0; i < EXTRUDERS; ++i)
-//                {
-//                    e_smoothed_speed[i] *= LOW_PASS_SMOOTHING;
-//                }
             }
         }
 
@@ -793,25 +840,65 @@ void lcd_menu_printing_tg()
         {
             lcd_lib_draw_string_left(5, card.longFilename);
         }
-        // draw progress string right aligned
-        int_to_string(progress*100/124, buffer, PSTR("%"));
-        lcd_lib_draw_string_right(15, buffer);
-        lcd_progressline(progress);
+
+        if (card.pause)
+        {
+            lcd_lib_draw_gfx(54, 15, pauseGfx);
+            lcd_lib_draw_stringP(64, 15, (movesplanned() < 1) ? PSTR("Paused...") : PSTR("Pausing..."));
+        }
+        else
+        {
+            // time left
+            timeLeftSec = predictTimeLeft();
+            if (timeLeftSec > 0)
+            {
+                lcd_lib_draw_gfx(54, 15, clockInverseGfx);
+                int_to_time_string_tg(timeLeftSec, buffer);
+                lcd_lib_draw_string(64, 15, buffer);
+
+                // draw progress string right aligned
+                int_to_string(progress*100/124, buffer, PSTR("%"));
+                lcd_lib_draw_string_right(15, buffer);
+                lcd_progressline(progress);
+            }
+        }
+
         break;
     case PRINT_STATE_WAIT_USER:
         lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
-        lcd_lib_draw_string_left(5, PSTR("Paused..."));
-        lcd_lib_draw_string_centerP(20, PSTR("Press button"));
-        lcd_lib_draw_string_centerP(30, PSTR("to continue"));
-        return;
+        lcd_reset_menu_options();
+        // lcd_lib_draw_string_left(5, PSTR("Paused..."));
+        lcd_lib_draw_string_left(5, card.longFilename);
+        lcd_lib_draw_gfx(54, 15, pauseGfx);
+        if (movesplanned() < 1)
+        {
+            lcd_lib_draw_stringP(64, 15, PSTR("Paused..."));
+            lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Click to continue..."));
+        }
+        else
+        {
+            lcd_lib_draw_stringP(64, 15, PSTR("Pausing..."));
+        }
         break;
     case PRINT_STATE_HEATING:
-        lcd_lib_draw_string_leftP(5, PSTR("Heating"));
-        // lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-LCD_CHAR_WIDTH, 5, getHeaterPower(0));
+        if (selectedOption && *detailBuffer)
+        {
+            lcd_lib_draw_string_left(5, detailBuffer);
+        }
+        else
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Heating"));
+        }
         break;
     case PRINT_STATE_HEATING_BED:
-        lcd_lib_draw_string_leftP(5, PSTR("Heating buildplate"));
-        // lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-LCD_CHAR_WIDTH, 5, getHeaterPower(-1));
+        if (selectedOption && *detailBuffer)
+        {
+            lcd_lib_draw_string_left(5, detailBuffer);
+        }
+        else
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Heating buildplate"));
+        }
         break;
     }
 
@@ -823,8 +910,8 @@ void lcd_menu_printing_tg()
 
     uint8_t index=2;
     // flow
-    lcd_lib_draw_string_leftP(printOptions[index].top, PSTR("*"));
-    // lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT-1, printOptions[index].top, flowGfx);
+    // lcd_lib_draw_string_leftP(printOptions[index].top, PSTR("*"));
+    lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT-1, printOptions[index].top, flowGfx);
     if (!printOptions[index].isActive())
     {
         int_to_string(extrudemultiply[0], printOptions[index].title, PSTR("%"));
@@ -845,20 +932,12 @@ void lcd_menu_printing_tg()
     // lcd_lib_draw_string_leftP(printOptions[++index].top, PSTR("Temp"));
     if (!printOptions[index].isActive())
     {
-//        if (printing_state == PRINT_STATE_HEATING)
-//        {
-//            lcd_lib_draw_heater(printOptions[index].left-8, printOptions[index].top, getHeaterPower(0));
-//        }
         int_to_string(dsp_temperature[0], printOptions[index].title, PSTR(DEGREE_SYMBOL));
     }
 #if EXTRUDERS > 1
     // temperature second extruder
     if (!printOptions[++index].isActive())
     {
-//        if (printing_state == PRINT_STATE_HEATING)
-//        {
-//            lcd_lib_draw_heater(printOptions[5].left-8, printOptions[5].top, getHeaterPower(1));
-//        }
         int_to_string(dsp_temperature[1], printOptions[index].title, PSTR(DEGREE_SYMBOL));
         if (target_temperature[1] > 0)
             printOptions[index].state &= ~STATE_DISABLED;
@@ -870,23 +949,18 @@ void lcd_menu_printing_tg()
 #if TEMP_SENSOR_BED != 0
     // temperature build-plate
     ++index;
-    // lcd_lib_draw_gfx(printOptions[index].left-12, printOptions[index].top, bedTempGfx);
+    lcd_lib_draw_gfx(printOptions[index].left-12, printOptions[index].top, bedTempGfx);
     if (!printOptions[index].isActive())
     {
-//        if (printing_state == PRINT_STATE_HEATING_BED)
-//        {
-//            lcd_lib_draw_heater(printOptions[index].left-8, printOptions[index].top, getHeaterPower(-1));
-//        }
         int_to_string(dsp_temperature_bed, printOptions[index].title, PSTR(DEGREE_SYMBOL));
     }
 #endif
 
     // speed
     ++index;
-    // lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, printOptions[index].top, feedrateGfx);
-    lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+1, printOptions[index].top, PSTR("\x7E"));
+    lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, printOptions[index].top, speedGfx);
+    // lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+1, printOptions[index].top, PSTR("\x7E"));
 
-    // lcd_lib_draw_string_leftP(printOptions[++index].top, PSTR("Speed"));
     if (!printOptions[index].isActive())
     {
         int_to_string(feedmultiply, printOptions[index].title, PSTR("%"));
@@ -894,67 +968,50 @@ void lcd_menu_printing_tg()
 
     // fan speed
     ++index;
-    lcd_lib_draw_gfx(printOptions[index].left-12, printOptions[index].top, fanGfx);
-    // lcd_lib_draw_stringP(printOptions[index].left - 4*LCD_CHAR_WIDTH, printOptions[index].top, PSTR("Fan"));
+    static uint8_t fanAnimate = 0;
+    static uint8_t prevFanSpeed = 0;
+
+    // start animation
+    if (!fanAnimate && fanSpeed!=prevFanSpeed)
+        fanAnimate = 32;
+    if ((fanSpeed == 0) || (!fanAnimate) || (fanAnimate%4))
+    {
+        lcd_lib_draw_gfx(printOptions[index].left-11, printOptions[index].top, fan1Gfx);
+    }
+    if (fanAnimate && !(led_glow%16))
+    {
+        --fanAnimate;
+    }
+    prevFanSpeed = fanSpeed;
     if (!printOptions[index].isActive())
     {
         int_to_string(int(fanSpeed*100/255 + 0.5f), printOptions[index].title, PSTR("%"));
     }
 
-    float printTimeMs = (millis() - starttime);
-    float printTimeSec = printTimeMs / 1000L;
-    float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
-    static float totalTimeSmoothSec;
-    totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
-    if (isinf(totalTimeSmoothSec))
-        totalTimeSmoothSec = totalTimeMs;
-
-    if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
-    {
-        totalTimeSmoothSec = totalTimeMs / 1000;
-        // lcd_lib_draw_stringP(5, 10, PSTR("Time left unknown"));
-    }else{
-        unsigned long totalTimeSec;
-        if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
-        {
-            float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
-            if (f > 1.0)
-                f = 1.0;
-            totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
-        }else{
-            totalTimeSec = totalTimeSmoothSec;
-        }
-        unsigned long timeLeftSec;
-        if (printTimeSec > totalTimeSec)
-            timeLeftSec = 1;
-        else
-            timeLeftSec = totalTimeSec - printTimeSec;
-
-        lcd_lib_draw_gfx(54, 15, clockGfx);
-        int_to_time_string_tg(timeLeftSec, buffer);
-        lcd_lib_draw_string(64, 15, buffer);
-
-    }
-
-    lcd_process_menu_options(printOptions, sizeof(printOptions)/sizeof(printOptions[0]));
-
     index = 0;
-    const char *message = lcd_getstatus();
-    if (!selectedOption && message && *message)
+    if (printing_state == PRINT_STATE_WAIT_USER)
     {
-        lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, message);
         index += 2;
+    }
+    else
+    {
+        lcd_process_menu_options(printOptions, sizeof(printOptions)/sizeof(printOptions[0]));
+        if (!card.pause)
+        {
+            const char *message = lcd_getstatus();
+            if (!selectedOption && message && *message)
+            {
+                lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, message);
+                index += 2;
+            }
+        }
     }
 
     for (; index<sizeof(printOptions)/sizeof(printOptions[0]); ++index) {
-//        if (printOptions[index].isEnabled())
-//        {
-            lcd_draw_menu_option(printOptions[index]);
-//        }
+        lcd_draw_menu_option(printOptions[index]);
     }
 
     lcd_lib_update_screen();
-
 }
 
 static char* lcd_uimode_item(uint8_t nr)

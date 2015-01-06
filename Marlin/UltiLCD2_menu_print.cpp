@@ -35,6 +35,7 @@ static void lcd_menu_print_ready_cooled_down();
 static void lcd_menu_print_tune_retraction();
 
 bool primed = false;
+static bool pauseRequested = false;
 
 
 void lcd_clear_cache()
@@ -816,6 +817,11 @@ void lcd_menu_print_tune_heatup_nozzle1()
 
 void lcd_menu_print_tune()
 {
+    // print paused?
+    if (pauseRequested)
+    {
+        lcd_menu_print_pause();
+    }
     lcd_scroll_menu(PSTR("TUNE"), 6 + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
@@ -836,17 +842,8 @@ void lcd_menu_print_tune()
                 }
                 else
                 {
-                    if (movesplanned() > 0 && commands_queued() < BUFSIZE)
-                    {
-                        lcd_lib_beep();
-                        card.pause = true;
-                        if (current_position[Z_AXIS] < 170)
-                            enquecommand_P(PSTR("M601 X10 Y20 Z20 L30"));
-                        else if (current_position[Z_AXIS] < 200)
-                            enquecommand_P(PSTR("M601 X10 Y20 Z2 L30"));
-                        else
-                            enquecommand_P(PSTR("M601 X10 Y20 Z0 L30"));
-                    }
+                    lcd_lib_beep();
+                    lcd_menu_print_pause();
                 }
             }
         }else if (IS_SELECTED_SCROLL(2))
@@ -927,5 +924,30 @@ static void lcd_menu_print_tune_retraction()
     }
 }
 
+void lcd_menu_print_pause()
+{
+    if (card.sdprinting && !card.pause)
+    {
+        if (movesplanned() > 0 && commands_queued() < BUFSIZE)
+        {
+            pauseRequested = false;
+            card.pause = true;
+            if (current_position[Z_AXIS] < 170)
+                enquecommand_P(PSTR("M601 X10 Y190 Z20 L30"));
+            else if (current_position[Z_AXIS] < 200)
+                enquecommand_P(PSTR("M601 X10 Y190 Z2 L30"));
+            else
+                enquecommand_P(PSTR("M601 X10 Y190 Z0 L30"));
+        }
+        else{
+            pauseRequested = true;
+        }
+    }
+}
+
+bool isPauseRequested()
+{
+    return pauseRequested;
+}
 
 #endif//ENABLE_ULTILCD2
