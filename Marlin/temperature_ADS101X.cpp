@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-#include "marlin.h"
+#include "Marlin.h"
 
 #include "temperature_ADS101X.h"
 #include "i2c_driver.h"
