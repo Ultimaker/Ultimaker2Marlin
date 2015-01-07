@@ -13,11 +13,16 @@
 #include "pins.h"
 
 #define SERIAL_CONTROL_TIMEOUT 5000
+// coefficient for the exponential moving average
+#define ALPHA 0.05f
+#define ONE_MINUS_ALPHA 0.95f
 
 unsigned long lastSerialCommandTime;
 bool serialScreenShown;
 uint8_t led_brightness_level = 100;
 uint8_t led_mode = LED_MODE_ALWAYS_ON;
+float dsp_temperature[EXTRUDERS] = { 20.0 };
+float dsp_temperature_bed = 20.0;
 
 //#define SPECIAL_STARTUP
 
@@ -107,6 +112,12 @@ void lcd_update()
         lcd_lib_update_screen();
     }else{
         serialScreenShown = false;
+        // refresh the displayed temperatures
+        for(uint8_t e=0;e<EXTRUDERS;e++)
+        {
+            dsp_temperature[e] = (ALPHA * current_temperature[e]) + (ONE_MINUS_ALPHA * dsp_temperature[e]);
+        }
+        dsp_temperature_bed = (ALPHA * current_temperature_bed) + (ONE_MINUS_ALPHA * dsp_temperature_bed);
         currentMenu();
         if (postMenuCheck) postMenuCheck();
     }
