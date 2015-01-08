@@ -144,18 +144,23 @@ void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(index++))
         {
             active_extruder = 0;
+            encoder_acceleration = true;
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0, lcd_lib_encoder_pos);
         }
 #if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(index++))
         {
             active_extruder = 1;
+            encoder_acceleration = true;
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0, lcd_lib_encoder_pos);
         }
 #endif
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(index++))
+        {
+            encoder_acceleration = true;
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0, lcd_lib_encoder_pos);
+        }
 #endif
         else if (IS_SELECTED_SCROLL(index++))
         {
@@ -194,7 +199,9 @@ void lcd_menu_maintenance_advanced()
         }
 #endif
         else if (IS_SELECTED_SCROLL(index++))
+        {
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
+        }
         else if (IS_SELECTED_SCROLL(index++))
             lcd_change_to_menu(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
         else if (IS_SELECTED_SCROLL(index++))

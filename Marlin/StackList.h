@@ -45,9 +45,6 @@
 #ifndef _STACKLIST_H
 #define _STACKLIST_H
 
-// include Arduino basic header.
-#include <Arduino.h>
-
 // the definition of the stack class.
 template<typename T>
 class StackList {
@@ -77,15 +74,6 @@ class StackList {
     int count () const;
 
   private:
-    // exit report method in case of error.
-    void exit (const char * m) const;
-
-    // led blinking method in case of error.
-    void blink () const;
-
-    // the pin number of the on-board led.
-    static const int ledPin = 13;
-
     // the structure of each node in the list.
     typedef struct node {
       T item;      // the item in the node.

@@ -42,6 +42,7 @@
 #include "electronics_test.h"
 #include "language.h"
 #include "pins_arduino.h"
+#include "tinkergnome.h"
 
 #if NUM_SERVOS > 0
 #include "Servo.h"
@@ -2689,6 +2690,21 @@ void controllerFan()
 
 void manage_inactivity()
 {
+  static uint8_t ledDimmed = 0;
+  if (millis() - last_user_interaction > LED_DIM_TIME)
+  {
+    if (!ledDimmed)
+    {
+        analogWrite(LED_PIN, 255 * min(int(DIM_LEVEL), led_brightness_level) / 100);
+        ledDimmed ^= 1;
+    }
+  }
+  else if (ledDimmed)
+  {
+    analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
+    ledDimmed ^= 1;
+  }
+
   if( (millis() - previous_millis_cmd) >  max_inactive_time )
     if(max_inactive_time)
       kill();

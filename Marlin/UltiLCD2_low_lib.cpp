@@ -1,8 +1,10 @@
 #include "Configuration.h"
-#include "pins.h"
-#include "UltiLCD2_low_lib.h"
 
 #ifdef ENABLE_ULTILCD2
+#include "pins.h"
+#include "UltiLCD2_low_lib.h"
+#include "tinkergnome.h"
+
 /**
  * Implementation of the LCD display routines for a SSD1309 OLED graphical display connected with i2c.
  **/
@@ -41,6 +43,10 @@
 #define LCD_COMMAND_LOCK_COMMANDS           0xDF
 
 #define LCD_COMMAND_SET_ADDRESSING_MODE     0x20
+
+unsigned long last_user_interaction=0;
+// this is changed by the various menus to enable or disable encoder acceleration for that time.
+bool encoder_acceleration = false;
 
 /** Backbuffer for LCD */
 uint8_t lcd_buffer[LCD_GFX_WIDTH * LCD_GFX_HEIGHT / 8];
@@ -741,6 +747,44 @@ void lcd_lib_beep()
 #undef _BEEP
 }
 
+//-----------------------------------------------------------------------------------------------------------------
+// very short tick for UI feedback -- 1 millisecond  long
+void lcd_lib_tick( )
+{
+#if EXTENDED_BEEP
+	for (int a =0; a<10; ++a)
+    {
+        WRITE(BEEPER, HIGH);
+        _delay_us (50);
+        WRITE(BEEPER, LOW);
+        _delay_us(50);
+    }
+	// WRITE(BEEPER,0);
+#endif
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------
+// freq in Hz, duration in milliseconds -- note that there will be a
+// minimum time of one cycle.  ie: specifying a freq of 100Hz
+// would mean one cycle takes 10ms, and that is the
+// minimum time for the duration.
+void lcd_lib_beep_ext( unsigned int freq, unsigned int dur )
+{
+#if EXTENDED_BEEP
+	freq = 500000UL/freq;
+	unsigned long start_time = millis();
+	while (millis() - start_time < dur)
+    {
+        WRITE(BEEPER, HIGH);
+        _delay_us (freq);
+        WRITE(BEEPER, LOW);
+        _delay_us(freq);
+    }
+	// WRITE(BEEPER,0);
+#endif
+}
+
 int8_t lcd_lib_encoder_pos_interrupt = 0;
 int16_t lcd_lib_encoder_pos = 0;
 bool lcd_lib_button_pressed = false;
@@ -792,12 +836,52 @@ void lcd_lib_buttons_update_interrupt()
 
 void lcd_lib_buttons_update()
 {
-    lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
-    lcd_lib_encoder_pos_interrupt = 0;
+// Added encoder acceleration (Lars Jun 2014)
+// if we detect we're moving the encoder the same direction for repeated frames, we increase our step size (up to a maximum)
+// if we stop, or change direction, set the step size back to +/- 1
+// we only want this for SOME things, like changing a value, and not for other things, like a menu.
+// so we have an enable bit
+	static uint8_t accelFactor = 0;
+	if (lcd_lib_encoder_pos_interrupt)
+    {
+        if ((ui_mode & UI_MODE_TINKERGNOME) && encoder_acceleration)
+        {
+            if (lcd_lib_encoder_pos_interrupt > 0)		// positive -- were we already going positive last time?  If so, increase our accel
+            {
+                // increase positive acceleration
+                if (accelFactor >= 0)
+                    ++accelFactor;
+                else
+                    accelFactor = 1;
+                // beep with a pitch changing tone based on the acceleration factor
+                lcd_lib_beep_ext (500+accelFactor*25, 10);
+            }
+            else //if (lcd_lib_encoder_pos_interrupt <0)
+            {
+                // decrease negative acceleration
+                if (accelFactor <= 0 )
+                    --accelFactor;
+                else
+                    accelFactor = -1;
+                lcd_lib_beep_ext (500+accelFactor*25, 10);
+            }
+            lcd_lib_encoder_pos_interrupt *= constrain(abs(accelFactor), 0, MAX_ENCODER_ACCELERATION);
+        }
+        lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
+    }
+    else
+    {
+        // no movement -> no acceleration
+        accelFactor=0;
+    }
 
     uint8_t buttonState = !READ(BTN_ENC);
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);
     lcd_lib_button_down = buttonState;
+
+	if (lcd_lib_button_down || lcd_lib_encoder_pos_interrupt!=0 ) last_user_interaction=millis();
+
+    lcd_lib_encoder_pos_interrupt = 0;
 }
 
 char* int_to_string(int i, char* temp_buffer, const char* p_postfix)

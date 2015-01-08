@@ -1,11 +1,11 @@
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
-#include <limits.h>
 #include "Marlin.h"
 #include "cardreader.h"
 #include "temperature.h"
 //#include "lifetime_stats.h"
 #include "UltiLCD2_low_lib.h"
+#include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2.h"
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_print.h"
@@ -14,7 +14,8 @@
 
 #include "tinkergnome.h"
 
-#define LCD_TIMEOUT_TO_STATUS 30000
+// #define LCD_TIMEOUT_TO_STATUS 30000
+#define LCD_TIMEOUT_TO_STATUS (MILLISECONDS_PER_SECOND*30UL)		// 30 Sec.
 
 // low pass filter constant, from 0.0 to 1.0 -- Higher numbers mean more smoothing, less responsiveness.
 // 0.0 would be completely disabled, 1.0 would ignore any changes
@@ -30,11 +31,11 @@
 //#define LED_GLOW() lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow)
 //#define LED_GLOW_ERROR() lcd_lib_led_color(8+min(245,led_glow<<3),0,0);
 
-#define LED_FLASH() lcd_lib_led_color(8 + (led_glow<<3), 8 + min(255-8,(led_glow<<3)), 32 + min(255-32,led_glow<<3))
-#define LED_HEAT() lcd_lib_led_color(192 + led_glow/4, 8 + led_glow/4, 0)
-#define LED_INPUT() lcd_lib_led_color(192 + led_glow/4, 8 + led_glow/4, 0)
-#define LED_DONE() lcd_lib_led_color(0, 8 + led_glow, 8)
-#define LED_COOL() lcd_lib_led_color(0, 4,16 + led_glow)
+// #define LED_FLASH() lcd_lib_led_color(8 + (led_glow<<3), 8 + min(255-8,(led_glow<<3)), 32 + min(255-32,led_glow<<3))
+// #define LED_HEAT() lcd_lib_led_color(192 + led_glow/4, 8 + led_glow/4, 0)
+#define LED_INPUT() lcd_lib_led_color(192+led_glow/4, 8+led_glow/4, 0)
+// #define LED_DONE() lcd_lib_led_color(0, 8+led_glow, 8)
+// #define LED_COOL() lcd_lib_led_color(0, 4, 16+led_glow)
 
 #define DETAIL_LEN 20
 
@@ -44,7 +45,7 @@
 #define CUBED_SYMBOL "\x1D"
 #define PER_SECOND_SYMBOL "/s"
 
-static unsigned long timeout = 0;
+// static unsigned long timeout = 0;
 static int16_t lastEncoderPos = 0;
 static int16_t prevEncoderPos = 0;
 static menuoption_t *selectedOption = NULL;
@@ -376,6 +377,7 @@ static void lcd_tune_value(char *title, int &value, int _min, int _max, const ch
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
+        lcd_lib_tick();
         value = constrain(int(value) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM), _min, _max);
         lcd_lib_encoder_pos = 0;
     }
@@ -397,6 +399,7 @@ static void lcd_tune_byte(char *title, uint8_t &value, uint8_t _min, uint8_t _ma
     int temp_value = int((float(value)*_max/255)+0.5);
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
+        lcd_lib_tick();
         temp_value += lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
         temp_value = constrain(temp_value, _min, _max);
         value = uint8_t((float(temp_value)*255/_max)+0.5);
@@ -409,6 +412,7 @@ static void lcd_tune_temperature(char *title, int &value, int _min, int _max, co
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
+        lcd_lib_tick();
         value = constrain(int(value) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM), _min, _max);
         lcd_lib_encoder_pos = 0;
     }
@@ -538,7 +542,7 @@ static void lcd_print_tune_bed(menuoption_t &opt, char *detail, uint8_t n)
 static void lcd_reset_menu_options()
 {
     // reset selection
-    timeout = ULONG_MAX;
+    // timeout = ULONG_MAX;
     *detailBuffer = 0;
     lastEncoderPos = lcd_lib_encoder_pos = prevEncoderPos;
     if (selectedOption)
@@ -555,7 +559,6 @@ static void lcd_process_menu_options(menuoption_t options[], uint8_t len)
     if ((lcd_lib_encoder_pos != lastEncoderPos) || lcd_lib_button_pressed)
     {
         // reset timeout value
-        timeout = millis() + LCD_TIMEOUT_TO_STATUS;
         lastEncoderPos = lcd_lib_encoder_pos;
 
         // process active item
@@ -616,14 +619,19 @@ static void lcd_process_menu_options(menuoption_t options[], uint8_t len)
                 selectedOption = 0;
             }
         }
-    } else if (timeout < millis())
+    }
+    else if (selectedOption)
     {
-        // timeout occurred - reset selection
-        lcd_reset_menu_options();
-    } else if (selectedOption)
-    {
-        // refresh detail text
-        selectedOption->callbackFunc(*selectedOption, detailBuffer, DETAIL_LEN);
+        if (millis() - last_user_interaction > LCD_TIMEOUT_TO_STATUS)
+        {
+            // timeout occurred - reset selection
+            lcd_reset_menu_options();
+        }
+        else
+        {
+            // refresh detail text
+            selectedOption->callbackFunc(*selectedOption, detailBuffer, DETAIL_LEN);
+        }
     }
 }
 
@@ -878,6 +886,10 @@ void lcd_menu_printing_tg()
         else
         {
             lcd_lib_draw_stringP(64, 15, PSTR("Pausing..."));
+        }
+        if (!led_glow)
+        {
+            lcd_lib_tick();
         }
         break;
     case PRINT_STATE_HEATING:

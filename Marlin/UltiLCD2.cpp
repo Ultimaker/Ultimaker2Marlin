@@ -205,11 +205,10 @@ static void lcd_menu_special_startup()
 
     if (lcd_lib_button_pressed)
     {
+        lcd_remove_menu();
         if (!IS_FIRST_RUN_DONE())
         {
-            lcd_replace_menu(lcd_menu_first_run_init);
-        }else{
-            lcd_replace_menu(lcd_menu_main);
+            lcd_add_menu(lcd_menu_first_run_init, ENCODER_NO_SELECTION);
         }
     }
 }
@@ -241,7 +240,7 @@ void lcd_menu_main()
             lcd_change_to_menu(lcd_menu_material);
         else if (IS_SELECTED_MAIN(2))
         {
-            if (ui_mode == UI_MODE_TINKERGNOME)
+            if (ui_mode & UI_MODE_TINKERGNOME)
             {
                 lcd_change_to_menu(lcd_menu_maintenance_advanced);
             }else{

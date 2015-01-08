@@ -1,7 +1,7 @@
 #ifndef ULTI_LCD2_MENU_TINKERGNOME_H
 #define ULTI_LCD2_MENU_TINKERGNOME_H
 
-#include "UltiLCD2_hi_lib.h"
+// #include "UltiLCD2_hi_lib.h"
 
 #define EEPROM_UI_MODE_OFFSET 0x401
 #define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
@@ -30,6 +30,16 @@
 #define ALIGN_RIGHT 16
 #define ALIGN_HCENTER 32
 #define ALIGN_CENTER 36
+
+#define MILLISECONDS_PER_SECOND 1000UL
+#define MILLISECONDS_PER_MINUTE (MILLISECONDS_PER_SECOND*60UL)
+
+#define LED_DIM_TIME (MILLISECONDS_PER_MINUTE*30UL)		// 30 min
+#define DIM_LEVEL 5
+
+// customizations and enhancements (added by Lars June 3,2014)
+#define EXTENDED_BEEP 1					// enables extened audio feedback
+#define MAX_ENCODER_ACCELERATION 4		// set this to 1 for no acceleration
 
 // UI Mode
 #define UI_MODE_STANDARD 0

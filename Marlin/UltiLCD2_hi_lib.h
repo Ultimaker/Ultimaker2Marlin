@@ -11,9 +11,10 @@ typedef void (*entryDetailsCallback_t)(uint8_t nr);
 struct menu_t {
     menuFunc_t  menuFunc;
     int16_t     encoderPos;
+    bool        encoder_acceleration;
 
     // menu_t() : menuFunc(NULL), encoderPos(0) {}
-    menu_t(menuFunc_t func, int16_t pos) : menuFunc(func), encoderPos(pos) {}
+    menu_t(menuFunc_t func, int16_t pos, bool accel) : menuFunc(func), encoderPos(pos), encoder_acceleration(accel) {}
 };
 
 #define ENCODER_TICKS_PER_MAIN_MENU_ITEM 8

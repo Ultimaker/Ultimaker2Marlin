@@ -38,13 +38,14 @@ static void lcd_start_menu(bool beep)
 void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 {
     lcd_start_menu(false);
-    menuStack.push(menu_t(nextMenu, newEncoderPos));
+    menuStack.push(menu_t(nextMenu, newEncoderPos, encoder_acceleration));
 }
 
 void lcd_replace_menu(menuFunc_t nextMenu)
 {
     lcd_start_menu(true);
     menuStack.peek().menuFunc = nextMenu;
+    menuStack.peek().encoder_acceleration = encoder_acceleration;
 }
 
 void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
@@ -52,6 +53,7 @@ void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
     lcd_start_menu(true);
     menuStack.peek().menuFunc = nextMenu;
     menuStack.peek().encoderPos = newEncoderPos;
+    menuStack.peek().encoder_acceleration = encoder_acceleration;
     lcd_lib_encoder_pos = newEncoderPos;
 }
 
@@ -71,6 +73,7 @@ void lcd_change_to_previous_menu()
         menuStack.pop();
     }
     lcd_lib_encoder_pos = menuStack.peek().encoderPos;
+    encoder_acceleration = menuStack.peek().encoder_acceleration;
 }
 
 void lcd_remove_menu()
@@ -82,6 +85,7 @@ void lcd_remove_menu()
         menuStack.pop();
     }
     lcd_lib_encoder_pos = menuStack.peek().encoderPos;
+    encoder_acceleration = menuStack.peek().encoder_acceleration;
 }
 
 menu_t & currentMenu()
