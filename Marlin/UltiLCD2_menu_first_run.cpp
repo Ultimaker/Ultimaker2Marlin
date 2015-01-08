@@ -39,9 +39,8 @@ static void lcd_menu_first_run_material_load_forward();
 static void lcd_menu_first_run_material_load_wait();
 
 static void lcd_menu_first_run_material_select_1();
-static void lcd_menu_first_run_material_select_pla_abs();
-static void lcd_menu_first_run_material_select_confirm_pla();
-static void lcd_menu_first_run_material_select_confirm_abs();
+static void lcd_menu_first_run_material_select_material();
+static void lcd_menu_first_run_material_select_confirm_material();
 static void lcd_menu_first_run_material_select_2();
 
 static void lcd_menu_first_run_print_1();
@@ -419,62 +418,55 @@ static void lcd_menu_first_run_material_load_wait()
 static void lcd_menu_first_run_material_select_1()
 {
     SELECT_MAIN_MENU_ITEM(0);
-    lcd_info_screen(lcd_menu_first_run_material_select_pla_abs, doCooldown, PSTR("READY"));
+    lcd_info_screen(lcd_menu_first_run_material_select_material, doCooldown, PSTR("READY"));
     DRAW_PROGRESS_NR(16);
     lcd_lib_draw_string_centerP(10, PSTR("Next, select the"));
     lcd_lib_draw_string_centerP(20, PSTR("material you have"));
-    lcd_lib_draw_string_centerP(30, PSTR("inserted in the "));
+    lcd_lib_draw_string_centerP(30, PSTR("inserted in this"));
     lcd_lib_draw_string_centerP(40, PSTR("Ultimaker2."));
     lcd_lib_update_screen();
 }
 
-static void lcd_menu_first_run_material_select_pla_abs()
+static char* lcd_material_select_callback(uint8_t nr)
+{
+    eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+    return card.longFilename;
+}
+
+static void lcd_material_select_details_callback(uint8_t nr)
+{
+}
+
+static void lcd_menu_first_run_material_select_material()
 {
     LED_GLOW();
-    lcd_tripple_menu(PSTR("PLA"), PSTR("ABS"), NULL);
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+
+    lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_material_select_callback, lcd_material_select_details_callback);
+    
     DRAW_PROGRESS_NR(17);
     lcd_lib_update_screen();
 
     if (lcd_lib_button_pressed)
     {
         digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
-        if (IS_SELECTED_MAIN(0))
-        {
-            lcd_material_reset_defaults();
-            for(uint8_t e=0; e<EXTRUDERS; e++)
-                lcd_material_set_material(0, e);
-            SET_FIRST_RUN_DONE();
-            lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_pla);
-        }
-        else if (IS_SELECTED_MAIN(1))
-        {
-            lcd_material_reset_defaults();
-            for(uint8_t e=0; e<EXTRUDERS; e++)
-                lcd_material_set_material(1, e);
-            SET_FIRST_RUN_DONE();
-            lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_abs);
-        }
+
+        lcd_material_reset_defaults();
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+            lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), e);
+        SET_FIRST_RUN_DONE();
+        lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_material);
+        strcat_P(card.longFilename, PSTR(" as material,"));
     }
 }
 
-static void lcd_menu_first_run_material_select_confirm_pla()
+static void lcd_menu_first_run_material_select_confirm_material()
 {
     LED_GLOW();
-    lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, NULL, PSTR("NO"));
+    lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_material, NULL, PSTR("NO"));
     DRAW_PROGRESS_NR(18);
     lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
-    lcd_lib_draw_string_centerP(30, PSTR("PLA as material,"));
-    lcd_lib_draw_string_centerP(40, PSTR("is this right?"));
-    lcd_lib_update_screen();
-}
-
-static void lcd_menu_first_run_material_select_confirm_abs()
-{
-    LED_GLOW();
-    lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_pla_abs, NULL, PSTR("NO"));
-    DRAW_PROGRESS_NR(18);
-    lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
-    lcd_lib_draw_string_centerP(30, PSTR("ABS as material,"));
+    lcd_lib_draw_string_center(30, card.longFilename);
     lcd_lib_draw_string_centerP(40, PSTR("is this right?"));
     lcd_lib_update_screen();
 }

@@ -154,7 +154,7 @@ unsigned long watchmillis[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0,0,0);
 #ifndef SOFT_PWM_SCALE
 #define SOFT_PWM_SCALE 0
 #endif
-	
+
 #ifdef HEATER_0_USES_MAX6675
 static int read_max6675();
 #endif
@@ -517,7 +517,7 @@ void manage_heater()
         #endif
       }
     #endif
-    if (pid_output == PID_MAX)
+    if (soft_pwm[e] == (PID_MAX >> 1))
     {
         if (current_temperature[e] - max_heating_start_temperature[e] > MAX_HEATING_TEMPERATURE_INCREASE)
         {
