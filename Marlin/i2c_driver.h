@@ -34,7 +34,7 @@ struct i2cCommand {
 void i2cDriverInit();
 /**
     Plan a i2cCommand to be executed by the I2C driver. The command is scheduled and executed with interrupts.
-    Do not call this function from interrupt context.
+    You can call this function from interrupt context.
     Do not call this function when the i2cCommand.finished is false.
  */
 void i2cDriverPlan(i2cCommand* command);
