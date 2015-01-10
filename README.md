@@ -1,3 +1,17 @@
+
+### Changelist for this fork:
+
+* new branch geek_mode
+* (re-)activated PID-controlling for the printbed temperature
+* added new menu option: Maintenance -> Advanced -> Expert settings (activate the "Geek mode" there)
+* in "Geek mode" the build-plate wizard is moved into the maintenance menu, the "Advanced" step is skipped
+* Redesigned printing screen displaying the Z stage and some tuning parameters
+* "instant tuning" - select a parameter and change the target value directly on the printing screen
+
+For more information follow the appropriate discussion on the [Ultimaker forum](http://umforum.ultimaker.com/index.php?/topic/6436-more-information-during-print/page-2#entry84729)
+
+
+
 ==========================
 Marlin 3D Printer Firmware
 ==========================
