@@ -378,16 +378,18 @@ void lcd_menu_print_select()
                         while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
                     }
                     card.setIndex(0);
+
+#if TEMP_SENSOR_BED != 0
+                    target_temperature_bed = 0;
+#endif
+                    fanSpeedPercent = 0;
+                    fanSpeed = 0;
+                    feedmultiply = 100;
+                    lcd_clearstatus();
                     if (strcmp_P(buffer, PSTR(";FLAVOR:UltiGCode")) == 0)
                     {
                         //New style GCode flavor without start/end code.
                         // Temperature settings, filament settings, fan settings, start and end-code are machine controlled.
-#if TEMP_SENSOR_BED != 0
-                        target_temperature_bed = 0;
-#endif
-                        fanSpeedPercent = 0;
-                        feedmultiply = 100;
-                        lcd_clearstatus();
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
@@ -401,9 +403,8 @@ void lcd_menu_print_select()
                             extrudemultiply[e] = material[e].flow;
                         }
 
-                        fanSpeed = 0;
                         enquecommand_P(PSTR("G28"));
-                        enquecommand_P(PSTR("G1 F12000 X5 Y10"));
+                        enquecommand_P(PSTR("G1 F12000 X5 Y5"));
                         if (ui_mode & UI_MODE_TINKERGNOME)
                             lcd_replace_menu(lcd_menu_print_heatup_tg, ENCODER_NO_SELECTION);
                         else
@@ -412,15 +413,12 @@ void lcd_menu_print_select()
                         //Classic gcode file
 
                         //Set the settings to defaults so the classic GCode has full control
-                        fanSpeedPercent = 100;
-                        feedmultiply = 100;
-                        lcd_clearstatus();
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
+                            target_temperature[e] = 0;
                             volume_to_filament_length[e] = 1.0;
                             extrudemultiply[e] = 100;
                         }
-
                         lcd_replace_menu(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0));
                     }
                 }
@@ -933,11 +931,11 @@ void lcd_menu_print_pause()
             pauseRequested = false;
             card.pause = true;
             if (current_position[Z_AXIS] < 170)
-                enquecommand_P(PSTR("M601 X10 Y190 Z20 L30"));
+                enquecommand_P(PSTR("M601 X10 Y200 Z20 L30"));
             else if (current_position[Z_AXIS] < 200)
-                enquecommand_P(PSTR("M601 X10 Y190 Z2 L30"));
+                enquecommand_P(PSTR("M601 X10 Y200 Z2 L30"));
             else
-                enquecommand_P(PSTR("M601 X10 Y190 Z0 L30"));
+                enquecommand_P(PSTR("M601 X10 Y200 Z0 L30"));
         }
         else{
             pauseRequested = true;

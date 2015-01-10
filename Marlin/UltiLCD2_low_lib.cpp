@@ -961,7 +961,7 @@ char* int_to_time_string(unsigned long i, char* temp_buffer)
     */
 }
 
-char* float_to_string(float f, char* temp_buffer, const char* p_postfix, uint8_t decimals)
+char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
 {
     int32_t i = f * 100.0 + 0.5;
     char* c = temp_buffer;
@@ -975,14 +975,10 @@ char* float_to_string(float f, char* temp_buffer, const char* p_postfix, uint8_t
     if (i >= 1000)
         *c++ = ((i/1000)%10)+'0';
     *c++ = ((i/100)%10)+'0';
-    if (decimals) {
-        *c++ = '.';
+    *c++ = '.';
+    if (i >= 10)
         *c++ = ((i/10)%10)+'0';
-        if (--decimals)
-        {
-            *c++ = ((i)%10)+'0';
-        }
-    }
+    *c++ = ((i)%10)+'0';
     *c = '\0';
     if (p_postfix)
     {

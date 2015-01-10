@@ -129,8 +129,8 @@ void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
     {
         if (IS_SELECTED_MAIN(2))
         {
-            lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-1, 125-2, BOTTOM_MENU_YPOS+7);
-            lcd_lib_set(3+3, BOTTOM_MENU_YPOS, 125-3, BOTTOM_MENU_YPOS+6);
+            lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-1, 124-2, BOTTOM_MENU_YPOS+7);
+            lcd_lib_set(3+3, BOTTOM_MENU_YPOS, 124-3, BOTTOM_MENU_YPOS+6);
             lcd_lib_clear_string_centerP(BOTTOM_MENU_YPOS, bottom);
         }else{
             lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, bottom);
@@ -164,8 +164,8 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     if (!cancelButtonText) cancelButtonText = PSTR("CANCEL");
     if (IS_SELECTED_MAIN(0))
     {
-        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-1, 125-2, BOTTOM_MENU_YPOS+7);
-        lcd_lib_set(3+3, BOTTOM_MENU_YPOS, 125-3, BOTTOM_MENU_YPOS+6);
+        lcd_lib_draw_box(3+2, BOTTOM_MENU_YPOS-1, 124-2, BOTTOM_MENU_YPOS+7);
+        lcd_lib_set(3+3, BOTTOM_MENU_YPOS, 124-3, BOTTOM_MENU_YPOS+6);
         lcd_lib_clear_stringP(65 - strlen_P(cancelButtonText) * 3, BOTTOM_MENU_YPOS, cancelButtonText);
     }else{
         lcd_lib_draw_stringP(65 - strlen_P(cancelButtonText) * 3, BOTTOM_MENU_YPOS, cancelButtonText);

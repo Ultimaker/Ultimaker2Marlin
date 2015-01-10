@@ -10,7 +10,7 @@
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
 #ifndef STRING_CONFIG_H_AUTHOR
-#define STRING_CONFIG_H_AUTHOR "Tinker 15.01-RC6" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Tinker 15.01-RC7" // Who made the changes.
 #endif
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
@@ -587,7 +587,7 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 										// (Ultimaker 2 hot end capacity is approx 80 mm^3)
 #define PRIMING_MM3_PER_SEC 5			// Rate at which to prime head (in mm^3/s)
 										// (Ultimaker 2 upper limit is 8-10)
-#define PRIMING_HEIGHT 20				// Height at which to perform the priming extrusions
+#define PRIMING_HEIGHT 30				// Height at which to perform the priming extrusions
 
 // Bed leveling wizard configuration
 #define LEVELING_OFFSET 0.1				// Assumed thickness of feeler gauge/paper used in leveling (mm)

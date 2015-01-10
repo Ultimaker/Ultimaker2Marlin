@@ -45,6 +45,18 @@ extern bool encoder_acceleration;
 
 char* int_to_string(int i, char* temp_buffer, const char* p_postfix = NULL);
 char* int_to_time_string(unsigned long i, char* temp_buffer);
-char* float_to_string(float f, char* temp_buffer, const char* p_postfix = NULL, uint8_t decimals = 2);
+char* float_to_string(float f, char* temp_buffer, const char* p_postfix = NULL);
+
+#define LCD_GFX_WIDTH 128
+#define LCD_CHAR_MARGIN_LEFT 4
+#define LCD_CHAR_MARGIN_RIGHT 4
+#define LCD_CHAR_SPACING 6
+
+FORCE_INLINE void lcd_lib_draw_string_left(uint8_t y, const char* str) { lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT, y, str); }
+FORCE_INLINE void lcd_lib_draw_string_leftP(uint8_t y, const char* pstr) { lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, y, pstr); }
+FORCE_INLINE void lcd_lib_draw_string_right(uint8_t x, uint8_t y, const char* str) { lcd_lib_draw_string(x - (strlen(str) * LCD_CHAR_SPACING), y, str); }
+FORCE_INLINE void lcd_lib_draw_string_right(uint8_t y, const char* str) { lcd_lib_draw_string_right(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT, y, str); }
+FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t y, const char* pstr) { lcd_lib_draw_stringP(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT - (strlen_P(pstr) * LCD_CHAR_SPACING), y, pstr); }
+FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t x, uint8_t y, const char* pstr) { lcd_lib_draw_stringP(x - (strlen_P(pstr) * LCD_CHAR_SPACING), y, pstr); }
 
 #endif//ULTI_LCD2_LOW_LIB_H

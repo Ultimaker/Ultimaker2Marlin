@@ -19,3 +19,4 @@ Marlin/_Ultimaker2
 *.patch
 .bin
 .obj
+resources

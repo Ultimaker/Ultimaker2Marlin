@@ -8,12 +8,8 @@
 #define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
 
 // display constants
-#define LCD_GFX_WIDTH 128
 #define LCD_GFX_HEIGHT 64
-#define LCD_CHAR_MARGIN_LEFT 4
-#define LCD_CHAR_MARGIN_RIGHT 4
 #define LCD_CHAR_HEIGHT 7
-#define LCD_CHAR_WIDTH 6
 #define LCD_LINE_HEIGHT 9
 
 // menu option states

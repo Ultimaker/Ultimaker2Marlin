@@ -127,7 +127,8 @@ static void lcd_menu_change_material_preheat()
         current_position[E_AXIS] = 0;
         plan_set_e_position(current_position[E_AXIS]);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -1.0, FILAMENT_REVERSAL_SPEED, active_extruder);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -FILAMENT_REVERSAL_LENGTH, FILAMENT_REVERSAL_SPEED, active_extruder);
+        for(uint8_t n=0;n<6;n++)
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (n+1)*-FILAMENT_REVERSAL_LENGTH/6, FILAMENT_REVERSAL_SPEED, active_extruder);
 
         max_feedrate[E_AXIS] = old_max_feedrate_e;
         retract_acceleration = old_retract_acceleration;
@@ -287,8 +288,7 @@ static void lcd_menu_change_material_insert_forward()
         led_glow_dir = led_glow = 0;
 
         digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.
-        lcd_replace_menu(lcd_menu_change_material_insert);
-        SELECT_MAIN_MENU_ITEM(0);
+        lcd_replace_menu(lcd_menu_change_material_insert, MAIN_MENU_ITEM_POS(0));
     }
 
     long pos = st_get_position(E_AXIS);
@@ -301,11 +301,10 @@ static void lcd_menu_change_material_insert_forward()
 
 static void materialInsertReady()
 {
-    lcd_remove_menu();
     current_position[E_AXIS] -= END_OF_PRINT_RETRACTION;
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, active_extruder);
     cancelMaterialInsert();
-
+    lcd_remove_menu();
 }
 
 static void lcd_menu_change_material_insert()
@@ -355,7 +354,7 @@ static void lcd_menu_change_material_select_material_details_callback(uint8_t nr
         c += 5;
         c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
     }
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
+    lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, buffer);
 }
 
 static void lcd_menu_change_material_select_material()
@@ -591,7 +590,7 @@ static void lcd_material_select_details_callback(uint8_t nr)
             c += 5;
             c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
         }
-        lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
+        lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, buffer);
     }else if (nr == count + 1)
     {
         lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Modify the settings"));
@@ -689,7 +688,7 @@ static void lcd_material_settings_details_callback(uint8_t nr)
     {
         int_to_string(material[active_extruder].flow, buffer, PSTR("%"));
     }
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
+    lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, buffer);
 }
 
 static void lcd_menu_material_settings()
