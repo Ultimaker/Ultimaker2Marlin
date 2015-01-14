@@ -406,7 +406,8 @@ static void lcd_tune_byte(char *title, uint8_t &value, uint8_t _min, uint8_t _ma
 
 static void lcd_tune_temperature(char *title, int &value, int _min, int _max, const char *p_postfix)
 {
-    if ((value > 0) && (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0))
+//    if ((value > 0) && (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0))
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
         lcd_lib_tick();
         value = constrain(int(value) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM), _min, _max);
@@ -472,7 +473,10 @@ static void lcd_print_tune_nozzle0(menuoption_t &opt, char *detail, uint8_t n)
         lcd_tune_temperature(opt.title, target_temperature[0], 0, HEATER_0_MAXTEMP - 15, PSTR(DEGREE_SYMBOL));
     }
     if (detail) {
-        strncpy_P(detail, PSTR("Nozzle temperature"), n);
+        char buffer[21];
+        strcpy_P(buffer, PSTR("Nozzle "));
+        int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer+strlen(buffer), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
+        strncpy(detail, buffer, n);
     }
 }
 
@@ -501,7 +505,10 @@ static void lcd_print_tune_nozzle1(menuoption_t &opt, char *detail, uint8_t n)
         lcd_tune_temperature(opt.title, target_temperature[1], 0, HEATER_1_MAXTEMP - 15, PSTR(DEGREE_SYMBOL));
     }
     if (detail) {
-        strncpy_P(detail, PSTR("Nozzle2 temperature"), n);
+        char buffer[21];
+        strcpy_P(buffer, PSTR("Nozzle2 "));
+        int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], buffer+strlen(buffer), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
+        strncpy(detail, buffer, n);
     }
 }
 
@@ -530,7 +537,10 @@ static void lcd_print_tune_bed(menuoption_t &opt, char *detail, uint8_t n)
         lcd_tune_temperature(opt.title, target_temperature_bed, 0, BED_MAXTEMP - 15, PSTR(DEGREE_SYMBOL));
     }
     if (detail) {
-        strncpy_P(detail, PSTR("Buildplate temp."), n);
+        char buffer[21];
+        strcpy_P(buffer, PSTR("Buildplate "));
+        int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer+strlen(buffer), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
+        strncpy(detail, buffer, n);
     }
 }
 #endif

@@ -464,7 +464,7 @@ static void lcd_menu_first_run_material_select_material()
         for(uint8_t e=0; e<EXTRUDERS; e++)
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), e);
         SET_FIRST_RUN_DONE();
-        lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_material);
+        lcd_replace_menu(lcd_menu_first_run_material_select_confirm_material, MAIN_MENU_ITEM_POS(0));
         strcat_P(card.longFilename, PSTR(" as material,"));
     }
 }

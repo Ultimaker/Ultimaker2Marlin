@@ -863,7 +863,7 @@ void lcd_lib_buttons_update()
                     --accelFactor;
                 else
                     accelFactor = -1;
-                lcd_lib_beep_ext (500+accelFactor*25, 10);
+                lcd_lib_beep_ext (600+accelFactor*25, 10);
             }
             lcd_lib_encoder_pos_interrupt *= constrain(abs(accelFactor), 0, MAX_ENCODER_ACCELERATION);
         }

@@ -379,10 +379,6 @@ void lcd_menu_print_select()
                     }
                     card.setIndex(0);
 
-#if TEMP_SENSOR_BED != 0
-                    target_temperature_bed = 0;
-#endif
-                    fanSpeedPercent = 0;
                     fanSpeed = 0;
                     feedmultiply = 100;
                     lcd_clearstatus();
@@ -390,6 +386,10 @@ void lcd_menu_print_select()
                     {
                         //New style GCode flavor without start/end code.
                         // Temperature settings, filament settings, fan settings, start and end-code are machine controlled.
+#if TEMP_SENSOR_BED != 0
+                        target_temperature_bed = 0;
+#endif
+                        fanSpeedPercent = 0;
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
@@ -413,9 +413,9 @@ void lcd_menu_print_select()
                         //Classic gcode file
 
                         //Set the settings to defaults so the classic GCode has full control
+                        fanSpeedPercent = 100;
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
-                            target_temperature[e] = 0;
                             volume_to_filament_length[e] = 1.0;
                             extrudemultiply[e] = 100;
                         }
