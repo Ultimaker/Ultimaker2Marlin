@@ -26,6 +26,7 @@ void inline eeprom_write_float(float* addr, float f)
 #endif
 
 struct materialSettings material[EXTRUDERS];
+static menuFunc_t post_change_material_menu;
 
 void doCooldown();//TODO
 static void lcd_menu_material_main();
@@ -48,7 +49,6 @@ static void cancelMaterialInsert()
 {
     digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
     doCooldown();
-    enquecommand_P(PSTR("G28 X0 Y0"));
 }
 
 void lcd_menu_material()
@@ -84,10 +84,14 @@ static void lcd_menu_material_main()
 
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED_MAIN(0))
+        if (IS_SELECTED_MAIN(0) && !is_command_queued())
         {
             minProgress = 0;
-            lcd_change_to_menu(lcd_menu_change_material_preheat);
+            char buffer[32];
+            enquecommand_P(PSTR("G28 X0 Y0"));
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+            enquecommand(buffer);
+            lcd_change_to_menu_change_material(lcd_menu_material_main);
         }
         else if (IS_SELECTED_MAIN(1))
             lcd_change_to_menu(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0));
@@ -98,29 +102,31 @@ static void lcd_menu_material_main()
     lcd_lib_update_screen();
 }
 
+void lcd_change_to_menu_change_material(menuFunc_t return_menu)
+{
+    post_change_material_menu = return_menu;
+    lcd_change_to_menu(lcd_menu_change_material_preheat);
+}
+
 static void lcd_menu_change_material_preheat()
 {
     setTargetHotend(material[active_extruder].temperature, active_extruder);
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20 - 10;
     if (temp < 0) temp = 0;
-    if (temp > target && !is_command_queued())
+    if (temp > target)
     {
-        set_extrude_min_temp(0);
-        for(uint8_t e=0; e<EXTRUDERS; e++)
-            volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
-
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 20.0, retract_feedrate/60.0, active_extruder);
+        plan_set_e_position(0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 20.0 / volume_to_filament_length[active_extruder], retract_feedrate/60.0, active_extruder);
 
         float old_max_feedrate_e = max_feedrate[E_AXIS];
         float old_retract_acceleration = retract_acceleration;
         max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
         retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
 
-        current_position[E_AXIS] = 0;
-        plan_set_e_position(current_position[E_AXIS]);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -1.0, FILAMENT_REVERSAL_SPEED, active_extruder);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -FILAMENT_REVERSAL_LENGTH, FILAMENT_REVERSAL_SPEED, active_extruder);
+        plan_set_e_position(0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -1.0 / volume_to_filament_length[active_extruder], FILAMENT_REVERSAL_SPEED, active_extruder);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder], FILAMENT_REVERSAL_SPEED, active_extruder);
 
         max_feedrate[E_AXIS] = old_max_feedrate_e;
         retract_acceleration = old_retract_acceleration;
@@ -135,7 +141,7 @@ static void lcd_menu_change_material_preheat()
     else
         minProgress = progress;
 
-    lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
+    lcd_info_screen(post_change_material_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead"));
     lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
 
@@ -146,7 +152,7 @@ static void lcd_menu_change_material_preheat()
 
 static void lcd_menu_change_material_remove()
 {
-    lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
+    lcd_info_screen(post_change_material_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Reversing material"));
 
     if (!blocks_queued())
@@ -162,7 +168,7 @@ static void lcd_menu_change_material_remove()
     }
 
     long pos = -st_get_position(E_AXIS);
-    long targetPos = lround(FILAMENT_REVERSAL_LENGTH*axis_steps_per_unit[E_AXIS]);
+    long targetPos = lround(FILAMENT_REVERSAL_LENGTH * axis_steps_per_unit[E_AXIS]);
     uint8_t progress = (pos * 125 / targetPos);
     lcd_progressbar(progress);
 
@@ -171,14 +177,8 @@ static void lcd_menu_change_material_remove()
 
 static void lcd_menu_change_material_remove_wait_user_ready()
 {
-    current_position[E_AXIS] = 0;
-    plan_set_e_position(current_position[E_AXIS]);
+    plan_set_e_position(0);
     lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0));
-
-    char buffer[32];
-    enquecommand_P(PSTR("G28 X0 Y0"));
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
-    enquecommand(buffer);
 }
 
 static void lcd_menu_change_material_remove_wait_user()
@@ -190,13 +190,9 @@ static void lcd_menu_change_material_remove_wait_user()
     lcd_lib_update_screen();
 }
 
-void lcd_menu_insert_material()
+void lcd_change_to_menu_insert_material(menuFunc_t return_menu)
 {
-    char buffer[32];
-    enquecommand_P(PSTR("G28 X0 Y0"));
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
-    enquecommand(buffer);
-
+    post_change_material_menu = return_menu;
     currentMenu = lcd_menu_insert_material_preheat;
 }
 
@@ -222,7 +218,7 @@ static void lcd_menu_insert_material_preheat()
     else
         minProgress = progress;
 
-    lcd_info_screen(lcd_menu_material_main, cancelMaterialInsert);
+    lcd_info_screen(post_change_material_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead for"));
     lcd_lib_draw_stringP(3, 20, PSTR("material insertion"));
 
@@ -237,11 +233,11 @@ static void lcd_menu_change_material_insert_wait_user()
 
     if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 2)
     {
-        current_position[E_AXIS] += 0.5;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, active_extruder);
+        plan_set_e_position(0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_SPEED, active_extruder);
     }
 
-    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
     lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
     lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
@@ -257,10 +253,8 @@ static void lcd_menu_change_material_insert_wait_user_ready()
     max_feedrate[E_AXIS] = FILAMENT_INSERT_FAST_SPEED;
     retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
 
-    current_position[E_AXIS] = 0;
-    plan_set_e_position(current_position[E_AXIS]);
-    current_position[E_AXIS] = FILAMENT_FORWARD_LENGTH;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_FAST_SPEED, active_extruder);
+    plan_set_e_position(0);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], FILAMENT_FORWARD_LENGTH / volume_to_filament_length[active_extruder], FILAMENT_INSERT_FAST_SPEED, active_extruder);
 
     //Put back origonal values.
     max_feedrate[E_AXIS] = old_max_feedrate_e;
@@ -271,7 +265,7 @@ static void lcd_menu_change_material_insert_wait_user_ready()
 
 static void lcd_menu_change_material_insert_forward()
 {
-    lcd_info_screen(lcd_menu_main, cancelMaterialInsert);
+    lcd_info_screen(post_change_material_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Forwarding material"));
 
     if (!blocks_queued())
@@ -294,8 +288,8 @@ static void lcd_menu_change_material_insert_forward()
 
 static void materialInsertReady()
 {
-    current_position[E_AXIS] -= END_OF_PRINT_RETRACTION;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 25*60, active_extruder);
+    plan_set_e_position(0);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -END_OF_PRINT_RETRACTION / volume_to_filament_length[active_extruder], 25*60, active_extruder);
     cancelMaterialInsert();
 
 }
@@ -304,14 +298,14 @@ static void lcd_menu_change_material_insert()
 {
     LED_GLOW();
 
-    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
     lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
 
     if (movesplanned() < 2)
     {
-        current_position[E_AXIS] += 0.5;
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
+        plan_set_e_position(0);
+        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
     }
 
     lcd_lib_update_screen();
@@ -614,6 +608,7 @@ static void lcd_menu_material_select()
         else{
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM() - 1, active_extruder);
 
+            post_change_material_menu = lcd_menu_material_main;
             lcd_change_to_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
         }
     }
@@ -621,7 +616,7 @@ static void lcd_menu_material_select()
 
 static void lcd_menu_material_selected()
 {
-    lcd_info_screen(lcd_menu_main, NULL, PSTR("OK"));
+    lcd_info_screen(post_change_material_menu, NULL, PSTR("OK"));
     lcd_lib_draw_string_centerP(20, PSTR("Selected material:"));
     lcd_lib_draw_string_center(30, card.longFilename);
 #if EXTRUDERS > 1

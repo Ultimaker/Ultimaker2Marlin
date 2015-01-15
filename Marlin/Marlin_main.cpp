@@ -1375,30 +1375,14 @@ void process_commands()
     case 0: // M0 - Unconditional stop - Wait for user button press on LCD
     case 1: // M1 - Conditional stop - Wait for user button press on LCD
     {
-      printing_state = PRINT_STATE_WAIT_USER;
-
-      codenum = 0;
-      if(code_seen('P')) codenum = code_value(); // milliseconds to wait
-      if(code_seen('S')) codenum = code_value() * 1000; // seconds to wait
-
-      st_synchronize();
-      previous_millis_cmd = millis();
-      if (codenum > 0){
-        codenum += millis();  // keep track of when we started waiting
-        while(millis()  < codenum && !lcd_lib_button_down){
+        card.pause = true;
+        while(card.pause)
+        {
           manage_heater();
           manage_inactivity();
           lcd_update();
           lifetime_stats_tick();
         }
-      }else{
-        while(!lcd_lib_button_down){
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
-        }
-      }
     }
     break;
 #endif
@@ -2326,6 +2310,7 @@ void process_commands()
     #ifdef ENABLE_ULTILCD2
     case 601: //Pause in UltiLCD2, X[pos] Y[pos] Z[relative lift] L[later retract distance]
     {
+        st_synchronize();
         float target[4];
         float lastpos[4];
         target[X_AXIS]=current_position[X_AXIS];
@@ -2364,6 +2349,10 @@ void process_commands()
         }
         plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], retract_feedrate/60, active_extruder);
 
+        current_position[X_AXIS] = target[X_AXIS];
+        current_position[Y_AXIS] = target[Y_AXIS];
+        current_position[Z_AXIS] = target[Z_AXIS];
+        current_position[E_AXIS] = target[E_AXIS];
         //finish moves
         st_synchronize();
         //disable extruder steppers so filament can be removed
@@ -2386,6 +2375,10 @@ void process_commands()
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder); //move xy back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder); //move z back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], retract_feedrate/60, active_extruder); //final untretract
+        current_position[X_AXIS] = lastpos[X_AXIS];
+        current_position[Y_AXIS] = lastpos[Y_AXIS];
+        current_position[Z_AXIS] = lastpos[Z_AXIS];
+        current_position[E_AXIS] = lastpos[E_AXIS];
     }
     break;
 
