@@ -1286,6 +1286,7 @@ void process_commands()
           destination[Z_AXIS] = height_3;
           //Position the head at exactly the height, so we can use this as Z0 later.
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
+          st_synchronize();
 
           MSerial.println(height_1, 5);
           MSerial.println(height_2, 5);

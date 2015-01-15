@@ -123,6 +123,8 @@ static int maxttemp_raw[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_RAW_HI_TEMP , 
 static int minttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 0, 0, 0 );
 static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 16383, 16383, 16383 );
 //static int bed_minttemp_raw = HEATER_BED_RAW_LO_TEMP; /* No bed mintemp error implemented?!? */
+static uint8_t temp_error_cnt[EXTRUDERS];
+static uint8_t temp_error_bed_cnt;
 
 static void min_temp_error(uint8_t e);
 static void max_temp_error(uint8_t e);
@@ -1088,7 +1090,6 @@ static int read_max6675()
 }
 #endif
 
-
 // Timer 0 is shared with millies
 ISR(TIMER0_COMPB_vect)
 {
@@ -1305,18 +1306,21 @@ ISR(TIMER0_COMPB_vect)
 #else
     if(current_temperature_raw[0] >= maxttemp_raw[0]) {
 #endif
-#ifndef HEATER_0_USES_MAX6675
-       max_temp_error(0);
-#endif
+        temp_error_cnt[0] += 10;
+        if (temp_error_cnt[0] > 20)
+            max_temp_error(0);
     }
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
-    if(current_temperature_raw[0] >= minttemp_raw[0]) {
+    else if(current_temperature_raw[0] >= minttemp_raw[0]) {
 #else
-    if(current_temperature_raw[0] <= minttemp_raw[0]) {
+    else if(current_temperature_raw[0] <= minttemp_raw[0]) {
 #endif
-#ifndef HEATER_0_USES_MAX6675
-       min_temp_error(0);
-#endif
+        temp_error_cnt[0] += 10;
+        if (temp_error_cnt[0] > 20)
+            min_temp_error(0);
+    }else if (temp_error_cnt[0] > 0)
+    {
+        temp_error_cnt[0]--;
     }
 #if EXTRUDERS > 1
 #if HEATER_1_RAW_LO_TEMP > HEATER_1_RAW_HI_TEMP
@@ -1324,14 +1328,21 @@ ISR(TIMER0_COMPB_vect)
 #else
     if(current_temperature_raw[1] >= maxttemp_raw[1]) {
 #endif
-        max_temp_error(1);
+        temp_error_cnt[1] += 10;
+        if (temp_error_cnt[1] > 20)
+            max_temp_error(1);
     }
 #if HEATER_1_RAW_LO_TEMP > HEATER_1_RAW_HI_TEMP
     if(current_temperature_raw[1] >= minttemp_raw[1]) {
 #else
     if(current_temperature_raw[1] <= minttemp_raw[1]) {
 #endif
-        min_temp_error(1);
+        temp_error_cnt[1] += 10;
+        if (temp_error_cnt[1] > 20)
+            min_temp_error(1);
+    }else if (temp_error_cnt[1] > 0)
+    {
+        temp_error_cnt[1]--;
     }
 #endif
 #if EXTRUDERS > 2
@@ -1340,14 +1351,21 @@ ISR(TIMER0_COMPB_vect)
 #else
     if(current_temperature_raw[2] >= maxttemp_raw[2]) {
 #endif
-        max_temp_error(2);
+        temp_error_cnt[2] += 10;
+        if (temp_error_cnt[2] > 20)
+            max_temp_error(2);
     }
 #if HEATER_2_RAW_LO_TEMP > HEATER_2_RAW_HI_TEMP
-    if(current_temperature_raw[2] >= minttemp_raw[2]) {
+    else if(current_temperature_raw[2] >= minttemp_raw[2]) {
 #else
-    if(current_temperature_raw[2] <= minttemp_raw[2]) {
+    else if(current_temperature_raw[2] <= minttemp_raw[2]) {
 #endif
-        min_temp_error(2);
+        temp_error_cnt[2] += 10;
+        if (temp_error_cnt[2] > 20)
+            min_temp_error(2);
+    }else if (temp_error_cnt[2] > 0)
+    {
+        temp_error_cnt[2]--;
     }
 #endif
 
@@ -1358,8 +1376,14 @@ ISR(TIMER0_COMPB_vect)
 #else
     if(current_temperature_bed_raw >= bed_maxttemp_raw) {
 #endif
-       target_temperature_bed = 0;
-       bed_max_temp_error();
+        temp_error_bed_cnt += 10;
+        if (temp_error_bed_cnt > 20)
+        {
+            target_temperature_bed = 0;
+            bed_max_temp_error();
+        }
+    }else if (temp_error_bed_cnt > 0) {
+        temp_error_bed_cnt--;
     }
 #endif
   }
