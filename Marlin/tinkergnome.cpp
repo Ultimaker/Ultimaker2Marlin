@@ -187,7 +187,7 @@ static const menuitem_t & get_heatup_menuoption(uint8_t nr, menuitem_t &opt)
     if (nr == index++)
     {
         // temp nozzle 1
-        int_to_string((isActive(nr)) ? target_temperature[0] : dsp_temperature[0], opt.title, PSTR(DEGREE_SYMBOL));
+        int_to_string(target_temperature[0], opt.title, PSTR(DEGREE_SYMBOL));
 #if EXTRUDERS < 2
         strcpy_P(opt.details, PSTR("Nozzle "));
 #else
@@ -208,7 +208,7 @@ static const menuitem_t & get_heatup_menuoption(uint8_t nr, menuitem_t &opt)
     else if (nr == index++)
     {
         // temp nozzle 2
-        int_to_string((isActive(nr)) ? target_temperature[1] : dsp_temperature[1], opt.title, PSTR(DEGREE_SYMBOL));
+        int_to_string(target_temperature[1], opt.title, PSTR(DEGREE_SYMBOL));
         strcpy_P(opt.details, PSTR("Nozzle(2) "));
         int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], opt.details+strlen(opt.details), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
         opt.left = LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING;
@@ -226,7 +226,7 @@ static const menuitem_t & get_heatup_menuoption(uint8_t nr, menuitem_t &opt)
     else if (nr == index++)
     {
         // temp nozzle 1
-        int_to_string((isActive(nr)) ? target_temperature_bed : dsp_temperature_bed, opt.title, PSTR(DEGREE_SYMBOL));
+        int_to_string(target_temperature_bed, opt.title, PSTR(DEGREE_SYMBOL));
         strcpy_P(opt.details, PSTR("Buildplate "));
         int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, opt.details+strlen(opt.details), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
         opt.left = LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING;
@@ -1248,7 +1248,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
         opt.callbackFunc = lcd_move_x_axis;
         opt.textalign = ALIGN_RIGHT | ALIGN_VCENTER;
         opt.flags = MENU_INPLACE_EDIT;
-        opt.max_encoder_acceleration = 4;
+        opt.max_encoder_acceleration = 5;
     }
     else if (nr == index++)
     {
@@ -1278,7 +1278,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
         opt.callbackFunc = lcd_move_y_axis;
         opt.textalign = ALIGN_RIGHT | ALIGN_VCENTER;
         opt.flags = MENU_INPLACE_EDIT;
-        opt.max_encoder_acceleration = 4;
+        opt.max_encoder_acceleration = 5;
     }
     else if (nr == index++)
     {
@@ -1308,7 +1308,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
         opt.callbackFunc = lcd_move_z_axis;
         opt.textalign = ALIGN_RIGHT | ALIGN_VCENTER;
         opt.flags = MENU_INPLACE_EDIT;
-        opt.max_encoder_acceleration = 12;
+        opt.max_encoder_acceleration = 15;
     }
     else if (nr == index++)
     {
@@ -1357,7 +1357,7 @@ void lcd_menu_move_axes()
                 if (target_position[i] != current_position[i])
                 {
                     current_position[i] = target_position[i];
-                    feedrate = constrain(min(feedrate, homing_feedrate[i]), 4000, 8000);
+                    feedrate = constrain(min(feedrate, homing_feedrate[i]), 3200, 8000);
                     bMove = true;
                 }
             }
