@@ -73,9 +73,9 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,Ki);
     EEPROM_WRITE_VAR(i,Kd);
   #else
-		float dummy = 3000.0f;
+	float dummy = 3000.0f;
     EEPROM_WRITE_VAR(i,dummy);
-		dummy = 0.0f;
+    dummy = 0.0f;
     EEPROM_WRITE_VAR(i,dummy);
     EEPROM_WRITE_VAR(i,dummy);
   #endif

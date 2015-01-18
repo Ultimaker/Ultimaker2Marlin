@@ -6,6 +6,7 @@
 #include "UltiLCD2_menu_maintenance.h"
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_material.h"
+#include "UltiLCD2_menu_utils.h"
 #include "cardreader.h"
 #include "lifetime_stats.h"
 #include "ConfigurationStore.h"
@@ -49,86 +50,103 @@ void lcd_menu_maintenance()
 
 static char* lcd_advanced_item(uint8_t nr)
 {
-    static const char* itemText[] = {
-                                        PSTR("< RETURN")
-                                      , PSTR("LED settings")
+    uint8_t index(0);
+    if (nr == index++)
+    {
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
+    }
+    else if (nr == index++)
+    {
+        strcpy_P(card.longFilename, PSTR("LED settings"));
+    }
+    else if (nr == index++)
 #if EXTRUDERS < 2
-                                      , PSTR("Heatup nozzle")
+        strcpy_P(card.longFilename, PSTR("Heatup nozzle"));
 #else
-                                      , PSTR("Heatup first nozzle")
-                                      , PSTR("Heatup second nozzle")
+        strcpy_P(card.longFilename, PSTR("Heatup first nozzle"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Heatup second nozzle"));
 #endif
 #if TEMP_SENSOR_BED != 0
-                                      , PSTR("Heatup buildplate")
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Heatup buildplate"));
 #endif
-                                      , PSTR("Home head")
-                                      , PSTR("Lower buildplate")
-                                      , PSTR("Raise buildplate")
-                                      , PSTR("Insert material")
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Home head"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Lower buildplate"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Raise buildplate"));
+    else if ((ui_mode & UI_MODE_TINKERGNOME) && (nr == index++))
+        strcpy_P(card.longFilename, PSTR("Move axis"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Insert material"));
+    else if (nr == index++)
 #if EXTRUDERS < 2
-                                      , PSTR("Move material")
+        strcpy_P(card.longFilename, PSTR("Move material"));
 #else
-                                      , PSTR("Move material (1)")
-                                      , PSTR("Move material (2)")
+        strcpy_P(card.longFilename, PSTR("Move material (1)"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Move material (2)"));
 #endif
-                                      , PSTR("Set fan speed")
-                                      , PSTR("Retraction settings")
-                                      , PSTR("Motion settings")
-                                      , PSTR("Adjust buildplate")
-                                      , PSTR("Expert settings")
-                                      , PSTR("Version")
-                                      , PSTR("Runtime stats")
-                                      , PSTR("Factory reset")
-                                      , PSTR("???")
-                                    };
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Set fan speed"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Retraction settings"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Motion settings"));
+    else if ((ui_mode & UI_MODE_TINKERGNOME) && (nr == index++))
+        strcpy_P(card.longFilename, PSTR("Adjust buildplate"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Expert settings"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Version"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Runtime stats"));
+    else if (nr == index++)
+        strcpy_P(card.longFilename, PSTR("Factory reset"));
+    else
+        strcpy_P(card.longFilename, PSTR("???"));
 
-    if (!(ui_mode & UI_MODE_TINKERGNOME) && (nr > 8+BED_MENU_OFFSET+2*EXTRUDERS))
-        ++nr;
-    strcpy_P(card.longFilename, itemText[constrain(nr, 0, sizeof(itemText)/sizeof(itemText[0])-1)]);
     return card.longFilename;
 }
 
 static void lcd_advanced_details(uint8_t nr)
 {
-    char buffer[16];
-    buffer[0] = '\0';
+    LCD_CACHE_FILENAME(1)[0] = '\0';
     if (!(ui_mode & UI_MODE_TINKERGNOME) && (nr > 8+BED_MENU_OFFSET+2*EXTRUDERS))
-        ++nr;
+        nr+=2;
 
     if (nr == 1)
     {
-        int_to_string(led_brightness_level, buffer, PSTR("%"));
+        int_to_string(led_brightness_level, LCD_CACHE_FILENAME(1), PSTR("%"));
     }else if (nr == 2)
     {
-        int_to_string(int(dsp_temperature[0]), buffer, PSTR("C/"));
-        int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
+        int_to_string(int(dsp_temperature[0]), LCD_CACHE_FILENAME(1), PSTR("C/"));
+        int_to_string(int(target_temperature[0]), LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR("C"));
 #if EXTRUDERS > 1
     }else if (nr == 3)
     {
-        int_to_string(int(dsp_temperature[1]), buffer, PSTR("C/"));
-        int_to_string(int(target_temperature[1]), buffer+strlen(buffer), PSTR("C"));
+        int_to_string(int(dsp_temperature[1]), LCD_CACHE_FILENAME(1), PSTR("C/"));
+        int_to_string(int(target_temperature[1]), LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR("C"));
 #endif
 #if TEMP_SENSOR_BED != 0
     }else if (nr == 2 + EXTRUDERS)
     {
-        int_to_string(int(dsp_temperature_bed), buffer, PSTR("C/"));
-        int_to_string(int(target_temperature_bed), buffer+strlen(buffer), PSTR("C"));
+        int_to_string(int(dsp_temperature_bed), LCD_CACHE_FILENAME(1), PSTR("C/"));
+        int_to_string(int(target_temperature_bed), LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR("C"));
 #endif
     }else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS * 2)
     {
-        int_to_string(int(fanSpeed) * 100 / 255, buffer, PSTR("%"));
-    }else if (nr == 10 + BED_MENU_OFFSET + EXTRUDERS * 2)
-    {
-        lcd_lib_draw_stringP(5, BOTTOM_MENU_YPOS, (ui_mode & UI_MODE_TINKERGNOME) ? PSTR("Geek Mode") : PSTR("Standard Mode"));
-        return;
-    }else if (nr == 11 + BED_MENU_OFFSET + EXTRUDERS * 2)
+        int_to_string(int(fanSpeed) * 100 / 255, LCD_CACHE_FILENAME(1), PSTR("%"));
+    }else if (nr == 12 + BED_MENU_OFFSET + EXTRUDERS * 2)
     {
         lcd_lib_draw_stringP(5, BOTTOM_MENU_YPOS, PSTR(STRING_CONFIG_H_AUTHOR));
         return;
     }else{
         return;
     }
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
+    lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, LCD_CACHE_FILENAME(1));
 }
 
 void lcd_menu_maintenance_advanced()
@@ -144,21 +162,21 @@ void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(index++))
         {
             active_extruder = 0;
-            encoder_acceleration = true;
+            max_encoder_acceleration = 4;
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0, lcd_lib_encoder_pos);
         }
 #if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(index++))
         {
             active_extruder = 1;
-            encoder_acceleration = true;
+            max_encoder_acceleration = 4;
             lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0, lcd_lib_encoder_pos);
         }
 #endif
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(index++))
         {
-            encoder_acceleration = true;
+            max_encoder_acceleration = 4;
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0, lcd_lib_encoder_pos);
         }
 #endif
@@ -178,9 +196,17 @@ void lcd_menu_maintenance_advanced()
             enquecommand_P(PSTR("G28 Z0"));
             enquecommand_P(PSTR("G1 Z40"));
         }
+        else if ((ui_mode & UI_MODE_TINKERGNOME) && (IS_SELECTED_SCROLL(index++)))
+        {
+            lcd_change_to_menu(lcd_menu_move_axes, MAIN_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+        }
         else if (IS_SELECTED_SCROLL(index++))
         {
-            lcd_change_to_menu(lcd_menu_insert_material, 0, lcd_lib_encoder_pos);
+            char buffer[32];
+            enquecommand_P(PSTR("G28 X0 Y0"));
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+            enquecommand(buffer);
+            lcd_change_to_menu(lcd_menu_insert_material_preheat);
         }
         else if (IS_SELECTED_SCROLL(index++))
         {
@@ -209,7 +235,7 @@ void lcd_menu_maintenance_advanced()
         else if ((ui_mode & UI_MODE_TINKERGNOME) && (IS_SELECTED_SCROLL(index++)))
             lcd_change_to_menu(lcd_menu_first_run_start_bed_leveling, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_maintenance_uimode, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+            lcd_change_to_menu(lcd_menu_maintenance_expert, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
         else if (IS_SELECTED_SCROLL(index++))
             lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
         else if (IS_SELECTED_SCROLL(index++))

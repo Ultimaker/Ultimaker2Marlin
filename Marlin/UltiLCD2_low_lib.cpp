@@ -8,9 +8,6 @@
 /**
  * Implementation of the LCD display routines for a SSD1309 OLED graphical display connected with i2c.
  **/
-#define LCD_GFX_WIDTH 128
-#define LCD_GFX_HEIGHT 64
-
 #define LCD_RESET_PIN 5
 #define LCD_CS_PIN    6
 #define I2C_SDA_PIN   20
@@ -46,7 +43,7 @@
 
 unsigned long last_user_interaction=0;
 // this is changed by the various menus to enable or disable encoder acceleration for that time.
-bool encoder_acceleration = false;
+uint8_t max_encoder_acceleration = 1;
 
 /** Backbuffer for LCD */
 uint8_t lcd_buffer[LCD_GFX_WIDTH * LCD_GFX_HEIGHT / 8];
@@ -244,13 +241,14 @@ void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b)
 // norpchen
 // the baseline ASCII->font table offset.  Was 32 (space) but shifted down by four as I added four custom characters to the font
 // had to add them to the start of the table, because we're using char, which are signed and top out at 128, which is already the max table value.
-#define FONT_BASE_CHAR 29
+#define FONT_BASE_CHAR 28
 
 static const uint8_t lcd_font_7x5[] PROGMEM = {
+	0x7C, 0x4A, 0x69, 0x4A, 0x7C,       // " HOME_SYMBOL "
 	0x11, 0x15, 0x0A, 0x00, 0x00,       // ^3 " CUBED_SYMBOL "
 	0x19, 0x15, 0x12, 0x00, 0x00,       // ^2 " SQUARED_SYMBOL "
-	// 0x02, 0x05, 0x72, 0x88, 0x88,    	// deg C  " DEGREE_C_SYMBOL "
-	0x06, 0x09, 0x09, 0x06, 0x00,
+	0x06, 0x09, 0x09, 0x06, 0x00,    	// deg C  " DEGREE_C_SYMBOL "
+
 //	0x30, 0x0C, 0x43, 0xA8, 0x90,		//s " PER_SECOND_SYMBOL "   -- fugly, dont use
 
     0x00, 0x00, 0x00, 0x00, 0x00,// (space)
@@ -792,6 +790,8 @@ bool lcd_lib_button_down;
 
 #define ENCODER_ROTARY_BIT_0 _BV(0)
 #define ENCODER_ROTARY_BIT_1 _BV(1)
+#define INC_ENCODER_POS(n) do { if (n<+127) { ++n; } } while(0)
+#define DEC_ENCODER_POS(n) do { if (n>-127) { --n; } } while(0)
 /* Warning: This function is called from interrupt context */
 void lcd_lib_buttons_update_interrupt()
 {
@@ -807,27 +807,27 @@ void lcd_lib_buttons_update_interrupt()
         {
         case encrot0:
             if(lastEncBits==encrot3)
-                lcd_lib_encoder_pos_interrupt++;
+                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             else if(lastEncBits==encrot1)
-                lcd_lib_encoder_pos_interrupt--;
+                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             break;
         case encrot1:
             if(lastEncBits==encrot0)
-                lcd_lib_encoder_pos_interrupt++;
+                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             else if(lastEncBits==encrot2)
-                lcd_lib_encoder_pos_interrupt--;
+                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             break;
         case encrot2:
             if(lastEncBits==encrot1)
-                lcd_lib_encoder_pos_interrupt++;
+                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             else if(lastEncBits==encrot3)
-                lcd_lib_encoder_pos_interrupt--;
+                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             break;
         case encrot3:
             if(lastEncBits==encrot2)
-                lcd_lib_encoder_pos_interrupt++;
+                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             else if(lastEncBits==encrot0)
-                lcd_lib_encoder_pos_interrupt--;
+                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
             break;
         }
         lastEncBits = encBits;
@@ -841,10 +841,10 @@ void lcd_lib_buttons_update()
 // if we stop, or change direction, set the step size back to +/- 1
 // we only want this for SOME things, like changing a value, and not for other things, like a menu.
 // so we have an enable bit
-	static uint8_t accelFactor = 0;
-	if (lcd_lib_encoder_pos_interrupt)
+	static int8_t accelFactor = 0;
+	if (lcd_lib_encoder_pos_interrupt != 0)
     {
-        if ((ui_mode & UI_MODE_TINKERGNOME) && encoder_acceleration)
+        if ((ui_mode & UI_MODE_TINKERGNOME) && (max_encoder_acceleration > 1))
         {
             if (lcd_lib_encoder_pos_interrupt > 0)		// positive -- were we already going positive last time?  If so, increase our accel
             {
@@ -854,7 +854,7 @@ void lcd_lib_buttons_update()
                 else
                     accelFactor = 1;
                 // beep with a pitch changing tone based on the acceleration factor
-                lcd_lib_beep_ext (500+accelFactor*25, 10);
+                // lcd_lib_beep_ext (500+accelFactor*25, 10);
             }
             else //if (lcd_lib_encoder_pos_interrupt <0)
             {
@@ -863,11 +863,15 @@ void lcd_lib_buttons_update()
                     --accelFactor;
                 else
                     accelFactor = -1;
-                lcd_lib_beep_ext (600+accelFactor*25, 10);
+                // lcd_lib_beep_ext (600+accelFactor*25, 10);
             }
-            lcd_lib_encoder_pos_interrupt *= constrain(abs(accelFactor), 0, MAX_ENCODER_ACCELERATION);
+            lcd_lib_tick();
+            lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt * constrain(abs(accelFactor), 1, max_encoder_acceleration);
         }
-        lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
+        else
+        {
+            lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
+        }
     }
     else
     {
@@ -976,8 +980,7 @@ char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
         *c++ = ((i/1000)%10)+'0';
     *c++ = ((i/100)%10)+'0';
     *c++ = '.';
-    if (i >= 10)
-        *c++ = ((i/10)%10)+'0';
+    *c++ = ((i/10)%10)+'0';
     *c++ = ((i)%10)+'0';
     *c = '\0';
     if (p_postfix)

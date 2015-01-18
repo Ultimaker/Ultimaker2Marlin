@@ -41,16 +41,21 @@ extern int16_t lcd_lib_encoder_pos;
 extern bool lcd_lib_button_pressed;
 extern bool lcd_lib_button_down;
 extern unsigned long last_user_interaction;
-extern bool encoder_acceleration;
+extern uint8_t max_encoder_acceleration;
 
 char* int_to_string(int i, char* temp_buffer, const char* p_postfix = NULL);
 char* int_to_time_string(unsigned long i, char* temp_buffer);
 char* float_to_string(float f, char* temp_buffer, const char* p_postfix = NULL);
 
+// display constants
 #define LCD_GFX_WIDTH 128
+#define LCD_GFX_HEIGHT 64
+#define LCD_LINE_HEIGHT 9
+
 #define LCD_CHAR_MARGIN_LEFT 4
 #define LCD_CHAR_MARGIN_RIGHT 4
 #define LCD_CHAR_SPACING 6
+#define LCD_CHAR_HEIGHT 7
 
 FORCE_INLINE void lcd_lib_draw_string_left(uint8_t y, const char* str) { lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT, y, str); }
 FORCE_INLINE void lcd_lib_draw_string_leftP(uint8_t y, const char* pstr) { lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, y, pstr); }

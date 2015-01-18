@@ -5,17 +5,10 @@
 #include "UltiLCD2_gfx.h"
 
 typedef void (*menuFunc_t)();
+
 typedef char* (*entryNameCallback_t)(uint8_t nr);
 typedef void (*entryDetailsCallback_t)(uint8_t nr);
 
-struct menu_t {
-    menuFunc_t  menuFunc;
-    int16_t     encoderPos;
-    bool        encoder_acceleration;
-
-    // menu_t() : menuFunc(NULL), encoderPos(0) {}
-    menu_t(menuFunc_t func, int16_t pos, bool accel) : menuFunc(func), encoderPos(pos), encoder_acceleration(accel) {}
-};
 
 #define ENCODER_TICKS_PER_MAIN_MENU_ITEM 8
 #define ENCODER_TICKS_PER_SCROLL_MENU_ITEM 4
@@ -28,15 +21,6 @@ struct menu_t {
 #define SELECTED_SCROLL_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM)
 #define IS_SELECTED_MAIN(n) ((n) == SELECTED_MAIN_MENU_ITEM())
 #define IS_SELECTED_SCROLL(n) ((n) == SELECTED_SCROLL_MENU_ITEM())
-
-void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos);
-void lcd_replace_menu(menuFunc_t nextMenu);
-void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos);
-void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos = ENCODER_NO_SELECTION, int16_t oldEncoderPos = ENCODER_NO_SELECTION);
-void lcd_change_to_previous_menu();
-void lcd_remove_menu();
-
-menu_t & currentMenu();
 
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom);
 void lcd_basic_screen();
@@ -136,5 +120,7 @@ extern uint8_t led_glow_dir;
 #endif
 
 #define BOTTOM_MENU_YPOS 54
+#define MILLISECONDS_PER_SECOND 1000UL
+#define MILLISECONDS_PER_MINUTE (MILLISECONDS_PER_SECOND*60UL)
 
 #endif//ULTI_LCD2_HI_LIB_H

@@ -11,6 +11,7 @@
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_print.h"
+#include "UltiLCD2_menu_utils.h"
 
 #define BED_CENTER_ADJUST_X (X_MAX_POS/2)
 #define BED_CENTER_ADJUST_Y (Y_MAX_LENGTH - 10)

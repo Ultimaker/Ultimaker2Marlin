@@ -4,9 +4,7 @@
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
 #include "UltiLCD2_hi_lib.h"
-#include "StackList.h"
-
-static StackList<menu_t> menuStack;
+#include "UltiLCD2_menu_utils.h"
 
 //menuFunc_t currentMenu;
 //menuFunc_t previousMenu;
@@ -23,75 +21,6 @@ uint8_t lcd_setting_type;
 int16_t lcd_setting_min;
 int16_t lcd_setting_max;
 
-
-static void lcd_start_menu(bool beep)
-{
-    minProgress = 0;
-    led_glow = led_glow_dir = 0;
-    LED_NORMAL();
-    if (beep)
-    {
-        lcd_lib_beep();
-    }
-}
-
-void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
-{
-    lcd_start_menu(false);
-    menuStack.push(menu_t(nextMenu, newEncoderPos, encoder_acceleration));
-}
-
-void lcd_replace_menu(menuFunc_t nextMenu)
-{
-    lcd_start_menu(true);
-    menuStack.peek().menuFunc = nextMenu;
-    menuStack.peek().encoder_acceleration = encoder_acceleration;
-}
-
-void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
-{
-    lcd_start_menu(true);
-    menuStack.peek().menuFunc = nextMenu;
-    menuStack.peek().encoderPos = newEncoderPos;
-    menuStack.peek().encoder_acceleration = encoder_acceleration;
-    lcd_lib_encoder_pos = newEncoderPos;
-}
-
-void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos, int16_t oldEncoderPos)
-{
-    lcd_start_menu(true);
-    menuStack.peek().encoderPos = oldEncoderPos;
-    lcd_add_menu(nextMenu, newEncoderPos);
-    lcd_lib_encoder_pos = newEncoderPos;
-}
-
-void lcd_change_to_previous_menu()
-{
-    lcd_start_menu(true);
-    if (menuStack.count()>1)
-    {
-        menuStack.pop();
-    }
-    lcd_lib_encoder_pos = menuStack.peek().encoderPos;
-    encoder_acceleration = menuStack.peek().encoder_acceleration;
-}
-
-void lcd_remove_menu()
-{
-    // go one step back (without "beep")
-    lcd_start_menu(false);
-    if (menuStack.count()>1)
-    {
-        menuStack.pop();
-    }
-    lcd_lib_encoder_pos = menuStack.peek().encoderPos;
-    encoder_acceleration = menuStack.peek().encoder_acceleration;
-}
-
-menu_t & currentMenu()
-{
-    return menuStack.peek();
-}
 
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
 {

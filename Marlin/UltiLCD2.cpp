@@ -11,6 +11,7 @@
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
+#include "UltiLCD2_menu_utils.h"
 #include "tinkergnome.h"
 
 #define SERIAL_CONTROL_TIMEOUT 5000
