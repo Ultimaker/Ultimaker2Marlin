@@ -214,26 +214,12 @@ const menuitem_t & lcd_draw_menu_item(menuItemCallback_t getMenuItem, uint8_t nr
 
 void lcd_process_menu(menuItemCallback_t getMenuItem, uint8_t len)
 {
-
     if ((lcd_lib_encoder_pos != lastEncoderPos) || lcd_lib_button_pressed)
     {
         // reset timeout value
         lastEncoderPos = lcd_lib_encoder_pos;
 
-        // process active item
-        if ((selectedMenuItem >= 0) && currentMenuFunc)
-        {
-            if (lcd_lib_button_pressed)
-            {
-                lcd_lib_beep();
-                lcd_reset_menu();
-            }else
-            {
-                currentMenuFunc();
-                lastEncoderPos = lcd_lib_encoder_pos;
-            }
-        }
-        else if (lcd_lib_encoder_pos != ENCODER_NO_SELECTION)
+        if (!currentMenuFunc && (lcd_lib_encoder_pos != ENCODER_NO_SELECTION))
         {
             // adjust encoder position
             if (lcd_lib_encoder_pos < 0)
@@ -254,7 +240,12 @@ void lcd_process_menu(menuItemCallback_t getMenuItem, uint8_t len)
 
                 if (lcd_lib_button_pressed)
                 {
+                    lcd_lib_button_pressed = false;
                     getMenuItem(index, cachedItem);
+                    if (cachedItem.initFunc)
+                    {
+                        cachedItem.initFunc();
+                    }
                     if (cachedItem.flags & MENU_INPLACE_EDIT)
                     {
                         // "instant tuning"
@@ -283,6 +274,19 @@ void lcd_process_menu(menuItemCallback_t getMenuItem, uint8_t len)
         {
             // timeout occurred - reset selection
             lcd_reset_menu();
+        }
+    }
+    // process active item
+    if ((selectedMenuItem >= 0) && currentMenuFunc)
+    {
+        if (lcd_lib_button_pressed)
+        {
+            lcd_lib_beep();
+            lcd_reset_menu();
+        }else
+        {
+            currentMenuFunc();
+            lastEncoderPos = lcd_lib_encoder_pos;
         }
     }
 }

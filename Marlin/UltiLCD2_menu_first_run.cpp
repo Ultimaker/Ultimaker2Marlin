@@ -439,8 +439,9 @@ static void lcd_menu_first_run_material_select_1()
 
 static char* lcd_material_select_callback(uint8_t nr)
 {
-    eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
-    return card.longFilename;
+    eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+    LCD_CACHE_FILENAME(0)[8] = '\0';
+    return LCD_CACHE_FILENAME(0);
 }
 
 static void lcd_material_select_details_callback(uint8_t nr)
@@ -466,7 +467,7 @@ static void lcd_menu_first_run_material_select_material()
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), e);
         SET_FIRST_RUN_DONE();
         lcd_replace_menu(lcd_menu_first_run_material_select_confirm_material, MAIN_MENU_ITEM_POS(0));
-        strcat_P(card.longFilename, PSTR(" as material,"));
+        strcat_P(LCD_CACHE_FILENAME(0), PSTR(" as material,"));
     }
 }
 
@@ -476,7 +477,7 @@ static void lcd_menu_first_run_material_select_confirm_material()
     lcd_question_screen(lcd_menu_first_run_material_select_2, lcd_remove_menu, PSTR("YES"), lcd_menu_first_run_material_select_material, lcd_remove_menu, PSTR("NO"));
     DRAW_PROGRESS_NR(18);
     lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
-    lcd_lib_draw_string_center(30, card.longFilename);
+    lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
     lcd_lib_draw_string_centerP(40, PSTR("is this right?"));
     lcd_lib_update_screen();
 }

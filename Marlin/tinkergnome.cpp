@@ -50,6 +50,7 @@ static float xy_speed = 0.0;
 static float target_position[NUM_AXIS];
 static unsigned long last_axis_move = 0;
 static bool bResetTargetPos = false;
+static int8_t movingSpeed = 0;
 
 const uint8_t thermometerGfx[] PROGMEM = {
     5, 8, //size
@@ -114,6 +115,11 @@ const uint8_t fan1Gfx[] PROGMEM = {
 const uint8_t speedGfx[] PROGMEM = {
     6, 8, //size
     0x22, 0x14, 0x08, 0x22, 0x14, 0x08
+};
+
+const uint8_t revSpeedGfx[] PROGMEM = {
+    6, 8, //size
+    0x08, 0x14, 0x22, 0x08, 0x14, 0x22
 };
 
 static void lcd_print_tune();
@@ -1114,7 +1120,167 @@ void lcd_menu_maintenance_expert()
     }
 }
 
+static void init_target_positions()
+{
+    lcd_lib_encoder_pos = 0;
+    movingSpeed = 0;
+    for (uint8_t i=0; i<NUM_AXIS; ++i)
+    {
+        target_position[i] = current_position[i];
+    }
+}
+
+static void plan_move()
+{
+    if (!is_command_queued())
+    {
+        if (bResetTargetPos)
+        {
+            init_target_positions();
+            bResetTargetPos = false;
+        }
+        else if (((millis() - last_axis_move) > AXIS_MOVE_DELAY) && (movesplanned() < 2))
+        {
+            // enque next move
+            bool bMove(false);
+            float feedrate = homing_feedrate[X_AXIS];
+            for (uint8_t i=0; i<NUM_AXIS; ++i)
+            {
+                if (target_position[i] != current_position[i])
+                {
+                    current_position[i] = target_position[i];
+                    feedrate = constrain(min(feedrate, homing_feedrate[i]), 3200, 8000);
+                    bMove = true;
+                }
+            }
+            if (bMove)
+            {
+                plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/800, active_extruder);
+                last_axis_move = millis();
+            }
+        }
+    }
+}
+
+static void stopMove(AxisEnum axis)
+{
+    // stop moving
+    quickStop();
+    lcd_lib_encoder_pos = 0;
+    movingSpeed = 0;
+    current_position[axis] = st_get_position(axis)/axis_steps_per_unit[axis];
+}
+
+static void lcd_move_axis(AxisEnum axis)
+{
+    if (lcd_lib_button_pressed || ((lcd_lib_encoder_pos < 0) && (movingSpeed > 0)) || ((lcd_lib_encoder_pos > 0) && (movingSpeed < 0)))
+//    if (lcd_lib_button_pressed)
+    {
+        // stop moving
+        stopMove(axis);
+    }
+    else
+    {
+        int8_t newSpeed = movingSpeed;
+        if (lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM < 0)
+        {
+            --newSpeed;
+            lcd_lib_encoder_pos = 0;
+        }
+        else if (lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM > 0)
+        {
+            ++newSpeed;
+            lcd_lib_encoder_pos = 0;
+        }
+        newSpeed = constrain(newSpeed, -20, 20);
+        if (((newSpeed > 0) && (movingSpeed < 0)) || ((newSpeed < 0) && (movingSpeed > 0)))
+        {
+            // direction has changed
+            stopMove(axis);
+        }
+        else
+        {
+            movingSpeed = newSpeed;
+            if (movingSpeed!= 0)
+            {
+                // feed the plsnner with consecutively moves
+                while (movesplanned() < 3)
+                {
+                    target_position[axis] = constrain(current_position[axis]+float(movingSpeed)/10, min_pos[axis], max_pos[axis]);
+                    if (abs(target_position[axis]-current_position[axis]) < 0.01)
+                    {
+                        // min/max position reached
+                        stopMove(axis);
+                        break;
+                    }
+                    current_position[axis] = target_position[axis];
+                    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], abs(movingSpeed), active_extruder);
+                }
+            }
+        }
+    }
+}
+
 static void lcd_move_x_axis()
+{
+    #if defined(X_MIN_PIN) && X_MIN_PIN > -1
+    if ((movingSpeed < 0) && (READ(X_MIN_PIN) != X_ENDSTOPS_INVERTING))
+    {
+        stopMove(X_AXIS);
+        return;
+    }
+    #endif
+    #if defined(X_MAX_PIN) && X_MAX_PIN > -1
+    if ((movingSpeed > 0) && (READ(X_MAX_PIN) != X_ENDSTOPS_INVERTING))
+    {
+        stopMove(X_AXIS);
+        return;
+    }
+    #endif
+    lcd_move_axis(X_AXIS);
+}
+
+static void lcd_move_y_axis()
+{
+    #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
+    if ((movingSpeed < 0) && (READ(Y_MIN_PIN) != Y_ENDSTOPS_INVERTING))
+    {
+        stopMove(Y_AXIS);
+        return;
+    }
+    #endif
+    // check max endstop
+    #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
+    if ((movingSpeed > 0) && (READ(Y_MAX_PIN) != Y_ENDSTOPS_INVERTING))
+    {
+        stopMove(Y_AXIS);
+        return;
+    }
+    #endif
+    lcd_move_axis(Y_AXIS);
+}
+
+static void lcd_move_z_axis()
+{
+    #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
+    if ((movingSpeed < 0) && (READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING))
+    {
+        stopMove(Z_AXIS);
+        return;
+    }
+    #endif
+    // check max endstop
+    #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
+    if ((movingSpeed > 0) && (READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING))
+    {
+        stopMove(Z_AXIS);
+        return;
+    }
+    #endif
+    lcd_move_axis(Z_AXIS);
+}
+
+static void lcd_position_x_axis()
 {
     lcd_tune_value(target_position[X_AXIS], min_pos[X_AXIS], max_pos[X_AXIS], 0.05f);
     // check min endstop
@@ -1131,9 +1297,10 @@ static void lcd_move_x_axis()
         target_position[X_AXIS] = current_position[X_AXIS];
     }
     #endif
+    plan_move();
 }
 
-static void lcd_move_y_axis()
+static void lcd_position_y_axis()
 {
     lcd_tune_value(target_position[Y_AXIS], min_pos[Y_AXIS], max_pos[Y_AXIS], 0.05f);
     // check min endstop
@@ -1150,9 +1317,10 @@ static void lcd_move_y_axis()
         target_position[Y_AXIS] = current_position[Y_AXIS];
     }
     #endif
+    plan_move();
 }
 
-static void lcd_move_z_axis()
+static void lcd_position_z_axis()
 {
     lcd_tune_value(target_position[Z_AXIS], min_pos[Z_AXIS], max_pos[Z_AXIS], 0.01f);
     // check min endstop
@@ -1169,6 +1337,7 @@ static void lcd_move_z_axis()
         target_position[Z_AXIS] = current_position[Z_AXIS];
     }
     #endif
+    plan_move();
 }
 
 FORCE_INLINE void lcd_home_x_axis() { bResetTargetPos = true; enquecommand_P(PSTR("G28 X0")); }
@@ -1176,29 +1345,34 @@ FORCE_INLINE void lcd_home_y_axis() { bResetTargetPos = true; enquecommand_P(PST
 FORCE_INLINE void lcd_home_z_axis() { bResetTargetPos = true; enquecommand_P(PSTR("G28 Z0")); }
 FORCE_INLINE void lcd_home_all()    { bResetTargetPos = true; enquecommand_P(PSTR("G28")); }
 
-static void init_target_positions()
-{
-    for (uint8_t i=0; i<NUM_AXIS; ++i)
-    {
-        target_position[i] = current_position[i];
-    }
-}
-
 static void post_menu_move()
 {
     clear_command_queue();
 
-    // move all axes to home position and disable steppers
-    if (current_position[Z_AXIS] > Z_MAX_POS - 30)
-    {
-        enquecommand_P(PSTR("G28 X0 Y0"));
-        enquecommand_P(PSTR("G28 Z0"));
-    }else{
-        enquecommand_P(PSTR("G28"));
-    }
-    enquecommand_P(PSTR("M84"));
+//    // move all axes to home position and disable steppers
+//    if (current_position[Z_AXIS] > Z_MAX_POS - 30)
+//    {
+//        enquecommand_P(PSTR("G28 X0 Y0"));
+//        enquecommand_P(PSTR("G28 Z0"));
+//    }else{
+//        enquecommand_P(PSTR("G28"));
+//    }
+//    enquecommand_P(PSTR("M84"));
 
     lcd_change_to_previous_menu();
+}
+
+static void drawMoveDetails(char *details)
+{
+    int_to_string(abs(movingSpeed), details, PSTR("mm" PER_SECOND_SYMBOL));
+    if (movingSpeed <= 0)
+    {
+        lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, revSpeedGfx);
+    }
+    if (movingSpeed >= 0)
+    {
+        lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-6, 5, speedGfx);
+    }
 }
 
 // create menu options for "move axes"
@@ -1237,25 +1411,47 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
     }
     else if (nr == index++)
     {
+        // x move
+        strcpy_P(opt.title, PSTR("X"));
+        if (isActive(nr))
+        {
+            drawMoveDetails(opt.details);
+        }
+        else
+        {
+            strcpy_P(opt.details, PSTR("Move X axis"));
+        }
+        opt.left = LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING;
+        opt.top = 17;
+        opt.width = LCD_CHAR_SPACING*3;
+        opt.height = LCD_CHAR_HEIGHT;
+        opt.initFunc = init_target_positions;
+        opt.callbackFunc = lcd_move_x_axis;
+        opt.textalign = ALIGN_CENTER;
+        opt.flags = MENU_INPLACE_EDIT;
+        opt.max_encoder_acceleration = 2;
+    }
+    else if (nr == index++)
+    {
         // x position
         float_to_string(isActive(nr) ? target_position[X_AXIS] : current_position[X_AXIS], opt.title, PSTR("mm"));
         strcpy_P(opt.details, PSTR("X axis position"));
-        opt.left = LCD_CHAR_MARGIN_LEFT+3*LCD_CHAR_SPACING;
+        opt.left = LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING;
         opt.top = 17;
         opt.width = 48;
         opt.height = LCD_CHAR_HEIGHT;
         opt.initFunc = init_target_positions;
-        opt.callbackFunc = lcd_move_x_axis;
+        opt.callbackFunc = lcd_position_x_axis;
         opt.textalign = ALIGN_RIGHT | ALIGN_VCENTER;
         opt.flags = MENU_INPLACE_EDIT;
-        opt.max_encoder_acceleration = 5;
+        opt.max_encoder_acceleration = 4;
     }
     else if (nr == index++)
     {
         // x home
         strcpy_P(opt.title, PSTR(HOME_SYMBOL));
         strcpy_P(opt.details, PSTR("Home X axis"));
-        opt.left = LCD_CHAR_MARGIN_LEFT+13*LCD_CHAR_SPACING;
+        opt.left = LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - LCD_CHAR_SPACING;
         opt.top = 17;
         opt.width = 10;
         opt.height = LCD_CHAR_HEIGHT;
@@ -1267,25 +1463,47 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
     }
     else if (nr == index++)
     {
+        // y move
+        strcpy_P(opt.title, PSTR("Y"));
+        if (isActive(nr))
+        {
+            drawMoveDetails(opt.details);
+        }
+        else
+        {
+            strcpy_P(opt.details, PSTR("Move Y axis"));
+        }
+        opt.left = LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING;
+        opt.top = 29;
+        opt.width = LCD_CHAR_SPACING*3;
+        opt.height = LCD_CHAR_HEIGHT;
+        opt.initFunc = init_target_positions;
+        opt.callbackFunc = lcd_move_y_axis;
+        opt.textalign = ALIGN_CENTER;
+        opt.flags = MENU_INPLACE_EDIT;
+        opt.max_encoder_acceleration = 2;
+    }
+    else if (nr == index++)
+    {
         // y position
         float_to_string(isActive(nr) ? target_position[Y_AXIS] : current_position[Y_AXIS], opt.title, PSTR("mm"));
         strcpy_P(opt.details, PSTR("Y axis position"));
-        opt.left = LCD_CHAR_MARGIN_LEFT+3*LCD_CHAR_SPACING;
+        opt.left = LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING;
         opt.top = 29;
         opt.width = 48;
         opt.height = LCD_CHAR_HEIGHT;
         opt.initFunc = init_target_positions;
-        opt.callbackFunc = lcd_move_y_axis;
+        opt.callbackFunc = lcd_position_y_axis;
         opt.textalign = ALIGN_RIGHT | ALIGN_VCENTER;
         opt.flags = MENU_INPLACE_EDIT;
-        opt.max_encoder_acceleration = 5;
+        opt.max_encoder_acceleration = 4;
     }
     else if (nr == index++)
     {
         // y home
         strcpy_P(opt.title, PSTR(HOME_SYMBOL));
         strcpy_P(opt.details, PSTR("Home Y axis"));
-        opt.left = LCD_CHAR_MARGIN_LEFT+13*LCD_CHAR_SPACING;
+        opt.left = LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - LCD_CHAR_SPACING;
         opt.top = 29;
         opt.width = 10;
         opt.height = LCD_CHAR_HEIGHT;
@@ -1297,25 +1515,47 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
     }
     else if (nr == index++)
     {
+        // z move
+        strcpy_P(opt.title, PSTR("Z"));
+        if (isActive(nr))
+        {
+            drawMoveDetails(opt.details);
+        }
+        else
+        {
+            strcpy_P(opt.details, PSTR("Move Z axis"));
+        }
+        opt.left = LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING;
+        opt.top = 41;
+        opt.width = LCD_CHAR_SPACING*3;
+        opt.height = LCD_CHAR_HEIGHT;
+        opt.initFunc = init_target_positions;
+        opt.callbackFunc = lcd_move_z_axis;
+        opt.textalign = ALIGN_CENTER;
+        opt.flags = MENU_INPLACE_EDIT;
+        opt.max_encoder_acceleration = 2;
+    }
+    else if (nr == index++)
+    {
         // z position
         float_to_string(isActive(nr) ? target_position[Z_AXIS] : current_position[Z_AXIS], opt.title, PSTR("mm"));
         strcpy_P(opt.details, PSTR("Z axis position"));
-        opt.left = LCD_CHAR_MARGIN_LEFT+3*LCD_CHAR_SPACING;
+        opt.left = LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING;
         opt.top = 41;
         opt.width = 48;
         opt.height = LCD_CHAR_HEIGHT;
         opt.initFunc = init_target_positions;
-        opt.callbackFunc = lcd_move_z_axis;
+        opt.callbackFunc = lcd_position_z_axis;
         opt.textalign = ALIGN_RIGHT | ALIGN_VCENTER;
         opt.flags = MENU_INPLACE_EDIT;
-        opt.max_encoder_acceleration = 15;
+        opt.max_encoder_acceleration = 10;
     }
     else if (nr == index++)
     {
         // z home
         strcpy_P(opt.title, PSTR(HOME_SYMBOL));
         strcpy_P(opt.details, PSTR("Home Z axis"));
-        opt.left = LCD_CHAR_MARGIN_LEFT+13*LCD_CHAR_SPACING;
+        opt.left = LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - LCD_CHAR_SPACING;
         opt.top = 41;
         opt.width = 10;
         opt.height = LCD_CHAR_HEIGHT;
@@ -1333,48 +1573,18 @@ void lcd_menu_move_axes()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    // bed temperature
-    lcd_lib_draw_string_leftP(17, PSTR("X"));
-    lcd_lib_draw_string_leftP(29, PSTR("Y"));
-    lcd_lib_draw_string_leftP(41, PSTR("Z"));
+//    lcd_lib_draw_string_leftP(17, PSTR("X"));
+//    lcd_lib_draw_string_leftP(29, PSTR("Y"));
+//    lcd_lib_draw_string_leftP(41, PSTR("Z"));
 
-    lcd_process_menu(get_move_menuoption, 8);
-
-    if (!is_command_queued())
-    {
-        if (bResetTargetPos)
-        {
-            init_target_positions();
-            bResetTargetPos = false;
-        }
-        else if (((millis() - last_axis_move) > AXIS_MOVE_DELAY) && (movesplanned() < BLOCK_BUFFER_SIZE))
-        {
-            // enque next move
-            bool bMove(false);
-            float feedrate = homing_feedrate[X_AXIS];
-            for (uint8_t i=0; i<NUM_AXIS; ++i)
-            {
-                if (target_position[i] != current_position[i])
-                {
-                    current_position[i] = target_position[i];
-                    feedrate = constrain(min(feedrate, homing_feedrate[i]), 3200, 8000);
-                    bMove = true;
-                }
-            }
-            if (bMove)
-            {
-                plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/400, active_extruder);
-                last_axis_move = millis();
-            }
-        }
-    }
+    lcd_process_menu(get_move_menuoption, 11);
 
     bool bDrawHeader(true);
-    for (uint8_t index=0; index<8; ++index) {
+    for (uint8_t index=0; index<11; ++index) {
         const menuitem_t &opt = lcd_draw_menu_item(get_move_menuoption, index);
         if ((isSelected(index) || isActive(index)) && opt.details[0])
         {
-            lcd_lib_draw_string_left(5, opt.details);
+            lcd_lib_draw_string_center(5, opt.details);
             bDrawHeader = false;
         }
     }
