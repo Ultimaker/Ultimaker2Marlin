@@ -151,7 +151,7 @@ static void lcd_advanced_details(uint8_t nr)
 
 void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu((ui_mode & UI_MODE_TINKERGNOME) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_TINKERGNOME) ? 14 : 13), lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu((ui_mode & UI_MODE_TINKERGNOME) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_TINKERGNOME) ? 15 : 13), lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;

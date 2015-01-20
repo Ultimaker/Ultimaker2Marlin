@@ -84,6 +84,8 @@
 		<Unit filename="../Marlin/UltiLCD2_menu_material.h" />
 		<Unit filename="../Marlin/UltiLCD2_menu_print.cpp" />
 		<Unit filename="../Marlin/UltiLCD2_menu_print.h" />
+		<Unit filename="../Marlin/UltiLCD2_menu_utils.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_menu_utils.h" />
 		<Unit filename="../Marlin/cardreader.cpp" />
 		<Unit filename="../Marlin/cardreader.h" />
 		<Unit filename="../Marlin/electronics_test.cpp" />

@@ -24,8 +24,6 @@
 #define LED_DIM_MAXTIME 240		// 240 min
 #define DIM_LEVEL 0
 
-#define AXIS_MOVE_DELAY 10      // 10ms
-
 //#define LED_NORMAL() lcd_lib_led_color(48,48,60)
 //#define LED_GLOW() lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow)
 //#define LED_GLOW_ERROR() lcd_lib_led_color(8+min(245,led_glow<<3),0,0);
@@ -42,15 +40,17 @@
 #define HOME_SYMBOL "\x1C"
 #define PER_SECOND_SYMBOL "/s"
 
+// #define AXIS_MOVE_DELAY 10      // 10ms
+#define MOVE_DELAY 500
 
 // these are used to maintain a simple low-pass filter on the speeds - thanks norpchen
 static float e_smoothed_speed[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0.0, 0.0, 0.0);
 static float xy_speed = 0.0;
 
 static float target_position[NUM_AXIS];
-static unsigned long last_axis_move = 0;
 static bool bResetTargetPos = false;
 static int8_t movingSpeed = 0;
+static bool delayMove = false;
 
 const uint8_t thermometerGfx[] PROGMEM = {
     5, 8, //size
@@ -1124,95 +1124,132 @@ static void init_target_positions()
 {
     lcd_lib_encoder_pos = 0;
     movingSpeed = 0;
+    delayMove = false;
     for (uint8_t i=0; i<NUM_AXIS; ++i)
     {
         target_position[i] = current_position[i];
     }
 }
 
-static void plan_move()
+static bool endstop_reached(AxisEnum axis, int8_t direction)
 {
-    if (!is_command_queued())
+    if (axis == X_AXIS)
+    {
+        #if defined(X_MIN_PIN) && X_MIN_PIN > -1
+        if ((direction < 0) && (READ(X_MIN_PIN) != X_ENDSTOPS_INVERTING))
+        {
+            return true;
+        }
+        #endif
+        #if defined(X_MAX_PIN) && X_MAX_PIN > -1
+        if ((direction > 0) && (READ(X_MAX_PIN) != X_ENDSTOPS_INVERTING))
+        {
+            return true;
+        }
+        #endif
+    }
+    else if (axis == Y_AXIS)
+    {
+        #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
+        if ((direction < 0) && (READ(Y_MIN_PIN) != Y_ENDSTOPS_INVERTING))
+        {
+            return true;
+        }
+        #endif
+        // check max endstop
+        #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
+        if ((direction > 0) && (READ(Y_MAX_PIN) != Y_ENDSTOPS_INVERTING))
+        {
+            return true;
+        }
+        #endif
+    }
+    else if (axis == Z_AXIS)
+    {
+        #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
+        if ((direction < 0) && (READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING))
+        {
+            return true;
+        }
+        #endif
+        // check max endstop
+        #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
+        if ((direction > 0) && (READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING))
+        {
+            return true;
+        }
+        #endif
+    }
+    return false;
+}
+
+static void plan_move(AxisEnum axis)
+{
+    if (!is_command_queued() && !blocks_queued())
     {
         if (bResetTargetPos)
         {
             init_target_positions();
             bResetTargetPos = false;
         }
-        else if (((millis() - last_axis_move) > AXIS_MOVE_DELAY) && (movesplanned() < 2))
+        else
         {
             // enque next move
-            bool bMove(false);
-            float feedrate = homing_feedrate[X_AXIS];
-            for (uint8_t i=0; i<NUM_AXIS; ++i)
+            if ((abs(target_position[axis] - current_position[axis])>0.005) && !endstop_reached(axis, (target_position[axis]>current_position[axis]) ? 1 : -1))
             {
-                if (target_position[i] != current_position[i])
-                {
-                    current_position[i] = target_position[i];
-                    feedrate = constrain(min(feedrate, homing_feedrate[i]), 3200, 8000);
-                    bMove = true;
-                }
-            }
-            if (bMove)
-            {
-                plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], feedrate/800, active_extruder);
-                last_axis_move = millis();
+                current_position[axis] = target_position[axis];
+                plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[axis]/800, active_extruder);
             }
         }
     }
 }
 
-static void stopMove(AxisEnum axis)
+static void stopMove()
 {
     // stop moving
-    quickStop();
     lcd_lib_encoder_pos = 0;
     movingSpeed = 0;
-    current_position[axis] = st_get_position(axis)/axis_steps_per_unit[axis];
+    delayMove = true;
 }
 
 static void lcd_move_axis(AxisEnum axis)
 {
-    if (lcd_lib_button_pressed || ((lcd_lib_encoder_pos < 0) && (movingSpeed > 0)) || ((lcd_lib_encoder_pos > 0) && (movingSpeed < 0)))
-//    if (lcd_lib_button_pressed)
+    if (endstop_reached(axis, movingSpeed) || lcd_lib_button_pressed || ((lcd_lib_encoder_pos < 0) && (movingSpeed > 0)) || ((lcd_lib_encoder_pos > 0) && (movingSpeed < 0)))
     {
         // stop moving
-        stopMove(axis);
+        stopMove();
+    }
+    else if (delayMove)
+    {
+        // prevent too fast consecutively inputs
+        lcd_lib_encoder_pos = 0;
+        delayMove = (millis() - last_user_interaction) < MOVE_DELAY;
     }
     else
     {
-        int8_t newSpeed = movingSpeed;
         if (lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM < 0)
         {
-            --newSpeed;
+            --movingSpeed;
             lcd_lib_encoder_pos = 0;
         }
         else if (lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM > 0)
         {
-            ++newSpeed;
+            ++movingSpeed;
             lcd_lib_encoder_pos = 0;
         }
-        newSpeed = constrain(newSpeed, -20, 20);
-        if (((newSpeed > 0) && (movingSpeed < 0)) || ((newSpeed < 0) && (movingSpeed > 0)))
+        movingSpeed = constrain(movingSpeed, -15, 15);
+        if (movingSpeed != 0)
         {
-            // direction has changed
-            stopMove(axis);
-        }
-        else
-        {
-            movingSpeed = newSpeed;
-            if (movingSpeed!= 0)
+            uint8_t steps = BLOCK_BUFFER_SIZE - movesplanned() - 2;
+            for (uint8_t i = 0; i < steps; ++i)
             {
-                // feed the plsnner with consecutively moves
-                while (movesplanned() < 3)
+                target_position[axis] = current_position[axis]+float(movingSpeed)/(BLOCK_BUFFER_SIZE << 2);
+                if ((movingSpeed < 0 && (target_position[axis] < min_pos[axis])) || ((movingSpeed > 0) && (target_position[axis] > max_pos[axis])) || endstop_reached(axis, movingSpeed))
                 {
-                    target_position[axis] = constrain(current_position[axis]+float(movingSpeed)/10, min_pos[axis], max_pos[axis]);
-                    if (abs(target_position[axis]-current_position[axis]) < 0.01)
-                    {
-                        // min/max position reached
-                        stopMove(axis);
-                        break;
-                    }
+                    stopMove();
+                }
+                else
+                {
                     current_position[axis] = target_position[axis];
                     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], abs(movingSpeed), active_extruder);
                 }
@@ -1223,144 +1260,41 @@ static void lcd_move_axis(AxisEnum axis)
 
 static void lcd_move_x_axis()
 {
-    #if defined(X_MIN_PIN) && X_MIN_PIN > -1
-    if ((movingSpeed < 0) && (READ(X_MIN_PIN) != X_ENDSTOPS_INVERTING))
-    {
-        stopMove(X_AXIS);
-        return;
-    }
-    #endif
-    #if defined(X_MAX_PIN) && X_MAX_PIN > -1
-    if ((movingSpeed > 0) && (READ(X_MAX_PIN) != X_ENDSTOPS_INVERTING))
-    {
-        stopMove(X_AXIS);
-        return;
-    }
-    #endif
     lcd_move_axis(X_AXIS);
 }
 
 static void lcd_move_y_axis()
 {
-    #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
-    if ((movingSpeed < 0) && (READ(Y_MIN_PIN) != Y_ENDSTOPS_INVERTING))
-    {
-        stopMove(Y_AXIS);
-        return;
-    }
-    #endif
-    // check max endstop
-    #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
-    if ((movingSpeed > 0) && (READ(Y_MAX_PIN) != Y_ENDSTOPS_INVERTING))
-    {
-        stopMove(Y_AXIS);
-        return;
-    }
-    #endif
     lcd_move_axis(Y_AXIS);
 }
 
 static void lcd_move_z_axis()
 {
-    #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
-    if ((movingSpeed < 0) && (READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING))
-    {
-        stopMove(Z_AXIS);
-        return;
-    }
-    #endif
-    // check max endstop
-    #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
-    if ((movingSpeed > 0) && (READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING))
-    {
-        stopMove(Z_AXIS);
-        return;
-    }
-    #endif
     lcd_move_axis(Z_AXIS);
 }
 
 static void lcd_position_x_axis()
 {
     lcd_tune_value(target_position[X_AXIS], min_pos[X_AXIS], max_pos[X_AXIS], 0.05f);
-    // check min endstop
-    #if defined(X_MIN_PIN) && X_MIN_PIN > -1
-    if ((target_position[X_AXIS] < current_position[X_AXIS]) && (READ(X_MIN_PIN) != X_ENDSTOPS_INVERTING))
-    {
-        target_position[X_AXIS] = current_position[X_AXIS];
-    }
-    #endif
-    // check max endstop
-    #if defined(X_MAX_PIN) && X_MAX_PIN > -1
-    if ((target_position[X_AXIS] > current_position[X_AXIS]) && (READ(X_MAX_PIN) != X_ENDSTOPS_INVERTING))
-    {
-        target_position[X_AXIS] = current_position[X_AXIS];
-    }
-    #endif
-    plan_move();
+    plan_move(X_AXIS);
 }
 
 static void lcd_position_y_axis()
 {
     lcd_tune_value(target_position[Y_AXIS], min_pos[Y_AXIS], max_pos[Y_AXIS], 0.05f);
-    // check min endstop
-    #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
-    if ((target_position[Y_AXIS] < current_position[Y_AXIS]) && (READ(Y_MIN_PIN) != Y_ENDSTOPS_INVERTING))
-    {
-        target_position[Y_AXIS] = current_position[Y_AXIS];
-    }
-    #endif
-    // check max endstop
-    #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
-    if ((target_position[Y_AXIS] > current_position[Y_AXIS]) && (READ(Y_MAX_PIN) != Y_ENDSTOPS_INVERTING))
-    {
-        target_position[Y_AXIS] = current_position[Y_AXIS];
-    }
-    #endif
-    plan_move();
+    plan_move(Y_AXIS);
 }
 
 static void lcd_position_z_axis()
 {
     lcd_tune_value(target_position[Z_AXIS], min_pos[Z_AXIS], max_pos[Z_AXIS], 0.01f);
-    // check min endstop
-    #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
-    if ((target_position[Z_AXIS] < current_position[Z_AXIS]) && (READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING))
-    {
-        target_position[Z_AXIS] = current_position[Z_AXIS];
-    }
-    #endif
-    // check max endstop
-    #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
-    if ((target_position[Z_AXIS] > current_position[Z_AXIS]) && (READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING))
-    {
-        target_position[Z_AXIS] = current_position[Z_AXIS];
-    }
-    #endif
-    plan_move();
+    plan_move(Z_AXIS);
 }
 
 FORCE_INLINE void lcd_home_x_axis() { bResetTargetPos = true; enquecommand_P(PSTR("G28 X0")); }
 FORCE_INLINE void lcd_home_y_axis() { bResetTargetPos = true; enquecommand_P(PSTR("G28 Y0")); }
 FORCE_INLINE void lcd_home_z_axis() { bResetTargetPos = true; enquecommand_P(PSTR("G28 Z0")); }
 FORCE_INLINE void lcd_home_all()    { bResetTargetPos = true; enquecommand_P(PSTR("G28")); }
-
-static void post_menu_move()
-{
-    clear_command_queue();
-
-//    // move all axes to home position and disable steppers
-//    if (current_position[Z_AXIS] > Z_MAX_POS - 30)
-//    {
-//        enquecommand_P(PSTR("G28 X0 Y0"));
-//        enquecommand_P(PSTR("G28 Z0"));
-//    }else{
-//        enquecommand_P(PSTR("G28"));
-//    }
-//    enquecommand_P(PSTR("M84"));
-
-    lcd_change_to_previous_menu();
-}
 
 static void drawMoveDetails(char *details)
 {
@@ -1404,7 +1338,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
         opt.width = 52;
         opt.height = LCD_CHAR_HEIGHT;
         opt.initFunc = 0;
-        opt.callbackFunc = post_menu_move;
+        opt.callbackFunc = lcd_change_to_previous_menu;
         opt.textalign = ALIGN_CENTER;
         opt.flags = MENU_NORMAL;
         opt.max_encoder_acceleration = 1;
@@ -1434,7 +1368,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
     else if (nr == index++)
     {
         // x position
-        float_to_string(isActive(nr) ? target_position[X_AXIS] : current_position[X_AXIS], opt.title, PSTR("mm"));
+        float_to_string(current_position[X_AXIS], opt.title, PSTR("mm"));
         strcpy_P(opt.details, PSTR("X axis position"));
         opt.left = LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING;
         opt.top = 17;
@@ -1486,7 +1420,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
     else if (nr == index++)
     {
         // y position
-        float_to_string(isActive(nr) ? target_position[Y_AXIS] : current_position[Y_AXIS], opt.title, PSTR("mm"));
+        float_to_string(current_position[Y_AXIS], opt.title, PSTR("mm"));
         strcpy_P(opt.details, PSTR("Y axis position"));
         opt.left = LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING;
         opt.top = 29;
@@ -1538,7 +1472,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
     else if (nr == index++)
     {
         // z position
-        float_to_string(isActive(nr) ? target_position[Z_AXIS] : current_position[Z_AXIS], opt.title, PSTR("mm"));
+        float_to_string(current_position[Z_AXIS], opt.title, PSTR("mm"));
         strcpy_P(opt.details, PSTR("Z axis position"));
         opt.left = LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING;
         opt.top = 41;
@@ -1548,7 +1482,7 @@ static const menuitem_t & get_move_menuoption(uint8_t nr, menuitem_t &opt)
         opt.callbackFunc = lcd_position_z_axis;
         opt.textalign = ALIGN_RIGHT | ALIGN_VCENTER;
         opt.flags = MENU_INPLACE_EDIT;
-        opt.max_encoder_acceleration = 10;
+        opt.max_encoder_acceleration = 5;
     }
     else if (nr == index++)
     {
@@ -1572,10 +1506,6 @@ void lcd_menu_move_axes()
 {
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
-
-//    lcd_lib_draw_string_leftP(17, PSTR("X"));
-//    lcd_lib_draw_string_leftP(29, PSTR("Y"));
-//    lcd_lib_draw_string_leftP(41, PSTR("Z"));
 
     lcd_process_menu(get_move_menuoption, 11);
 
