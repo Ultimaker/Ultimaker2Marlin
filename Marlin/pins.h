@@ -439,22 +439,6 @@
 
 
 
-  #ifdef NUM_SERVOS
-    #define SERVO0_PIN         11
-
-    #if NUM_SERVOS > 1
-      #define SERVO1_PIN         6
-    #endif
-
-    #if NUM_SERVOS > 2
-      #define SERVO2_PIN         5
-    #endif
-
-    #if NUM_SERVOS > 3
-      #define SERVO3_PIN         4
-    #endif
-  #endif
-
   #ifdef ULTRA_LCD
 
     #ifdef NEWPANEL
@@ -709,10 +693,6 @@
 #define BEEPER 		         36
 
 #define KILL_PIN           -1
-
-// M240  Triggers a camera by emulating a Canon RC-1 Remote
-// Data from: http://www.doc-diy.net/photo/rc-1_hacked/
-#define PHOTOGRAPH_PIN     29
 
 #ifdef RA_CONTROL_PANEL
 
@@ -1747,11 +1727,7 @@
 #define HEATER_1_PIN 7
 #define TEMP_1_PIN 1
 
-#ifdef BARICUDA
-#define HEATER_2_PIN 6
-#else
 #define HEATER_2_PIN -1
-#endif
 #define TEMP_2_PIN -1
 
 #define E0_STEP_PIN         34

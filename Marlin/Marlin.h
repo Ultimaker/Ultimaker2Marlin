@@ -203,10 +203,6 @@ extern float min_pos[3];
 extern float max_pos[3];
 extern uint8_t fanSpeed;
 extern uint8_t fanSpeedPercent;
-#ifdef BARICUDA
-extern int ValvePressure;
-extern int EtoPPressure;
-#endif
 
 #ifdef FAN_SOFT_PWM
 extern unsigned char fanSpeedSoftPwm;
