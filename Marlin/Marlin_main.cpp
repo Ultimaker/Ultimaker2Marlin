@@ -161,31 +161,6 @@ uint8_t active_extruder = 0;
 uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
 
-struct machinesettings {
-  machinesettings() : has_saved_settings(0) {}
-  int feedmultiply;
-  int HotendTemperature[EXTRUDERS];
-  int BedTemperature;
-  uint8_t fanSpeed;
-  int extrudemultiply[EXTRUDERS];
-  long max_acceleration_units_per_sq_second[NUM_AXIS];
-  float max_feedrate[NUM_AXIS];
-  float acceleration;
-  float minimumfeedrate;
-  float mintravelfeedrate;
-  long minsegmenttime;
-  float max_xy_jerk;
-  float max_z_jerk;
-  float max_e_jerk;
-  uint8_t has_saved_settings;
-};
-machinesettings machinesettings_tempsave[10];
-
-#ifdef SERVO_ENDSTOPS
-  int servo_endstops[] = SERVO_ENDSTOPS;
-  int servo_endstop_angles[] = SERVO_ENDSTOP_ANGLES;
-#endif
-
 #ifdef FWRETRACT
   bool autoretract_enabled=false;
   bool retracted=false;

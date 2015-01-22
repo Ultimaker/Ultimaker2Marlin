@@ -62,18 +62,18 @@
 //=============================public variables ============================
 //===========================================================================
 
-unsigned long minsegmenttime;
-float max_feedrate[4]; // set the max speeds
-float axis_steps_per_unit[4];
+unsigned long minsegmenttime=DEFAULT_MINSEGMENTTIME;
+float max_feedrate[4] = DEFAULT_MAX_FEEDRATE; // set the max speeds
+float axis_steps_per_unit[4] = DEFAULT_AXIS_STEPS_PER_UNIT;
 float volume_to_filament_length[EXTRUDERS];
-unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
+unsigned long max_acceleration_units_per_sq_second[4] = DEFAULT_MAX_ACCELERATION; // Use M201 to override by software
 float minimumfeedrate;
-float acceleration;         // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX
-float retract_acceleration; //  mm/s^2   filament pull-pack and push-forward  while standing still in the other axis M204 TXXXX
-float max_xy_jerk; //speed than can be stopped at once, if i understand correctly.
-float max_z_jerk;
-float max_e_jerk;
-float mintravelfeedrate;
+float acceleration = DEFAULT_ACCELERATION;         // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX
+float retract_acceleration = DEFAULT_RETRACT_ACCELERATION; //  mm/s^2   filament pull-pack and push-forward  while standing still in the other axis M204 TXXXX
+float max_xy_jerk = DEFAULT_XYJERK; //speed than can be stopped at once, if i understand correctly.
+float max_z_jerk = DEFAULT_ZJERK;
+float max_e_jerk = DEFAULT_EJERK;
+float mintravelfeedrate = DEFAULT_MINTRAVELFEEDRATE;
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 // The current position of the tool in absolute steps
@@ -359,23 +359,26 @@ void planner_recalculate_trapezoids() {
 //
 //   3. Recalculate trapezoids for all blocks.
 
-void planner_recalculate() {
-  planner_reverse_pass();
-  planner_forward_pass();
-  planner_recalculate_trapezoids();
+void planner_recalculate()
+{
+    planner_reverse_pass();
+    planner_forward_pass();
+    planner_recalculate_trapezoids();
 }
 
-void plan_init() {
-  block_buffer_head = 0;
-  block_buffer_tail = 0;
-  memset(position, 0, sizeof(position)); // clear position
-  previous_speed[0] = 0.0;
-  previous_speed[1] = 0.0;
-  previous_speed[2] = 0.0;
-  previous_speed[3] = 0.0;
-  previous_nominal_speed = 0.0;
-  for(uint8_t e=0; e<EXTRUDERS; e++)
-    volume_to_filament_length[e] = 1.0;
+void plan_init()
+{
+    block_buffer_head = 0;
+    block_buffer_tail = 0;
+    memset(position, 0, sizeof(position)); // clear position
+    previous_speed[0] = 0.0;
+    previous_speed[1] = 0.0;
+    previous_speed[2] = 0.0;
+    previous_speed[3] = 0.0;
+    previous_nominal_speed = 0.0;
+    for(uint8_t e=0; e<EXTRUDERS; e++)
+        volume_to_filament_length[e] = 1.0;
+    reset_acceleration_rates();
 }
 
 void check_axes_activity()
@@ -857,8 +860,8 @@ void set_extrude_min_temp(float temp)
 // Calculate the steps/s^2 acceleration rates, based on the mm/s^s
 void reset_acceleration_rates()
 {
-	for(int8_t i=0; i < NUM_AXIS; i++)
-        {
+    for(int8_t i=0; i < NUM_AXIS; i++)
+    {
         axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
-        }
+    }
 }
