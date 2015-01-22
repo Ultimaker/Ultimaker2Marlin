@@ -146,7 +146,7 @@ int feedmultiply=100; //100->1 200->2
 int saved_feedmultiply;
 int extrudemultiply[EXTRUDERS]=ARRAY_BY_EXTRUDERS(100, 100, 100); //100->1 200->2
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
-float add_homeing[3]={0,0,0};
+float add_homeing[3]={0,0,-30};
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 // Extruder offset, only in XY plane
@@ -1380,12 +1380,6 @@ void process_commands()
         {
           if(i == 3) { // E
             float value = code_value();
-            if(value < 20.0) {
-              float factor = axis_steps_per_unit[i] / value; // increase e constants if M92 E14 is given for netfab.
-              max_e_jerk *= factor;
-              max_feedrate[i] *= factor;
-              axis_steps_per_sqr_second[i] *= factor;
-            }
             axis_steps_per_unit[i] = value;
           }
           else {
