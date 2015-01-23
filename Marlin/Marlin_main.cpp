@@ -1735,7 +1735,8 @@ void FlushSerialRequestResend()
   MYSERIAL.flush();
   SERIAL_PROTOCOLPGM(MSG_RESEND);
   SERIAL_PROTOCOLLN(gcode_LastN + 1);
-  ClearToSend();
+  previous_millis_cmd = millis();
+  SERIAL_PROTOCOLLNPGM(MSG_OK);
 }
 
 void ClearToSend()
