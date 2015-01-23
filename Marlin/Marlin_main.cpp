@@ -171,8 +171,6 @@ uint8_t fanSpeedPercent=100;
   float retract_recover_length=0, retract_recover_feedrate=25*60;
 #endif
 
-uint8_t printing_state;
-
 //===========================================================================
 //=============================private variables=============================
 //===========================================================================
@@ -188,10 +186,10 @@ static long gcode_N[BUFSIZE], gcode_LastN, Stopped_gcode_LastN = 0;
 
 static bool relative_mode = false;  //Determines Absolute or Relative Coordinates
 
-static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
-static int bufindr = 0;
-static int bufindw = 0;
-static int buflen = 0;
+static char command_buffer[BUFSIZE][MAX_CMD_SIZE];
+static int command_buffer_index_read = 0;
+static int command_buffer_index_write = 0;
+static int command_buffer_length = 0;
 //static int i = 0;
 static char serial_char;
 static int serial_count = 0;
@@ -250,10 +248,10 @@ extern "C"{
 //Clear all the commands in the ASCII command buffer, to make sure we have room for abort commands.
 void clear_command_queue()
 {
-    if (buflen > 0)
+    if (command_buffer_length > 0)
     {
-        bufindw = (bufindr + 1)%BUFSIZE;
-        buflen = 1;
+        command_buffer_index_write = (command_buffer_index_read + 1)%BUFSIZE;
+        command_buffer_length = 1;
     }
 }
 
@@ -262,42 +260,42 @@ void clear_command_queue()
 //needs overworking someday
 void enquecommand(const char *cmd)
 {
-  if(buflen < BUFSIZE)
+  if(command_buffer_length < BUFSIZE)
   {
     //this is dangerous if a mixing of serial and this happsens
-    strcpy(&(cmdbuffer[bufindw][0]),cmd);
+    strcpy(&(command_buffer[command_buffer_index_write][0]),cmd);
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
+    SERIAL_ECHO(command_buffer[command_buffer_index_write]);
     SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
+    command_buffer_index_write= (command_buffer_index_write + 1)%BUFSIZE;
+    command_buffer_length += 1;
   }
 }
 
 void enquecommand_P(const char *cmd)
 {
-  if(buflen < BUFSIZE)
+  if(command_buffer_length < BUFSIZE)
   {
     //this is dangerous if a mixing of serial and this happsens
-    strcpy_P(&(cmdbuffer[bufindw][0]),cmd);
+    strcpy_P(&(command_buffer[command_buffer_index_write][0]),cmd);
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
+    SERIAL_ECHO(command_buffer[command_buffer_index_write]);
     SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
+    command_buffer_index_write= (command_buffer_index_write + 1)%BUFSIZE;
+    command_buffer_length += 1;
   }
 }
 
 bool is_command_queued()
 {
-    return buflen > 0;
+    return command_buffer_length > 0;
 }
 
 uint8_t commands_queued()
 {
-    return buflen;
+    return command_buffer_length;
 }
 
 void setup_killpin()
@@ -386,15 +384,15 @@ void setup()
 
 void loop()
 {
-  if(buflen < (BUFSIZE-1))
+  if(command_buffer_length < (BUFSIZE-1))
     get_command();
-  if(buflen)
+  if(command_buffer_length)
   {
     process_commands();
-    if (buflen > 0)
+    if (command_buffer_length > 0)
     {
-      buflen = (buflen-1);
-      bufindr = (bufindr + 1)%BUFSIZE;
+      command_buffer_length = (command_buffer_length-1);
+      command_buffer_index_read = (command_buffer_index_read + 1)%BUFSIZE;
     }
   }
   //check heater every n milliseconds
@@ -405,7 +403,7 @@ void loop()
 
 void get_command()
 {
-  while( MYSERIAL.available() > 0  && buflen < BUFSIZE) {
+  while( MYSERIAL.available() > 0  && command_buffer_length < BUFSIZE) {
     serial_char = MYSERIAL.read();
     if(serial_char == '\n' ||
        serial_char == '\r' ||
@@ -416,15 +414,15 @@ void get_command()
         comment_mode = false; //for new command
         return;
       }
-      cmdbuffer[bufindw][serial_count] = 0; //terminate string
+      command_buffer[command_buffer_index_write][serial_count] = 0; //terminate string
       if(!comment_mode){
         comment_mode = false; //for new command
-        gcode_N[bufindw] = -1;
-        if(strchr(cmdbuffer[bufindw], 'N') != NULL)
+        gcode_N[command_buffer_index_write] = -1;
+        if(strchr(command_buffer[command_buffer_index_write], 'N') != NULL)
         {
-          strchr_pointer = strchr(cmdbuffer[bufindw], 'N');
-          gcode_N[bufindw] = (strtol(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL, 10));
-          if(gcode_N[bufindw] != gcode_LastN+1 && (strstr_P(cmdbuffer[bufindw], PSTR("M110")) == NULL) ) {
+          strchr_pointer = strchr(command_buffer[command_buffer_index_write], 'N');
+          gcode_N[command_buffer_index_write] = (strtol(&command_buffer[command_buffer_index_write][strchr_pointer - command_buffer[command_buffer_index_write] + 1], NULL, 10));
+          if(gcode_N[command_buffer_index_write] != gcode_LastN+1 && (strstr_P(command_buffer[command_buffer_index_write], PSTR("M110")) == NULL) ) {
             SERIAL_ERROR_START;
             SERIAL_ERRORPGM(MSG_ERR_LINE_NO);
             SERIAL_ERRORLN(gcode_LastN);
@@ -434,14 +432,14 @@ void get_command()
             return;
           }
 
-          if(strchr(cmdbuffer[bufindw], '*') != NULL)
+          if(strchr(command_buffer[command_buffer_index_write], '*') != NULL)
           {
             byte checksum = 0;
             byte count = 0;
-            while(cmdbuffer[bufindw][count] != '*') checksum = checksum^cmdbuffer[bufindw][count++];
-            strchr_pointer = strchr(cmdbuffer[bufindw], '*');
+            while(command_buffer[command_buffer_index_write][count] != '*') checksum = checksum^command_buffer[command_buffer_index_write][count++];
+            strchr_pointer = strchr(command_buffer[command_buffer_index_write], '*');
 
-            if( (int)(strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)) != checksum) {
+            if( (int)(strtod(&command_buffer[command_buffer_index_write][strchr_pointer - command_buffer[command_buffer_index_write] + 1], NULL)) != checksum) {
               SERIAL_ERROR_START;
               SERIAL_ERRORPGM(MSG_ERR_CHECKSUM_MISMATCH);
               SERIAL_ERRORLN(gcode_LastN);
@@ -461,12 +459,12 @@ void get_command()
             return;
           }
 
-          gcode_LastN = gcode_N[bufindw];
+          gcode_LastN = gcode_N[command_buffer_index_write];
           //if no errors, continue parsing
         }
         else  // if we don't receive 'N' but still see '*'
         {
-          if((strchr(cmdbuffer[bufindw], '*') != NULL))
+          if((strchr(command_buffer[command_buffer_index_write], '*') != NULL))
           {
             SERIAL_ERROR_START;
             SERIAL_ERRORPGM(MSG_ERR_NO_LINENUMBER_WITH_CHECKSUM);
@@ -475,9 +473,9 @@ void get_command()
             return;
           }
         }
-        if((strchr(cmdbuffer[bufindw], 'G') != NULL)){
-          strchr_pointer = strchr(cmdbuffer[bufindw], 'G');
-          switch((int)((strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)))){
+        if((strchr(command_buffer[command_buffer_index_write], 'G') != NULL)){
+          strchr_pointer = strchr(command_buffer[command_buffer_index_write], 'G');
+          switch((int)((strtod(&command_buffer[command_buffer_index_write][strchr_pointer - command_buffer[command_buffer_index_write] + 1], NULL)))){
           case 0:
           case 1:
           case 2:
@@ -491,15 +489,15 @@ void get_command()
           }
 
         }
-        bufindw = (bufindw + 1)%BUFSIZE;
-        buflen += 1;
+        command_buffer_index_write = (command_buffer_index_write + 1)%BUFSIZE;
+        command_buffer_length += 1;
       }
       serial_count = 0; //clear buffer
     }
     else
     {
       if(serial_char == ';') comment_mode = true;
-      if(!comment_mode) cmdbuffer[bufindw][serial_count++] = serial_char;
+      if(!comment_mode) command_buffer[command_buffer_index_write][serial_count++] = serial_char;
     }
   }
 }
@@ -507,17 +505,17 @@ void get_command()
 
 float code_value()
 {
-  return (strtod(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL));
+  return (strtod(&command_buffer[command_buffer_index_read][strchr_pointer - command_buffer[command_buffer_index_read] + 1], NULL));
 }
 
 long code_value_long()
 {
-  return (strtol(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL, 10));
+  return (strtol(&command_buffer[command_buffer_index_read][strchr_pointer - command_buffer[command_buffer_index_read] + 1], NULL, 10));
 }
 
 bool code_seen(char code)
 {
-  strchr_pointer = strchr(cmdbuffer[bufindr], code);
+  strchr_pointer = strchr(command_buffer[command_buffer_index_read], code);
   return (strchr_pointer != NULL);  //Return True if a character was found
 }
 
@@ -772,7 +770,6 @@ void process_commands()
 {
   unsigned long codenum; //throw away variable
 
-  printing_state = PRINT_STATE_NORMAL;
   if(code_seen('G'))
   {
     switch((int)code_value())
@@ -802,7 +799,6 @@ void process_commands()
       st_synchronize();
       codenum += millis();  // keep track of when we started waiting
       previous_millis_cmd = millis();
-      printing_state = PRINT_STATE_DWELL;
       while(millis()  < codenum ){
         manage_heater();
         manage_inactivity();
@@ -848,7 +844,6 @@ void process_commands()
       break;
       #endif //FWRETRACT
     case 28: //G28 Home all Axis one at a time
-      printing_state = PRINT_STATE_HOMING;
       saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
       feedmultiply = 100;
@@ -1096,7 +1091,6 @@ void process_commands()
     case 0: // M0 - Unconditional stop - Wait for user button press on LCD
     case 1: // M1 - Conditional stop - Wait for user button press on LCD
     {
-      printing_state = PRINT_STATE_WAIT_USER;
       LCD_MESSAGEPGM(MSG_USERWAIT);
       codenum = 0;
       if(code_seen('P')) codenum = code_value(); // milliseconds to wait
@@ -1204,7 +1198,6 @@ void process_commands()
       if(setTargetedHotend(109)){
         break;
       }
-      printing_state = PRINT_STATE_HEATING;
       if (code_seen('S')) setTargetHotend(code_value(), tmp_extruder);
 
       setWatch();
@@ -1264,7 +1257,6 @@ void process_commands()
       break;
     case 190: // M190 - Wait for bed heater to reach target.
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-        printing_state = PRINT_STATE_HEATING_BED;
         if (code_seen('S')) setTargetBed(code_value());
         codenum = millis();
         while(current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
@@ -1516,7 +1508,7 @@ void process_commands()
           default:
             SERIAL_ECHO_START;
             SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-            SERIAL_ECHO(cmdbuffer[bufindr]);
+            SERIAL_ECHO(command_buffer[command_buffer_index_read]);
             SERIAL_ECHOLNPGM("\"");
         }
       }
@@ -1722,7 +1714,7 @@ void process_commands()
       SERIAL_PROTOCOLLN((int)active_extruder);
     }
   }
-  else if (strcmp_P(cmdbuffer[bufindr], PSTR("Electronics_test")) == 0)
+  else if (strcmp_P(command_buffer[command_buffer_index_read], PSTR("Electronics_test")) == 0)
   {
     run_electronics_test();
   }
@@ -1730,17 +1722,16 @@ void process_commands()
   {
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-    SERIAL_ECHO(cmdbuffer[bufindr]);
+    SERIAL_ECHO(command_buffer[command_buffer_index_read]);
     SERIAL_ECHOLNPGM("\"");
   }
-  printing_state = PRINT_STATE_NORMAL;
 
   ClearToSend();
 }
 
 void FlushSerialRequestResend()
 {
-  //char cmdbuffer[bufindr][100]="Resend:";
+  //char command_buffer[command_buffer_index_read][100]="Resend:";
   MYSERIAL.flush();
   SERIAL_PROTOCOLPGM(MSG_RESEND);
   SERIAL_PROTOCOLLN(gcode_LastN + 1);
@@ -1750,10 +1741,6 @@ void FlushSerialRequestResend()
 void ClearToSend()
 {
   previous_millis_cmd = millis();
-  #ifdef SDSUPPORT
-  if(fromsd[bufindr])
-    return;
-  #endif //SDSUPPORT
   SERIAL_PROTOCOL_OK_LN();
 }
 

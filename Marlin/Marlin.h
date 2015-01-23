@@ -56,8 +56,8 @@
 #define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x));
 #define SERIAL_PROTOCOLLN(x) do {MYSERIAL.print(x);MYSERIAL.write('\n');} while(0)
 #define SERIAL_PROTOCOLLNPGM(x) do{serialprintPGM(PSTR(x));MYSERIAL.write('\n');} while(0)
-#define SERIAL_PROTOCOL_OK() do{serialprintPGM(PSTR(MSG_OK " N")); MYSERIAL.print(gcode_N[bufindr]); }while(0)
-#define SERIAL_PROTOCOL_OK_LN() do{serialprintPGM(PSTR(MSG_OK " N")); MYSERIAL.println(gcode_N[bufindr]); }while(0)
+#define SERIAL_PROTOCOL_OK() do{serialprintPGM(PSTR(MSG_OK " N")); MYSERIAL.print(gcode_N[command_buffer_index_read]); }while(0)
+#define SERIAL_PROTOCOL_OK_LN() do{serialprintPGM(PSTR(MSG_OK " N")); MYSERIAL.println(gcode_N[command_buffer_index_read]); }while(0)
 
 const char errormagic[] PROGMEM ="Error:";
 const char echomagic[] PROGMEM ="echo:";
@@ -221,15 +221,6 @@ extern float retract_recover_length, retract_recover_feedrate;
 
 extern unsigned long starttime;
 extern unsigned long stoptime;
-
-//The printing state from the main command processor. Is not zero when the command processor is in a loop waiting for a result.
-extern uint8_t printing_state;
-#define PRINT_STATE_NORMAL      0
-#define PRINT_STATE_DWELL       1
-#define PRINT_STATE_WAIT_USER   2
-#define PRINT_STATE_HEATING     3
-#define PRINT_STATE_HEATING_BED 4
-#define PRINT_STATE_HOMING      5
 
 // Handling multiple extruders pins
 extern uint8_t active_extruder;

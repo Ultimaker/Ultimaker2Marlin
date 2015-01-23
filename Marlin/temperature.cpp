@@ -694,7 +694,6 @@ void tp_init()
   #endif
 
   #ifdef HEATER_0_USES_MAX6675
-    #ifndef SDSUPPORT
       SET_OUTPUT(MAX_SCK_PIN);
       WRITE(MAX_SCK_PIN,0);
 
@@ -703,10 +702,6 @@ void tp_init()
 
       SET_INPUT(MAX_MISO_PIN);
       WRITE(MAX_MISO_PIN,1);
-    #else
-	  pinMode(SS_PIN, OUTPUT);
-	  digitalWrite(SS_PIN, HIGH);
-    #endif
 
     SET_OUTPUT(MAX6675_SS);
     WRITE(MAX6675_SS,1);
