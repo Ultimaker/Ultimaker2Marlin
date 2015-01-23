@@ -488,7 +488,7 @@ void get_command()
           case 2:
           case 3:
             if(Stopped == false) { // If printer is stopped by an error the G[0-3] codes are ignored.
-              SERIAL_PROTOCOLLNPGM(MSG_OK);
+              SERIAL_PROTOCOL_OK_LN();
             }
             else {
               SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
@@ -1586,7 +1586,7 @@ void process_commands()
         if(code_seen('D')) Kd = scalePID_d(code_value());
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
+        SERIAL_PROTOCOL_OK();
         SERIAL_PROTOCOL(" p:");
         SERIAL_PROTOCOL(Kp);
         SERIAL_PROTOCOL(" i:");
@@ -1605,7 +1605,7 @@ void process_commands()
         if(code_seen('D')) bedKd = scalePID_d(code_value());
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
+        SERIAL_PROTOCOL_OK();
         SERIAL_PROTOCOL(" p:");
         SERIAL_PROTOCOL(bedKp);
         SERIAL_PROTOCOL(" i:");
@@ -1766,7 +1766,7 @@ void ClearToSend()
   if(fromsd[bufindr])
     return;
   #endif //SDSUPPORT
-  SERIAL_PROTOCOLLNPGM(MSG_OK);
+  SERIAL_PROTOCOL_OK_LN();
 }
 
 void get_coordinates()
