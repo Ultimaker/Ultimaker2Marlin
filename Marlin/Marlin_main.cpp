@@ -487,10 +487,7 @@ void get_command()
           case 1:
           case 2:
           case 3:
-            if(Stopped == false) { // If printer is stopped by an error the G[0-3] codes are ignored.
-              SERIAL_PROTOCOL_OK_LN();
-            }
-            else {
+            if(Stopped) { // If printer is stopped by an error the G[0-3] codes are ignored.
               SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
             }
             break;
@@ -790,21 +787,17 @@ void process_commands()
       if(Stopped == false) {
         get_coordinates(); // For X Y Z E F
         prepare_move();
-        //ClearToSend();
-        return;
       }
       //break;
     case 2: // G2  - CW ARC
       if(Stopped == false) {
         get_arc_coordinates();
         prepare_arc_move(true);
-        return;
       }
     case 3: // G3  - CCW ARC
       if(Stopped == false) {
         get_arc_coordinates();
         prepare_arc_move(false);
-        return;
       }
     case 4: // G4 dwell
       codenum = 0;
