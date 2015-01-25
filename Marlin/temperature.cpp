@@ -1095,9 +1095,15 @@ ISR(TIMER0_COMPB_vect)
   //these variables are only accesible from the ISR, but static, so they don't lose their value
   static unsigned char temp_count = 0;
   static unsigned long raw_temp_0_value = 0;
+#if EXTRUDERS > 1
   static unsigned long raw_temp_1_value = 0;
+#endif
+#if EXTRUDERS > 2
   static unsigned long raw_temp_2_value = 0;
+#endif
+#if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
   static unsigned long raw_temp_bed_value = 0;
+#endif
   static unsigned char temp_state = 5;
   static unsigned char pwm_count = (1 << SOFT_PWM_SCALE);
   static unsigned char soft_pwm_0;
@@ -1244,15 +1250,23 @@ ISR(TIMER0_COMPB_vect)
 #if EXTRUDERS > 2
       current_temperature_raw[2] = raw_temp_2_value;
 #endif
+#if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
       current_temperature_bed_raw = raw_temp_bed_value;
+#endif
     }
 
     temp_meas_ready = true;
     temp_count = 0;
     raw_temp_0_value = 0;
+#if EXTRUDERS > 1
     raw_temp_1_value = 0;
+#endif
+#if EXTRUDERS > 2
     raw_temp_2_value = 0;
+#endif
+#if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
     raw_temp_bed_value = 0;
+#endif
 
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
     if(current_temperature_raw[0] <= maxttemp_raw[0]) {

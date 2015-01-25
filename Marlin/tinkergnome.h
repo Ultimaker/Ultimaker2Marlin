@@ -26,6 +26,7 @@ void lcd_menu_printing_tg();
 void lcd_menu_move_axes();
 void lcd_lib_draw_heater(uint8_t x, uint8_t y, uint8_t heaterPower);
 void manage_led_timeout();
+void manage_encoder_position(int8_t encoder_pos_interrupt);
 
 #endif//ULTI_LCD2_MENU_TINKERGNOME_H
 

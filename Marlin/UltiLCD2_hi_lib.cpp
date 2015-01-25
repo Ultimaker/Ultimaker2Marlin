@@ -85,7 +85,7 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel, const c
     if (lcd_lib_button_pressed && IS_SELECTED_MAIN(0))
     {
         if (callbackOnCancel) callbackOnCancel();
-        if (cancelMenu) lcd_replace_menu(cancelMenu, ENCODER_NO_SELECTION);
+        if (cancelMenu) menu.replace_menu(menu_t(cancelMenu));
     }
 
     lcd_basic_screen();
@@ -115,11 +115,11 @@ void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const c
         if (IS_SELECTED_MAIN(0))
         {
             if (callbackOnA) callbackOnA();
-            if (optionAMenu) lcd_change_to_menu(optionAMenu, ENCODER_NO_SELECTION);
+            if (optionAMenu) menu.add_menu(menu_t(optionAMenu));
         }else if (IS_SELECTED_MAIN(1))
         {
             if (callbackOnB) callbackOnB();
-            if (optionBMenu) lcd_change_to_menu(optionBMenu, ENCODER_NO_SELECTION);
+            if (optionBMenu) menu.add_menu(menu_t(optionBMenu));
         }
     }
 

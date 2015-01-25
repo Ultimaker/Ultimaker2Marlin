@@ -71,7 +71,7 @@ static void homeAndParkHeadForCenterAdjustment2()
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH - 10);
     enquecommand(buffer);
-    lcd_remove_menu();
+    menu.return_to_previous(false);
 }
 //Started bed leveling from the calibration menu
 void lcd_menu_first_run_start_bed_leveling()
@@ -324,7 +324,7 @@ static void lcd_menu_first_run_material_load_heatup()
         for(uint8_t e=0; e<EXTRUDERS; e++)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
 
-        lcd_replace_menu(lcd_menu_first_run_material_load_insert);
+        menu.replace_menu(menu_t(lcd_menu_first_run_material_load_insert));
         temp = target;
     }
 
@@ -394,7 +394,7 @@ static void lcd_menu_first_run_material_load_forward()
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
         digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
-        lcd_replace_menu(lcd_menu_first_run_material_load_wait);
+        menu.replace_menu(menu_t(lcd_menu_first_run_material_load_wait));
         SELECT_MAIN_MENU_ITEM(0);
     }
 
@@ -466,7 +466,7 @@ static void lcd_menu_first_run_material_select_material()
         for(uint8_t e=0; e<EXTRUDERS; e++)
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), e);
         SET_FIRST_RUN_DONE();
-        lcd_replace_menu(lcd_menu_first_run_material_select_confirm_material, MAIN_MENU_ITEM_POS(0));
+        menu.replace_menu(menu_t(lcd_menu_first_run_material_select_confirm_material, MAIN_MENU_ITEM_POS(0)));
         strcat_P(LCD_CACHE_FILENAME(0), PSTR(" as material,"));
     }
 }

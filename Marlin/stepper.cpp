@@ -78,12 +78,24 @@ bool abort_on_endstop_hit = false;
   int motor_current_setting[3] = DEFAULT_PWM_MOTOR_CURRENT;
 #endif
 
-static bool old_x_min_endstop=false;
-static bool old_x_max_endstop=false;
-static bool old_y_min_endstop=false;
-static bool old_y_max_endstop=false;
-static bool old_z_min_endstop=false;
-static bool old_z_max_endstop=false;
+#if defined(X_MIN_PIN) && X_MIN_PIN > -1
+    static bool old_x_min_endstop=false;
+#endif
+#if defined(X_MAX_PIN) && X_MAX_PIN > -1
+    static bool old_x_max_endstop=false;
+#endif
+#if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
+    static bool old_y_min_endstop=false;
+#endif
+#if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
+    static bool old_y_max_endstop=false;
+#endif
+#if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
+    static bool old_z_min_endstop=false;
+#endif
+#if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
+    static bool old_z_max_endstop=false;
+#endif
 
 static bool check_endstops = true;
 

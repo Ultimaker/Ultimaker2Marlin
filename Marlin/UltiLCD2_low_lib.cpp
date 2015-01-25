@@ -41,8 +41,6 @@
 #define LCD_COMMAND_SET_ADDRESSING_MODE     0x20
 
 unsigned long last_user_interaction=0;
-// this is changed by the various menus to enable or disable encoder acceleration for that time.
-uint8_t max_encoder_acceleration = 1;
 
 /** Backbuffer for LCD */
 uint8_t lcd_buffer[LCD_GFX_WIDTH * LCD_GFX_HEIGHT / 8];
@@ -90,7 +88,7 @@ void lcd_lib_init()
 
     SET_OUTPUT(I2C_SDA_PIN);
     SET_OUTPUT(I2C_SCL_PIN);
-    
+
     //Set unused pins in the 10 pin connector to GND to improve shielding of the cable.
     SET_OUTPUT(LCD_PINS_D4); WRITE(LCD_PINS_D4, 0); //RXD3/PJ1
     SET_OUTPUT(LCD_PINS_ENABLE); WRITE(LCD_PINS_ENABLE, 0); //TXD3/PJ0
@@ -838,48 +836,7 @@ void lcd_lib_buttons_update_interrupt()
 
 void lcd_lib_buttons_update()
 {
-// Added encoder acceleration (Lars Jun 2014)
-// if we detect we're moving the encoder the same direction for repeated frames, we increase our step size (up to a maximum)
-// if we stop, or change direction, set the step size back to +/- 1
-// we only want this for SOME things, like changing a value, and not for other things, like a menu.
-// so we have an enable bit
-	static int8_t accelFactor = 0;
-	if (lcd_lib_encoder_pos_interrupt != 0)
-    {
-        if ((ui_mode & UI_MODE_TINKERGNOME) && (max_encoder_acceleration > 1))
-        {
-            if (lcd_lib_encoder_pos_interrupt > 0)		// positive -- were we already going positive last time?  If so, increase our accel
-            {
-                // increase positive acceleration
-                if (accelFactor >= 0)
-                    ++accelFactor;
-                else
-                    accelFactor = 1;
-                // beep with a pitch changing tone based on the acceleration factor
-                // lcd_lib_beep_ext (500+accelFactor*25, 10);
-            }
-            else //if (lcd_lib_encoder_pos_interrupt <0)
-            {
-                // decrease negative acceleration
-                if (accelFactor <= 0 )
-                    --accelFactor;
-                else
-                    accelFactor = -1;
-                // lcd_lib_beep_ext (600+accelFactor*25, 10);
-            }
-            lcd_lib_tick();
-            lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt * constrain(abs(accelFactor), 1, max_encoder_acceleration);
-        }
-        else
-        {
-            lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
-        }
-    }
-    else
-    {
-        // no movement -> no acceleration
-        accelFactor=0;
-    }
+    manage_encoder_position(lcd_lib_encoder_pos_interrupt);
 
     uint8_t buttonState = !READ(BTN_ENC);
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);

@@ -3,24 +3,7 @@
 
 #include "UltiLCD2_low_lib.h"
 #include "UltiLCD2_gfx.h"
-
-typedef void (*menuFunc_t)();
-
-typedef char* (*entryNameCallback_t)(uint8_t nr);
-typedef void (*entryDetailsCallback_t)(uint8_t nr);
-
-
-#define ENCODER_TICKS_PER_MAIN_MENU_ITEM 8
-#define ENCODER_TICKS_PER_SCROLL_MENU_ITEM 4
-#define ENCODER_NO_SELECTION (ENCODER_TICKS_PER_MAIN_MENU_ITEM * -15)
-#define MAIN_MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_MAIN_MENU_ITEM * (n) + ENCODER_TICKS_PER_MAIN_MENU_ITEM / 2)
-#define SCROLL_MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_SCROLL_MENU_ITEM * (n) + ENCODER_TICKS_PER_SCROLL_MENU_ITEM / 2)
-#define SELECT_MAIN_MENU_ITEM(n)  do { lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(n); } while(0)
-#define SELECT_SCROLL_MENU_ITEM(n)  do { lcd_lib_encoder_pos = SCROLL_MENU_ITEM_POS(n); } while(0)
-#define SELECTED_MAIN_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MAIN_MENU_ITEM)
-#define SELECTED_SCROLL_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM)
-#define IS_SELECTED_MAIN(n) ((n) == SELECTED_MAIN_MENU_ITEM())
-#define IS_SELECTED_SCROLL(n) ((n) == SELECTED_SCROLL_MENU_ITEM())
+#include "UltiLCD2_menu_utils.h"
 
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom);
 void lcd_basic_screen();
@@ -46,7 +29,7 @@ extern menuFunc_t postMenuCheck;
 extern uint8_t minProgress;
 
 #define LCD_EDIT_SETTING(_setting, _name, _postfix, _min, _max) do { \
-            lcd_change_to_menu(lcd_menu_edit_setting, ENCODER_NO_SELECTION, lcd_lib_encoder_pos); \
+            menu.add_menu(menu_t(lcd_menu_edit_setting)); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &_setting; \
@@ -56,7 +39,7 @@ extern uint8_t minProgress;
             lcd_setting_max = _max; \
         } while(0)
 #define LCD_EDIT_SETTING_BYTE_PERCENT(_setting, _name, _postfix, _min, _max) do { \
-            lcd_change_to_menu(lcd_menu_edit_setting, ENCODER_NO_SELECTION, lcd_lib_encoder_pos); \
+            menu.add_menu(menu_t(lcd_menu_edit_setting)); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &_setting; \
@@ -66,7 +49,7 @@ extern uint8_t minProgress;
             lcd_setting_max = _max; \
         } while(0)
 #define LCD_EDIT_SETTING_FLOAT001(_setting, _name, _postfix, _min, _max) do { \
-            lcd_change_to_menu(lcd_menu_edit_setting, ENCODER_NO_SELECTION, lcd_lib_encoder_pos); \
+            menu.add_menu(menu_t(lcd_menu_edit_setting)); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &_setting; \
@@ -76,7 +59,7 @@ extern uint8_t minProgress;
             lcd_setting_max = (_max) * 100; \
         } while(0)
 #define LCD_EDIT_SETTING_FLOAT100(_setting, _name, _postfix, _min, _max) do { \
-            lcd_change_to_menu(lcd_menu_edit_setting, ENCODER_NO_SELECTION, lcd_lib_encoder_pos); \
+            menu.add_menu(menu_t(lcd_menu_edit_setting)); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR("00" _postfix); \
             lcd_setting_ptr = &(_setting); \
@@ -86,7 +69,7 @@ extern uint8_t minProgress;
             lcd_setting_max = (_max) / 100 + 0.5; \
         } while(0)
 #define LCD_EDIT_SETTING_FLOAT1(_setting, _name, _postfix, _min, _max) do { \
-            lcd_change_to_menu(lcd_menu_edit_setting, ENCODER_NO_SELECTION, lcd_lib_encoder_pos); \
+            menu.add_menu(menu_t(lcd_menu_edit_setting)); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &(_setting); \
@@ -96,7 +79,7 @@ extern uint8_t minProgress;
             lcd_setting_max = (_max) + 0.5; \
         } while(0)
 #define LCD_EDIT_SETTING_SPEED(_setting, _name, _postfix, _min, _max) do { \
-            lcd_change_to_menu(lcd_menu_edit_setting, ENCODER_NO_SELECTION, lcd_lib_encoder_pos); \
+            menu.add_menu(menu_t(lcd_menu_edit_setting)); \
             lcd_setting_name = PSTR(_name); \
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &(_setting); \
