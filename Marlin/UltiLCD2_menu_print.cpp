@@ -73,7 +73,13 @@ static void abortPrint()
         primed = false;
     }
 
-    enquecommand_P(PSTR("G28"));
+    if (current_position[Z_AXIS] > Z_MAX_POS - 30)
+    {
+        enquecommand_P(PSTR("G28 X0 Y0"));
+        enquecommand_P(PSTR("G28 Z0"));
+    }else{
+        enquecommand_P(PSTR("G28"));
+    }
     enquecommand_P(PSTR("M84"));
 }
 
@@ -476,72 +482,91 @@ static void lcd_menu_print_heatup()
     lcd_lib_update_screen();
 }
 
+static void lcd_change_to_menu_change_material_return()
+{
+    setTargetHotend(material[active_extruder].temperature, active_extruder);
+    currentMenu = lcd_menu_print_printing;
+}
+
 static void lcd_menu_print_printing()
 {
-    lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
-    uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
-    char buffer[16];
-    char* c;
-    switch(printing_state)
+    if (card.pause)
     {
-    default:
-        lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
-        lcd_lib_draw_string_center(30, card.longFilename);
-        break;
-    case PRINT_STATE_WAIT_USER:
-        lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
-        lcd_lib_draw_string_centerP(20, PSTR("Press button"));
-        lcd_lib_draw_string_centerP(30, PSTR("to continue"));
-        break;
-    case PRINT_STATE_HEATING:
-        lcd_lib_draw_string_centerP(20, PSTR("Heating"));
-        c = int_to_string(dsp_temperature[0], buffer, PSTR("C"));
-        *c++ = '/';
-        c = int_to_string(target_temperature[0], c, PSTR("C"));
-        lcd_lib_draw_string_center(30, buffer);
-        break;
-    case PRINT_STATE_HEATING_BED:
-        lcd_lib_draw_string_centerP(20, PSTR("Heating buildplate"));
-        c = int_to_string(dsp_temperature_bed, buffer, PSTR("C"));
-        *c++ = '/';
-        c = int_to_string(target_temperature_bed, c, PSTR("C"));
-        lcd_lib_draw_string_center(30, buffer);
-        break;
-    }
-    float printTimeMs = (millis() - starttime);
-    float printTimeSec = printTimeMs / 1000L;
-    float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
-    static float totalTimeSmoothSec;
-    totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
-    if (isinf(totalTimeSmoothSec))
-        totalTimeSmoothSec = totalTimeMs;
-
-    if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
-    {
-        totalTimeSmoothSec = totalTimeMs / 1000;
-        lcd_lib_draw_stringP(5, 10, PSTR("Time left unknown"));
-    }else{
-        unsigned long totalTimeSec;
-        if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
+        lcd_tripple_menu(PSTR("RESUME|PRINT"), PSTR("CHANGE|MATERIAL"), PSTR("TUNE"));
+        if (lcd_lib_button_pressed)
         {
-            float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
-            if (f > 1.0)
-                f = 1.0;
-            totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
-        }else{
-            totalTimeSec = totalTimeSmoothSec;
+            if (IS_SELECTED_MAIN(0) && movesplanned() < 1)
+            {
+                card.pause = false;
+                lcd_lib_beep();
+            }else if (IS_SELECTED_MAIN(1) && movesplanned() < 1)
+                lcd_change_to_menu_change_material(lcd_change_to_menu_change_material_return);
+            else if (IS_SELECTED_MAIN(2))
+                lcd_change_to_menu(lcd_menu_print_tune);
         }
-        unsigned long timeLeftSec;
-        if (printTimeSec > totalTimeSec)
-            timeLeftSec = 1;
-        else
-            timeLeftSec = totalTimeSec - printTimeSec;
-        int_to_time_string(timeLeftSec, buffer);
-        lcd_lib_draw_stringP(5, 10, PSTR("Time left"));
-        lcd_lib_draw_string(65, 10, buffer);
     }
+    else
+    {
+        lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
+        uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
+        char buffer[16];
+        char* c;
+        switch(printing_state)
+        {
+        default:
+            lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
+            lcd_lib_draw_string_center(30, card.longFilename);
+            break;
+        case PRINT_STATE_HEATING:
+            lcd_lib_draw_string_centerP(20, PSTR("Heating"));
+            c = int_to_string(dsp_temperature[0], buffer, PSTR("C"));
+            *c++ = '/';
+            c = int_to_string(target_temperature[0], c, PSTR("C"));
+            lcd_lib_draw_string_center(30, buffer);
+            break;
+        case PRINT_STATE_HEATING_BED:
+            lcd_lib_draw_string_centerP(20, PSTR("Heating buildplate"));
+            c = int_to_string(dsp_temperature_bed, buffer, PSTR("C"));
+            *c++ = '/';
+            c = int_to_string(target_temperature_bed, c, PSTR("C"));
+            lcd_lib_draw_string_center(30, buffer);
+            break;
+        }
+        float printTimeMs = (millis() - starttime);
+        float printTimeSec = printTimeMs / 1000L;
+        float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
+        static float totalTimeSmoothSec;
+        totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
+        if (isinf(totalTimeSmoothSec))
+            totalTimeSmoothSec = totalTimeMs;
 
-    lcd_progressbar(progress);
+        if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
+        {
+            totalTimeSmoothSec = totalTimeMs / 1000;
+            lcd_lib_draw_stringP(5, 10, PSTR("Time left unknown"));
+        }else{
+            unsigned long totalTimeSec;
+            if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
+            {
+                float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
+                if (f > 1.0)
+                    f = 1.0;
+                totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
+            }else{
+                totalTimeSec = totalTimeSmoothSec;
+            }
+            unsigned long timeLeftSec;
+            if (printTimeSec > totalTimeSec)
+                timeLeftSec = 1;
+            else
+                timeLeftSec = totalTimeSec - printTimeSec;
+            int_to_time_string(timeLeftSec, buffer);
+            lcd_lib_draw_stringP(5, 10, PSTR("Time left"));
+            lcd_lib_draw_string(65, 10, buffer);
+        }
+
+        lcd_progressbar(progress);
+    }
 
     lcd_lib_update_screen();
 }
@@ -616,7 +641,9 @@ static void lcd_menu_print_ready()
         char* c = buffer;
         for(uint8_t e=0; e<EXTRUDERS; e++)
             c = int_to_string(dsp_temperature[e], c, PSTR("C "));
+#if TEMP_SENSOR_BED != 0
         int_to_string(dsp_temperature_bed, c, PSTR("C"));
+#endif
         lcd_lib_draw_string_center(25, buffer);
     }else{
         currentMenu = lcd_menu_print_ready_cooled_down;
@@ -813,12 +840,12 @@ static void lcd_menu_print_tune()
                     {
                         lcd_lib_beep();
                         card.pause = true;
-                        if (current_position[Z_AXIS] < 170)
-                            enquecommand_P(PSTR("M601 X10 Y20 Z20 L30"));
-                        else if (current_position[Z_AXIS] < 200)
-                            enquecommand_P(PSTR("M601 X10 Y20 Z2 L30"));
+                        if (current_position[Z_AXIS] < Z_MAX_POS - 60)
+                            enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
+                        else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
+                            enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
                         else
-                            enquecommand_P(PSTR("M601 X10 Y20 Z0 L30"));
+                            enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
                     }
                 }
             }
@@ -899,6 +926,5 @@ static void lcd_menu_print_tune_retraction()
 #endif
     }
 }
-
 
 #endif//ENABLE_ULTILCD2

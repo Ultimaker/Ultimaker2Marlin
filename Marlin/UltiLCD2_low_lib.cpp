@@ -10,7 +10,6 @@
 #define LCD_GFX_HEIGHT 64
 
 #define LCD_RESET_PIN 5
-#define LCD_CS_PIN    6
 #define I2C_SDA_PIN   20
 #define I2C_SCL_PIN   21
 
@@ -38,7 +37,7 @@
 #define LCD_COMMAND_DISPLAY_OFF             0xAE
 #define LCD_COMMAND_DISPLAY_ON              0xAF
 #define LCD_COMMAND_NOP                     0xE3
-#define LCD_COMMAND_LOCK_COMMANDS           0xDF
+#define LCD_COMMAND_LOCK_COMMANDS           0xFD
 
 #define LCD_COMMAND_SET_ADDRESSING_MODE     0x20
 
@@ -84,11 +83,15 @@ static void i2c_led_write(uint8_t addr, uint8_t data)
 
 void lcd_lib_init()
 {
-    SET_OUTPUT(LCD_CS_PIN);
     SET_OUTPUT(LCD_RESET_PIN);
 
     SET_OUTPUT(I2C_SDA_PIN);
     SET_OUTPUT(I2C_SCL_PIN);
+    
+    //Set unused pins in the 10 pin connector to GND to improve shielding of the cable.
+    SET_OUTPUT(LCD_PINS_D4); WRITE(LCD_PINS_D4, 0); //RXD3/PJ1
+    SET_OUTPUT(LCD_PINS_ENABLE); WRITE(LCD_PINS_ENABLE, 0); //TXD3/PJ0
+    SET_OUTPUT(LCD_PINS_D7); WRITE(LCD_PINS_D7, 0); //PH3
 
     //Set the beeper as output.
     SET_OUTPUT(BEEPER);
@@ -104,7 +107,6 @@ void lcd_lib_init()
     SET_INPUT(SDCARDDETECT);
     WRITE(SDCARDDETECT, HIGH);
 
-    WRITE(LCD_CS_PIN, 0);
     WRITE(I2C_SDA_PIN, 1);
     WRITE(I2C_SCL_PIN, 1);
 
