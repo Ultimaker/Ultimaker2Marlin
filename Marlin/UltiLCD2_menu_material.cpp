@@ -60,21 +60,20 @@ void lcd_menu_material()
         if (IS_SELECTED_MAIN(0))
         {
             active_extruder = 0;
-            lcd_change_to_menu(lcd_menu_material_main);
+            menu.add_menu(menu_t(lcd_menu_material_main));
         }
         else if (IS_SELECTED_MAIN(1))
         {
             active_extruder = 1;
-            lcd_change_to_menu(lcd_menu_material_main);
+            menu.add_menu(menu_t(lcd_menu_material_main));
         }
         else if (IS_SELECTED_MAIN(2))
-            lcd_change_to_previous_menu();
+            menu.return_to_previous();
     }
 
     lcd_lib_update_screen();
 #else
-    lcd_remove_menu();
-    lcd_add_menu(lcd_menu_material_main, ENCODER_NO_SELECTION);
+    menu.replace_menu(menu_t(lcd_menu_material_main), false);
 #endif
 }
 
@@ -91,12 +90,12 @@ static void lcd_menu_material_main()
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
-            lcd_change_to_menu(lcd_menu_change_material_preheat);
+            menu.add_menu(menu_t(lcd_menu_change_material_preheat));
         }
         else if (IS_SELECTED_MAIN(1))
-            lcd_change_to_menu(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0));
+            menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_MAIN(2))
-            lcd_change_to_previous_menu();
+            menu.return_to_previous();
     }
 
     lcd_lib_update_screen();
@@ -131,7 +130,7 @@ void lcd_menu_change_material_preheat()
         max_feedrate[E_AXIS] = old_max_feedrate_e;
         retract_acceleration = old_retract_acceleration;
 
-        lcd_replace_menu(lcd_menu_change_material_remove);
+        menu.replace_menu(menu_t(lcd_menu_change_material_remove), false);
         temp = target;
     }
 
@@ -159,7 +158,7 @@ static void lcd_menu_change_material_remove()
     {
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
-        lcd_replace_menu(lcd_menu_change_material_remove_wait_user);
+        menu.replace_menu(menu_t(lcd_menu_change_material_remove_wait_user));
         SELECT_MAIN_MENU_ITEM(0);
         //Disable the extruder motor so you can pull out the remaining filament.
         disable_e0();
@@ -178,7 +177,7 @@ static void lcd_menu_change_material_remove()
 static void lcd_menu_change_material_remove_wait_user_ready()
 {
     plan_set_e_position(0);
-    lcd_replace_menu(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0));
+    menu.replace_menu(menu_t(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0)));
 }
 
 static void lcd_menu_change_material_remove_wait_user()
@@ -202,7 +201,7 @@ void lcd_menu_insert_material_preheat()
         for(uint8_t e=0; e<EXTRUDERS; e++)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
 
-        lcd_replace_menu(lcd_menu_change_material_insert_wait_user);
+        menu.replace_menu(menu_t(lcd_menu_change_material_insert_wait_user));
         temp = target;
     }
 
@@ -254,7 +253,7 @@ static void lcd_menu_change_material_insert_wait_user_ready()
     max_feedrate[E_AXIS] = old_max_feedrate_e;
     retract_acceleration = old_retract_acceleration;
 
-    lcd_replace_menu(lcd_menu_change_material_insert_forward);
+    menu.replace_menu(menu_t(lcd_menu_change_material_insert_forward));
 }
 
 static void lcd_menu_change_material_insert_forward()
@@ -268,7 +267,7 @@ static void lcd_menu_change_material_insert_forward()
         led_glow_dir = led_glow = 0;
 
         digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.
-        lcd_replace_menu(lcd_menu_change_material_insert, MAIN_MENU_ITEM_POS(0));
+        menu.replace_menu(menu_t(lcd_menu_change_material_insert, MAIN_MENU_ITEM_POS(0)));
     }
 
     long pos = st_get_position(E_AXIS);
@@ -346,7 +345,7 @@ static void lcd_menu_change_material_select_material()
     {
         lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), active_extruder);
 
-        lcd_replace_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
+        menu.replace_menu(menu_t(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0)));
     }
 }
 
@@ -427,7 +426,7 @@ static void lcd_menu_material_export()
     }
     card.closefile();
 
-    lcd_replace_menu(lcd_menu_material_export_done);
+    menu.replace_menu(menu_t(lcd_menu_material_export_done));
 }
 
 static void lcd_menu_material_import_done()
@@ -518,7 +517,7 @@ static void lcd_menu_material_import()
     }
     card.closefile();
 
-    lcd_replace_menu(lcd_menu_material_import_done);
+    menu.replace_menu(menu_t(lcd_menu_material_import_done));
 }
 
 static char* lcd_material_select_callback(uint8_t nr)
@@ -591,16 +590,16 @@ static void lcd_menu_material_select()
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
-            lcd_change_to_previous_menu();
+            menu.return_to_previous();
         else if (IS_SELECTED_SCROLL(count + 1))
-            lcd_change_to_menu(lcd_menu_material_settings);
+            menu.add_menu(menu_t(lcd_menu_material_settings));
         else if (IS_SELECTED_SCROLL(count + 2))
-            lcd_change_to_menu(lcd_menu_material_export);
+            menu.add_menu(menu_t(lcd_menu_material_export));
         else if (IS_SELECTED_SCROLL(count + 3))
-            lcd_change_to_menu(lcd_menu_material_import);
+            menu.add_menu(menu_t(lcd_menu_material_import));
         else{
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM() - 1, active_extruder);
-            lcd_replace_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
+            menu.replace_menu(menu_t(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0)));
         }
     }
 }
@@ -692,7 +691,7 @@ static void lcd_menu_material_settings()
         else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET))
             LCD_EDIT_SETTING(material[active_extruder].flow, "Material flow", "%", 1, 1000);
         else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET))
-            lcd_change_to_menu(lcd_menu_material_settings_store);
+            menu.add_menu(menu_t(lcd_menu_material_settings_store));
     }
 }
 

@@ -1,38 +1,14 @@
 #ifndef ULTI_LCD2_MENU_UTILS_H
 #define ULTI_LCD2_MENU_UTILS_H
 
-#include "UltiLCD2_hi_lib.h"
+#include "UltiLCD2_low_lib.h"
 #include "UltiLCD2_menu_print.h"
-
-// --------------------------------------------------------------------------
-// menu stack handling
-// --------------------------------------------------------------------------
-
-struct menu_t {
-    menuFunc_t  menuFunc;
-    int16_t     encoderPos;
-    uint8_t     max_encoder_acceleration;
-
-    // menu_t() : menuFunc(NULL), encoderPos(0) {}
-    menu_t(menuFunc_t func, int16_t pos, uint8_t accel) : menuFunc(func), encoderPos(pos), max_encoder_acceleration(accel) {}
-};
-
-void lcd_add_menu(menuFunc_t nextMenu, int16_t newEncoderPos);
-void lcd_replace_menu(menuFunc_t nextMenu);
-void lcd_replace_menu(menuFunc_t nextMenu, int16_t newEncoderPos);
-void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos = ENCODER_NO_SELECTION, int16_t oldEncoderPos = ENCODER_NO_SELECTION);
-void lcd_change_to_previous_menu();
-void lcd_remove_menu();
-
-menu_t & currentMenu();
-
-// --------------------------------------------------------------------------
-// menu item processing
-// --------------------------------------------------------------------------
 
 // menu item flags
 #define MENU_NORMAL 0
 #define MENU_INPLACE_EDIT 1
+#define MENU_SELECTED 4
+#define MENU_ACTIVE   8
 
 // text alignment
 #define ALIGN_TOP 1
@@ -43,45 +19,129 @@ menu_t & currentMenu();
 #define ALIGN_HCENTER 32
 #define ALIGN_CENTER 36
 
-typedef void (*menuActionCallback_t) ();
 
-struct menuitem_t {
-    char                 *title;
-    char                 *details;
-    uint8_t               left;
-    uint8_t               top;
-    uint8_t               width;
-    uint8_t               height;
-    menuActionCallback_t  initFunc;
-    menuActionCallback_t  callbackFunc;
-    uint8_t               textalign;
-    uint8_t               flags;
-    uint8_t               max_encoder_acceleration;
+#define ENCODER_TICKS_PER_MAIN_MENU_ITEM 8
+#define ENCODER_TICKS_PER_SCROLL_MENU_ITEM 4
+#define ENCODER_NO_SELECTION (ENCODER_TICKS_PER_MAIN_MENU_ITEM * -15)
+#define MAIN_MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_MAIN_MENU_ITEM * (n) + ENCODER_TICKS_PER_MAIN_MENU_ITEM / 2)
+#define SCROLL_MENU_ITEM_POS(n)  (ENCODER_TICKS_PER_SCROLL_MENU_ITEM * (n) + ENCODER_TICKS_PER_SCROLL_MENU_ITEM / 2)
+#define SELECT_MAIN_MENU_ITEM(n)  do { lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(n); } while(0)
+#define SELECT_SCROLL_MENU_ITEM(n)  do { lcd_lib_encoder_pos = SCROLL_MENU_ITEM_POS(n); } while(0)
+#define SELECTED_MAIN_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MAIN_MENU_ITEM)
+#define SELECTED_SCROLL_MENU_ITEM() (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM)
+#define IS_SELECTED_MAIN(n) ((n) == SELECTED_MAIN_MENU_ITEM())
+#define IS_SELECTED_SCROLL(n) ((n) == SELECTED_SCROLL_MENU_ITEM())
 
-    menuitem_t() : title(LCD_CACHE_FILENAME(0))
-                   , details(LCD_CACHE_FILENAME(1))
-                   , left(0)
-                   , top(0)
-                   , width(30)
-                   , height(LCD_CHAR_HEIGHT)
-                   , initFunc(0)
-                   , callbackFunc(0)
-                   , textalign(0)
-                   , flags(MENU_NORMAL)
-                   , max_encoder_acceleration(1)
-                     {}
+
+// --------------------------------------------------------------------------
+// menu stack handling
+// --------------------------------------------------------------------------
+#define MAX_MENU_DEPTH 6
+
+typedef void (*menuFunc_t)();
+
+struct menu_t {
+    menuFunc_t  initMenuFunc;
+    menuFunc_t  postMenuFunc;
+    menuFunc_t  processMenuFunc;
+    int16_t     encoderPos;
+    uint8_t     max_encoder_acceleration;
+    uint8_t     flags;
+
+    // constructor
+    menu_t(menuFunc_t func=0, int16_t pos=ENCODER_NO_SELECTION, uint8_t accel=0, uint8_t fl=MENU_NORMAL)
+     : initMenuFunc(0)
+     , postMenuFunc(0)
+     , processMenuFunc(func)
+     , encoderPos(pos)
+     , max_encoder_acceleration(accel)
+     , flags(fl) {}
+    // constructor
+    menu_t(menuFunc_t initFunc, menuFunc_t eventFunc, menuFunc_t postFunc, int16_t pos=ENCODER_NO_SELECTION, uint8_t accel=0, uint8_t fl=MENU_NORMAL)
+     : initMenuFunc(initFunc)
+     , postMenuFunc(postFunc)
+     , processMenuFunc(eventFunc)
+     , encoderPos(pos)
+     , max_encoder_acceleration(accel)
+     , flags(fl) {}
+
+    void setData(uint8_t fl, menuFunc_t func=0, uint8_t accel=0, int16_t pos=ENCODER_NO_SELECTION)
+    {
+        initMenuFunc = 0;
+        postMenuFunc = 0;
+        processMenuFunc = func;
+        encoderPos = pos;
+        max_encoder_acceleration = accel;
+        flags = fl;
+    }
+    void setData(uint8_t fl, menuFunc_t initFunc, menuFunc_t eventFunc, menuFunc_t postFunc, uint8_t accel=0, int16_t pos=ENCODER_NO_SELECTION)
+    {
+        initMenuFunc = initFunc;
+        postMenuFunc = postFunc;
+        processMenuFunc = eventFunc;
+        encoderPos = pos;
+        max_encoder_acceleration = accel;
+        flags = fl;
+    }
 };
 
-typedef const menuitem_t & (*menuItemCallback_t) (uint8_t nr, menuitem_t &opt);
+typedef char* (*entryNameCallback_t)(uint8_t nr);
+typedef void (*entryDetailsCallback_t)(uint8_t nr);
+typedef const menu_t & (*menuItemCallback_t) (uint8_t nr, menu_t &opt);
+typedef void (*menuDrawCallback_t) (uint8_t nr, uint8_t flags, bool &bStatusline);
 
-extern int8_t selectedMenuItem;
-extern menuActionCallback_t currentMenuFunc;
+class LCDMenu
+{
+public:
+    // constructor
+    LCDMenu() : currentIndex(0), selectedSubmenu(-1) {}
 
-FORCE_INLINE bool isActive(uint8_t nr) { return ((selectedMenuItem == nr) && currentMenuFunc); }
-FORCE_INLINE bool isSelected(uint8_t nr) { return (selectedMenuItem == nr); }
+    void processEvents()
+    {
+        if (menuStack[currentIndex].processMenuFunc)
+            menuStack[currentIndex].processMenuFunc();
+    }
 
-void lcd_reset_menu();
-const menuitem_t & lcd_draw_menu_item(menuItemCallback_t getMenuItem, uint8_t nr);
-void lcd_process_menu(menuItemCallback_t getMenuItem, uint8_t len);
+    void add_menu(menu_t nextMenu, bool beep = true);
+    void replace_menu(menu_t nextMenu, bool beep = true);
+    void return_to_previous(bool beep = true);
+
+    const menu_t & currentMenu() const { return menuStack[currentIndex]; }
+    menu_t & currentMenu() { return menuStack[currentIndex]; }
+
+    const uint8_t encoder_acceleration_factor() const
+    {
+        return (activeSubmenu.processMenuFunc ? activeSubmenu.max_encoder_acceleration : menuStack[currentIndex].max_encoder_acceleration);
+    }
+
+    void process_submenu(menuItemCallback_t getMenuItem, uint8_t len);
+    void reset_submenu();
+    void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, bool &bStatusline);
+    bool isSubmenuSelected() const { return (selectedSubmenu >= 0); }
+
+    // standard drawing functions (for convenience)
+    static void drawMenuBox(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t flags);
+    static void drawMenuString(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
+    static void drawMenuString_P(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
+
+private:
+    static void init_menu_switch(bool beep);
+    FORCE_INLINE bool isSelected(uint8_t nr) { return (selectedSubmenu == nr); }
+    FORCE_INLINE bool isActive(uint8_t nr) { return ((selectedSubmenu == nr) && activeSubmenu.processMenuFunc); }
+
+    // menu stack
+    menu_t menuStack[MAX_MENU_DEPTH];
+    uint8_t currentIndex;
+
+    // submenu item
+    menu_t activeSubmenu;
+    int8_t selectedSubmenu;
+
+};
+
+extern LCDMenu menu;
+
+FORCE_INLINE void lcd_change_to_previous_menu() { menu.return_to_previous(); }
+FORCE_INLINE void lcd_remove_menu() { menu.return_to_previous(false); }
 
 #endif

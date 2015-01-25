@@ -7,11 +7,11 @@
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_maintenance.h"
+#include "UltiLCD2_menu_utils.h"
 #include "cardreader.h"
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
-#include "UltiLCD2_menu_utils.h"
 #include "tinkergnome.h"
 
 #define SERIAL_CONTROL_TIMEOUT 5000
@@ -50,8 +50,8 @@ void lcd_init()
 
     // initialize menu stack and show start animation
     *lcd_status_message = 0;
-    lcd_add_menu(lcd_menu_main, ENCODER_NO_SELECTION);
-    lcd_add_menu(lcd_menu_startup, ENCODER_NO_SELECTION);
+    menu.add_menu(menu_t(lcd_menu_main), false);
+    menu.add_menu(menu_t(lcd_menu_startup), false);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
 
@@ -130,7 +130,7 @@ void lcd_update()
 #if TEMP_SENSOR_BED != 0
         dsp_temperature_bed = (ALPHA * current_temperature_bed) + (ONE_MINUS_ALPHA * dsp_temperature_bed);
 #endif
-        currentMenu().menuFunc();
+        menu.processEvents();
         if (postMenuCheck) postMenuCheck();
     }
 }
@@ -177,16 +177,17 @@ void lcd_menu_startup()
             analogWrite(LED_PIN, 255 * led_brightness_level / 100);
         led_glow = led_glow_dir = 0;
         LED_NORMAL();
-        if (lcd_lib_button_pressed)
-            lcd_lib_beep();
 
-        lcd_remove_menu();
 #ifdef SPECIAL_STARTUP
-        lcd_add_menu(lcd_menu_special_startup, ENCODER_NO_SELECTION);
+        menu.replace_menu(menu_t(lcd_menu_special_startup), lcd_lib_button_pressed);
 #else
-        if (!IS_FIRST_RUN_DONE())
+        if (IS_FIRST_RUN_DONE())
         {
-            lcd_add_menu(lcd_menu_first_run_init, ENCODER_NO_SELECTION);
+            menu.return_to_previous(false);
+        }
+        else
+        {
+            menu.replace_menu(menu_t(lcd_menu_first_run_init), lcd_lib_button_pressed);
         }
 #endif//SPECIAL_STARTUP
     }
@@ -235,17 +236,17 @@ void lcd_menu_main()
         {
             lcd_clear_cache();
             card.release();
-            lcd_change_to_menu(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0));
+            menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
         }
         else if (IS_SELECTED_MAIN(1))
-            lcd_change_to_menu(lcd_menu_material);
+            menu.add_menu(menu_t(lcd_menu_material));
         else if (IS_SELECTED_MAIN(2))
         {
             if (ui_mode & UI_MODE_TINKERGNOME)
             {
-                lcd_change_to_menu(lcd_menu_maintenance_advanced);
+                menu.add_menu(menu_t(lcd_menu_maintenance_advanced));
             }else{
-                lcd_change_to_menu(lcd_menu_maintenance);
+                menu.add_menu(menu_t(lcd_menu_maintenance));
             }
         }
     }
@@ -253,7 +254,7 @@ void lcd_menu_main()
     {
         led_glow_dir = 0;
         if (led_glow > 200)
-            lcd_change_to_menu(lcd_menu_breakout);
+            menu.add_menu(menu_t(lcd_menu_breakout));
     }else{
         led_glow = led_glow_dir = 0;
     }

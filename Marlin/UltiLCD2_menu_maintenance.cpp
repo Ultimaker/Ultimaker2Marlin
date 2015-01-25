@@ -29,19 +29,18 @@ void lcd_menu_maintenance()
 {
     if (ui_mode & UI_MODE_TINKERGNOME)
     {
-        lcd_remove_menu();
-        lcd_add_menu(lcd_menu_maintenance_advanced, ENCODER_NO_SELECTION);
+        menu.replace_menu(menu_t(lcd_menu_maintenance_advanced), false);
     }else{
         lcd_tripple_menu(PSTR("BUILD-|PLATE"), PSTR("ADVANCED"), PSTR("RETURN"));
 
         if (lcd_lib_button_pressed)
         {
             if (IS_SELECTED_MAIN(0))
-                lcd_change_to_menu(lcd_menu_first_run_start_bed_leveling);
+                menu.add_menu(menu_t(lcd_menu_first_run_start_bed_leveling));
             else if (IS_SELECTED_MAIN(1))
-                lcd_change_to_menu(lcd_menu_maintenance_advanced);
+                menu.add_menu(menu_t(lcd_menu_maintenance_advanced));
             else if (IS_SELECTED_MAIN(2))
-                lcd_change_to_previous_menu();
+                menu.return_to_previous();
         }
 
         lcd_lib_update_screen();
@@ -77,8 +76,6 @@ static char* lcd_advanced_item(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Lower buildplate"));
     else if (nr == index++)
         strcpy_P(card.longFilename, PSTR("Raise buildplate"));
-    else if ((ui_mode & UI_MODE_TINKERGNOME) && (nr == index++))
-        strcpy_P(card.longFilename, PSTR("Move axis"));
     else if (nr == index++)
         strcpy_P(card.longFilename, PSTR("Insert material"));
     else if (nr == index++)
@@ -115,7 +112,7 @@ static void lcd_advanced_details(uint8_t nr)
 {
     LCD_CACHE_FILENAME(1)[0] = '\0';
     if (!(ui_mode & UI_MODE_TINKERGNOME) && (nr > 8+BED_MENU_OFFSET+2*EXTRUDERS))
-        nr+=2;
+        ++nr;
 
     if (nr == 1)
     {
@@ -139,7 +136,7 @@ static void lcd_advanced_details(uint8_t nr)
     }else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS * 2)
     {
         int_to_string(int(fanSpeed) * 100 / 255, LCD_CACHE_FILENAME(1), PSTR("%"));
-    }else if (nr == 12 + BED_MENU_OFFSET + EXTRUDERS * 2)
+    }else if (nr == 11 + BED_MENU_OFFSET + EXTRUDERS * 2)
     {
         lcd_lib_draw_stringP(5, BOTTOM_MENU_YPOS, PSTR(STRING_CONFIG_H_AUTHOR));
         return;
@@ -151,33 +148,30 @@ static void lcd_advanced_details(uint8_t nr)
 
 void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu((ui_mode & UI_MODE_TINKERGNOME) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_TINKERGNOME) ? 15 : 13), lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu((ui_mode & UI_MODE_TINKERGNOME) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_TINKERGNOME) ? 14 : 13), lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
         if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_previous_menu();
+            menu.return_to_previous();
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_maintenance_led, 0, lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_led, 0, lcd_lib_encoder_pos));
         else if (IS_SELECTED_SCROLL(index++))
         {
             active_extruder = 0;
-            max_encoder_acceleration = 4;
-            lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0, lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_advanced_heatup, MAIN_MENU_ITEM_POS(0), 4));
         }
 #if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(index++))
         {
             active_extruder = 1;
-            max_encoder_acceleration = 4;
-            lcd_change_to_menu(lcd_menu_maintenance_advanced_heatup, 0, lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_advanced_heatup, MAIN_MENU_ITEM_POS(0), 4));
         }
 #endif
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(index++))
         {
-            max_encoder_acceleration = 4;
-            lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0, lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_advanced_bed_heatup, MAIN_MENU_ITEM_POS(0), 4));
         }
 #endif
         else if (IS_SELECTED_SCROLL(index++))
@@ -196,24 +190,20 @@ void lcd_menu_maintenance_advanced()
             enquecommand_P(PSTR("G28 Z0"));
             enquecommand_P(PSTR("G1 Z40"));
         }
-        else if ((ui_mode & UI_MODE_TINKERGNOME) && (IS_SELECTED_SCROLL(index++)))
-        {
-            lcd_change_to_menu(lcd_menu_move_axes, MAIN_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
-        }
         else if (IS_SELECTED_SCROLL(index++))
         {
             char buffer[32];
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
-            lcd_change_to_menu(lcd_menu_insert_material_preheat);
+            menu.add_menu(menu_t(lcd_menu_insert_material_preheat));
         }
         else if (IS_SELECTED_SCROLL(index++))
         {
             set_extrude_min_temp(0);
             active_extruder = 0;
             target_temperature[active_extruder] = material[active_extruder].temperature;
-            lcd_change_to_menu(lcd_menu_maintenance_extrude, 0, lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_extrude, MAIN_MENU_ITEM_POS(0)));
         }
 #if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(index++))
@@ -221,7 +211,7 @@ void lcd_menu_maintenance_advanced()
             set_extrude_min_temp(0);
             active_extruder = 1;
             target_temperature[active_extruder] = material[active_extruder].temperature;
-            lcd_change_to_menu(lcd_menu_maintenance_extrude, 0, lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_extrude, MAIN_MENU_ITEM_POS(0)));
         }
 #endif
         else if (IS_SELECTED_SCROLL(index++))
@@ -229,19 +219,19 @@ void lcd_menu_maintenance_advanced()
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
         }
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
         else if ((ui_mode & UI_MODE_TINKERGNOME) && (IS_SELECTED_SCROLL(index++)))
-            lcd_change_to_menu(lcd_menu_first_run_start_bed_leveling, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_first_run_start_bed_leveling, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_maintenance_expert, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_maintenance_expert, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0), lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
-            lcd_change_to_menu(lcd_menu_advanced_factory_reset, SCROLL_MENU_ITEM_POS(1), lcd_lib_encoder_pos);
+            menu.add_menu(menu_t(lcd_menu_advanced_factory_reset, MAIN_MENU_ITEM_POS(1)));
     }
 }
 
