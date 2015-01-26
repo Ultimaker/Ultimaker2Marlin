@@ -37,7 +37,7 @@
 #define LCD_COMMAND_DISPLAY_OFF             0xAE
 #define LCD_COMMAND_DISPLAY_ON              0xAF
 #define LCD_COMMAND_NOP                     0xE3
-#define LCD_COMMAND_LOCK_COMMANDS           0xDF
+#define LCD_COMMAND_LOCK_COMMANDS           0xFD
 
 #define LCD_COMMAND_SET_ADDRESSING_MODE     0x20
 
