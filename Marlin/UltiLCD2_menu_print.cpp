@@ -352,10 +352,13 @@ void lcd_menu_print_select()
                 {
                     if (led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
                         analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
-                    if (!card.longFilename[0])
-                        strcpy(card.longFilename, card.filename);
-                    card.longFilename[20] = '\0';
-                    if (strchr(card.longFilename, '.')) strchr(card.longFilename, '.')[0] = '\0';
+                    LCD_CACHE_ID(0) = 255;
+                    if (card.longFilename[0])
+                        strcpy(LCD_CACHE_FILENAME(0), card.longFilename);
+                    else
+                        strcpy(LCD_CACHE_FILENAME(0), card.filename);
+                    LCD_CACHE_FILENAME(0)[20] = '\0';
+                    if (strchr(LCD_CACHE_FILENAME(0), '.')) strchr(LCD_CACHE_FILENAME(0), '.')[0] = '\0';
 
                     char buffer[64];
                     card.fgets(buffer, sizeof(buffer));
@@ -475,7 +478,7 @@ static void lcd_menu_print_heatup()
 
     lcd_lib_draw_string_centerP(10, PSTR("Heating up..."));
     lcd_lib_draw_string_centerP(20, PSTR("Preparing to print:"));
-    lcd_lib_draw_string_center(30, card.longFilename);
+    lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
 
     lcd_progressbar(progress);
 
@@ -515,7 +518,7 @@ static void lcd_menu_print_printing()
         {
         default:
             lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
-            lcd_lib_draw_string_center(30, card.longFilename);
+            lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
             break;
         case PRINT_STATE_HEATING:
             lcd_lib_draw_string_centerP(20, PSTR("Heating"));
