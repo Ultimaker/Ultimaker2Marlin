@@ -56,8 +56,8 @@
 #define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x));
 #define SERIAL_PROTOCOLLN(x) do {MYSERIAL.print(x);MYSERIAL.write('\n');} while(0)
 #define SERIAL_PROTOCOLLNPGM(x) do{serialprintPGM(PSTR(x));MYSERIAL.write('\n');} while(0)
-#define SERIAL_PROTOCOL_OK() do{serialprintPGM(PSTR(MSG_OK " N")); MYSERIAL.print(gcode_N[command_buffer_index_read]); }while(0)
-#define SERIAL_PROTOCOL_OK_LN() do{serialprintPGM(PSTR(MSG_OK " N")); MYSERIAL.println(gcode_N[command_buffer_index_read]); }while(0)
+#define SERIAL_PROTOCOL_OK() do{serialprintPGM(PSTR(MSG_OK " N")); MYSERIAL.print(gcode_N[command_buffer_index_read]); serialprintPGM(PSTR(" P")); MYSERIAL.print(int(BLOCK_BUFFER_SIZE - movesplanned() - 1)); }while(0)
+#define SERIAL_PROTOCOL_OK_LN() do{SERIAL_PROTOCOL_OK(); MYSERIAL.println(); }while(0)
 
 const char errormagic[] PROGMEM ="Error:";
 const char echomagic[] PROGMEM ="echo:";
@@ -158,9 +158,6 @@ void FlushSerialRequestResend();
 void ClearToSend();
 
 void get_coordinates();
-#ifdef DELTA
-void calculate_delta(float cartesian[3]);
-#endif
 void prepare_move();
 void kill();
 #define STOP_REASON_MAXTEMP              1

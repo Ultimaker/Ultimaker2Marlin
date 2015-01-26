@@ -91,8 +91,6 @@ volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1};
 //=============================functions         ============================
 //===========================================================================
 
-#define CHECK_ENDSTOPS  if(check_endstops)
-
 #ifdef __AVR
 // intRes = intIn1 * intIn2 >> 16
 // uses:
@@ -318,7 +316,7 @@ ISR(TIMER1_COMPA_vect)
     out_bits = current_block->direction_bits;
 
 
-    // Set the direction bits (X_AXIS=A_AXIS and Y_AXIS=B_AXIS for COREXY)
+    // Set the direction bits
     if((out_bits & (1<<X_AXIS))!=0){
       WRITE(X_DIR_PIN, INVERT_X_DIR);
       count_direction[X_AXIS]=-1;
@@ -337,12 +335,8 @@ ISR(TIMER1_COMPA_vect)
     }
 
     // Set direction en check limit switches
-    #ifndef COREXY
     if ((out_bits & (1<<X_AXIS)) != 0) {   // stepping along -X axis
-    #else
-    if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) != 0)) {   //-X occurs for -A and -B
-    #endif
-      CHECK_ENDSTOPS
+      if (check_endstops)
       {
         #if defined(X_MIN_PIN) && X_MIN_PIN > -1
           bool x_min_endstop=(READ(X_MIN_PIN) != X_ENDSTOPS_INVERTING);
@@ -356,7 +350,7 @@ ISR(TIMER1_COMPA_vect)
       }
     }
     else { // +direction
-      CHECK_ENDSTOPS
+      if(check_endstops)
       {
         #if defined(X_MAX_PIN) && X_MAX_PIN > -1
           bool x_max_endstop=(READ(X_MAX_PIN) != X_ENDSTOPS_INVERTING);
@@ -370,12 +364,8 @@ ISR(TIMER1_COMPA_vect)
       }
     }
 
-    #ifndef COREXY
     if ((out_bits & (1<<Y_AXIS)) != 0) {   // -direction
-    #else
-    if ((((out_bits & (1<<X_AXIS)) != 0)&&(out_bits & (1<<Y_AXIS)) == 0)) {   // -Y occurs for -A and +B
-    #endif
-      CHECK_ENDSTOPS
+      if(check_endstops)
       {
         #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
           bool y_min_endstop=(READ(Y_MIN_PIN) != Y_ENDSTOPS_INVERTING);
@@ -389,7 +379,7 @@ ISR(TIMER1_COMPA_vect)
       }
     }
     else { // +direction
-      CHECK_ENDSTOPS
+      if(check_endstops)
       {
         #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
           bool y_max_endstop=(READ(Y_MAX_PIN) != Y_ENDSTOPS_INVERTING);
@@ -411,7 +401,7 @@ ISR(TIMER1_COMPA_vect)
       #endif
 
       count_direction[Z_AXIS]=-1;
-      CHECK_ENDSTOPS
+      if(check_endstops)
       {
         #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
           bool z_min_endstop=(READ(Z_MIN_PIN) != Z_ENDSTOPS_INVERTING);
@@ -432,7 +422,7 @@ ISR(TIMER1_COMPA_vect)
       #endif
 
       count_direction[Z_AXIS]=1;
-      CHECK_ENDSTOPS
+      if(check_endstops)
       {
         #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
           bool z_max_endstop=(READ(Z_MAX_PIN) != Z_ENDSTOPS_INVERTING);
