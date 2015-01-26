@@ -32,8 +32,10 @@ static void lcd_menu_print_ready();
 static void lcd_menu_print_ready_cooled_down();
 static void lcd_menu_print_tune();
 static void lcd_menu_print_tune_retraction();
+static void lcd_menu_print_pause();
 
 bool primed = false;
+static bool pauseRequested = false;
 
 
 void lcd_clear_cache()
@@ -133,12 +135,14 @@ static void doStartPrint()
         plan_set_e_position(-PRIMING_MM3);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], (PRIMING_MM3_PER_SEC * volume_to_filament_length[e]), e);
 
+#if EXTRUDERS > 1
         // for extruders other than the first one, perform end of print retraction
         if (e > 0)
         {
             plan_set_e_position((END_OF_PRINT_RETRACTION) / volume_to_filament_length[e]);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, e);
         }
+#endif
     }
     active_extruder = 0;
 
@@ -507,6 +511,9 @@ static void lcd_menu_print_printing()
     }
     else
     {
+        if (pauseRequested) {
+            lcd_menu_print_pause();
+        }
         lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
         uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
         char buffer[16];
@@ -674,7 +681,7 @@ static char* tune_item_callback(uint8_t nr)
         strcpy_P(c, PSTR("< RETURN"));
     else if (nr == 1)
     {
-        if (!card.pause)
+        if (!card.pause && !pauseRequested)
         {
             if (movesplanned() > 0)
                 strcpy_P(c, PSTR("Pause"));
@@ -813,6 +820,11 @@ void lcd_menu_print_tune_heatup_nozzle1()
 
 static void lcd_menu_print_tune()
 {
+    // print paused?
+    if (pauseRequested)
+    {
+        lcd_menu_print_pause();
+    }
     lcd_scroll_menu(PSTR("TUNE"), 6 + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
@@ -836,17 +848,8 @@ static void lcd_menu_print_tune()
                 }
                 else
                 {
-                    if (movesplanned() > 0 && commands_queued() < BUFSIZE)
-                    {
-                        lcd_lib_beep();
-                        card.pause = true;
-                        if (current_position[Z_AXIS] < Z_MAX_POS - 60)
-                            enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
-                        else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
-                            enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
-                        else
-                            enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
-                    }
+                    lcd_lib_beep();
+                    lcd_menu_print_pause();
                 }
             }
         }else if (IS_SELECTED_SCROLL(2))
@@ -924,6 +927,27 @@ static void lcd_menu_print_tune_retraction()
         else if (IS_SELECTED_SCROLL(3))
             LCD_EDIT_SETTING_FLOAT001(extruder_swap_retract_length, "Extruder change", "mm", 0, 50);
 #endif
+    }
+}
+
+static void lcd_menu_print_pause()
+{
+    if (card.sdprinting && !card.pause)
+    {
+        if (movesplanned() > 0 && commands_queued() < BUFSIZE)
+        {
+            pauseRequested = false;
+            card.pause = true;
+            if (current_position[Z_AXIS] < Z_MAX_POS - 60)
+                enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
+            else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
+                enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
+            else
+                enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
+        }
+        else{
+            pauseRequested = true;
+        }
     }
 }
 
