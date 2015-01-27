@@ -27,12 +27,9 @@ static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error();
 static void lcd_menu_print_classic_warning();
-//static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
 static void lcd_menu_print_ready_cooled_down();
-//static void lcd_menu_print_tune();
 static void lcd_menu_print_tune_retraction();
-static void lcd_menu_print_pause();
 
 bool primed = false;
 static bool pauseRequested = false;
@@ -74,6 +71,8 @@ static void abortPrint()
         // no longer primed
         primed = false;
     }
+
+    enquecommand_P(PSTR("M401"));
 
     if (current_position[Z_AXIS] > Z_MAX_POS - 30)
     {
@@ -371,13 +370,10 @@ void lcd_menu_print_select()
                 {
                     if (led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
                         analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
-                    LCD_CACHE_ID(0) = 255;
-                    if (card.longFilename[0])
-                        strcpy(LCD_CACHE_FILENAME(0), card.longFilename);
-                    else
-                        strcpy(LCD_CACHE_FILENAME(0), card.filename);
-                    LCD_CACHE_FILENAME(0)[20] = '\0';
-                    if (strchr(LCD_CACHE_FILENAME(0), '.')) strchr(LCD_CACHE_FILENAME(0), '.')[0] = '\0';
+                    if (!card.longFilename[0])
+                        strcpy(card.longFilename, card.filename);
+                    card.longFilename[20] = '\0';
+                    if (strchr(card.longFilename, '.')) strchr(card.longFilename, '.')[0] = '\0';
 
                     char buffer[64];
                     card.fgets(buffer, sizeof(buffer));
@@ -707,7 +703,7 @@ static void lcd_menu_print_ready_cooled_down()
 
 static char* tune_item_callback(uint8_t nr)
 {
-    char* c = (char*)lcd_cache;
+    char* c = LCD_CACHE_FILENAME(0);
     if (nr == 0)
         strcpy_P(c, PSTR("< RETURN"));
     else if (nr == 1)
@@ -756,7 +752,7 @@ static char* tune_item_callback(uint8_t nr)
 
 static void tune_item_details_callback(uint8_t nr)
 {
-    char* c = (char*)lcd_cache;
+    char* c = LCD_CACHE_FILENAME(0);
     if (nr == 2)
         c = int_to_string(feedmultiply, c, PSTR("%"));
     else if (nr == 3)
@@ -797,7 +793,7 @@ static void tune_item_details_callback(uint8_t nr)
     }
     else
         return;
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, (char*)lcd_cache);
+    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, LCD_CACHE_FILENAME(0));
 }
 
 void lcd_menu_print_tune_heatup_nozzle0()
@@ -912,34 +908,33 @@ void lcd_menu_print_tune()
 static char* lcd_retraction_item(uint8_t nr)
 {
     if (nr == 0)
-        strcpy_P((char*)lcd_cache, PSTR("< RETURN"));
+        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("< RETURN"));
     else if (nr == 1)
-        strcpy_P((char*)lcd_cache, PSTR("Retract length"));
+        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Retract length"));
     else if (nr == 2)
-        strcpy_P((char*)lcd_cache, PSTR("Retract speed"));
+        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Retract speed"));
 #if EXTRUDERS > 1
     else if (nr == 3)
-        strcpy_P((char*)lcd_cache, PSTR("Extruder change len"));
+        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Extruder change len"));
 #endif
     else
-        strcpy_P((char*)lcd_cache, PSTR("???"));
-    return (char*)lcd_cache;
+        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("???"));
+    return LCD_CACHE_FILENAME(0);
 }
 
 static void lcd_retraction_details(uint8_t nr)
 {
-    char buffer[16];
     if (nr == 0)
         return;
     else if(nr == 1)
-        float_to_string(retract_length, buffer, PSTR("mm"));
+        float_to_string(retract_length, LCD_CACHE_FILENAME(0), PSTR("mm"));
     else if(nr == 2)
-        int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
+        int_to_string(retract_feedrate / 60 + 0.5, LCD_CACHE_FILENAME(0), PSTR("mm/sec"));
 #if EXTRUDERS > 1
     else if(nr == 3)
-        int_to_string(extruder_swap_retract_length, buffer, PSTR("mm"));
+        int_to_string(extruder_swap_retract_length, LCD_CACHE_FILENAME(0), PSTR("mm"));
 #endif
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
+    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, LCD_CACHE_FILENAME(0));
 }
 
 static void lcd_menu_print_tune_retraction()
@@ -960,11 +955,7 @@ static void lcd_menu_print_tune_retraction()
     }
 }
 
-<<<<<<< HEAD
 void lcd_menu_print_pause()
-=======
-static void lcd_menu_print_pause()
->>>>>>> master
 {
     if (card.sdprinting && !card.pause)
     {
@@ -973,19 +964,11 @@ static void lcd_menu_print_pause()
             pauseRequested = false;
             card.pause = true;
             if (current_position[Z_AXIS] < Z_MAX_POS - 60)
-<<<<<<< HEAD
                 enquecommand_P(PSTR("M601 X10 Y200 Z20 L20"));
             else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
                 enquecommand_P(PSTR("M601 X10 Y200 Z2 L20"));
             else
                 enquecommand_P(PSTR("M601 X10 Y200 Z0 L20"));
-=======
-                enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
-            else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
-                enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
-            else
-                enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
->>>>>>> master
         }
         else{
             pauseRequested = true;
@@ -993,12 +976,9 @@ static void lcd_menu_print_pause()
     }
 }
 
-<<<<<<< HEAD
 bool isPauseRequested()
 {
     return pauseRequested;
 }
 
-=======
->>>>>>> master
 #endif//ENABLE_ULTILCD2

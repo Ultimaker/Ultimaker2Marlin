@@ -378,7 +378,7 @@ static void lcd_tune_value(float &value, float _min, float _max, float _step)
     if (lcd_lib_encoder_pos != 0)
     {
         lcd_lib_tick();
-        value = constrain(value + (lcd_lib_encoder_pos * _step), _min, _max);
+        value = constrain(roundf((value + (lcd_lib_encoder_pos * _step))/_step)*_step, _min, _max);
         lcd_lib_encoder_pos = 0;
     }
 }
@@ -497,7 +497,7 @@ void drawHeatupSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // temp nozzle 1
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
 #if EXTRUDERS < 2
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Nozzle "));
@@ -521,7 +521,7 @@ void drawHeatupSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // temp nozzle 2
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Nozzle(2) "));
             int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
@@ -542,7 +542,7 @@ void drawHeatupSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // temp buildplate
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Buildplate "));
             int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
@@ -571,7 +571,7 @@ void drawPrintSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // flow nozzle 1
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
 #if EXTRUDERS < 2
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Flow "));
@@ -595,7 +595,7 @@ void drawPrintSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // flow nozzle 2
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Flow(2) "));
             float_to_string2(e_smoothed_speed[1], LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR("mm" CUBED_SYMBOL PER_SECOND_SYMBOL));
@@ -615,7 +615,7 @@ void drawPrintSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // temp nozzle 1
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
 #if EXTRUDERS < 2
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Nozzle "));
@@ -639,7 +639,7 @@ void drawPrintSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // temp nozzle 2
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Nozzle(2) "));
             int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
@@ -660,7 +660,7 @@ void drawPrintSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // temp buildplate
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Buildplate "));
             int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
@@ -680,7 +680,7 @@ void drawPrintSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // speed
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Speed "));
             int_to_string(xy_speed+0.5, LCD_CACHE_FILENAME(1)+strlen(LCD_CACHE_FILENAME(1)), PSTR("mm" PER_SECOND_SYMBOL));
@@ -699,7 +699,7 @@ void drawPrintSubmenu (uint8_t nr, uint8_t flags, bool &bStatusline)
     else if (nr == index++)
     {
         // fan
-        if (flags & MENU_SELECTED)
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(LCD_CACHE_FILENAME(1), PSTR("Fan"));
             lcd_lib_draw_string_left(5, LCD_CACHE_FILENAME(1));
@@ -1319,7 +1319,7 @@ static void stopMove()
     delayMove = true;
 }
 
-static void lcd_move_axis(AxisEnum axis)
+static void lcd_move_axis(AxisEnum axis, float diff)
 {
     if (endstop_reached(axis, movingSpeed) || lcd_lib_button_pressed || ((lcd_lib_encoder_pos < 0) && (movingSpeed > 0)) || ((lcd_lib_encoder_pos > 0) && (movingSpeed < 0)))
     {
@@ -1347,18 +1347,16 @@ static void lcd_move_axis(AxisEnum axis)
         movingSpeed = constrain(movingSpeed, -15, 15);
         if (movingSpeed != 0)
         {
-            uint8_t steps = BLOCK_BUFFER_SIZE - movesplanned() - 2;
-            for (uint8_t i = 0; i < steps; ++i)
+            uint8_t steps = min(abs(movingSpeed)*2, (BLOCK_BUFFER_SIZE - movesplanned()) >> 1);
+            for (uint8_t i = 0; (i < steps) && movingSpeed; ++i)
             {
-                target_position[axis] = current_position[axis]+float(movingSpeed)/(BLOCK_BUFFER_SIZE << 2);
+                target_position[axis] = roundf((current_position[axis]+float(movingSpeed)*diff)/diff)*diff;
+                current_position[axis] = constrain(target_position[axis], min_pos[axis], max_pos[axis]);
+                plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], abs(movingSpeed), active_extruder);
                 if ((movingSpeed < 0 && (target_position[axis] < min_pos[axis])) || ((movingSpeed > 0) && (target_position[axis] > max_pos[axis])) || endstop_reached(axis, movingSpeed))
                 {
                     stopMove();
-                }
-                else
-                {
-                    current_position[axis] = target_position[axis];
-                    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], abs(movingSpeed), active_extruder);
+                    break;
                 }
             }
         }
@@ -1367,17 +1365,17 @@ static void lcd_move_axis(AxisEnum axis)
 
 static void lcd_move_x_axis()
 {
-    lcd_move_axis(X_AXIS);
+    lcd_move_axis(X_AXIS, 0.1);
 }
 
 static void lcd_move_y_axis()
 {
-    lcd_move_axis(Y_AXIS);
+    lcd_move_axis(Y_AXIS, 0.1);
 }
 
 static void lcd_move_z_axis()
 {
-    lcd_move_axis(Z_AXIS);
+    lcd_move_axis(Z_AXIS, 0.05);
 }
 
 static void lcd_position_x_axis()

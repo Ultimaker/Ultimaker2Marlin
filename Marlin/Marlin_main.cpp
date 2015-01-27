@@ -136,6 +136,7 @@
 // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
 // M304 - Set bed PID parameters P I and D
 // M400 - Finish all moves
+// M401 - Cancel as many moves as possible
 // M500 - stores paramters in EEPROM
 // M501 - reads parameters from EEPROM (if you need reset them after you changed them temporarily).
 // M502 - reverts to the default "factory settings".  You still need to store them in EEPROM afterwards if you want to.
@@ -1949,6 +1950,9 @@ void process_commands()
     {
       st_synchronize();
     }
+    break;
+    case 401:
+      quickStop();
     break;
     case 500: // M500 Store settings in EEPROM
     {
