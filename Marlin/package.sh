@@ -11,7 +11,7 @@
 ##Do we need to create the final archive
 ARCHIVE_FOR_DISTRIBUTION=1
 ##Which version name are we appending to the final archive
-export BUILD_NAME=15.01-RC10
+export BUILD_NAME=15.01-RC11
 
 #############################
 # Support functions

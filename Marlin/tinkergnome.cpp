@@ -1,5 +1,6 @@
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
+#include <math.h>
 #include "Marlin.h"
 #include "cardreader.h"
 #include "temperature.h"
@@ -378,7 +379,7 @@ static void lcd_tune_value(float &value, float _min, float _max, float _step)
     if (lcd_lib_encoder_pos != 0)
     {
         lcd_lib_tick();
-        value = constrain(roundf((value + (lcd_lib_encoder_pos * _step))/_step)*_step, _min, _max);
+        value = constrain(round((value + (lcd_lib_encoder_pos * _step))/_step)*_step, _min, _max);
         lcd_lib_encoder_pos = 0;
     }
 }
@@ -1350,7 +1351,7 @@ static void lcd_move_axis(AxisEnum axis, float diff)
             uint8_t steps = min(abs(movingSpeed)*2, (BLOCK_BUFFER_SIZE - movesplanned()) >> 1);
             for (uint8_t i = 0; (i < steps) && movingSpeed; ++i)
             {
-                target_position[axis] = roundf((current_position[axis]+float(movingSpeed)*diff)/diff)*diff;
+                target_position[axis] = round((current_position[axis]+float(movingSpeed)*diff)/diff)*diff;
                 current_position[axis] = constrain(target_position[axis], min_pos[axis], max_pos[axis]);
                 plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], abs(movingSpeed), active_extruder);
                 if ((movingSpeed < 0 && (target_position[axis] < min_pos[axis])) || ((movingSpeed > 0) && (target_position[axis] > max_pos[axis])) || endstop_reached(axis, movingSpeed))
