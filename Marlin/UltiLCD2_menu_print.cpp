@@ -32,6 +32,7 @@ static void lcd_menu_print_ready();
 static void lcd_menu_print_ready_cooled_down();
 //static void lcd_menu_print_tune();
 static void lcd_menu_print_tune_retraction();
+static void lcd_menu_print_pause();
 
 bool primed = false;
 static bool pauseRequested = false;
@@ -370,10 +371,13 @@ void lcd_menu_print_select()
                 {
                     if (led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
                         analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
-                    if (!card.longFilename[0])
-                        strcpy(card.longFilename, card.filename);
-                    card.longFilename[20] = '\0';
-                    if (strchr(card.longFilename, '.')) strchr(card.longFilename, '.')[0] = '\0';
+                    LCD_CACHE_ID(0) = 255;
+                    if (card.longFilename[0])
+                        strcpy(LCD_CACHE_FILENAME(0), card.longFilename);
+                    else
+                        strcpy(LCD_CACHE_FILENAME(0), card.filename);
+                    LCD_CACHE_FILENAME(0)[20] = '\0';
+                    if (strchr(LCD_CACHE_FILENAME(0), '.')) strchr(LCD_CACHE_FILENAME(0), '.')[0] = '\0';
 
                     char buffer[64];
                     card.fgets(buffer, sizeof(buffer));
@@ -503,7 +507,7 @@ static void lcd_menu_print_heatup()
 
     lcd_lib_draw_string_centerP(10, PSTR("Heating up..."));
     lcd_lib_draw_string_centerP(20, PSTR("Preparing to print:"));
-    lcd_lib_draw_string_center(30, card.longFilename);
+    lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
 
     lcd_progressbar(progress);
 
@@ -548,7 +552,7 @@ static void lcd_menu_print_printing()
         {
         default:
             lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
-            lcd_lib_draw_string_center(30, card.longFilename);
+            lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
             break;
         case PRINT_STATE_HEATING:
             lcd_lib_draw_string_centerP(20, PSTR("Heating"));
@@ -956,7 +960,11 @@ static void lcd_menu_print_tune_retraction()
     }
 }
 
+<<<<<<< HEAD
 void lcd_menu_print_pause()
+=======
+static void lcd_menu_print_pause()
+>>>>>>> master
 {
     if (card.sdprinting && !card.pause)
     {
@@ -965,11 +973,19 @@ void lcd_menu_print_pause()
             pauseRequested = false;
             card.pause = true;
             if (current_position[Z_AXIS] < Z_MAX_POS - 60)
+<<<<<<< HEAD
                 enquecommand_P(PSTR("M601 X10 Y200 Z20 L20"));
             else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
                 enquecommand_P(PSTR("M601 X10 Y200 Z2 L20"));
             else
                 enquecommand_P(PSTR("M601 X10 Y200 Z0 L20"));
+=======
+                enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
+            else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
+                enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
+            else
+                enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
+>>>>>>> master
         }
         else{
             pauseRequested = true;
@@ -977,9 +993,12 @@ void lcd_menu_print_pause()
     }
 }
 
+<<<<<<< HEAD
 bool isPauseRequested()
 {
     return pauseRequested;
 }
 
+=======
+>>>>>>> master
 #endif//ENABLE_ULTILCD2
