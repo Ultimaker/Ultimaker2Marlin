@@ -74,6 +74,8 @@ static void abortPrint()
         // no longer primed
         primed = false;
     }
+    
+    enquecommand_P(PSTR("M401"));
 
     if (current_position[Z_AXIS] > Z_MAX_POS - 30)
     {
@@ -679,7 +681,7 @@ static void lcd_menu_print_ready_cooled_down()
 
 static char* tune_item_callback(uint8_t nr)
 {
-    char* c = (char*)lcd_cache;
+    char* c = card.longFilename;
     if (nr == 0)
         strcpy_P(c, PSTR("< RETURN"));
     else if (nr == 1)
@@ -728,7 +730,7 @@ static char* tune_item_callback(uint8_t nr)
 
 static void tune_item_details_callback(uint8_t nr)
 {
-    char* c = (char*)lcd_cache;
+    char* c = card.longFilename;
     if (nr == 2)
         c = int_to_string(feedmultiply, c, PSTR("%"));
     else if (nr == 3)
@@ -769,7 +771,7 @@ static void tune_item_details_callback(uint8_t nr)
     }
     else
         return;
-    lcd_lib_draw_string(5, 53, (char*)lcd_cache);
+    lcd_lib_draw_string(5, 53, card.longFilename);
 }
 
 void lcd_menu_print_tune_heatup_nozzle0()
@@ -885,18 +887,18 @@ static void lcd_menu_print_tune()
 static char* lcd_retraction_item(uint8_t nr)
 {
     if (nr == 0)
-        strcpy_P((char*)lcd_cache, PSTR("< RETURN"));
+        strcpy_P(card.longFilename, PSTR("< RETURN"));
     else if (nr == 1)
-        strcpy_P((char*)lcd_cache, PSTR("Retract length"));
+        strcpy_P(card.longFilename, PSTR("Retract length"));
     else if (nr == 2)
-        strcpy_P((char*)lcd_cache, PSTR("Retract speed"));
+        strcpy_P(card.longFilename, PSTR("Retract speed"));
 #if EXTRUDERS > 1
     else if (nr == 3)
-        strcpy_P((char*)lcd_cache, PSTR("Extruder change len"));
+        strcpy_P(card.longFilename, PSTR("Extruder change len"));
 #endif
     else
-        strcpy_P((char*)lcd_cache, PSTR("???"));
-    return (char*)lcd_cache;
+        strcpy_P(card.longFilename, PSTR("???"));
+    return card.longFilename;
 }
 
 static void lcd_retraction_details(uint8_t nr)
