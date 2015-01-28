@@ -48,7 +48,6 @@ static void lcd_menu_material_settings_store();
 static void cancelMaterialInsert()
 {
     digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
-    doCooldown();
 }
 
 void lcd_menu_material()
@@ -78,6 +77,13 @@ void lcd_menu_material()
 #endif
 }
 
+static void lcd_menu_material_main_return()
+{
+    doCooldown();
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    currentMenu = lcd_menu_material_main;
+}
+
 static void lcd_menu_material_main()
 {
     lcd_tripple_menu(PSTR("CHANGE"), PSTR("SETTINGS"), PSTR("RETURN"));
@@ -91,7 +97,7 @@ static void lcd_menu_material_main()
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
-            lcd_change_to_menu_change_material(lcd_menu_material_main);
+            lcd_change_to_menu_change_material(lcd_menu_material_main_return);
         }
         else if (IS_SELECTED_MAIN(1))
             lcd_change_to_menu(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0));
@@ -185,7 +191,7 @@ static void lcd_menu_change_material_remove_wait_user()
 {
     LED_GLOW();
 
-    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_menu_main, cancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
     lcd_lib_update_screen();
 }
