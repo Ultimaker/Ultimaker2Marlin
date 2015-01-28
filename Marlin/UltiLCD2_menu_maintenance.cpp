@@ -127,6 +127,13 @@ static void lcd_advanced_details(uint8_t nr)
     lcd_lib_draw_string(5, 53, buffer);
 }
 
+static void lcd_menu_maintenance_advanced_return()
+{
+    doCooldown();
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    currentMenu = lcd_menu_maintenance_advanced;
+}
+
 static void lcd_menu_maintenance_advanced()
 {
     lcd_scroll_menu(PSTR("ADVANCED"), 12 + BED_MENU_OFFSET + EXTRUDERS * 2, lcd_advanced_item, lcd_advanced_details);
@@ -175,7 +182,7 @@ static void lcd_menu_maintenance_advanced()
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
             
-            lcd_change_to_menu_insert_material(lcd_menu_maintenance_advanced);
+            lcd_change_to_menu_insert_material(lcd_menu_maintenance_advanced_return);
         }
         else if (IS_SELECTED_SCROLL(6 + BED_MENU_OFFSET + EXTRUDERS))
         {
