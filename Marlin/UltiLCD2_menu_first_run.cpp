@@ -20,8 +20,6 @@
 #define BED_RIGHT_ADJUST_X (X_MAX_POS - 10)
 #define BED_RIGHT_ADJUST_Y 20
 
-void doCooldown();//TODO
-
 static void lcd_menu_first_run_init_2();
 static void lcd_menu_first_run_init_3();
 

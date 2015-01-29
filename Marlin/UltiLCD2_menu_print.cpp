@@ -58,6 +58,7 @@ static void abortPrint()
     }
     //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
     card.pause = false;
+    pauseRequested = false;
 
     if (primed)
     {
@@ -95,6 +96,11 @@ static void userAbortPrint()
 
 static void checkPrintFinished()
 {
+    if (pauseRequested)
+    {
+        lcd_menu_print_pause();
+    }
+
     if (!card.sdprinting && !is_command_queued())
     {
         abortPrint();
@@ -538,10 +544,7 @@ static void lcd_menu_print_printing()
     }
     else
     {
-        if (pauseRequested) {
-            lcd_menu_print_pause();
-        }
-        lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
+        lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_printing, lcd_menu_print_pause, PSTR("PAUSE"));
         uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
         char* c;
         switch(printing_state)
@@ -707,22 +710,7 @@ static char* tune_item_callback(uint8_t nr)
     if (nr == 0)
         strcpy_P(c, PSTR("< RETURN"));
     else if (nr == 1)
-    {
-        if (!card.pause && !pauseRequested)
-        {
-            if (movesplanned() > 0)
-                strcpy_P(c, PSTR("Pause"));
-            else
-                strcpy_P(c, PSTR("Can not pause"));
-        }
-        else
-        {
-            if (movesplanned() < 1)
-                strcpy_P(c, PSTR("Resume"));
-            else
-                strcpy_P(c, PSTR("Pausing..."));
-        }
-    }
+        strcpy_P(c, PSTR("Abort"));
     else if (nr == 2)
         strcpy_P(c, PSTR("Speed"));
     else if (nr == 3)
@@ -849,11 +837,6 @@ void lcd_menu_print_tune_heatup_nozzle1()
 
 void lcd_menu_print_tune()
 {
-    // print paused?
-    if (pauseRequested)
-    {
-        lcd_menu_print_pause();
-    }
     lcd_scroll_menu(PSTR("TUNE"), 6 + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
@@ -862,22 +845,7 @@ void lcd_menu_print_tune()
             menu.return_to_previous();
         }else if (IS_SELECTED_SCROLL(1))
         {
-            if (card.sdprinting)
-            {
-                if (card.pause)
-                {
-                    if (movesplanned() < 1)
-                    {
-                        card.pause = false;
-                        lcd_lib_beep();
-                    }
-                }
-                else
-                {
-                    lcd_lib_beep();
-                    lcd_menu_print_pause();
-                }
-            }
+            lcd_change_to_menu(lcd_menu_print_abort);
         }else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING(feedmultiply, "Print speed", "%", 10, 1000);
         else if (IS_SELECTED_SCROLL(3))
