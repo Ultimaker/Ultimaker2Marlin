@@ -50,7 +50,7 @@ void lcd_init()
 
     // initialize menu stack and show start animation
     *lcd_status_message = 0;
-    menu.add_menu(menu_t(lcd_menu_main), false);
+    menu.init_menu(menu_t(menu.reset_selection, lcd_menu_main, NULL), false);
     menu.add_menu(menu_t(lcd_menu_startup), false);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;

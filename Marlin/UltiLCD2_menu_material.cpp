@@ -80,7 +80,7 @@ static void lcd_menu_material_main_return()
 {
     doCooldown();
     enquecommand_P(PSTR("G28 X0 Y0"));
-    currentMenu = lcd_menu_material_main;
+    menu.return_to_previous();
 }
 
 static void lcd_menu_material_main()
@@ -96,11 +96,8 @@ static void lcd_menu_material_main()
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
-<<<<<<< HEAD
+            menu.add_menu(menu_t(lcd_menu_material_main_return));
             menu.add_menu(menu_t(lcd_menu_change_material_preheat));
-=======
-            lcd_change_to_menu_change_material(lcd_menu_material_main_return);
->>>>>>> master
         }
         else if (IS_SELECTED_MAIN(1))
             menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
@@ -109,12 +106,6 @@ static void lcd_menu_material_main()
     }
 
     lcd_lib_update_screen();
-}
-
-static void userCancelMaterialInsert()
-{
-    lcd_change_to_previous_menu();
-    cancelMaterialInsert();
 }
 
 void lcd_menu_change_material_preheat()
@@ -150,7 +141,7 @@ void lcd_menu_change_material_preheat()
     else
         minProgress = progress;
 
-    lcd_info_screen(NULL, userCancelMaterialInsert);
+    lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead"));
     lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
 
@@ -161,7 +152,7 @@ void lcd_menu_change_material_preheat()
 
 static void lcd_menu_change_material_remove()
 {
-    lcd_info_screen(NULL, userCancelMaterialInsert);
+    lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Reversing material"));
 
     if (!blocks_queued())
@@ -193,12 +184,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
 static void lcd_menu_change_material_remove_wait_user()
 {
     LED_GLOW();
-
-<<<<<<< HEAD
-    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), NULL, userCancelMaterialInsert, PSTR("CANCEL"));
-=======
-    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
->>>>>>> master
+    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
     lcd_lib_update_screen();
 }
@@ -225,7 +211,7 @@ void lcd_menu_insert_material_preheat()
     else
         minProgress = progress;
 
-    lcd_info_screen(NULL, userCancelMaterialInsert);
+    lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead for"));
     lcd_lib_draw_stringP(3, 20, PSTR("material insertion"));
 
@@ -244,7 +230,7 @@ static void lcd_menu_change_material_insert_wait_user()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_SPEED, active_extruder);
     }
 
-    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), NULL, userCancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
     lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
     lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
@@ -272,7 +258,7 @@ static void lcd_menu_change_material_insert_wait_user_ready()
 
 static void lcd_menu_change_material_insert_forward()
 {
-    lcd_info_screen(NULL, userCancelMaterialInsert);
+    lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Forwarding material"));
 
     if (!blocks_queued())
@@ -304,7 +290,7 @@ static void lcd_menu_change_material_insert()
 {
     LED_GLOW();
 
-    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), NULL, userCancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
     lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
 

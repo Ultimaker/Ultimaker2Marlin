@@ -87,11 +87,8 @@ static void abortPrint()
 
 static void userAbortPrint()
 {
-    // remove the abort menu
-    lcd_remove_menu();
-    // remove the print menu
-    lcd_remove_menu();
     abortPrint();
+    menu.return_to_main();
 }
 
 static void checkPrintFinished()
@@ -509,7 +506,7 @@ static void lcd_menu_print_heatup()
 
     lcd_lib_draw_string_centerP(10, PSTR("Heating up..."));
     lcd_lib_draw_string_centerP(20, PSTR("Preparing to print:"));
-    lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
+    lcd_lib_draw_string_center(30, card.longFilename);
 
     lcd_progressbar(progress);
 
@@ -551,7 +548,7 @@ static void lcd_menu_print_printing()
         {
         default:
             lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
-            lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
+            lcd_lib_draw_string_center(30, card.longFilename);
             break;
         case PRINT_STATE_HEATING:
             lcd_lib_draw_string_centerP(20, PSTR("Heating"));
@@ -845,7 +842,7 @@ void lcd_menu_print_tune()
             menu.return_to_previous();
         }else if (IS_SELECTED_SCROLL(1))
         {
-            lcd_change_to_menu(lcd_menu_print_abort);
+            menu.add_menu(menu_t(lcd_menu_print_abort));
         }else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING(feedmultiply, "Print speed", "%", 10, 1000);
         else if (IS_SELECTED_SCROLL(3))

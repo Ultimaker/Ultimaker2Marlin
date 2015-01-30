@@ -146,18 +146,14 @@ static void lcd_advanced_details(uint8_t nr)
     lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, LCD_CACHE_FILENAME(1));
 }
 
-<<<<<<< HEAD
-void lcd_menu_maintenance_advanced()
-=======
 static void lcd_menu_maintenance_advanced_return()
 {
     doCooldown();
     enquecommand_P(PSTR("G28 X0 Y0"));
-    currentMenu = lcd_menu_maintenance_advanced;
+    menu.return_to_previous();
 }
 
-static void lcd_menu_maintenance_advanced()
->>>>>>> master
+void lcd_menu_maintenance_advanced()
 {
     lcd_scroll_menu((ui_mode & UI_MODE_TINKERGNOME) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_TINKERGNOME) ? 14 : 13), lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
@@ -207,12 +203,8 @@ static void lcd_menu_maintenance_advanced()
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
-<<<<<<< HEAD
+            menu.add_menu(menu_t(lcd_menu_maintenance_advanced_return));
             menu.add_menu(menu_t(lcd_menu_insert_material_preheat));
-=======
-            
-            lcd_change_to_menu_insert_material(lcd_menu_maintenance_advanced_return);
->>>>>>> master
         }
         else if (IS_SELECTED_SCROLL(index++))
         {

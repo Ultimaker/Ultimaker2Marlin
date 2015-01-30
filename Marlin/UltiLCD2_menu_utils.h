@@ -102,9 +102,11 @@ public:
             menuStack[currentIndex].processMenuFunc();
     }
 
+    void init_menu(menu_t nextMenu, bool beep = false);
     void add_menu(menu_t nextMenu, bool beep = true);
     void replace_menu(menu_t nextMenu, bool beep = true);
     void return_to_previous(bool beep = true);
+    void return_to_main(bool beep = true);
 
     const menu_t & currentMenu() const { return menuStack[currentIndex]; }
     menu_t & currentMenu() { return menuStack[currentIndex]; }
@@ -124,6 +126,8 @@ public:
     static void drawMenuString(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
     static void drawMenuString_P(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
 
+    static void reset_selection() { lcd_lib_encoder_pos = ENCODER_NO_SELECTION; }
+
 private:
     static void init_menu_switch(bool beep);
     FORCE_INLINE bool isSelected(uint8_t nr) { return (selectedSubmenu == nr); }
@@ -138,6 +142,7 @@ private:
     int8_t selectedSubmenu;
 
 };
+
 
 extern LCDMenu menu;
 
