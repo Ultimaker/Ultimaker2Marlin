@@ -9,6 +9,7 @@
 #define MENU_INPLACE_EDIT 1
 #define MENU_SELECTED 4
 #define MENU_ACTIVE   8
+#define MENU_STATUSLINE   16
 
 // text alignment
 #define ALIGN_TOP 1
@@ -88,7 +89,7 @@ struct menu_t {
 typedef char* (*entryNameCallback_t)(uint8_t nr);
 typedef void (*entryDetailsCallback_t)(uint8_t nr);
 typedef const menu_t & (*menuItemCallback_t) (uint8_t nr, menu_t &opt);
-typedef void (*menuDrawCallback_t) (uint8_t nr, uint8_t flags, bool &bStatusline);
+typedef void (*menuDrawCallback_t) (uint8_t nr, uint8_t &flags);
 
 class LCDMenu
 {
@@ -118,20 +119,21 @@ public:
 
     void process_submenu(menuItemCallback_t getMenuItem, uint8_t len);
     void reset_submenu();
-    void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, bool &bStatusline);
-    bool isSubmenuSelected() const { return (selectedSubmenu >= 0); }
+    void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, uint8_t &flags);
+    void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr);
+    FORCE_INLINE bool isSubmenuSelected() const { return (selectedSubmenu >= 0); }
+    FORCE_INLINE bool isSelected(uint8_t nr) { return (selectedSubmenu == nr); }
+    FORCE_INLINE bool isActive(uint8_t nr) { return ((selectedSubmenu == nr) && activeSubmenu.processMenuFunc); }
 
     // standard drawing functions (for convenience)
     static void drawMenuBox(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t flags);
     static void drawMenuString(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
     static void drawMenuString_P(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
 
-    static void reset_selection() { lcd_lib_encoder_pos = ENCODER_NO_SELECTION; }
+    static void reset_selection();
 
 private:
     static void init_menu_switch(bool beep);
-    FORCE_INLINE bool isSelected(uint8_t nr) { return (selectedSubmenu == nr); }
-    FORCE_INLINE bool isActive(uint8_t nr) { return ((selectedSubmenu == nr) && activeSubmenu.processMenuFunc); }
 
     // menu stack
     menu_t menuStack[MAX_MENU_DEPTH];
@@ -145,8 +147,10 @@ private:
 
 
 extern LCDMenu menu;
+extern uint8_t menu_index;
 
 FORCE_INLINE void lcd_change_to_previous_menu() { menu.return_to_previous(); }
+FORCE_INLINE void lcd_return_to_main_menu() { menu.return_to_main(); }
 FORCE_INLINE void lcd_remove_menu() { menu.return_to_previous(false); }
 
 #endif

@@ -37,6 +37,12 @@ static void lcd_menu_special_startup();
 
 static void lcd_menu_breakout();
 
+//static void lcd_main_init()
+//{
+//    led_glow = led_glow_dir = 0;
+//    LCDMenu::reset_selection();
+//}
+
 void lcd_init()
 {
     lcd_lib_init();
@@ -50,7 +56,7 @@ void lcd_init()
 
     // initialize menu stack and show start animation
     *lcd_status_message = 0;
-    menu.init_menu(menu_t(menu.reset_selection, lcd_menu_main, NULL), false);
+    menu.init_menu(menu_t(lcd_menu_main), false);
     menu.add_menu(menu_t(lcd_menu_startup), false);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
@@ -226,42 +232,102 @@ void doCooldown()
     //quickStop();         //Abort all moves already in the planner
 }
 
+static void lcd_main_print()
+{
+    lcd_clear_cache();
+    card.release();
+    menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
+}
+
+static void lcd_main_material()
+{
+    menu.add_menu(menu_t(lcd_menu_material));
+}
+
+static void lcd_main_maintenance()
+{
+    if (ui_mode & UI_MODE_TINKERGNOME)
+    {
+        menu.add_menu(menu_t(lcd_menu_maintenance_advanced));
+    }else{
+        menu.add_menu(menu_t(lcd_menu_maintenance));
+    }
+}
+
+static const menu_t & get_main_menuoption(uint8_t nr, menu_t &opt)
+{
+    menu_index = 0;
+    if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_main_print);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_main_material);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_main_maintenance);
+    }
+    return opt;
+}
+
+void drawMainSubmenu(uint8_t nr, uint8_t &flags)
+{
+    menu_index = 0;
+    if (nr == menu_index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
+                                , LCD_LINE_HEIGHT
+                                , 52
+                                , LCD_LINE_HEIGHT*4
+                                , PSTR("PRINT")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+    else if (nr == menu_index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+3
+                                , LCD_LINE_HEIGHT
+                                , 52
+                                , LCD_LINE_HEIGHT*4
+                                , PSTR("MATERIAL")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+    else if (nr == menu_index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 7*LCD_CHAR_SPACING
+                                , BOTTOM_MENU_YPOS
+                                , 14*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("MAINTENANCE")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+}
+
 void lcd_menu_main()
 {
-    lcd_tripple_menu(PSTR("PRINT"), PSTR("MATERIAL"), PSTR("MAINTENANCE"));
+    lcd_lib_clear();
+    lcd_lib_draw_vline(64, 5, 46);
+    lcd_lib_draw_hline(3, 124, 50);
 
-    if (lcd_lib_button_pressed)
-    {
-        if (IS_SELECTED_MAIN(0))
-        {
-            lcd_clear_cache();
-            card.release();
-            menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
-        }
-        else if (IS_SELECTED_MAIN(1))
-            menu.add_menu(menu_t(lcd_menu_material));
-        else if (IS_SELECTED_MAIN(2))
-        {
-            if (ui_mode & UI_MODE_TINKERGNOME)
-            {
-                menu.add_menu(menu_t(lcd_menu_maintenance_advanced));
-            }else{
-                menu.add_menu(menu_t(lcd_menu_maintenance));
-            }
-        }
-    }
-    if (lcd_lib_button_down && lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
+    if (lcd_lib_button_down && !menu.isSubmenuSelected())
     {
         led_glow_dir = 0;
         if (led_glow > 200)
             menu.add_menu(menu_t(lcd_menu_breakout));
     }else{
         led_glow = led_glow_dir = 0;
+        menu.process_submenu(get_main_menuoption, 3);
     }
-
+    for (uint8_t index=0; index<3; ++index)
+    {
+        menu.drawSubMenu(drawMainSubmenu, index);
+    }
     lcd_lib_update_screen();
 }
-
 
 #define BREAKOUT_PADDLE_WIDTH 21
 //Use the lcd_cache memory to store breakout data, so we do not waste memory.
@@ -317,7 +383,7 @@ static void lcd_menu_breakout()
     if (ball_y > (58 << 8))
     {
         if (ball_x < (lcd_lib_encoder_pos * 2 - 2) << 8 || ball_x > (lcd_lib_encoder_pos * 2 + BREAKOUT_PADDLE_WIDTH) << 8)
-            lcd_change_to_previous_menu();
+            menu.return_to_previous();
         ball_dx += (ball_x - ((lcd_lib_encoder_pos * 2 + BREAKOUT_PADDLE_WIDTH / 2) * 256)) / 64;
         ball_dy = -512 + abs(ball_dx);
     }

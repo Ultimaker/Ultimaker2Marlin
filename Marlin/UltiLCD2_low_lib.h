@@ -64,4 +64,10 @@ FORCE_INLINE void lcd_lib_draw_string_right(uint8_t y, const char* str) { lcd_li
 FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t y, const char* pstr) { lcd_lib_draw_stringP(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT - (strlen_P(pstr) * LCD_CHAR_SPACING), y, pstr); }
 FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t x, uint8_t y, const char* pstr) { lcd_lib_draw_stringP(x - (strlen_P(pstr) * LCD_CHAR_SPACING), y, pstr); }
 
+// norpchen font symbols
+#define DEGREE_SYMBOL "\x1F"
+#define SQUARED_SYMBOL "\x1E"
+#define CUBED_SYMBOL "\x1D"
+#define PER_SECOND_SYMBOL "/s"
+
 #endif//ULTI_LCD2_LOW_LIB_H

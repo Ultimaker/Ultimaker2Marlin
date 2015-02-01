@@ -10,6 +10,7 @@
 #define LED_INPUT() lcd_lib_led_color(192, 8, 0)
 
 LCDMenu menu;
+uint8_t menu_index;
 
 static int16_t lastEncoderPos = 0;
 
@@ -270,6 +271,7 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
                         LED_INPUT();
                         lcd_lib_beep();
 
+                        selectedSubmenu = index;
                         activeSubmenu = menuItem;
                     }
                     else
@@ -280,9 +282,11 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
                             menuItem.processMenuFunc();
                         }
                         selectedSubmenu = -1;
+                        activeSubmenu = menu_t();
                     }
+                }else {
+                    selectedSubmenu = index;
                 }
-                selectedSubmenu = index;
             }
             else
             {
@@ -311,11 +315,12 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
     }
 }
 
-void LCDMenu::drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, bool &bStatusline)
+void LCDMenu::drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, uint8_t &flags)
 {
     if (drawFunc)
     {
-        uint8_t flags = 0;
+        // reset flags
+        flags &= ~(MENU_ACTIVE | MENU_SELECTED);
         if ((activeSubmenu.processMenuFunc) && (selectedSubmenu == nr))
         {
             flags |= MENU_ACTIVE;
@@ -324,8 +329,20 @@ void LCDMenu::drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, bool &bStatus
         {
             flags |= MENU_SELECTED;
         }
-        drawFunc(nr, flags, bStatusline);
+        drawFunc(nr, flags);
     }
+}
+
+void LCDMenu::drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr)
+{
+    uint8_t flags = 0;
+    drawSubMenu(drawFunc, nr, flags);
+}
+
+void LCDMenu::reset_selection()
+{
+    lastEncoderPos = lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
+    lcd_lib_button_pressed = lcd_lib_button_down = false;
 }
 
 

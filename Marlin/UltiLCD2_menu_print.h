@@ -10,16 +10,21 @@
 #define LCD_DETAIL_CACHE_START ((LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))+1)
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
 extern uint8_t lcd_cache[LCD_CACHE_SIZE];
+#define LCD_CACHE_ID(n) lcd_cache[(n)]
 
 void lcd_menu_print_select();
 void lcd_clear_cache();
-void doCancelPrint();
+
+void abortPrint();
 
 bool isPauseRequested();
-void lcd_menu_print_pause();
+void lcd_print_pause();
+void lcd_print_tune();
+void lcd_print_abort();
 
 void lcd_menu_print_abort();
 void lcd_menu_print_tune();
+void lcd_menu_print_ready();
 void lcd_menu_print_tune_heatup_nozzle0();
 #if EXTRUDERS > 1
 void lcd_menu_print_tune_heatup_nozzle1();

@@ -269,12 +269,21 @@ static void homeBed()
     add_homeing[Z_AXIS] += LEVELING_OFFSET;  //Adjust the Z homing position to account for the thickness of the paper.
     // now that we are finished, save the settings to EEPROM
     Config_StoreSettings();
-    enquecommand_P(PSTR("G28 Z0"));
+    if (IS_FIRST_RUN_DONE())
+    {
+        // home all
+        enquecommand_P(PSTR("G28"));
+    }
+    else
+    {
+        // home z-axis
+        enquecommand_P(PSTR("G28 Z0"));
+    }
 }
 
 static void lcd_menu_first_run_bed_level_done()
 {
-    lcd_change_to_previous_menu();
+    menu.return_to_previous();
     homeBed();
 }
 
@@ -506,7 +515,7 @@ static void lcd_menu_first_run_print_card_detect()
 {
     if (!card.sdInserted)
     {
-        lcd_info_screen(lcd_menu_main);
+        lcd_info_screen(lcd_return_to_main_menu);
         DRAW_PROGRESS_NR(21);
         lcd_lib_draw_string_centerP(20, PSTR("Please insert SD-card"));
         lcd_lib_draw_string_centerP(30, PSTR("that came with"));
@@ -518,7 +527,7 @@ static void lcd_menu_first_run_print_card_detect()
 
     if (!card.isOk())
     {
-        lcd_info_screen(lcd_menu_main);
+        lcd_info_screen(lcd_return_to_main_menu);
         DRAW_PROGRESS_NR(21);
         lcd_lib_draw_string_centerP(30, PSTR("Reading card..."));
         lcd_lib_update_screen();

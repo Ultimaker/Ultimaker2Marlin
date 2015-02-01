@@ -239,12 +239,11 @@ void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b)
 }
 
 // norpchen
-// the baseline ASCII->font table offset.  Was 32 (space) but shifted down by four as I added four custom characters to the font
+// the baseline ASCII->font table offset.  Was 32 (space) but shifted down as I added custom characters to the font
 // had to add them to the start of the table, because we're using char, which are signed and top out at 128, which is already the max table value.
-#define FONT_BASE_CHAR 28
+#define FONT_BASE_CHAR 0x1D
 
 static const uint8_t lcd_font_7x5[] PROGMEM = {
-	0x7C, 0x4A, 0x69, 0x4A, 0x7C,       // " HOME_SYMBOL "
 	0x11, 0x15, 0x0A, 0x00, 0x00,       // ^3 " CUBED_SYMBOL "
 	0x19, 0x15, 0x12, 0x00, 0x00,       // ^2 " SQUARED_SYMBOL "
 	0x06, 0x09, 0x09, 0x06, 0x00,    	// deg C  " DEGREE_C_SYMBOL "

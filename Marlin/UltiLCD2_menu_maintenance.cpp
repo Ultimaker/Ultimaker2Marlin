@@ -24,27 +24,26 @@ static void lcd_menu_advanced_version();
 static void lcd_menu_advanced_stats();
 static void lcd_menu_maintenance_motion();
 static void lcd_menu_advanced_factory_reset();
+static void homeHead();
 
 void lcd_menu_maintenance()
 {
-    if (ui_mode & UI_MODE_TINKERGNOME)
+    lcd_tripple_menu(PSTR("BUILD-|PLATE"), PSTR("ADVANCED"), PSTR("RETURN"));
+
+    if (lcd_lib_button_pressed)
     {
-        menu.replace_menu(menu_t(lcd_menu_maintenance_advanced), false);
-    }else{
-        lcd_tripple_menu(PSTR("BUILD-|PLATE"), PSTR("ADVANCED"), PSTR("RETURN"));
-
-        if (lcd_lib_button_pressed)
+        if (IS_SELECTED_MAIN(0))
         {
-            if (IS_SELECTED_MAIN(0))
-                menu.add_menu(menu_t(lcd_menu_first_run_start_bed_leveling));
-            else if (IS_SELECTED_MAIN(1))
-                menu.add_menu(menu_t(lcd_menu_maintenance_advanced));
-            else if (IS_SELECTED_MAIN(2))
-                menu.return_to_previous();
+            menu.add_menu(menu_t(NULL, lcd_change_to_previous_menu, homeHead));
+            menu.add_menu(menu_t(lcd_menu_first_run_start_bed_leveling));
         }
-
-        lcd_lib_update_screen();
+        else if (IS_SELECTED_MAIN(1))
+            menu.add_menu(menu_t(lcd_menu_maintenance_advanced));
+        else if (IS_SELECTED_MAIN(2))
+            menu.return_to_previous();
     }
+
+    lcd_lib_update_screen();
 }
 
 static char* lcd_advanced_item(uint8_t nr)
@@ -146,10 +145,15 @@ static void lcd_advanced_details(uint8_t nr)
     lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, LCD_CACHE_FILENAME(1));
 }
 
+static void homeHead()
+{
+    enquecommand_P(PSTR("G28 X0 Y0"));
+}
+
 static void lcd_menu_maintenance_advanced_return()
 {
     doCooldown();
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     menu.return_to_previous();
 }
 
@@ -184,7 +188,7 @@ void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(index++))
         {
             lcd_lib_beep();
-            enquecommand_P(PSTR("G28 X0 Y0"));
+            homeHead();
         }
         else if (IS_SELECTED_SCROLL(index++))
         {
@@ -231,7 +235,9 @@ void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
         else if ((ui_mode & UI_MODE_TINKERGNOME) && (IS_SELECTED_SCROLL(index++)))
+        {
             menu.add_menu(menu_t(lcd_menu_first_run_start_bed_leveling, SCROLL_MENU_ITEM_POS(0)));
+        }
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_expert, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
@@ -283,17 +289,17 @@ static void lcd_menu_maintenance_extrude()
     {
         set_extrude_min_temp(EXTRUDE_MINTEMP);
         target_temperature[active_extruder] = 0;
-        lcd_change_to_previous_menu();
+        menu.return_to_previous();
     }
 
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(10, PSTR("Nozzle temperature:"));
     lcd_lib_draw_string_centerP(40, PSTR("Rotate to extrude"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
-    char buffer[16];
-    int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/"));
-    int_to_string(int(target_temperature[active_extruder]), buffer+strlen(buffer), PSTR("C"));
-    lcd_lib_draw_string_center(20, buffer);
+
+    int_to_string(int(dsp_temperature[active_extruder]), LCD_CACHE_FILENAME(0), PSTR("C/"));
+    int_to_string(int(target_temperature[active_extruder]), LCD_CACHE_FILENAME(0)+strlen(LCD_CACHE_FILENAME(0)), PSTR("C"));
+    lcd_lib_draw_string_center(20, LCD_CACHE_FILENAME(0));
     lcd_lib_draw_heater(LCD_GFX_WIDTH/2-2, 30, getHeaterPower(active_extruder));
     lcd_lib_update_screen();
 }
@@ -469,7 +475,7 @@ static void lcd_motion_details(uint8_t nr)
     if (nr == 0)
         return;
     else if(nr == 1)
-        int_to_string(acceleration, buffer, PSTR("mm/sec^2"));
+        int_to_string(acceleration, buffer, PSTR("mm/sec" SQUARED_SYMBOL));
     else if(nr == 2)
         int_to_string(max_xy_jerk, buffer, PSTR("mm/sec"));
     else if(nr == 3)
@@ -501,7 +507,7 @@ static void lcd_menu_maintenance_motion()
             lcd_change_to_previous_menu();
         }
         else if (IS_SELECTED_SCROLL(1))
-            LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec^2", 0, 20000);
+            LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec" SQUARED_SYMBOL, 0, 20000);
         else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_FLOAT1(max_xy_jerk, "X/Y Jerk", "mm/sec", 0, 100);
         else if (IS_SELECTED_SCROLL(3))
