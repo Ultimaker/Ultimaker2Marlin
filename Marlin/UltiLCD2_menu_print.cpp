@@ -987,11 +987,11 @@ static const menu_t & get_pause_menuoption(uint8_t nr, menu_t &opt)
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_INPLACE_EDIT, lcd_print_tune);
+        opt.setData(MENU_NORMAL, lcd_print_tune);
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_INPLACE_EDIT, lcd_print_abort);
+        opt.setData(MENU_NORMAL, lcd_print_abort);
     }
     return opt;
 }
