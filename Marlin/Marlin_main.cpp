@@ -1044,37 +1044,6 @@ void process_commands()
   {
     switch( (int)code_value() )
     {
-#ifdef ULTIPANEL
-    case 0: // M0 - Unconditional stop - Wait for user button press on LCD
-    case 1: // M1 - Conditional stop - Wait for user button press on LCD
-    {
-      LCD_MESSAGEPGM(MSG_USERWAIT);
-      codenum = 0;
-      if(code_seen('P')) codenum = code_value(); // milliseconds to wait
-      if(code_seen('S')) codenum = code_value() * 1000; // seconds to wait
-
-      st_synchronize();
-      previous_millis_cmd = millis();
-      if (codenum > 0){
-        codenum += millis();  // keep track of when we started waiting
-        while(millis()  < codenum && !lcd_clicked()){
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
-        }
-      }else{
-        while(!lcd_clicked()){
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
-        }
-      }
-      LCD_MESSAGEPGM(MSG_RESUMING);
-    }
-    break;
-#endif
     case 17:
         enable_x();
         enable_y();
@@ -1609,18 +1578,6 @@ void process_commands()
       #endif
     }
     break;
-    case 908: // M908 Control digital trimpot directly.
-    {
-    }
-    break;
-    case 350: // M350 Set microstepping mode. Warning: Steps per unit remains unchanged. S code sets stepping mode for all drivers.
-    {
-    }
-    break;
-    case 351: // M351 Toggle MS1 MS2 pins directly, S# determines MS1 or MS2, X# sets the pin high/low.
-    {
-    }
-    break;
     case 999: // M999: Restart after being stopped
       Stopped = false;
       gcode_LastN = Stopped_gcode_LastN;
@@ -1689,8 +1646,6 @@ void process_commands()
 
 void FlushSerialRequestResend()
 {
-  //char command_buffer[command_buffer_index_read][100]="Resend:";
-  MYSERIAL.flush();
   SERIAL_PROTOCOLPGM(MSG_RESEND);
   SERIAL_PROTOCOLLN(gcode_LastN + 1);
   previous_millis_cmd = millis();
