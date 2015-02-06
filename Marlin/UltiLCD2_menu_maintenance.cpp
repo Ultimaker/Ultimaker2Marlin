@@ -91,7 +91,7 @@ static char* lcd_advanced_item(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Retraction settings"));
     else if (nr == index++)
         strcpy_P(card.longFilename, PSTR("Motion settings"));
-    else if ((ui_mode & UI_MODE_TINKERGNOME) && (nr == index++))
+    else if ((ui_mode & UI_MODE_EXPERT) && (nr == index++))
         strcpy_P(card.longFilename, PSTR("Adjust buildplate"));
     else if (nr == index++)
         strcpy_P(card.longFilename, PSTR("Expert settings"));
@@ -110,7 +110,7 @@ static char* lcd_advanced_item(uint8_t nr)
 static void lcd_advanced_details(uint8_t nr)
 {
     LCD_CACHE_FILENAME(1)[0] = '\0';
-    if (!(ui_mode & UI_MODE_TINKERGNOME) && (nr > 8+BED_MENU_OFFSET+2*EXTRUDERS))
+    if (!(ui_mode & UI_MODE_EXPERT) && (nr > 8+BED_MENU_OFFSET+2*EXTRUDERS))
         ++nr;
 
     if (nr == 1)
@@ -159,7 +159,7 @@ static void lcd_menu_maintenance_advanced_return()
 
 void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu((ui_mode & UI_MODE_TINKERGNOME) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_TINKERGNOME) ? 14 : 13), lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu((ui_mode & UI_MODE_EXPERT) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_EXPERT) ? 14 : 13), lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
@@ -214,16 +214,28 @@ void lcd_menu_maintenance_advanced()
         {
             set_extrude_min_temp(0);
             active_extruder = 0;
+            enquecommand_P(PSTR("G92 E0"));
             target_temperature[active_extruder] = material[active_extruder].temperature;
-            menu.add_menu(menu_t(lcd_menu_maintenance_extrude, MAIN_MENU_ITEM_POS(0)));
+            if (ui_mode & UI_MODE_EXPERT)
+            {
+                menu.add_menu(menu_t(lcd_menu_expert_extrude));
+            }else{
+                menu.add_menu(menu_t(lcd_menu_maintenance_extrude, MAIN_MENU_ITEM_POS(0)));
+            }
         }
 #if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(index++))
         {
             set_extrude_min_temp(0);
             active_extruder = 1;
+            enquecommand_P(PSTR("G92 E0"));
             target_temperature[active_extruder] = material[active_extruder].temperature;
-            menu.add_menu(menu_t(lcd_menu_maintenance_extrude, MAIN_MENU_ITEM_POS(0)));
+            if (ui_mode & UI_MODE_EXPERT)
+            {
+                menu.add_menu(menu_t(lcd_menu_expert_extrude));
+            }else{
+                menu.add_menu(menu_t(lcd_menu_maintenance_extrude, MAIN_MENU_ITEM_POS(0)));
+            }
         }
 #endif
         else if (IS_SELECTED_SCROLL(index++))
@@ -234,7 +246,7 @@ void lcd_menu_maintenance_advanced()
             menu.add_menu(menu_t(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
-        else if ((ui_mode & UI_MODE_TINKERGNOME) && (IS_SELECTED_SCROLL(index++)))
+        else if ((ui_mode & UI_MODE_EXPERT) && (IS_SELECTED_SCROLL(index++)))
         {
             menu.add_menu(menu_t(lcd_menu_first_run_start_bed_leveling, SCROLL_MENU_ITEM_POS(0)));
         }

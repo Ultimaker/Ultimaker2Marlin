@@ -415,7 +415,7 @@ void lcd_menu_print_select()
 
                         enquecommand_P(PSTR("G28"));
                         enquecommand_P(PSTR("G1 F12000 X5 Y5"));
-                        if (ui_mode & UI_MODE_TINKERGNOME)
+                        if (ui_mode & UI_MODE_EXPERT)
                             menu.replace_menu(menu_t(lcd_menu_print_heatup_tg));
                         else
                             menu.replace_menu(menu_t(lcd_menu_print_heatup));
@@ -469,7 +469,7 @@ static void lcd_menu_print_heatup()
             if (ready)
             {
                 doStartPrint();
-                if (ui_mode & UI_MODE_TINKERGNOME)
+                if (ui_mode & UI_MODE_EXPERT)
                 {
                     menu.replace_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(2)), false);
                 }else{
@@ -621,7 +621,7 @@ static void lcd_menu_print_error()
 
 static void lcd_menu_print_classic_warning()
 {
-    lcd_question_screen((ui_mode & UI_MODE_TINKERGNOME) ? lcd_menu_printing_tg : lcd_menu_print_printing, userStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, lcd_remove_menu, PSTR("CANCEL"));
+    lcd_question_screen((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing, userStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, lcd_remove_menu, PSTR("CANCEL"));
 
     lcd_lib_draw_string_centerP(10, PSTR("This file will"));
     lcd_lib_draw_string_centerP(20, PSTR("override machine"));

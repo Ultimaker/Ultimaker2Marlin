@@ -14,7 +14,7 @@
 
 // UI Mode
 #define UI_MODE_STANDARD 0
-#define UI_MODE_TINKERGNOME 1
+#define UI_MODE_EXPERT 1
 
 extern uint8_t ui_mode;
 extern uint16_t led_timeout;
@@ -27,6 +27,7 @@ void lcd_menu_move_axes();
 void lcd_lib_draw_heater(uint8_t x, uint8_t y, uint8_t heaterPower);
 void manage_led_timeout();
 void manage_encoder_position(int8_t encoder_pos_interrupt);
+void lcd_menu_expert_extrude();
 
 #endif//ULTI_LCD2_MENU_TINKERGNOME_H
 

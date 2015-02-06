@@ -246,7 +246,7 @@ static void lcd_main_material()
 
 static void lcd_main_maintenance()
 {
-    if (ui_mode & UI_MODE_TINKERGNOME)
+    if (ui_mode & UI_MODE_EXPERT)
     {
         menu.add_menu(menu_t(lcd_menu_maintenance_advanced));
     }else{
