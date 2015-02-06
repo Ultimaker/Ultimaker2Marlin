@@ -31,6 +31,7 @@ void lcd_menu_print_tune_heatup_nozzle1();
 #endif
 void doStartPrint();
 void lcd_change_to_menu_change_material_return();
+void lcd_menu_print_pause();
 
 extern bool primed;
 

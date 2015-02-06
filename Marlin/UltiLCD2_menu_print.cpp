@@ -28,7 +28,6 @@ static void lcd_menu_print_error();
 static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_ready_cooled_down();
 static void lcd_menu_print_tune_retraction();
-static void lcd_menu_print_pause();
 
 bool primed = false;
 static bool pauseRequested = false;
@@ -539,6 +538,11 @@ static void lcd_menu_print_printing()
 //        }
 //    }
 //    else
+    if (card.pause)
+    {
+        menu.add_menu(menu_t(lcd_menu_print_pause, MAIN_MENU_ITEM_POS(0)), true);
+    }
+    else
     {
         lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), NULL, lcd_print_pause, PSTR("PAUSE"));
         uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
@@ -598,9 +602,8 @@ static void lcd_menu_print_printing()
         }
 
         lcd_progressbar(progress);
+        lcd_lib_update_screen();
     }
-
-    lcd_lib_update_screen();
 }
 
 static void lcd_menu_print_error()
