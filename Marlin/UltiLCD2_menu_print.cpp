@@ -114,16 +114,10 @@ void doStartPrint()
 	// zero the extruder position
 	current_position[E_AXIS] = 0.0;
 	plan_set_e_position(0);
+	primed = false;
 
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
-
-	// note that we have primed, so that we know to de-prime at the end
-	primed = true;
-
-	// move to priming height
-    current_position[Z_AXIS] = PRIMING_HEIGHT;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], 0);
 
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
@@ -136,6 +130,13 @@ void doStartPrint()
         }
         active_extruder = e;
 
+        if (!primed)
+        {
+            // move to priming height
+            current_position[Z_AXIS] = PRIMING_HEIGHT;
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+            primed = true;
+        }
         // undo the end-of-print retraction
         plan_set_e_position((0.0 - END_OF_PRINT_RETRACTION) / volume_to_filament_length[e]);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], END_OF_PRINT_RECOVERY_SPEED, e);
@@ -154,6 +155,8 @@ void doStartPrint()
 #endif
     }
     active_extruder = 0;
+	// note that we have primed, so that we know to de-prime at the end
+	primed = true;
 
     postMenuCheck = checkPrintFinished;
     card.startFileprint();
