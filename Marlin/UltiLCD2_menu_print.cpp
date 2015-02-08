@@ -643,6 +643,7 @@ void lcd_menu_print_abort()
     lcd_question_screen(lcd_menu_print_ready, userAbortPrint, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
 
     lcd_lib_draw_string_centerP(20, PSTR("Abort the print?"));
+    lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 4, 32, standbyGfx);
 
     lcd_lib_update_screen();
 }
@@ -1037,19 +1038,21 @@ static void drawPauseSubmenu(uint8_t nr, uint8_t &flags)
     }
     else if (nr == index++)
     {
-//        if (flags & MENU_SELECTED)
-//        {
-//
-//            lcd_lib_draw_string_leftP(5, PSTR("Abort print"));
-//            flags |= MENU_STATUSLINE;
-//        }
-        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+3
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 1
                                 , BOTTOM_MENU_YPOS
                                 , 52
                                 , LCD_CHAR_HEIGHT
-                                , PSTR("ABORT")
-                                , ALIGN_CENTER
                                 , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("ABORT"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + 10, BOTTOM_MENU_YPOS, standbyGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("ABORT"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + 10, BOTTOM_MENU_YPOS, standbyGfx);
+        }
     }
 }
 
