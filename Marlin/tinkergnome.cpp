@@ -118,9 +118,19 @@ const uint8_t brightnessGfx[] PROGMEM = {
     0x49, 0x2A, 0x1C, 0x7F, 0x1C, 0x2A, 0x49
 };
 
+//const uint8_t pauseGfx[] PROGMEM = {
+//    7, 8, //size
+//    0x7F, 0x41, 0x5D, 0x41, 0x5D, 0x41, 0x7F
+//};
+
+const uint8_t startGfx[] PROGMEM = {
+    5, 8, //size
+    0x7F, 0x7F, 0x3E, 0x1C, 0x08
+};
+
 const uint8_t pauseGfx[] PROGMEM = {
-    7, 8, //size
-    0x7F, 0x41, 0x5D, 0x41, 0x5D, 0x41, 0x7F
+    5, 8, //size
+    0x3E, 0x3E, 0x00, 0x3E, 0x3E
 };
 
 const uint8_t standbyGfx[] PROGMEM = {
@@ -695,11 +705,11 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                                , flags);
             if (flags & MENU_SELECTED)
             {
-                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
             }
             else
             {
-                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
             }
         }
         else if (nr == index++)
@@ -833,11 +843,11 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                                , flags);
             if (flags & MENU_SELECTED)
             {
-                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
             }
             else
             {
-                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
             }
         }
         else if (nr == index++)
@@ -2094,6 +2104,7 @@ static void lcd_extrude_temperature()
 
 static void lcd_extrude_reset_pos()
 {
+    lcd_lib_beep();
     enquecommand_P(PSTR("G92 E0"));
 }
 
@@ -2103,6 +2114,31 @@ static void lcd_extrude_move()
     {
         lcd_tune_value(current_position[E_AXIS], -10000.0, +10000.0, 0.1);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 10, active_extruder);
+    }
+}
+
+static void lcd_extrude_pull()
+{
+    if (lcd_lib_button_down)
+    {
+        if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 1)
+        {
+            float old_max_feedrate_e = max_feedrate[E_AXIS];
+            float old_retract_acceleration = retract_acceleration;
+            max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
+            retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
+
+            // plan_set_e_position(0);
+            current_position[E_AXIS] -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_REVERSAL_SPEED, active_extruder);
+            // plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder], FILAMENT_REVERSAL_SPEED, active_extruder);
+
+            max_feedrate[E_AXIS] = old_max_feedrate_e;
+            retract_acceleration = old_retract_acceleration;
+        }
+    } else {
+        quickStop();
+        menu.reset_submenu();
     }
 }
 
@@ -2116,6 +2152,10 @@ static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
     else if (nr == menu_index++)
     {
         opt.setData(MENU_INPLACE_EDIT, lcd_extrude_temperature, 4);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_INPLACE_EDIT, lcd_extrude_pull);
     }
     else if (nr == menu_index++)
     {
@@ -2174,14 +2214,38 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
         // move material
         if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
+            lcd_lib_draw_string_leftP(5, PSTR("Click & hold to pull"));
+            flags |= MENU_STATUSLINE;
+        }
+        // lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-12*LCD_CHAR_SPACING, 35, PSTR("Pos. E"));
+        // lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-13*LCD_CHAR_SPACING-1, 35, flowGfx);
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT+2
+                           , 35
+                           , 3*LCD_CHAR_SPACING
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING+2, 35, revSpeedGfx);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING+2, 35, revSpeedGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        // move material
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
+        {
             lcd_lib_draw_string_leftP(5, PSTR("Reset position"));
             flags |= MENU_STATUSLINE;
         }
         // lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-12*LCD_CHAR_SPACING, 35, PSTR("Pos. E"));
         // lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-13*LCD_CHAR_SPACING-1, 35, flowGfx);
-        LCDMenu::drawMenuBox(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-13*LCD_CHAR_SPACING
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-13*LCD_CHAR_SPACING-LCD_CHAR_MARGIN_LEFT
                            , 35
-                           , LCD_CHAR_SPACING
+                           , LCD_CHAR_SPACING+2*LCD_CHAR_MARGIN_LEFT
                            , LCD_CHAR_HEIGHT
                            , flags);
         if (flags & MENU_SELECTED)
@@ -2202,7 +2266,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
             flags |= MENU_STATUSLINE;
         }
         // lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-13*LCD_CHAR_SPACING-1, 35, flowGfx);
-        float_to_string(current_position[E_AXIS], LCD_CACHE_FILENAME(1), PSTR("mm"));
+        float_to_string(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS], LCD_CACHE_FILENAME(1), PSTR("mm"));
         LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-11*LCD_CHAR_SPACING
                           , 35
                           , 11*LCD_CHAR_SPACING
@@ -2218,10 +2282,10 @@ void lcd_menu_expert_extrude()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    menu.process_submenu(get_extrude_menuoption, 4);
+    menu.process_submenu(get_extrude_menuoption, 5);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<4; ++index)
+    for (uint8_t index=0; index<5; ++index)
     {
         menu.drawSubMenu(drawExtrudeSubmenu, index, flags);
     }

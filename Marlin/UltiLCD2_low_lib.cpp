@@ -932,6 +932,8 @@ char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
         *c++ = '-';
         i = -i;
     }
+    if (i >= 100000)
+        *c++ = ((i/100000)%10)+'0';
     if (i >= 10000)
         *c++ = ((i/10000)%10)+'0';
     if (i >= 1000)

@@ -19,6 +19,7 @@
 extern uint8_t ui_mode;
 extern uint16_t led_timeout;
 extern const uint8_t standbyGfx[];
+extern const uint8_t startGfx[];
 
 void tinkergnome_init();
 void lcd_menu_maintenance_expert();
