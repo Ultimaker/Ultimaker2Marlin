@@ -75,7 +75,7 @@ static void abortPrint()
         // no longer primed
         primed = false;
     }
-    
+
     enquecommand_P(PSTR("M401"));
 
     if (current_position[Z_AXIS] > Z_MAX_POS - 30)
@@ -383,6 +383,9 @@ void lcd_menu_print_select()
                         while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
                     }
                     card.setIndex(0);
+
+                    fanSpeed = 0;
+                    feedmultiply = 100;
                     if (strcmp_P(buffer, PSTR(";FLAVOR:UltiGCode")) == 0)
                     {
                         //New style GCode flavor without start/end code.
@@ -404,7 +407,6 @@ void lcd_menu_print_select()
                             extrudemultiply[e] = material[e].flow;
                         }
 
-                        fanSpeed = 0;
                         enquecommand_P(PSTR("G28"));
                         enquecommand_P(PSTR("G1 F12000 X5 Y10"));
                         lcd_change_to_menu(lcd_menu_print_heatup);
