@@ -14,6 +14,8 @@
 #include "UltiLCD2_menu_utils.h"
 #include "tinkergnome.h"
 
+#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y10"
+
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
 #define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
@@ -416,7 +418,7 @@ void lcd_menu_print_select()
                         }
 
                         enquecommand_P(PSTR("G28"));
-                        enquecommand_P(PSTR("G1 F12000 X5 Y5"));
+                        enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
                         if (ui_mode & UI_MODE_EXPERT)
                             menu.replace_menu(menu_t(lcd_menu_print_heatup_tg));
                         else
@@ -516,6 +518,7 @@ static void lcd_menu_print_heatup()
 
 void lcd_change_to_menu_change_material_return()
 {
+    plan_set_e_position(current_position[E_AXIS]);
     setTargetHotend(material[active_extruder].temperature, active_extruder);
     menu.return_to_previous(false);
 }

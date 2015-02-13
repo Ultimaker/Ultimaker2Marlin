@@ -846,7 +846,7 @@ static void homeaxis(int axis) {
         #endif
         break;
     }
-    if (endstop_pressed)
+    if (endstop_pressed && axis == Z_AXIS)
     {
         SERIAL_ERROR_START;
         SERIAL_ERRORLNPGM("Endstop still pressed after backing off. Endstop stuck?");
