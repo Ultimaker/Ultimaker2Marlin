@@ -12,7 +12,7 @@
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_maintenance.h"
 
-#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y10"
+#define HEATUP_POSITION_COMMAND "G1 F12000 X-10 Y10"
 
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
