@@ -12,6 +12,8 @@
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_maintenance.h"
 
+#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y10"
+
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
 #define LCD_CACHE_ID(n) lcd_cache[(n)]
@@ -75,7 +77,7 @@ static void abortPrint()
         // no longer primed
         primed = false;
     }
-    
+
     enquecommand_P(PSTR("M401"));
 
     if (current_position[Z_AXIS] > Z_MAX_POS - 30)
@@ -113,16 +115,10 @@ static void doStartPrint()
 	// zero the extruder position
 	current_position[E_AXIS] = 0.0;
 	plan_set_e_position(0);
+	primed = false;
 
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
-
-	// note that we have primed, so that we know to de-prime at the end
-	primed = true;
-
-	// move to priming height
-    current_position[Z_AXIS] = PRIMING_HEIGHT;
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], 0);
 
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
@@ -134,6 +130,15 @@ static void doStartPrint()
             continue;
         }
         active_extruder = e;
+
+        if (!primed)
+        {
+            // move to priming height
+            current_position[Z_AXIS] = PRIMING_HEIGHT;
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+            // note that we have primed, so that we know to de-prime at the end
+            primed = true;
+        }
 
         // undo the end-of-print retraction
         plan_set_e_position((0.0 - END_OF_PRINT_RETRACTION) / volume_to_filament_length[e]);
@@ -153,6 +158,7 @@ static void doStartPrint()
 #endif
     }
     active_extruder = 0;
+    primed = true;
 
     postMenuCheck = checkPrintFinished;
     card.startFileprint();
@@ -383,6 +389,9 @@ void lcd_menu_print_select()
                         while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
                     }
                     card.setIndex(0);
+
+                    fanSpeed = 0;
+                    feedmultiply = 100;
                     if (strcmp_P(buffer, PSTR(";FLAVOR:UltiGCode")) == 0)
                     {
                         //New style GCode flavor without start/end code.
@@ -404,9 +413,8 @@ void lcd_menu_print_select()
                             extrudemultiply[e] = material[e].flow;
                         }
 
-                        fanSpeed = 0;
                         enquecommand_P(PSTR("G28"));
-                        enquecommand_P(PSTR("G1 F12000 X5 Y10"));
+                        enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
                         lcd_change_to_menu(lcd_menu_print_heatup);
                     }else{
                         //Classic gcode file
@@ -499,6 +507,7 @@ static void lcd_menu_print_heatup()
 
 static void lcd_change_to_menu_change_material_return()
 {
+    plan_set_e_position(current_position[E_AXIS]);
     setTargetHotend(material[active_extruder].temperature, active_extruder);
     currentMenu = lcd_menu_print_printing;
 }
