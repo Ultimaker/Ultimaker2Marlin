@@ -297,7 +297,6 @@ static void materialInsertReady()
     plan_set_e_position(0);
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -END_OF_PRINT_RETRACTION / volume_to_filament_length[active_extruder], 25*60, active_extruder);
     cancelMaterialInsert();
-
 }
 
 static void lcd_menu_change_material_insert()

@@ -499,6 +499,7 @@ static void lcd_menu_print_heatup()
 
 static void lcd_change_to_menu_change_material_return()
 {
+    plan_set_e_position(current_position[E_AXIS]);
     setTargetHotend(material[active_extruder].temperature, active_extruder);
     currentMenu = lcd_menu_print_printing;
 }
