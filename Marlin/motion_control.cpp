@@ -126,12 +126,17 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
     arc_target[E_AXIS] += extruder_per_segment;
 
     clamp_to_software_endstops(arc_target);
-    plan_buffer_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], arc_target[E_AXIS], feed_rate, extruder);
+    if (printing_state != PRINT_STATE_RECOVER)
+    {
+      plan_buffer_line(arc_target[X_AXIS], arc_target[Y_AXIS], arc_target[Z_AXIS], arc_target[E_AXIS], feed_rate, extruder);
+    }
 
   }
-  // Ensure last segment arrives at target location.
-  plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feed_rate, extruder);
-
+  if (printing_state != PRINT_STATE_RECOVER)
+  {
+    // Ensure last segment arrives at target location.
+    plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feed_rate, extruder);
+  }
   //   plan_set_acceleration_manager_enabled(acceleration_manager_was_enabled);
 }
 

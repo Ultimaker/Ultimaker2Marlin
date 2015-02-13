@@ -1338,7 +1338,10 @@ void process_commands()
         break;
       }
       if (code_seen('S')) setTargetHotend(code_value(), tmp_extruder);
-      setWatch();
+      if (printing_state != PRINT_STATE_RECOVER)
+      {
+        setWatch();
+      }
       break;
     case 140: // M140 set bed temp
       if (code_seen('S')) setTargetBed(code_value());
@@ -1377,8 +1380,6 @@ void process_commands()
       if(setTargetedHotend(109)){
         break;
       }
-      printing_state = PRINT_STATE_HEATING;
-      LCD_MESSAGEPGM(MSG_HEATING);
       #ifdef AUTOTEMP
         autotemp_enabled=false;
       #endif
@@ -1392,6 +1393,13 @@ void process_commands()
           autotemp_enabled=true;
         }
       #endif
+      if (printing_state == PRINT_STATE_RECOVER)
+      {
+          break;
+      }
+
+      printing_state = PRINT_STATE_HEATING;
+      LCD_MESSAGEPGM(MSG_HEATING);
 
       setWatch();
       codenum = millis();
@@ -2615,21 +2623,31 @@ void prepare_move()
       destination[i] = current_position[i] + difference[i] * fraction;
     }
     calculate_delta(destination);
-    plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
-                     destination[E_AXIS], feedrate*feedmultiply/60/100.0,
-                     active_extruder);
+    if (printing_state != PRINT_STATE_RECOVER)
+    {
+      plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
+                       destination[E_AXIS], feedrate*feedmultiply/60/100.0,
+                       active_extruder);
+    }
   }
 #else
-  // Do not use feedmultiply for E or Z only moves
-  if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
+  if (printing_state != PRINT_STATE_RECOVER)
+  {
+    // Do not use feedmultiply for E or Z only moves
+    if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
       plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-  }
-  else {
-    plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate*feedmultiply/60/100.0, active_extruder);
+    }
+    else {
+      plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate*feedmultiply/60/100.0, active_extruder);
+    }
   }
 #endif
   for(int8_t i=0; i < NUM_AXIS; i++) {
     current_position[i] = destination[i];
+  }
+  if ((printing_state == PRINT_STATE_RECOVER) && (abs(current_position[Z_AXIS]-recover_height) < 0.01f))
+  {
+      recover_start_print();
   }
 }
 
@@ -2695,6 +2713,9 @@ void controllerFan()
 void manage_inactivity()
 {
   manage_led_timeout();
+
+  if(printing_state == PRINT_STATE_RECOVER)
+    previous_millis_cmd=millis();
 
   if( (millis() - previous_millis_cmd) >  max_inactive_time )
     if(max_inactive_time)

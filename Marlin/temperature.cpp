@@ -408,6 +408,9 @@ void manage_heater()
   float pid_input;
   float pid_output;
 
+  if(printing_state == PRINT_STATE_RECOVER)
+    return;
+
   if(temp_meas_ready != true)   //better readability
     return;
 

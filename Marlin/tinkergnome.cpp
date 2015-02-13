@@ -37,6 +37,7 @@
 
 uint8_t ui_mode = UI_MODE_STANDARD;
 uint16_t led_timeout = LED_DIM_TIME;
+float recover_height = 0.0f;
 
 // these are used to maintain a simple low-pass filter on the speeds - thanks norpchen
 static float e_smoothed_speed[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0.0, 0.0, 0.0);
@@ -2128,10 +2129,8 @@ static void lcd_extrude_pull()
             max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
             retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
 
-            // plan_set_e_position(0);
             current_position[E_AXIS] -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_REVERSAL_SPEED, active_extruder);
-            // plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder], FILAMENT_REVERSAL_SPEED, active_extruder);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_REVERSAL_SPEED*2/3, active_extruder);
 
             max_feedrate[E_AXIS] = old_max_feedrate_e;
             retract_acceleration = old_retract_acceleration;
@@ -2296,6 +2295,19 @@ void lcd_menu_expert_extrude()
 
     lcd_lib_update_screen();
 
+}
+
+void recover_start_print()
+{
+    // recover print from current position
+
+    while (printing_state == PRINT_STATE_RECOVER)
+    {
+        manage_heater();
+        manage_inactivity();
+        lcd_update();
+        lifetime_stats_tick();
+    }
 }
 
 #endif//ENABLE_ULTILCD2

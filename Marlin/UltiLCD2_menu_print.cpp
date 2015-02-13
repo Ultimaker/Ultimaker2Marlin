@@ -46,6 +46,7 @@ void lcd_clear_cache()
 void abortPrint()
 {
     postMenuCheck = NULL;
+    recover_height = 0.0f;
     lifetime_stats_print_end();
     doCooldown();
 
@@ -101,13 +102,11 @@ static void checkPrintFinished()
     if (!card.sdprinting && !is_command_queued())
     {
         abortPrint();
-        menu.replace_menu(menu_t(lcd_menu_print_ready));
-        SELECT_MAIN_MENU_ITEM(0);
+        menu.replace_menu(menu_t(lcd_menu_print_ready, MAIN_MENU_ITEM_POS(0)));
     }else if (card.errorCode())
     {
         abortPrint();
-        menu.replace_menu(menu_t(lcd_menu_print_error));
-        SELECT_MAIN_MENU_ITEM(0);
+        menu.replace_menu(menu_t(lcd_menu_print_error, MAIN_MENU_ITEM_POS(0)));
     }
 }
 
@@ -117,6 +116,11 @@ void doStartPrint()
 	current_position[E_AXIS] = 0.0;
 	plan_set_e_position(0);
 	primed = false;
+
+    if (printing_state == PRINT_STATE_RECOVER)
+    {
+        printing_state = PRINT_STATE_NORMAL;
+    }
 
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
@@ -135,7 +139,7 @@ void doStartPrint()
         if (!primed)
         {
             // move to priming height
-            current_position[Z_AXIS] = PRIMING_HEIGHT;
+            current_position[Z_AXIS] = min(PRIMING_HEIGHT + recover_height, max_pos[Z_AXIS]-PRIMING_HEIGHT);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
             primed = true;
         }
@@ -488,7 +492,7 @@ static void lcd_menu_print_heatup()
     uint8_t progress = 125;
     for(uint8_t e=0; e<EXTRUDERS; e++)
     {
-        if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] < 1)
+        if (((printing_state != PRINT_STATE_RECOVER) && (LCD_DETAIL_CACHE_MATERIAL(e) < 1)) || (target_temperature[e] < 1))
             continue;
         if (current_temperature[e] > 20)
             progress = min(progress, (current_temperature[e] - 20) * 125 / (target_temperature[e] - 20 - TEMP_WINDOW));
