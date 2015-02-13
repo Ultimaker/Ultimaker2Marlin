@@ -12,6 +12,8 @@
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_maintenance.h"
 
+#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y10"
+
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
 #define LCD_CACHE_ID(n) lcd_cache[(n)]
@@ -412,7 +414,7 @@ void lcd_menu_print_select()
                         }
 
                         enquecommand_P(PSTR("G28"));
-                        enquecommand_P(PSTR("G1 F12000 X5 Y10"));
+                        enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
                         lcd_change_to_menu(lcd_menu_print_heatup);
                     }else{
                         //Classic gcode file
