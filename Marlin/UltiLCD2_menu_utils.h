@@ -119,6 +119,7 @@ public:
 
     void process_submenu(menuItemCallback_t getMenuItem, uint8_t len);
     void reset_submenu();
+    void set_selection(int8_t index);
     void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, uint8_t &flags);
     void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr);
     FORCE_INLINE bool isSubmenuSelected() const { return (selectedSubmenu >= 0); }
@@ -152,5 +153,7 @@ extern uint8_t menu_index;
 FORCE_INLINE void lcd_change_to_previous_menu() { menu.return_to_previous(); }
 FORCE_INLINE void lcd_return_to_main_menu() { menu.return_to_main(); }
 FORCE_INLINE void lcd_remove_menu() { menu.return_to_previous(false); }
+FORCE_INLINE void lcd_select_first_submenu() { menu.set_selection(0); }
+FORCE_INLINE void lcd_reset_submenu() { menu.reset_submenu(); }
 
 #endif

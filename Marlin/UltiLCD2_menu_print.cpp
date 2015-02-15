@@ -91,11 +91,6 @@ static void userAbortPrint()
 
 static void checkPrintFinished()
 {
-    if (pauseRequested)
-    {
-        lcd_print_pause();
-    }
-
     if (!card.sdprinting && !is_command_queued())
     {
         abortPrint();
@@ -105,6 +100,11 @@ static void checkPrintFinished()
         abortPrint();
         menu.replace_menu(menu_t(lcd_menu_print_error, MAIN_MENU_ITEM_POS(0)));
     }
+//    else if (pauseRequested)
+//    {
+//        menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), !pauseRequested);
+//        lcd_print_pause();
+//    }
 }
 
 void doStartPrint()
@@ -552,11 +552,11 @@ static void lcd_menu_print_printing()
 //    else
     if (card.pause)
     {
-        menu.add_menu(menu_t(lcd_menu_print_pause, MAIN_MENU_ITEM_POS(0)), true);
+        menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
     }
     else
     {
-        lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), NULL, lcd_print_pause, PSTR("PAUSE"));
+        lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_pause, lcd_select_first_submenu, PSTR("PAUSE"));
         uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
         char* c;
         switch(printing_state)
@@ -945,18 +945,18 @@ void lcd_print_pause()
         if (movesplanned() > 0 && commands_queued() < BUFSIZE)
         {
             card.pause = true;
-            menu.add_menu(menu_t(lcd_menu_print_pause, MAIN_MENU_ITEM_POS(0)), !pauseRequested);
+            // menu.add_menu(menu_t(lcd_menu_print_resume, MAIN_MENU_ITEM_POS(0)), !pauseRequested);
             pauseRequested = false;
             if (current_position[Z_AXIS] < Z_MAX_POS - 60)
-                enquecommand_P(PSTR("M601 X10 Y200 Z20 L20"));
+                enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
             else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
-                enquecommand_P(PSTR("M601 X10 Y200 Z2 L20"));
+                enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
             else
-                enquecommand_P(PSTR("M601 X10 Y200 Z0 L20"));
+                enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
         }
         else if (!pauseRequested)
         {
-            lcd_lib_beep();
+            // lcd_lib_beep();
             pauseRequested = true;
         }
     }
@@ -982,6 +982,7 @@ void lcd_print_abort()
 static void lcd_print_resume()
 {
     card.pause = false;
+    pauseRequested = false;
     menu.return_to_previous();
 }
 
@@ -991,7 +992,119 @@ static void lcd_print_change_material()
     menu.add_menu(menu_t(lcd_menu_change_material_preheat));
 }
 
+static void lcd_show_pause_menu()
+{
+    lcd_print_pause();
+    menu.replace_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)));
+}
+
 static const menu_t & get_pause_menuoption(uint8_t nr, menu_t &opt)
+{
+    menu_index = 0;
+    if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_show_pause_menu);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_print_abort);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_print_tune);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_change_to_previous_menu);
+    }
+    return opt;
+}
+
+static void drawPauseSubmenu(uint8_t nr, uint8_t &flags)
+{
+    uint8_t index(0);
+    if (nr == index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
+                                , LCD_LINE_HEIGHT
+                                , 52
+                                , LCD_LINE_HEIGHT*4
+                                , PSTR("PAUSE|")
+                                , ALIGN_CENTER
+                                , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, pauseGfx);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, pauseGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+3
+                                , LCD_LINE_HEIGHT
+                                , 52
+                                , LCD_LINE_HEIGHT*4
+                                , PSTR("ABORT|")
+                                , ALIGN_CENTER
+                                , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, standbyGfx);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, standbyGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
+                                , BOTTOM_MENU_YPOS
+                                , 52
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("TUNE")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+    else if (nr == index++)
+    {
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 1
+                                , BOTTOM_MENU_YPOS
+                                , 52
+                                , LCD_CHAR_HEIGHT
+                                , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+    }
+}
+
+void lcd_menu_print_pause()
+{
+    lcd_lib_clear();
+    lcd_lib_draw_vline(64, 5, 46);
+    lcd_lib_draw_hline(3, 124, 50);
+
+    menu.process_submenu(get_pause_menuoption, 4);
+
+    for (uint8_t index=0; index<4; ++index)
+    {
+        menu.drawSubMenu(drawPauseSubmenu, index);
+    }
+    lcd_lib_update_screen();
+}
+
+static const menu_t & get_resume_menuoption(uint8_t nr, menu_t &opt)
 {
     menu_index = 0;
     if (nr == menu_index++)
@@ -1013,25 +1126,44 @@ static const menu_t & get_pause_menuoption(uint8_t nr, menu_t &opt)
     return opt;
 }
 
-static void drawPauseSubmenu(uint8_t nr, uint8_t &flags)
+static void drawResumeSubmenu(uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
     if (nr == index++)
     {
-        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
-                                , LCD_LINE_HEIGHT
-                                , 52
-                                , LCD_LINE_HEIGHT*4
-                                , PSTR("RESUME|")
-                                , ALIGN_CENTER
-                                , flags);
-        if (flags & MENU_SELECTED)
+        if (card.pause && (movesplanned() == 0))
         {
-            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
-        }
-        else
-        {
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
+            LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
+                                    , LCD_LINE_HEIGHT
+                                    , 52
+                                    , LCD_LINE_HEIGHT*4
+                                    , PSTR("RESUME|")
+                                    , ALIGN_CENTER
+                                    , flags);
+            if (flags & MENU_SELECTED)
+            {
+                lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
+            }
+            else
+            {
+                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
+            }
+        } else {
+            LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
+                                    , LCD_LINE_HEIGHT
+                                    , 52
+                                    , LCD_LINE_HEIGHT*4
+                                    , PSTR("PAUSING|")
+                                    , ALIGN_CENTER
+                                    , flags);
+            if (flags & MENU_SELECTED)
+            {
+                lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, hourglassGfx);
+            }
+            else
+            {
+                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, hourglassGfx);
+            }
         }
     }
     else if (nr == index++)
@@ -1074,17 +1206,21 @@ static void drawPauseSubmenu(uint8_t nr, uint8_t &flags)
     }
 }
 
-void lcd_menu_print_pause()
+void lcd_menu_print_resume()
 {
+    if (pauseRequested)
+    {
+        lcd_print_pause();
+    }
     lcd_lib_clear();
     lcd_lib_draw_vline(64, 5, 46);
     lcd_lib_draw_hline(3, 124, 50);
 
-    menu.process_submenu(get_pause_menuoption, 4);
+    menu.process_submenu(get_resume_menuoption, 4);
 
     for (uint8_t index=0; index<4; ++index)
     {
-        menu.drawSubMenu(drawPauseSubmenu, index);
+        menu.drawSubMenu(drawResumeSubmenu, index);
     }
     lcd_lib_update_screen();
 }

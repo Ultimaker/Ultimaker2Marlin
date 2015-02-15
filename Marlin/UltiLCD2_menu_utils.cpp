@@ -61,6 +61,7 @@ void LCDMenu::replace_menu(menu_t nextMenu, bool beep)
     init_menu_switch(beep);
     menuStack[currentIndex] = nextMenu;
     lastEncoderPos = lcd_lib_encoder_pos = nextMenu.encoderPos;
+    lcd_lib_button_pressed = false;
     // menu initialization
     if (nextMenu.initMenuFunc)
     {
@@ -82,6 +83,7 @@ void LCDMenu::return_to_previous(bool beep)
         // switch back to previous menu
         --currentIndex;
         lastEncoderPos = lcd_lib_encoder_pos = menuStack[currentIndex].encoderPos;
+        lcd_lib_button_pressed = false;
         if (menuStack[currentIndex].initMenuFunc)
         {
             menuStack[currentIndex].initMenuFunc();
@@ -106,6 +108,7 @@ void LCDMenu::return_to_main(bool beep)
             --currentIndex;
         }
         lastEncoderPos = lcd_lib_encoder_pos = menuStack[currentIndex].encoderPos;
+        lcd_lib_button_pressed = false;
         if (menuStack[currentIndex].initMenuFunc)
         {
             menuStack[currentIndex].initMenuFunc();
@@ -130,6 +133,7 @@ void LCDMenu::reset_submenu()
     lastEncoderPos = lcd_lib_encoder_pos = menuStack[currentIndex].encoderPos;
     activeSubmenu = menu_t();
     selectedSubmenu = -1;
+    lcd_lib_button_pressed = false;
 }
 
 void LCDMenu::drawMenuBox(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t flags)
@@ -345,5 +349,10 @@ void LCDMenu::reset_selection()
     lcd_lib_button_pressed = lcd_lib_button_down = false;
 }
 
+void LCDMenu::set_selection(int8_t index)
+{
+    lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(index);
+    lastEncoderPos = lcd_lib_encoder_pos-1;
+}
 
 #endif
