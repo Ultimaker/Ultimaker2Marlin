@@ -860,6 +860,7 @@ bool lcd_material_verify_material_settings()
             return false;
 
         eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(cnt), 8);
+        LCD_CACHE_FILENAME(0)[8] = '\0';
         if (strcmp_P(LCD_CACHE_FILENAME(0), PSTR("UPET")) == 0)
             hasUPET = true;
     }

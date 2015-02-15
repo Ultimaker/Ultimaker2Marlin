@@ -19,11 +19,9 @@
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
 #define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
-#define LCD_DETAIL_CACHE_START ((LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))+1)
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 
-void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error();
@@ -31,9 +29,8 @@ static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_ready_cooled_down();
 static void lcd_menu_print_tune_retraction();
 
-bool primed = false;
+static bool primed = false;
 static bool pauseRequested = false;
-
 
 void lcd_clear_cache()
 {
@@ -112,18 +109,20 @@ static void checkPrintFinished()
 
 void doStartPrint()
 {
-	// zero the extruder position
-	current_position[E_AXIS] = 0.0;
-	plan_set_e_position(0);
-	primed = false;
-
     if (printing_state == PRINT_STATE_RECOVER)
     {
         printing_state = PRINT_STATE_NORMAL;
     }
+    else
+    {
+        // zero the extruder position
+        current_position[E_AXIS] = 0.0;
+        plan_set_e_position(0);
+    }
 
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
+	primed = false;
 
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
@@ -197,7 +196,10 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
         for(uint8_t idx=0; idx<LCD_CACHE_COUNT; idx++)
         {
             if (LCD_CACHE_ID(idx) == nr)
+            {
                 strcpy(card.longFilename, LCD_CACHE_FILENAME(idx));
+                break;
+            }
         }
         if (card.longFilename[0] == '\0')
         {
@@ -261,12 +263,12 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             buffer[sizeof(buffer)-1] = '\0';
                             while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
                             if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
-                                LCD_DETAIL_CACHE_TIME() = atol(buffer + 6);
+                                LCD_DETAIL_CACHE_TIME() = strtol(buffer + 6, 0, 0);
                             else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(0) = atol(buffer + 10);
+                                LCD_DETAIL_CACHE_MATERIAL(0) = strtol(buffer + 10, 0, 0);
 #if EXTRUDERS > 1
                             else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(1) = atol(buffer + 11);
+                                LCD_DETAIL_CACHE_MATERIAL(1) = strtol(buffer + 11 ,0 ,0);
 #endif
                         }
                     }
@@ -952,7 +954,8 @@ void lcd_print_pause()
             else
                 enquecommand_P(PSTR("M601 X10 Y200 Z0 L20"));
         }
-        else{
+        else if (!pauseRequested)
+        {
             lcd_lib_beep();
             pauseRequested = true;
         }
