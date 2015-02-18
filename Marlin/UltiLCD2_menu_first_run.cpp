@@ -287,6 +287,7 @@ static void lcd_menu_first_run_bed_level_paper_right()
 
 static void parkHeadForHeating()
 {
+    lcd_material_reset_defaults();
     enquecommand_P(PSTR("G1 F12000 X110 Y10"));
     enquecommand_P(PSTR("M84"));//Disable motor power.
 }
@@ -417,6 +418,17 @@ static void lcd_menu_first_run_material_load_wait()
 
 static void lcd_menu_first_run_material_select_1()
 {
+    if (eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET()) == 1)
+    {
+        digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
+        
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+            lcd_material_set_material(0, e);
+        SET_FIRST_RUN_DONE();
+        
+        currentMenu = lcd_menu_first_run_print_1;
+        return;
+    }
     SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_select_material, doCooldown, PSTR("READY"));
     DRAW_PROGRESS_NR(16);
@@ -451,7 +463,6 @@ static void lcd_menu_first_run_material_select_material()
     {
         digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
 
-        lcd_material_reset_defaults();
         for(uint8_t e=0; e<EXTRUDERS; e++)
             lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), e);
         SET_FIRST_RUN_DONE();
