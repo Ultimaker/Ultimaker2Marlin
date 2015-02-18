@@ -2165,6 +2165,7 @@ void process_commands()
           lifetime_stats_tick();
         }
 
+        plan_set_e_position(current_position[E_AXIS]);
         //return to normal
         if(code_seen('L'))
         {
