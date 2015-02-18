@@ -290,6 +290,11 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
     #endif
         else if (nr == menu_index++)
         {
+            // speed
+            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_speed);
+        }
+        else if (nr == menu_index++)
+        {
             // temp nozzle 1
             opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_nozzle0);
         }
@@ -300,6 +305,11 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
             opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_nozzle1);
         }
     #endif
+        else if (nr == menu_index++)
+        {
+            // fan
+            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_fan);
+        }
     #if TEMP_SENSOR_BED != 0
         else if (nr == menu_index++)
         {
@@ -307,16 +317,6 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
             opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_bed);
         }
     #endif
-        else if (nr == menu_index++)
-        {
-            // speed
-            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_speed);
-        }
-        else if (nr == menu_index++)
-        {
-            // fan
-            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_fan);
-        }
     }
     return opt;
 }
@@ -846,7 +846,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
     }
     else // first page
     {
-        if (nr == index++)
+       if (nr == index++)
         {
             if (flags & MENU_SELECTED)
             {
@@ -903,6 +903,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT-1, 24, flowGfx);
             int_to_string(extrudemultiply[0], buffer, PSTR("%"));
             LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+12
                                   , 24
@@ -935,6 +936,26 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
     #endif
         else if (nr == index++)
         {
+            // speed
+            if (flags & (MENU_SELECTED | MENU_ACTIVE))
+            {
+                strcpy_P(buffer, PSTR("Speed "));
+                int_to_string(nominal_speed+0.5, buffer+strlen(buffer), PSTR("mm" PER_SECOND_SYMBOL));
+                lcd_lib_draw_string_left(5, buffer);
+                flags |= MENU_STATUSLINE;
+            }
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 33, speedGfx);
+            int_to_string(feedmultiply, buffer, PSTR("%"));
+            LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+12
+                                  , 33
+                                  , 24
+                                  , LCD_CHAR_HEIGHT
+                                  , buffer
+                                  , ALIGN_RIGHT | ALIGN_VCENTER
+                                  , flags);
+        }
+        else if (nr == index++)
+        {
             // temp nozzle 1
             if (flags & (MENU_SELECTED | MENU_ACTIVE))
             {
@@ -947,9 +968,10 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 42, thermometerGfx);
             int_to_string((flags & MENU_ACTIVE) ? target_temperature[0] : dsp_temperature[0], buffer, PSTR(DEGREE_SYMBOL));
             LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+12
-                                  , 33
+                                  , 42
                                   , 24
                                   , LCD_CHAR_HEIGHT
                                   , buffer
@@ -969,47 +991,6 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             }
             int_to_string((flags & MENU_ACTIVE) ? target_temperature[1] : dsp_temperature[1], buffer, PSTR(DEGREE_SYMBOL));
             LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+42
-                                  , 33
-                                  , 24
-                                  , LCD_CHAR_HEIGHT
-                                  , buffer
-                                  , ALIGN_RIGHT | ALIGN_VCENTER
-                                  , flags);
-        }
-    #endif
-    #if TEMP_SENSOR_BED != 0
-        else if (nr == index++)
-        {
-            // temp buildplate
-            if (flags & (MENU_SELECTED | MENU_ACTIVE))
-            {
-                strcpy_P(buffer, PSTR("Buildplate "));
-                int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer+strlen(buffer), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
-                lcd_lib_draw_string_left(5, buffer);
-                flags |= MENU_STATUSLINE;
-            }
-            int_to_string((flags & MENU_ACTIVE) ? target_temperature_bed : dsp_temperature_bed, buffer, PSTR(DEGREE_SYMBOL));
-            LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING
-                                  , 33
-                                  , 24
-                                  , LCD_CHAR_HEIGHT
-                                  , buffer
-                                  , ALIGN_RIGHT | ALIGN_VCENTER
-                                  , flags);
-        }
-    #endif
-        else if (nr == index++)
-        {
-            // speed
-            if (flags & (MENU_SELECTED | MENU_ACTIVE))
-            {
-                strcpy_P(buffer, PSTR("Speed "));
-                int_to_string(nominal_speed+0.5, buffer+strlen(buffer), PSTR("mm" PER_SECOND_SYMBOL));
-                lcd_lib_draw_string_left(5, buffer);
-                flags |= MENU_STATUSLINE;
-            }
-            int_to_string(feedmultiply, buffer, PSTR("%"));
-            LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+12
                                   , 42
                                   , 24
                                   , LCD_CHAR_HEIGHT
@@ -1017,6 +998,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                                   , ALIGN_RIGHT | ALIGN_VCENTER
                                   , flags);
         }
+    #endif
         else if (nr == index++)
         {
             // fan
@@ -1028,6 +1010,53 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             }
             int_to_string(float(fanSpeed)*100/255 + 0.5f, buffer, PSTR("%"));
             LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING
+    #if TEMP_SENSOR_BED != 0
+                                  , 33
+    #else
+                                  , 42
+    #endif
+                                  , 24
+                                  , LCD_CHAR_HEIGHT
+                                  , buffer
+                                  , ALIGN_RIGHT | ALIGN_VCENTER
+                                  , flags);
+
+            // fan speed
+            static uint8_t fanAnimate = 0;
+            static uint8_t prevFanSpeed = 0;
+
+            // start animation
+            if (!fanAnimate && fanSpeed!=prevFanSpeed)
+                fanAnimate = 32;
+            if ((fanSpeed == 0) || (!fanAnimate) || (fanAnimate%4))
+            {
+    #if TEMP_SENSOR_BED != 0
+                lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING-11, 33, fan1Gfx);
+    #else
+                lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING-11, 42, fan1Gfx);
+    #endif
+            }
+            if (fanAnimate && !(led_glow%16))
+            {
+                --fanAnimate;
+            }
+            prevFanSpeed = fanSpeed;
+
+        }
+    #if TEMP_SENSOR_BED != 0
+        else if (nr == index++)
+        {
+            // temp buildplate
+            if (flags & (MENU_SELECTED | MENU_ACTIVE))
+            {
+                strcpy_P(buffer, PSTR("Buildplate "));
+                int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer+strlen(buffer), PSTR(DEGREE_SYMBOL"/")), PSTR(DEGREE_SYMBOL));
+                lcd_lib_draw_string_left(5, buffer);
+                flags |= MENU_STATUSLINE;
+            }
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING-12, 42, bedTempGfx);
+            int_to_string((flags & MENU_ACTIVE) ? target_temperature_bed : dsp_temperature_bed, buffer, PSTR(DEGREE_SYMBOL));
+            LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING
                                   , 42
                                   , 24
                                   , LCD_CHAR_HEIGHT
@@ -1035,6 +1064,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                                   , ALIGN_RIGHT | ALIGN_VCENTER
                                   , flags);
         }
+    #endif
     }
 }
 
@@ -1264,34 +1294,6 @@ void lcd_menu_printing_tg()
             float_to_string(st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS], buffer, 0);
             lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+12, 15, buffer);
 
-            // flow
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT-1, 24, flowGfx);
-            // temperature first extruder
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 33, thermometerGfx);
-
-        #if TEMP_SENSOR_BED != 0
-            // temperature build-plate
-            lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING-12, 33, bedTempGfx);
-        #endif
-
-            // speed
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 42, speedGfx);
-            // fan speed
-            static uint8_t fanAnimate = 0;
-            static uint8_t prevFanSpeed = 0;
-
-            // start animation
-            if (!fanAnimate && fanSpeed!=prevFanSpeed)
-                fanAnimate = 32;
-            if ((fanSpeed == 0) || (!fanAnimate) || (fanAnimate%4))
-            {
-                lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING-11, 42, fan1Gfx);
-            }
-            if (fanAnimate && !(led_glow%16))
-            {
-                --fanAnimate;
-            }
-            prevFanSpeed = fanSpeed;
         }
 
         uint8_t index = 0;
