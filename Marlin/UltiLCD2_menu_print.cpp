@@ -58,6 +58,8 @@ void abortPrint()
     card.pause = false;
     pauseRequested = false;
 
+    enquecommand_P(PSTR("M401"));
+
     if (primed)
     {
         // set up the end of print retraction
@@ -70,8 +72,6 @@ void abortPrint()
         // no longer primed
         primed = false;
     }
-
-    enquecommand_P(PSTR("M401"));
 
     if (current_position[Z_AXIS] > Z_MAX_POS - 30)
     {
