@@ -256,7 +256,7 @@ static void lcd_main_maintenance()
 
 static const menu_t & get_main_menuoption(uint8_t nr, menu_t &opt)
 {
-    menu_index = 0;
+    uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
         opt.setData(MENU_NORMAL, lcd_main_print);
@@ -274,7 +274,7 @@ static const menu_t & get_main_menuoption(uint8_t nr, menu_t &opt)
 
 void drawMainSubmenu(uint8_t nr, uint8_t &flags)
 {
-    menu_index = 0;
+    uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
         LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3

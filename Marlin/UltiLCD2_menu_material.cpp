@@ -303,11 +303,11 @@ static void lcd_menu_change_material_insert()
     lcd_lib_update_screen();
 }
 
-static char* lcd_menu_change_material_select_material_callback(uint8_t nr)
+static char* lcd_menu_change_material_select_material_callback(uint8_t nr, char *buffer)
 {
-    eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
-    LCD_CACHE_FILENAME(0)[8] = '\0';
-    return LCD_CACHE_FILENAME(0);
+    eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+    buffer[8] = '\0';
+    return buffer;
 }
 
 static void lcd_menu_change_material_select_material_details_callback(uint8_t nr)
@@ -520,22 +520,22 @@ static void lcd_menu_material_import()
     menu.replace_menu(menu_t(lcd_menu_material_import_done));
 }
 
-static char* lcd_material_select_callback(uint8_t nr)
+static char* lcd_material_select_callback(uint8_t nr, char *buffer)
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (nr == 0)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("< RETURN"));
+        strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == count + 1)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Customize"));
+        strcpy_P(buffer, PSTR("Customize"));
     else if (nr == count + 2)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Export to SD"));
+        strcpy_P(buffer, PSTR("Export to SD"));
     else if (nr == count + 3)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Import from SD"));
+        strcpy_P(buffer, PSTR("Import from SD"));
     else{
-        eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
-        LCD_CACHE_FILENAME(0)[8] = '\0';
+        eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
+        buffer[8] = '\0';
     }
-    return LCD_CACHE_FILENAME(0);
+    return buffer;
 }
 
 static void lcd_material_select_details_callback(uint8_t nr)
@@ -618,27 +618,27 @@ static void lcd_menu_material_selected()
     lcd_lib_update_screen();
 }
 
-static char* lcd_material_settings_callback(uint8_t nr)
+static char* lcd_material_settings_callback(uint8_t nr, char *buffer)
 {
     if (nr == 0)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("< RETURN"));
+        strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Temperature"));
+        strcpy_P(buffer, PSTR("Temperature"));
 #if TEMP_SENSOR_BED != 0
     else if (nr == 2)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Heated buildplate"));
+        strcpy_P(buffer, PSTR("Heated buildplate"));
 #endif
     else if (nr == 2 + BED_MENU_OFFSET)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Diameter"));
+        strcpy_P(buffer, PSTR("Diameter"));
     else if (nr == 3 + BED_MENU_OFFSET)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Fan"));
+        strcpy_P(buffer, PSTR("Fan"));
     else if (nr == 4 + BED_MENU_OFFSET)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Flow %"));
+        strcpy_P(buffer, PSTR("Flow %"));
     else if (nr == 5 + BED_MENU_OFFSET)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Store as preset"));
+        strcpy_P(buffer, PSTR("Store as preset"));
     else
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("???"));
-    return LCD_CACHE_FILENAME(0);
+        strcpy_P(buffer, PSTR("???"));
+    return buffer;
 }
 
 static void lcd_material_settings_details_callback(uint8_t nr)
@@ -695,18 +695,18 @@ static void lcd_menu_material_settings()
     }
 }
 
-static char* lcd_menu_material_settings_store_callback(uint8_t nr)
+static char* lcd_menu_material_settings_store_callback(uint8_t nr, char *buffer)
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (nr == 0)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("< RETURN"));
+        strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr > count)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("New preset"));
+        strcpy_P(buffer, PSTR("New preset"));
     else{
-        eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
-        LCD_CACHE_FILENAME(0)[8] = '\0';
+        eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
+        buffer[8] = '\0';
     }
-    return LCD_CACHE_FILENAME(0);
+    return buffer;
 }
 
 static void lcd_menu_material_settings_store_details_callback(uint8_t nr)

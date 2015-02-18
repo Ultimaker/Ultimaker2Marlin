@@ -183,13 +183,14 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
 
     uint8_t drawOffset = 10 - (uint16_t(viewPos) % 8);
     uint8_t itemOffset = uint16_t(viewPos) / 8;
+    char buffer[32];
     for(uint8_t n=0; n<6; n++)
     {
         uint8_t itemIdx = n + itemOffset;
         if (itemIdx >= entryCount)
             continue;
 
-        char* ptr = entryNameCallback(itemIdx);
+        char* ptr = entryNameCallback(itemIdx, buffer);
 		//ptr[10] = '\0';
 		ptr[20] = '\0';
         if (itemIdx == selIndex)

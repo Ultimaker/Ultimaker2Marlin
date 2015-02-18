@@ -86,7 +86,7 @@ struct menu_t {
     }
 };
 
-typedef char* (*entryNameCallback_t)(uint8_t nr);
+typedef char* (*entryNameCallback_t)(uint8_t nr, char *buffer);
 typedef void (*entryDetailsCallback_t)(uint8_t nr);
 typedef const menu_t & (*menuItemCallback_t) (uint8_t nr, menu_t &opt);
 typedef void (*menuDrawCallback_t) (uint8_t nr, uint8_t &flags);
@@ -146,9 +146,7 @@ private:
 
 };
 
-
 extern LCDMenu menu;
-extern uint8_t menu_index;
 
 FORCE_INLINE void lcd_change_to_previous_menu() { menu.return_to_previous(); }
 FORCE_INLINE void lcd_return_to_main_menu() { menu.return_to_main(); }

@@ -444,11 +444,11 @@ static void lcd_menu_first_run_material_select_1()
     lcd_lib_update_screen();
 }
 
-static char* lcd_material_select_callback(uint8_t nr)
+static char* lcd_material_select_callback(uint8_t nr, char *buffer)
 {
-    eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
-    LCD_CACHE_FILENAME(0)[8] = '\0';
-    return LCD_CACHE_FILENAME(0);
+    eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+    buffer[8] = '\0';
+    return buffer;
 }
 
 static void lcd_material_select_details_callback(uint8_t nr)

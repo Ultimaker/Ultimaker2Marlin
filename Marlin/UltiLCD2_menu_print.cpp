@@ -180,40 +180,44 @@ static void cardUpdir()
     card.updir();
 }
 
-static char* lcd_sd_menu_filename_callback(uint8_t nr)
+static char* lcd_sd_menu_filename_callback(uint8_t nr, char *buffer)
 {
     //This code uses the card.longFilename as buffer to store the filename, to save memory.
     if (nr == 0)
     {
         if (card.atRoot())
         {
-            strcpy_P(card.longFilename, PSTR("< RETURN"));
+            strcpy_P(buffer, PSTR("< RETURN"));
         }else{
-            strcpy_P(card.longFilename, PSTR("< BACK"));
+            strcpy_P(buffer, PSTR("< BACK"));
         }
     }else{
-        card.longFilename[0] = '\0';
-        for(uint8_t idx=0; idx<LCD_CACHE_COUNT; idx++)
+        buffer[0] = '\0';
+        for(uint8_t idx=0; idx<LCD_CACHE_COUNT; ++idx)
         {
             if (LCD_CACHE_ID(idx) == nr)
             {
-                strcpy(card.longFilename, LCD_CACHE_FILENAME(idx));
+                strcpy(buffer, LCD_CACHE_FILENAME(idx));
                 break;
             }
         }
-        if (card.longFilename[0] == '\0')
+        if (buffer[0] == '\0')
         {
             card.getfilename(nr - 1);
-            if (!card.longFilename[0])
-                strcpy(card.longFilename, card.filename);
+            if (card.longFilename[0])
+            {
+                strcpy(buffer, card.longFilename);
+            } else {
+                strcpy(buffer, card.filename);
+            }
             if (!card.filenameIsDir)
             {
-                if (strchr(card.longFilename, '.')) strrchr(card.longFilename, '.')[0] = '\0';
+                if (strchr(buffer, '.')) strrchr(buffer, '.')[0] = '\0';
             }
 
             uint8_t idx = nr % LCD_CACHE_COUNT;
             LCD_CACHE_ID(idx) = nr;
-            strcpy(LCD_CACHE_FILENAME(idx), card.longFilename);
+            strcpy(LCD_CACHE_FILENAME(idx), buffer);
             LCD_CACHE_TYPE(idx) = card.filenameIsDir ? 1 : 0;
             if (card.errorCode() && card.sdInserted)
             {
@@ -224,7 +228,7 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
             }
         }
     }
-    return card.longFilename;
+    return buffer;
 }
 
 void lcd_sd_menu_details_callback(uint8_t nr)
@@ -558,7 +562,7 @@ static void lcd_menu_print_printing()
     {
         lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_pause, lcd_select_first_submenu, PSTR("PAUSE"));
         uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
-        char* c;
+        char buffer[32];
         switch(printing_state)
         {
         default:
@@ -567,17 +571,13 @@ static void lcd_menu_print_printing()
             break;
         case PRINT_STATE_HEATING:
             lcd_lib_draw_string_centerP(20, PSTR("Heating"));
-            c = int_to_string(dsp_temperature[0], LCD_CACHE_FILENAME(1), PSTR("C"));
-            *c++ = '/';
-            c = int_to_string(target_temperature[0], c, PSTR("C"));
-            lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(1));
+            int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer, PSTR("C/")), PSTR("C"));
+            lcd_lib_draw_string_center(30, buffer);
             break;
         case PRINT_STATE_HEATING_BED:
             lcd_lib_draw_string_centerP(20, PSTR("Heating buildplate"));
-            c = int_to_string(dsp_temperature_bed, LCD_CACHE_FILENAME(1), PSTR("C"));
-            *c++ = '/';
-            c = int_to_string(target_temperature_bed, c, PSTR("C"));
-            lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(1));
+            int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer, PSTR("C/")), PSTR("C"));
+            lcd_lib_draw_string_center(30, buffer);
             break;
         }
         float printTimeMs = (millis() - starttime);
@@ -608,9 +608,9 @@ static void lcd_menu_print_printing()
                 timeLeftSec = 1;
             else
                 timeLeftSec = totalTimeSec - printTimeSec;
-            int_to_time_string(timeLeftSec, LCD_CACHE_FILENAME(1));
+            int_to_time_string(timeLeftSec, buffer);
             lcd_lib_draw_stringP(5, 10, PSTR("Time left"));
-            lcd_lib_draw_string(65, 10, LCD_CACHE_FILENAME(1));
+            lcd_lib_draw_string(65, 10, buffer);
         }
 
         lcd_progressbar(progress);
@@ -716,86 +716,80 @@ static void lcd_menu_print_ready_cooled_down()
     lcd_lib_update_screen();
 }
 
-static char* tune_item_callback(uint8_t nr)
+static char* tune_item_callback(uint8_t nr, char *buffer)
 {
     uint8_t index = 0;
     if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("< RETURN"));
+        strcpy_P(buffer, PSTR("< RETURN"));
 //    else if (index++ == nr)
 //        strcpy_P(c, PSTR("Abort"));
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Speed"));
+        strcpy_P(buffer, PSTR("Speed"));
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Temperature"));
+        strcpy_P(buffer, PSTR("Temperature"));
 #if EXTRUDERS > 1
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Temperature 2"));
+        strcpy_P(buffer, PSTR("Temperature 2"));
 #endif
 #if TEMP_SENSOR_BED != 0
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Buildplate temp."));
+        strcpy_P(buffer, PSTR("Buildplate temp."));
 #endif
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Fan speed"));
+        strcpy_P(buffer, PSTR("Fan speed"));
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Material flow"));
+        strcpy_P(buffer, PSTR("Material flow"));
 #if EXTRUDERS > 1
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Material flow 2"));
+        strcpy_P(buffer, PSTR("Material flow 2"));
 #endif
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Retraction"));
+        strcpy_P(buffer, PSTR("Retraction"));
     else if (index++ == nr)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("LED Brightness"));
+        strcpy_P(buffer, PSTR("LED Brightness"));
     else
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("???"));
-    return LCD_CACHE_FILENAME(0);
+        strcpy_P(buffer, PSTR("???"));
+    return buffer;
 }
 
 static void tune_item_details_callback(uint8_t nr)
 {
-    char* c = LCD_CACHE_FILENAME(0);
+    char buffer[32];
     if (nr == 1)
-        c = int_to_string(feedmultiply, c, PSTR("%"));
+        int_to_string(feedmultiply, buffer, PSTR("%"));
     else if (nr == 2)
     {
-        c = int_to_string(dsp_temperature[0], c, PSTR("C"));
-        *c++ = '/';
-        c = int_to_string(target_temperature[0], c, PSTR("C"));
+        int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer, PSTR("C/")), PSTR("C"));
     }
 #if EXTRUDERS > 1
     else if (nr == 3)
     {
-        c = int_to_string(dsp_temperature[1], c, PSTR("C"));
-        *c++ = '/';
-        c = int_to_string(target_temperature[1], c, PSTR("C"));
+        int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], buffer, PSTR("C/")), PSTR("C"));
     }
 #endif
 #if TEMP_SENSOR_BED != 0
     else if (nr == 2 + EXTRUDERS)
     {
-        c = int_to_string(dsp_temperature_bed, c, PSTR("C"));
-        *c++ = '/';
-        c = int_to_string(target_temperature_bed, c, PSTR("C"));
+        int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer, PSTR("C/")), PSTR("C"));
     }
 #endif
     else if (nr == 2 + BED_MENU_OFFSET + EXTRUDERS)
-        c = int_to_string(int(fanSpeed) * 100 / 255, c, PSTR("%"));
+        int_to_string(int(fanSpeed) * 100 / 255, buffer, PSTR("%"));
     else if (nr == 3 + BED_MENU_OFFSET + EXTRUDERS)
-        c = int_to_string(extrudemultiply[0], c, PSTR("%"));
+        int_to_string(extrudemultiply[0], buffer, PSTR("%"));
 #if EXTRUDERS > 1
     else if (nr == 4 + BED_MENU_OFFSET + EXTRUDERS)
-        c = int_to_string(extrudemultiply[1], c, PSTR("%"));
+        int_to_string(extrudemultiply[1], buffer, PSTR("%"));
 #endif
     else if (nr == 5 + BED_MENU_OFFSET + EXTRUDERS)
     {
-        c = int_to_string(led_brightness_level, c, PSTR("%"));
+        int_to_string(led_brightness_level, buffer, PSTR("%"));
         if (led_mode == LED_MODE_ALWAYS_ON ||  led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
             analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
     }
     else
         return;
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, LCD_CACHE_FILENAME(0));
+    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
 }
 
 void lcd_menu_print_tune_heatup_nozzle0()
@@ -888,36 +882,37 @@ void lcd_menu_print_tune()
     }
 }
 
-static char* lcd_retraction_item(uint8_t nr)
+static char* lcd_retraction_item(uint8_t nr, char *buffer)
 {
     if (nr == 0)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("< RETURN"));
+        strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Retract length"));
+        strcpy_P(buffer, PSTR("Retract length"));
     else if (nr == 2)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Retract speed"));
+        strcpy_P(buffer, PSTR("Retract speed"));
 #if EXTRUDERS > 1
     else if (nr == 3)
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("Extruder change len"));
+        strcpy_P(buffer, PSTR("Extruder change len"));
 #endif
     else
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("???"));
-    return LCD_CACHE_FILENAME(0);
+        strcpy_P(buffer, PSTR("???"));
+    return buffer;
 }
 
 static void lcd_retraction_details(uint8_t nr)
 {
-    if (nr == 0)
-        return;
-    else if(nr == 1)
-        float_to_string(retract_length, LCD_CACHE_FILENAME(0), PSTR("mm"));
+    char buffer[32];
+    if(nr == 1)
+        float_to_string(retract_length, buffer, PSTR("mm"));
     else if(nr == 2)
-        int_to_string(retract_feedrate / 60 + 0.5, LCD_CACHE_FILENAME(0), PSTR("mm/sec"));
+        int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
 #if EXTRUDERS > 1
     else if(nr == 3)
-        int_to_string(extruder_swap_retract_length, LCD_CACHE_FILENAME(0), PSTR("mm"));
+        int_to_string(extruder_swap_retract_length, buffer, PSTR("mm"));
 #endif
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, LCD_CACHE_FILENAME(0));
+    else
+        return;
+    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
 }
 
 static void lcd_menu_print_tune_retraction()
@@ -1000,7 +995,7 @@ static void lcd_show_pause_menu()
 
 static const menu_t & get_pause_menuoption(uint8_t nr, menu_t &opt)
 {
-    menu_index = 0;
+    uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
         opt.setData(MENU_NORMAL, lcd_show_pause_menu);
@@ -1106,7 +1101,7 @@ void lcd_menu_print_pause()
 
 static const menu_t & get_resume_menuoption(uint8_t nr, menu_t &opt)
 {
-    menu_index = 0;
+    uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
         opt.setData(MENU_NORMAL, lcd_print_resume);
