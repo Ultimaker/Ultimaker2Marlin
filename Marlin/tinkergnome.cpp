@@ -147,6 +147,10 @@ const uint8_t backGfx[] PROGMEM = {
     0x10, 0x38, 0x7C, 0x10, 0x10, 0x10, 0x1E
 };
 
+const uint8_t menuGfx[] PROGMEM = {
+    5, 8, //size
+    0x2A, 0x2A, 0x2A, 0x2A, 0x2A
+};
 
 static void lcd_menu_print_page_inc() { lcd_lib_beep(); lcd_basic_screen(); ++printing_page; }
 static void lcd_menu_print_page_dec() { lcd_lib_beep(); lcd_basic_screen(); --printing_page; }
@@ -2094,6 +2098,148 @@ void manage_encoder_position(int8_t encoder_pos_interrupt)
     }
 }
 
+static void lcd_extrude_homehead()
+{
+    lcd_lib_beep();
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    disable_x();
+    disable_y();
+}
+
+static void lcd_extrude_headtofront()
+{
+    lcd_lib_beep();
+    enquecommand_P(PSTR("G1 F12000 X110 Y10"));
+    disable_x();
+    disable_y();
+}
+
+static void lcd_extrude_disablexy()
+{
+    lcd_lib_beep();
+    disable_x();
+    disable_y();
+}
+
+static const menu_t & get_extrude_tune_menuoption(uint8_t nr, menu_t &opt)
+{
+    uint8_t menu_index = 0;
+    if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_change_to_previous_menu);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_SCROLL_ITEM, lcd_extrude_homehead);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_SCROLL_ITEM, lcd_extrude_headtofront);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_SCROLL_ITEM, lcd_extrude_disablexy);
+    }
+    return opt;
+}
+
+static void drawExtrudeTuneSubmenu (uint8_t nr, uint8_t &flags)
+{
+    uint8_t index(0);
+    char buffer[32];
+    if (nr == index++)
+    {
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_MARGIN_LEFT
+                           , BOTTOM_MENU_YPOS
+                           , 52
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Click to return"));
+            flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT
+                           , 20
+                           , LCD_GFX_WIDTH-LCD_CHAR_MARGIN_LEFT-LCD_CHAR_MARGIN_RIGHT
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_stringP(2*LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, 20, PSTR("Home head"));
+            lcd_lib_clear_gfx(2*LCD_CHAR_MARGIN_LEFT, 20, homeGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, 20, PSTR("Home head"));
+            lcd_lib_draw_gfx(2*LCD_CHAR_MARGIN_LEFT, 20, homeGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT
+                           , 30
+                           , LCD_GFX_WIDTH-LCD_CHAR_MARGIN_LEFT-LCD_CHAR_MARGIN_RIGHT
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_stringP(2*LCD_CHAR_MARGIN_LEFT, 30, PSTR("Move head to front"));
+        }
+        else
+        {
+            lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT, 30, PSTR("Move head to front"));
+        }
+    }
+    else if (nr == index++)
+    {
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT
+                           , 40
+                           , LCD_GFX_WIDTH-LCD_CHAR_MARGIN_LEFT-LCD_CHAR_MARGIN_RIGHT
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_stringP(2*LCD_CHAR_MARGIN_LEFT, 40, PSTR("Disable XY-steppers"));
+        }
+        else
+        {
+            lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT, 40, PSTR("Disable XY-steppers"));
+        }
+    }
+}
+
+static void lcd_menu_tune_extrude()
+{
+    lcd_basic_screen();
+    lcd_lib_draw_hline(3, 124, 13);
+
+    menu.process_submenu(get_extrude_tune_menuoption, 4);
+
+    uint8_t flags = 0;
+    for (uint8_t index=0; index<4; ++index)
+    {
+        menu.drawSubMenu(drawExtrudeTuneSubmenu, index, flags);
+    }
+    if (!(flags & MENU_STATUSLINE))
+    {
+        lcd_lib_draw_string_leftP(5, PSTR("Select option"));
+    }
+
+    lcd_lib_update_screen();
+
+}
+
 static void lcd_extrude_return()
 {
     set_extrude_min_temp(EXTRUDE_MINTEMP);
@@ -2121,6 +2267,14 @@ static void lcd_extrude_move()
     }
 }
 
+static void lcd_extrude_quit_move()
+{
+    // disable E-steppers
+    disable_e0();
+    disable_e1();
+    disable_e2();
+}
+
 static void lcd_extrude_init_pull()
 {
     //Set E motor power lower so the motor will skip instead of grind.
@@ -2139,6 +2293,10 @@ static void lcd_extrude_quit_pull()
     retract_acceleration = old_retract_acceleration;
     //Set E motor power to default.
     digipot_current(2, motor_current_setting[2]);
+    // disable E-steppers
+    disable_e0();
+    disable_e1();
+    disable_e2();
 }
 
 static void lcd_extrude_pull()
@@ -2156,10 +2314,19 @@ static void lcd_extrude_pull()
     }
 }
 
+static void lcd_extrude_tune()
+{
+    menu.add_menu(lcd_menu_tune_extrude);
+}
+
 static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
 {
     uint8_t menu_index = 0;
     if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_extrude_tune);
+    }
+    else if (nr == menu_index++)
     {
         opt.setData(MENU_NORMAL, lcd_extrude_return);
     }
@@ -2177,7 +2344,7 @@ static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_INPLACE_EDIT, lcd_extrude_move, 2);
+        opt.setData(MENU_INPLACE_EDIT, NULL, lcd_extrude_move, lcd_extrude_quit_move, 2);
     }
     return opt;
 }
@@ -2188,18 +2355,43 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
     char buffer[32];
     if (nr == index++)
     {
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT + 1
+                           , BOTTOM_MENU_YPOS
+                           , 52
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("More options"));
+            flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("TUNE"));
+            lcd_lib_clear_gfx(2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, menuGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("TUNE"));
+            lcd_lib_draw_gfx(2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, menuGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_MARGIN_LEFT
+                           , BOTTOM_MENU_YPOS
+                           , 52
+                           , LCD_CHAR_HEIGHT
+                           , flags);
         if (flags & MENU_SELECTED)
         {
             lcd_lib_draw_string_leftP(5, PSTR("Click to return"));
             flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
         }
-        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+6*LCD_CHAR_SPACING
-                                , BOTTOM_MENU_YPOS
-                                , 8*LCD_CHAR_SPACING
-                                , LCD_CHAR_HEIGHT
-                                , PSTR("RETURN")
-                                , ALIGN_CENTER
-                                , flags);
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
     }
     else if (nr == index++)
     {
@@ -2297,10 +2489,10 @@ void lcd_menu_expert_extrude()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    menu.process_submenu(get_extrude_menuoption, 5);
+    menu.process_submenu(get_extrude_menuoption, 6);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<5; ++index)
+    for (uint8_t index=0; index<6; ++index)
     {
         menu.drawSubMenu(drawExtrudeSubmenu, index, flags);
     }

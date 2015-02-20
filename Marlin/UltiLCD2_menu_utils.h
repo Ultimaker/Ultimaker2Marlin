@@ -7,6 +7,7 @@
 // menu item flags
 #define MENU_NORMAL 0
 #define MENU_INPLACE_EDIT 1
+#define MENU_SCROLL_ITEM 2
 #define MENU_SELECTED 4
 #define MENU_ACTIVE   8
 #define MENU_STATUSLINE   16
@@ -90,6 +91,7 @@ typedef char* (*entryNameCallback_t)(uint8_t nr, char *buffer);
 typedef void (*entryDetailsCallback_t)(uint8_t nr);
 typedef const menu_t & (*menuItemCallback_t) (uint8_t nr, menu_t &opt);
 typedef void (*menuDrawCallback_t) (uint8_t nr, uint8_t &flags);
+typedef void (*scrollDrawCallback_t) (uint8_t nr, uint8_t offsetY, uint8_t &flags);
 
 class LCDMenu
 {
@@ -130,7 +132,6 @@ public:
     static void drawMenuBox(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t flags);
     static void drawMenuString(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
     static void drawMenuString_P(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
-
     static void reset_selection();
 
 private:

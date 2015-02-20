@@ -286,8 +286,9 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
                         {
                             menuItem.processMenuFunc();
                         }
-                        selectedSubmenu = -1;
                         activeSubmenu = menu_t();
+                        if (menuItem.flags & MENU_NORMAL)
+                            selectedSubmenu = -1;
                     }
                 }else {
                     selectedSubmenu = index;
