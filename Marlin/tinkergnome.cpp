@@ -2102,23 +2102,20 @@ static void lcd_extrude_homehead()
 {
     lcd_lib_beep();
     enquecommand_P(PSTR("G28 X0 Y0"));
-    disable_x();
-    disable_y();
+    enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
 static void lcd_extrude_headtofront()
 {
     lcd_lib_beep();
     enquecommand_P(PSTR("G1 F12000 X110 Y10"));
-    disable_x();
-    disable_y();
+    enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
 static void lcd_extrude_disablexy()
 {
     lcd_lib_beep();
-    disable_x();
-    disable_y();
+    enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
 static const menu_t & get_extrude_tune_menuoption(uint8_t nr, menu_t &opt)
@@ -2243,7 +2240,7 @@ static void lcd_menu_tune_extrude()
 static void lcd_extrude_return()
 {
     set_extrude_min_temp(EXTRUDE_MINTEMP);
-    target_temperature[active_extruder] = 0;
+    if (!card.sdprinting) target_temperature[active_extruder] = 0;
     menu.return_to_previous();
 }
 
@@ -2270,9 +2267,7 @@ static void lcd_extrude_move()
 static void lcd_extrude_quit_move()
 {
     // disable E-steppers
-    disable_e0();
-    disable_e1();
-    disable_e2();
+    enquecommand_P(PSTR("M84 E0"));
 }
 
 static void lcd_extrude_init_pull()
@@ -2322,6 +2317,8 @@ static void lcd_extrude_tune()
 static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
 {
     uint8_t menu_index = 0;
+    if (card.sdprinting) ++nr;
+
     if (nr == menu_index++)
     {
         opt.setData(MENU_NORMAL, lcd_extrude_tune);
@@ -2353,6 +2350,8 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
     char buffer[32];
+    if (card.sdprinting) ++nr;
+
     if (nr == index++)
     {
         LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT + 1
@@ -2489,10 +2488,12 @@ void lcd_menu_expert_extrude()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    menu.process_submenu(get_extrude_menuoption, 6);
+    uint8_t len = card.sdprinting ? 5 : 6;
+
+    menu.process_submenu(get_extrude_menuoption, len);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<6; ++index)
+    for (uint8_t index=0; index<len; ++index)
     {
         menu.drawSubMenu(drawExtrudeSubmenu, index, flags);
     }

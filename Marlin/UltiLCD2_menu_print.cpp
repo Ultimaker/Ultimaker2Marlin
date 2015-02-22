@@ -648,6 +648,10 @@ static void lcd_menu_print_classic_warning()
 
 void lcd_menu_print_abort()
 {
+    if (pauseRequested)
+    {
+        lcd_print_pause();
+    }
     LED_GLOW();
     lcd_question_screen(lcd_menu_print_ready, userAbortPrint, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
 
@@ -747,6 +751,8 @@ static char* tune_item_callback(uint8_t nr, char *buffer)
         strcpy_P(buffer, PSTR("Retraction"));
     else if (index++ == nr)
         strcpy_P(buffer, PSTR("LED Brightness"));
+    else if ((ui_mode & UI_MODE_EXPERT) && card.sdprinting && card.pause && (index++ == nr))
+        strcpy_P(buffer, PSTR("Move material"));
     else
         strcpy_P(buffer, PSTR("???"));
     return buffer;
@@ -804,7 +810,7 @@ void lcd_menu_print_tune_heatup_nozzle0()
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
-        lcd_change_to_previous_menu();
+        menu.return_to_previous();
 
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
@@ -845,7 +851,11 @@ void lcd_menu_print_tune_heatup_nozzle1()
 
 void lcd_menu_print_tune()
 {
-    lcd_scroll_menu(PSTR("TUNE"), 5 + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
+    if (pauseRequested)
+    {
+        lcd_print_pause();
+    }
+    lcd_scroll_menu(PSTR("TUNE"), (((ui_mode & UI_MODE_EXPERT) && card.sdprinting && card.pause) ? 6 : 5) + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         uint8_t index(0);
@@ -879,6 +889,8 @@ void lcd_menu_print_tune()
             menu.add_menu(menu_t(lcd_menu_print_tune_retraction, 0));
         else if (IS_SELECTED_SCROLL(index++))
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
+        else if ((ui_mode & UI_MODE_EXPERT) && card.sdprinting && card.pause && IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_expert_extrude, 0)); // Move material
     }
 }
 
