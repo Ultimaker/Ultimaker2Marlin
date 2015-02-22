@@ -82,6 +82,17 @@ static void i2c_led_write(uint8_t addr, uint8_t data)
     i2c_end();
 }
 
+// set LCD contrast
+void lcd_lib_contrast(uint8_t data)
+{
+    i2c_start();
+    i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+    i2c_send_raw(I2C_LCD_SEND_COMMAND);
+    i2c_send_raw(LCD_COMMAND_CONTRAST);
+    i2c_send_raw(data);
+    i2c_end();
+}
+
 void lcd_lib_init()
 {
     SET_OUTPUT(LCD_RESET_PIN);
@@ -196,30 +207,67 @@ ISR(TWI_vect)
 
 void lcd_lib_update_screen()
 {
-    i2c_led_write(2, led_r);//PWM0
-    i2c_led_write(3, led_g);//PWM1
-    i2c_led_write(4, led_b);//PWM2
-    i2c_start();
-    i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
-    //Set the drawin position to 0,0
-    i2c_send_raw(I2C_LCD_SEND_COMMAND);
-    i2c_send_raw(0x00 | (0 & 0x0F));
-    i2c_send_raw(0x10 | (0 >> 4));
-    i2c_send_raw(0xB0 | 0);
+    static uint8_t screenOff = 0;
 
-    i2c_restart();
-    i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
-    i2c_send_raw(I2C_LCD_SEND_DATA);
-#if USE_TWI_INTERRUPT
-    lcd_update_pos = 0;
-    TWCR |= _BV(TWIE);
-#else
-    for(uint16_t n=0;n<LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8;n++)
+    if (lcd_timeout > 0)
     {
-        i2c_send_raw(lcd_buffer[n]);
+        if ((millis() - last_user_interaction) > (lcd_timeout*MILLISECONDS_PER_MINUTE))
+        {
+            if (!screenOff)
+            {
+                screenOff ^= 1;
+                i2c_start();
+                i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+                i2c_send_raw(I2C_LCD_SEND_COMMAND);
+                i2c_send_raw(LCD_COMMAND_DISPLAY_OFF);
+                i2c_end();
+            }
+        }
+        else if (screenOff)
+        {
+            screenOff ^= 1;
+            i2c_start();
+            i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+            i2c_send_raw(I2C_LCD_SEND_COMMAND);
+            i2c_send_raw(LCD_COMMAND_DISPLAY_ON);
+            i2c_end();
+        }
     }
-    i2c_end();
-#endif
+
+    if (screenOff)
+    {
+        // screen saver is active - switch off the encoder led
+        i2c_led_write(2, 0);//PWM0
+        i2c_led_write(3, 0);//PWM1
+        i2c_led_write(4, 0);//PWM2
+    }
+    else
+    {
+        i2c_led_write(2, led_r);//PWM0
+        i2c_led_write(3, led_g);//PWM1
+        i2c_led_write(4, led_b);//PWM2
+        i2c_start();
+        i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+        //Set the drawin position to 0,0
+        i2c_send_raw(I2C_LCD_SEND_COMMAND);
+        i2c_send_raw(0x00 | (0 & 0x0F));
+        i2c_send_raw(0x10 | (0 >> 4));
+        i2c_send_raw(0xB0 | 0);
+
+        i2c_restart();
+        i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+        i2c_send_raw(I2C_LCD_SEND_DATA);
+    #if USE_TWI_INTERRUPT
+        lcd_update_pos = 0;
+        TWCR |= _BV(TWIE);
+    #else
+        for(uint16_t n=0;n<LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8;n++)
+        {
+            i2c_send_raw(lcd_buffer[n]);
+        }
+        i2c_end();
+    #endif
+    }
 }
 
 bool lcd_lib_update_ready()

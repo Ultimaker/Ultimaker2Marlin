@@ -36,9 +36,21 @@
 
 #define MOVE_DELAY 500  // 500ms
 
+#define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
+#define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
+#define GET_LED_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LED_TIMEOUT_OFFSET))
+#define SET_LED_TIMEOUT(n) do { eeprom_write_word((uint16_t*)EEPROM_LED_TIMEOUT_OFFSET, n); } while(0)
+#define GET_LCD_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET))
+#define SET_LCD_TIMEOUT(n) do { eeprom_write_word((uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET, n); } while(0)
+#define GET_LCD_CONTRAST() (eeprom_read_byte((const uint8_t*)EEPROM_LCD_CONTRAST_OFFSET))
+#define SET_LCD_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_LCD_CONTRAST_OFFSET, n); } while(0)
+
 uint8_t ui_mode = UI_MODE_STANDARD;
-uint16_t led_timeout = LED_DIM_TIME;
 float recover_height = 0.0f;
+uint16_t lcd_timeout = LED_DIM_TIME;
+uint8_t lcd_contrast = 0xDF;
+
+static uint16_t led_timeout = LED_DIM_TIME;
 
 // these are used to maintain a simple low-pass filter on the speeds - thanks norpchen
 static float e_smoothed_speed[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0.0, 0.0, 0.0);
@@ -183,6 +195,12 @@ void tinkergnome_init()
         ui_mode = UI_MODE_STANDARD;
 
     led_timeout = constrain(GET_LED_TIMEOUT(), 0, LED_DIM_MAXTIME);
+    lcd_timeout = constrain(GET_LCD_TIMEOUT(), 0, LED_DIM_MAXTIME);
+
+    lcd_contrast = constrain(GET_LCD_CONTRAST(), 0, 0xFF);
+    if (lcd_contrast == 0)
+        lcd_contrast = 0xDF;
+    lcd_lib_contrast(lcd_contrast);
 }
 
 void menu_printing_init()
@@ -453,14 +471,16 @@ static void lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max)
     }
 }
 
-static void lcd_tune_value(float &value, float _min, float _max, float _step)
+static bool lcd_tune_value(float &value, float _min, float _max, float _step)
 {
     if (lcd_lib_encoder_pos != 0)
     {
         lcd_lib_tick();
         value = constrain(round((value + (lcd_lib_encoder_pos * _step))/_step)*_step, _min, _max);
         lcd_lib_encoder_pos = 0;
+        return true;
     }
+    return false;
 }
 
 static void lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max)
@@ -1359,9 +1379,19 @@ static char* lcd_expert_item(uint8_t nr, char *buffer)
     else if (nr == 3)
     {
         buffer[0] = ' ';
-        strcpy_P(buffer+1, PSTR("Move axis"));
+        strcpy_P(buffer+1, PSTR("Screen timeout"));
     }
     else if (nr == 4)
+    {
+        buffer[0] = ' ';
+        strcpy_P(buffer+1, PSTR("Screen contrast"));
+    }
+    else if (nr == 5)
+    {
+        buffer[0] = ' ';
+        strcpy_P(buffer+1, PSTR("Move axis"));
+    }
+    else if (nr == 6)
     {
         buffer[0] = ' ';
         strcpy_P(buffer+1, PSTR("Disable steppers"));
@@ -1428,6 +1458,21 @@ static void lcd_expert_details(uint8_t nr)
         {
             strcpy_P(buffer, PSTR("off"));
         }
+    }
+    else if(nr == 3)
+    {
+        if (lcd_timeout > 0)
+        {
+            int_to_string(lcd_timeout, buffer, PSTR(" min"));
+        }
+        else
+        {
+            strcpy_P(buffer, PSTR("off"));
+        }
+    }
+    else if(nr == 4)
+    {
+        int_to_string(int(lcd_contrast)*100/255, buffer, PSTR("%"));
     }
     else
     {
@@ -1496,9 +1541,64 @@ static void lcd_menu_led_timeout()
     lcd_lib_update_screen();
 }
 
+static void lcd_menu_screen_timeout()
+{
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
+    {
+        lcd_timeout = constrain(int(lcd_timeout + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM)), 0, LED_DIM_MAXTIME);
+        lcd_lib_encoder_pos = 0;
+    }
+    if (lcd_lib_button_pressed)
+    {
+        SET_LCD_TIMEOUT(lcd_timeout);
+        menu.return_to_previous();
+    }
+
+    lcd_lib_clear();
+    lcd_lib_draw_string_centerP(20, PSTR("Screen saver timeout"));
+    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
+
+    char buffer[32];
+    if (lcd_timeout > 0)
+    {
+        int_to_string(int(lcd_timeout), buffer, PSTR(" min"));
+    }
+    else
+    {
+        strcpy_P(buffer, PSTR("off"));
+    }
+    lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_screen_contrast()
+{
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
+    {
+        lcd_contrast = constrain(int(lcd_contrast + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM)), 0x01, 0xFF);
+        lcd_lib_encoder_pos = 0;
+        lcd_lib_contrast(lcd_contrast);
+    }
+    if (lcd_lib_button_pressed)
+    {
+        SET_LCD_CONTRAST(lcd_contrast);
+        menu.return_to_previous();
+    }
+
+    lcd_lib_clear();
+    lcd_lib_draw_string_centerP(20, PSTR("Screen contrast"));
+    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
+
+    char buffer[32];
+    int_to_string(int(lcd_contrast)*100/255, buffer, PSTR("%"));
+
+    lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_update_screen();
+}
+
 void lcd_menu_maintenance_expert()
 {
-    lcd_scroll_menu(PSTR("Expert settings"), 5, lcd_expert_item, lcd_expert_details);
+    lcd_scroll_menu(PSTR("Expert settings"), 7, lcd_expert_item, lcd_expert_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(1))
@@ -1507,13 +1607,21 @@ void lcd_menu_maintenance_expert()
         }
         else if (IS_SELECTED_SCROLL(2))
         {
-            menu.add_menu(menu_t(lcd_menu_led_timeout, ENCODER_NO_SELECTION, 4));
+            menu.add_menu(menu_t(lcd_menu_led_timeout, 0, 4));
         }
         else if (IS_SELECTED_SCROLL(3))
         {
-            menu.add_menu(menu_t(lcd_menu_move_axes, MAIN_MENU_ITEM_POS(0)));
+            menu.add_menu(menu_t(lcd_menu_screen_timeout, 0, 4));
         }
         else if (IS_SELECTED_SCROLL(4))
+        {
+            menu.add_menu(menu_t(lcd_menu_screen_contrast, 0, 4));
+        }
+        else if (IS_SELECTED_SCROLL(5))
+        {
+            menu.add_menu(menu_t(lcd_menu_move_axes, MAIN_MENU_ITEM_POS(0)));
+        }
+        else if (IS_SELECTED_SCROLL(6))
         {
             // disable steppers
             enquecommand_P(PSTR("M84"));
@@ -1817,18 +1925,23 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
     else if (nr == index++)
     {
         // RETURN
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_MARGIN_LEFT
+                           , BOTTOM_MENU_YPOS
+                           , 52
+                           , LCD_CHAR_HEIGHT
+                           , flags);
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_draw_string_leftP(5, PSTR("Return"));
+            lcd_lib_draw_string_leftP(5, PSTR("Click to return"));
             flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
         }
-        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+3
-                                , BOTTOM_MENU_YPOS
-                                , 52
-                                , LCD_CHAR_HEIGHT
-                                , PSTR("RETURN")
-                                , ALIGN_CENTER
-                                , flags);
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
     }
     else if (nr == index++)
     {
@@ -2143,7 +2256,6 @@ static const menu_t & get_extrude_tune_menuoption(uint8_t nr, menu_t &opt)
 static void drawExtrudeTuneSubmenu (uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
-    char buffer[32];
     if (nr == index++)
     {
         LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_MARGIN_LEFT
@@ -2252,15 +2364,25 @@ static void lcd_extrude_temperature()
 static void lcd_extrude_reset_pos()
 {
     lcd_lib_beep();
-    enquecommand_P(PSTR("G92 E0"));
+    plan_set_e_position(0);
+    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    plan_set_e_position(target_position[E_AXIS]);
+}
+
+static void lcd_extrude_init_move()
+{
+    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    plan_set_e_position(target_position[E_AXIS]);
 }
 
 static void lcd_extrude_move()
 {
     if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 3)
     {
-        lcd_tune_value(current_position[E_AXIS], -10000.0, +10000.0, 0.1);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 10, active_extruder);
+        if (lcd_tune_value(target_position[E_AXIS], -10000.0, +10000.0, 0.1))
+        {
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target_position[E_AXIS], 10, active_extruder);
+        }
     }
 }
 
@@ -2272,6 +2394,8 @@ static void lcd_extrude_quit_move()
 
 static void lcd_extrude_init_pull()
 {
+    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    plan_set_e_position(target_position[E_AXIS]);
     //Set E motor power lower so the motor will skip instead of grind.
     digipot_current(2, motor_current_setting[2]*2/3);
     //increase max. feedrate and reduce acceleration
@@ -2289,9 +2413,9 @@ static void lcd_extrude_quit_pull()
     //Set E motor power to default.
     digipot_current(2, motor_current_setting[2]);
     // disable E-steppers
-    disable_e0();
-    disable_e1();
-    disable_e2();
+    enquecommand_P(PSTR("M84 E0"));
+    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    plan_set_e_position(target_position[E_AXIS]);
 }
 
 static void lcd_extrude_pull()
@@ -2300,8 +2424,8 @@ static void lcd_extrude_pull()
     {
         if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 1)
         {
-            current_position[E_AXIS] -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_REVERSAL_SPEED*2/3, active_extruder);
+            target_position[E_AXIS] -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target_position[E_AXIS], FILAMENT_REVERSAL_SPEED*2/3, active_extruder);
         }
     } else {
         quickStop();
@@ -2341,7 +2465,7 @@ static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_INPLACE_EDIT, NULL, lcd_extrude_move, lcd_extrude_quit_move, 2);
+        opt.setData(MENU_INPLACE_EDIT, lcd_extrude_init_move, lcd_extrude_move, lcd_extrude_quit_move, 2);
     }
     return opt;
 }
@@ -2481,6 +2605,11 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
                           , ALIGN_RIGHT | ALIGN_VCENTER
                           , flags);
     }
+}
+
+void lcd_extrude_quit_menu()
+{
+    plan_set_e_position(current_position[E_AXIS]);
 }
 
 void lcd_menu_expert_extrude()

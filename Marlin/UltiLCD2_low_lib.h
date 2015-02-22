@@ -36,6 +36,7 @@ void lcd_lib_tick();
 void lcd_lib_buttons_update();
 void lcd_lib_buttons_update_interrupt();
 void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b);
+void lcd_lib_contrast(uint8_t data);
 
 extern int16_t lcd_lib_encoder_pos;
 extern bool lcd_lib_button_pressed;
@@ -69,5 +70,8 @@ FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t x, uint8_t y, const char* p
 #define SQUARED_SYMBOL "\x1E"
 #define CUBED_SYMBOL "\x1D"
 #define PER_SECOND_SYMBOL "/s"
+
+#define MILLISECONDS_PER_SECOND 1000UL
+#define MILLISECONDS_PER_MINUTE (MILLISECONDS_PER_SECOND*60UL)
 
 #endif//ULTI_LCD2_LOW_LIB_H

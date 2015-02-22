@@ -404,6 +404,9 @@ static void doFactoryReset()
     eeprom_write_byte((uint8_t*)102, 0);
     eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
     eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, 0);
+    eeprom_write_word((uint16_t*)EEPROM_LED_TIMEOUT_OFFSET, 0);
+    eeprom_write_word((uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET, 0);
+    eeprom_write_byte((uint8_t*)EEPROM_LCD_CONTRAST_OFFSET, 0xDF);
     eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
     doMachineRestart();
 }
