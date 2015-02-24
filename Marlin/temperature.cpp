@@ -417,7 +417,7 @@ void manage_heater()
   updateTemperaturesFromRawValues();
 
   #ifdef HEATER_0_USES_MAX6675
-  if (current_temperature[0] > 1023 || current_temperature[0] > HEATER_0_MAXTEMP)
+  if (current_temperature[0] > 1023 || current_temperature[0] > maxttemp[0])
   {
 	  max_temp_error(0);
   }
@@ -1358,6 +1358,59 @@ float scalePID_d(float d)
 float unscalePID_d(float d)
 {
 	return d*PID_dT;
+}
+
+void set_maxtemp(uint8_t e, int maxTemp)
+{
+#ifdef HEATER_0_MAXTEMP
+  if (e == 0)
+  {
+      maxttemp[0] = maxTemp;
+      maxttemp_raw[0] = HEATER_0_RAW_HI_TEMP;
+      while(analog2temp(maxttemp_raw[0], 0) > maxTemp) {
+#if HEATER_0_RAW_LO_TEMP < HEATER_0_RAW_HI_TEMP
+        maxttemp_raw[0] -= OVERSAMPLENR;
+#else
+        maxttemp_raw[0] += OVERSAMPLENR;
+#endif
+      }
+  }
+#endif //MAXTEMP
+
+#if (EXTRUDERS > 1) && defined(HEATER_1_MAXTEMP)
+  if (e == 1)
+  {
+      maxttemp[1] = maxTemp;
+      maxttemp_raw[1] = HEATER_1_RAW_HI_TEMP;
+      while(analog2temp(maxttemp_raw[1], 1) > maxTemp) {
+    #if HEATER_1_RAW_LO_TEMP < HEATER_1_RAW_HI_TEMP
+        maxttemp_raw[1] -= OVERSAMPLENR;
+    #else
+        maxttemp_raw[1] += OVERSAMPLENR;
+    #endif
+      }
+  }
+#endif //MAXTEMP 1
+
+#if (EXTRUDERS > 2) && defined(HEATER_2_MAXTEMP)
+  if (e > 1)
+  {
+      maxttemp[2] = maxTemp;
+      maxttemp_raw[2] = HEATER_2_RAW_HI_TEMP;
+      while(analog2temp(maxttemp_raw[2], 2) > maxTemp) {
+    #if HEATER_2_RAW_LO_TEMP < HEATER_2_RAW_HI_TEMP
+        maxttemp_raw[2] -= OVERSAMPLENR;
+    #else
+        maxttemp_raw[2] += OVERSAMPLENR;
+    #endif
+      }
+  }
+#endif //MAXTEMP 2
+}
+
+int get_maxtemp(uint8_t e)
+{
+    return maxttemp[e];
 }
 
 #endif //PIDTEMP

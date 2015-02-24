@@ -46,9 +46,10 @@ void lcd_menu_maintenance()
     lcd_lib_update_screen();
 }
 
-static char* lcd_advanced_item(uint8_t nr, char *buffer)
+static void lcd_advanced_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     uint8_t index(0);
+    char buffer[32];
     if (nr == index++)
     {
         strcpy_P(buffer, PSTR("< RETURN"));
@@ -104,7 +105,7 @@ static char* lcd_advanced_item(uint8_t nr, char *buffer)
     else
         strcpy_P(buffer, PSTR("???"));
 
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_advanced_details(uint8_t nr)
@@ -270,8 +271,8 @@ static void lcd_menu_maintenance_advanced_heatup()
         target_temperature[active_extruder] = int(target_temperature[active_extruder]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
         if (target_temperature[active_extruder] < 0)
             target_temperature[active_extruder] = 0;
-        if (target_temperature[active_extruder] > HEATER_0_MAXTEMP - 15)
-            target_temperature[active_extruder] = HEATER_0_MAXTEMP - 15;
+        if (target_temperature[active_extruder] > get_maxtemp(active_extruder) - 15)
+            target_temperature[active_extruder] = get_maxtemp(active_extruder) - 15;
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
@@ -420,8 +421,9 @@ static void lcd_menu_advanced_factory_reset()
     lcd_lib_update_screen();
 }
 
-static char* lcd_retraction_item(uint8_t nr, char *buffer)
+static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[32];
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -430,7 +432,8 @@ static char* lcd_retraction_item(uint8_t nr, char *buffer)
         strcpy_P(buffer, PSTR("Retract speed"));
     else
         strcpy_P(buffer, PSTR("???"));
-    return buffer;
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_retraction_details(uint8_t nr)
@@ -462,8 +465,9 @@ static void lcd_menu_maintenance_retraction()
     }
 }
 
-static char* lcd_motion_item(uint8_t nr, char *buffer)
+static void lcd_motion_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[32];
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -484,7 +488,8 @@ static char* lcd_motion_item(uint8_t nr, char *buffer)
         strcpy_P(buffer, PSTR("Current E"));
     else
         strcpy_P(buffer, PSTR("???"));
-    return buffer;
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_motion_details(uint8_t nr)
@@ -543,8 +548,9 @@ static void lcd_menu_maintenance_motion()
     }
 }
 
-static char* lcd_led_item(uint8_t nr, char *buffer)
+static void lcd_led_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[32];
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -561,7 +567,8 @@ static char* lcd_led_item(uint8_t nr, char *buffer)
         strcpy_P(buffer, PSTR("???"));
     if (nr - 2 == led_mode)
         buffer[0] = '>';
-    return buffer;
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_led_details(uint8_t nr)

@@ -169,7 +169,7 @@ void lcd_lib_init()
     i2c_send_raw(0x12);
 
     i2c_send_raw(LCD_COMMAND_CONTRAST);
-    i2c_send_raw(0xDF);
+    i2c_send_raw(lcd_contrast);
 
     i2c_send_raw(0xD9);//Pre charge period
     i2c_send_raw(0x82);

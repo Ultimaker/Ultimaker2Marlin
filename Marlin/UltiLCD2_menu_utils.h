@@ -91,7 +91,7 @@ typedef char* (*entryNameCallback_t)(uint8_t nr, char *buffer);
 typedef void (*entryDetailsCallback_t)(uint8_t nr);
 typedef const menu_t & (*menuItemCallback_t) (uint8_t nr, menu_t &opt);
 typedef void (*menuDrawCallback_t) (uint8_t nr, uint8_t &flags);
-typedef void (*scrollDrawCallback_t) (uint8_t nr, uint8_t offsetY, uint8_t &flags);
+typedef void (*scrollDrawCallback_t) (uint8_t nr, uint8_t offsetY, uint8_t flags);
 
 class LCDMenu
 {

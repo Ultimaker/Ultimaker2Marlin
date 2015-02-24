@@ -196,11 +196,9 @@ void tinkergnome_init()
 
     led_timeout = constrain(GET_LED_TIMEOUT(), 0, LED_DIM_MAXTIME);
     lcd_timeout = constrain(GET_LCD_TIMEOUT(), 0, LED_DIM_MAXTIME);
-
-    lcd_contrast = constrain(GET_LCD_CONTRAST(), 0, 0xFF);
+    lcd_contrast = GET_LCD_CONTRAST();
     if (lcd_contrast == 0)
         lcd_contrast = 0xDF;
-    lcd_lib_contrast(lcd_contrast);
 }
 
 void menu_printing_init()
@@ -483,7 +481,7 @@ static bool lcd_tune_value(float &value, float _min, float _max, float _step)
     return false;
 }
 
-static void lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max)
+static bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max)
 {
     int temp_value = int((float(value)*_max/255)+0.5);
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
@@ -493,7 +491,9 @@ static void lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max)
         temp_value = constrain(temp_value, _min, _max);
         value = uint8_t((float(temp_value)*255/_max)+0.5);
         lcd_lib_encoder_pos = 0;
+        return true;
     }
+    return false;
 }
 
 static void lcd_tune_temperature(int &value, int _min, int _max)
@@ -529,7 +529,7 @@ static void lcd_print_tune_fan()
 
 static void lcd_print_tune_nozzle0()
 {
-    lcd_tune_temperature(target_temperature[0], 0, HEATER_0_MAXTEMP - 15);
+    lcd_tune_temperature(target_temperature[0], 0, get_maxtemp(0) - 15);
 }
 
 static void lcd_print_flow_nozzle0()
@@ -542,7 +542,7 @@ static void lcd_print_flow_nozzle0()
 #if EXTRUDERS > 1
 static void lcd_print_tune_nozzle1()
 {
-    lcd_tune_temperature(target_temperature[1], 0, HEATER_1_MAXTEMP - 15);
+    lcd_tune_temperature(target_temperature[1], 0, get_maxtemp(1) - 15);
 }
 
 static void lcd_print_flow_nozzle1()
@@ -1360,52 +1360,49 @@ void lcd_menu_printing_tg()
     }
 }
 
-static char* lcd_expert_item(uint8_t nr, char *buffer)
+static void lcd_expert_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[20];
+    buffer[0] = ' ';
     if (nr == 0)
     {
         strcpy_P(buffer, PSTR("< RETURN"));
     }
     else if (nr == 1)
     {
-        buffer[0] = ' ';
         strcpy_P(buffer+1, PSTR("User interface"));
     }
     else if (nr == 2)
     {
-        buffer[0] = ' ';
         strcpy_P(buffer+1, PSTR("LED timeout"));
     }
     else if (nr == 3)
     {
-        buffer[0] = ' ';
         strcpy_P(buffer+1, PSTR("Screen timeout"));
     }
     else if (nr == 4)
     {
-        buffer[0] = ' ';
         strcpy_P(buffer+1, PSTR("Screen contrast"));
     }
     else if (nr == 5)
     {
-        buffer[0] = ' ';
         strcpy_P(buffer+1, PSTR("Move axis"));
     }
     else if (nr == 6)
     {
-        buffer[0] = ' ';
         strcpy_P(buffer+1, PSTR("Disable steppers"));
     }
     else
     {
-        strcpy_P(buffer, PSTR("???"));
+        strcpy_P(buffer+1, PSTR("???"));
     }
 
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
-static char* lcd_uimode_item(uint8_t nr, char *buffer)
+static void lcd_uimode_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[20];
     if (nr == 0)
     {
         strcpy_P(buffer, PSTR("< RETURN"));
@@ -1429,7 +1426,7 @@ static char* lcd_uimode_item(uint8_t nr, char *buffer)
     if (nr-1 == ui_mode)
         buffer[0] = '>';
 
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_expert_details(uint8_t nr)
@@ -1472,7 +1469,7 @@ static void lcd_expert_details(uint8_t nr)
     }
     else if(nr == 4)
     {
-        int_to_string(int(lcd_contrast)*100/255, buffer, PSTR("%"));
+        int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
     }
     else
     {
@@ -1573,10 +1570,9 @@ static void lcd_menu_screen_timeout()
 
 static void lcd_menu_screen_contrast()
 {
-    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
+    if (lcd_tune_byte(lcd_contrast, 0, 100))
     {
-        lcd_contrast = constrain(int(lcd_contrast + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM)), 0x01, 0xFF);
-        lcd_lib_encoder_pos = 0;
+        lcd_contrast = constrain(lcd_contrast, 1, 255);
         lcd_lib_contrast(lcd_contrast);
     }
     if (lcd_lib_button_pressed)
@@ -1586,13 +1582,16 @@ static void lcd_menu_screen_contrast()
     }
 
     lcd_lib_clear();
-    lcd_lib_draw_string_centerP(20, PSTR("Screen contrast"));
+    lcd_lib_draw_string_centerP(10, PSTR("Screen contrast"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
 
     char buffer[32];
-    int_to_string(int(lcd_contrast)*100/255, buffer, PSTR("%"));
+    int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
 
-    lcd_lib_draw_string_center(30, buffer);
+    lcd_lib_draw_string_center(22, buffer);
+
+    lcd_lib_draw_bargraph(LCD_CHAR_MARGIN_LEFT+2*LCD_CHAR_SPACING, 34, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-2*LCD_CHAR_SPACING, 40, float(lcd_contrast)/255);
+
     lcd_lib_update_screen();
 }
 
@@ -2221,6 +2220,7 @@ static void lcd_extrude_homehead()
 static void lcd_extrude_headtofront()
 {
     lcd_lib_beep();
+    enquecommand_P(PSTR("G28 X0 Y0"));
     enquecommand_P(PSTR("G1 F12000 X110 Y10"));
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
@@ -2358,7 +2358,7 @@ static void lcd_extrude_return()
 
 static void lcd_extrude_temperature()
 {
-    lcd_tune_temperature(target_temperature[active_extruder], 0, (active_extruder > 0) ? HEATER_1_MAXTEMP - 15 : HEATER_0_MAXTEMP - 15);
+    lcd_tune_temperature(target_temperature[active_extruder], 0, get_maxtemp(active_extruder) - 15);
 }
 
 static void lcd_extrude_reset_pos()

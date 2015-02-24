@@ -303,11 +303,12 @@ static void lcd_menu_change_material_insert()
     lcd_lib_update_screen();
 }
 
-static char* lcd_menu_change_material_select_material_callback(uint8_t nr, char *buffer)
+static void lcd_menu_change_material_select_material_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[10];
     eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     buffer[8] = '\0';
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_menu_change_material_select_material_details_callback(uint8_t nr)
@@ -520,9 +521,10 @@ static void lcd_menu_material_import()
     menu.replace_menu(menu_t(lcd_menu_material_import_done));
 }
 
-static char* lcd_material_select_callback(uint8_t nr, char *buffer)
+static void lcd_material_select_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    char buffer[32];
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == count + 1)
@@ -535,7 +537,7 @@ static char* lcd_material_select_callback(uint8_t nr, char *buffer)
         eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
         buffer[8] = '\0';
     }
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_material_select_details_callback(uint8_t nr)
@@ -618,8 +620,9 @@ static void lcd_menu_material_selected()
     lcd_lib_update_screen();
 }
 
-static char* lcd_material_settings_callback(uint8_t nr, char *buffer)
+static void lcd_material_settings_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[32];
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -638,7 +641,8 @@ static char* lcd_material_settings_callback(uint8_t nr, char *buffer)
         strcpy_P(buffer, PSTR("Store as preset"));
     else
         strcpy_P(buffer, PSTR("???"));
-    return buffer;
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_material_settings_details_callback(uint8_t nr)
@@ -679,7 +683,7 @@ static void lcd_menu_material_settings()
             lcd_change_to_previous_menu();
             lcd_material_store_current_material();
         }else if (IS_SELECTED_SCROLL(1))
-            LCD_EDIT_SETTING(material[active_extruder].temperature, "Temperature", "C", 0, HEATER_0_MAXTEMP - 15);
+            LCD_EDIT_SETTING(material[active_extruder].temperature, "Temperature", "C", 0, get_maxtemp(active_extruder) - 15);
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING(material[active_extruder].bed_temperature, "Buildplate Temp.", "C", 0, BED_MAXTEMP - 15);
@@ -695,9 +699,10 @@ static void lcd_menu_material_settings()
     }
 }
 
-static char* lcd_menu_material_settings_store_callback(uint8_t nr, char *buffer)
+static void lcd_menu_material_settings_store_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+    char buffer[32];
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr > count)
@@ -706,7 +711,7 @@ static char* lcd_menu_material_settings_store_callback(uint8_t nr, char *buffer)
         eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), 8);
         buffer[8] = '\0';
     }
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_menu_material_settings_store_details_callback(uint8_t nr)
@@ -773,8 +778,12 @@ void lcd_material_reset_defaults()
 void lcd_material_set_material(uint8_t nr, uint8_t e)
 {
     material[e].temperature = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr));
+    set_maxtemp(e, constrain(material[e].temperature + 15, HEATER_0_MAXTEMP, min(HEATER_0_MAXTEMP + 15, material[e].temperature + 15)));
+
 #if TEMP_SENSOR_BED != 0
     material[e].bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr));
+    if (material[e].bed_temperature > BED_MAXTEMP - 15)
+        material[e].bed_temperature = BED_MAXTEMP - 15;
 #endif
     material[e].flow = eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr));
 
@@ -782,12 +791,8 @@ void lcd_material_set_material(uint8_t nr, uint8_t e)
     material[e].diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
     eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     LCD_CACHE_FILENAME(0)[8] = '\0';
-    if (material[e].temperature > HEATER_0_MAXTEMP - 15)
-        material[e].temperature = HEATER_0_MAXTEMP - 15;
-#if TEMP_SENSOR_BED != 0
-    if (material[e].bed_temperature > BED_MAXTEMP - 15)
-        material[e].bed_temperature = BED_MAXTEMP - 15;
-#endif
+    if (material[e].temperature > get_maxtemp(e) - 15)
+        material[e].temperature = get_maxtemp(e) - 15;
 
     lcd_material_store_current_material();
 }
@@ -817,6 +822,8 @@ void lcd_material_read_current_material()
 
         material[e].fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
         material[e].diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
+
+        set_maxtemp(e, constrain(material[e].temperature + 15, HEATER_0_MAXTEMP, min(HEATER_0_MAXTEMP + 15, material[e].temperature + 15)));
     }
 }
 
@@ -831,12 +838,15 @@ void lcd_material_store_current_material()
         eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].fan_speed);
         eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].flow);
         eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].diameter);
+
+        set_maxtemp(e, constrain(material[e].temperature + 15, HEATER_0_MAXTEMP, min(HEATER_0_MAXTEMP + 15, material[e].temperature + 15)));
     }
 }
 
 bool lcd_material_verify_material_settings()
 {
     bool hasUPET = false;
+    char buffer[32];
 
     uint8_t cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (cnt < 2 || cnt > EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
@@ -859,16 +869,16 @@ bool lcd_material_verify_material_settings()
         if (eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(cnt)) < 0.1)
             return false;
 
-        eeprom_read_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(cnt), 8);
-        LCD_CACHE_FILENAME(0)[8] = '\0';
-        if (strcmp_P(LCD_CACHE_FILENAME(0), PSTR("UPET")) == 0)
+        eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(cnt), 8);
+        buffer[8] = '\0';
+        if (strcmp_P(buffer, PSTR("UPET")) == 0)
             hasUPET = true;
     }
     cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (!hasUPET && cnt < EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
     {
-        strcpy_P(LCD_CACHE_FILENAME(0), PSTR("UPET"));
-        eeprom_write_block(LCD_CACHE_FILENAME(0), EEPROM_MATERIAL_NAME_OFFSET(cnt), 5);
+        strcpy_P(buffer, PSTR("UPET"));
+        eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(cnt), 5);
         eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(cnt), 250);
         eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(cnt), 60);
         eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(cnt), 50);

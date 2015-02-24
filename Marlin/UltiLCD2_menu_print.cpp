@@ -180,9 +180,10 @@ static void cardUpdir()
     card.updir();
 }
 
-static char* lcd_sd_menu_filename_callback(uint8_t nr, char *buffer)
+static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     //This code uses the card.longFilename as buffer to store the filename, to save memory.
+    char buffer[32];
     if (nr == 0)
     {
         if (card.atRoot())
@@ -228,7 +229,7 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr, char *buffer)
             }
         }
     }
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 void lcd_sd_menu_details_callback(uint8_t nr)
@@ -720,9 +721,10 @@ static void lcd_menu_print_ready_cooled_down()
     lcd_lib_update_screen();
 }
 
-static char* tune_item_callback(uint8_t nr, char *buffer)
+static void tune_item_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     uint8_t index = 0;
+    char buffer[32];
     if (index++ == nr)
         strcpy_P(buffer, PSTR("< RETURN"));
 //    else if (index++ == nr)
@@ -755,7 +757,8 @@ static char* tune_item_callback(uint8_t nr, char *buffer)
         strcpy_P(buffer, PSTR("Move material"));
     else
         strcpy_P(buffer, PSTR("???"));
-    return buffer;
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void tune_item_details_callback(uint8_t nr)
@@ -805,8 +808,8 @@ void lcd_menu_print_tune_heatup_nozzle0()
         target_temperature[0] = int(target_temperature[0]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
         if (target_temperature[0] < 0)
             target_temperature[0] = 0;
-        if (target_temperature[0] > HEATER_0_MAXTEMP - 15)
-            target_temperature[0] = HEATER_0_MAXTEMP - 15;
+        if (target_temperature[0] > get_maxtemp(0) - 15)
+            target_temperature[0] = get_maxtemp(0) - 15;
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
@@ -830,8 +833,8 @@ void lcd_menu_print_tune_heatup_nozzle1()
         target_temperature[1] = int(target_temperature[1]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
         if (target_temperature[1] < 0)
             target_temperature[1] = 0;
-        if (target_temperature[1] > HEATER_0_MAXTEMP - 15)
-            target_temperature[1] = HEATER_0_MAXTEMP - 15;
+        if (target_temperature[1] > maxttemp[1] - 15)
+            target_temperature[1] = maxttemp[1] - 15;
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
@@ -894,8 +897,9 @@ void lcd_menu_print_tune()
     }
 }
 
-static char* lcd_retraction_item(uint8_t nr, char *buffer)
+static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[32];
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -908,7 +912,8 @@ static char* lcd_retraction_item(uint8_t nr, char *buffer)
 #endif
     else
         strcpy_P(buffer, PSTR("???"));
-    return buffer;
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_retraction_details(uint8_t nr)

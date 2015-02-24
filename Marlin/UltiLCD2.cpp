@@ -45,6 +45,7 @@ static void lcd_menu_breakout();
 
 void lcd_init()
 {
+    tinkergnome_init();
     lcd_lib_init();
     if (!lcd_material_verify_material_settings())
     {
@@ -60,8 +61,6 @@ void lcd_init()
     menu.add_menu(menu_t(lcd_menu_startup), false);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
-
-    tinkergnome_init();
 }
 
 void lcd_update()

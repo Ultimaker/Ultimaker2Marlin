@@ -144,5 +144,9 @@ FORCE_INLINE void autotempShutdown(){
 
 void PID_autotune(float temp, int extruder, int ncycles);
 
+void set_maxtemp(uint8_t e, int maxTemp);
+int get_maxtemp(uint8_t e);
+
+
 #endif
 

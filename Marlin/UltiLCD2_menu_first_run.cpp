@@ -455,11 +455,12 @@ static void lcd_menu_first_run_material_select_1()
     lcd_lib_update_screen();
 }
 
-static char* lcd_material_select_callback(uint8_t nr, char *buffer)
+static void lcd_material_select_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
+    char buffer[10];
     eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     buffer[8] = '\0';
-    return buffer;
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
 static void lcd_material_select_details_callback(uint8_t nr)
@@ -471,7 +472,6 @@ static void lcd_menu_first_run_material_select_material()
 {
     LED_GLOW();
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
-
     lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_material_select_callback, lcd_material_select_details_callback);
     CLEAR_PROGRESS_NR(17);
     lcd_lib_update_screen();
