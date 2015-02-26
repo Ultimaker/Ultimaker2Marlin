@@ -357,4 +357,36 @@ void LCDMenu::set_selection(int8_t index)
     lastEncoderPos = lcd_lib_encoder_pos-1;
 }
 
+void LCDMenu::set_active(menuItemCallback_t getMenuItem, int8_t index)
+{
+    currentMenu().encoderPos = MAIN_MENU_ITEM_POS(index);
+    lastEncoderPos = lcd_lib_encoder_pos = 0;
+    menu_t menuItem;
+    getMenuItem(index, menuItem);
+    if (menuItem.initMenuFunc)
+    {
+        menuItem.initMenuFunc();
+    }
+
+    if (menuItem.flags & MENU_INPLACE_EDIT)
+    {
+        // "instant tuning"
+        lcd_lib_encoder_pos = 0;
+        LED_INPUT();
+        selectedSubmenu = index;
+        activeSubmenu = menuItem;
+    }
+    else
+    {
+        // process standard menu item
+        if (menuItem.processMenuFunc)
+        {
+            menuItem.processMenuFunc();
+        }
+        activeSubmenu = menu_t();
+        if (menuItem.flags & MENU_NORMAL)
+            selectedSubmenu = -1;
+    }
+}
+
 #endif

@@ -21,6 +21,7 @@ extern const uint8_t startGfx[];
 extern const uint8_t pauseGfx[];
 extern const uint8_t backGfx[];
 extern const uint8_t hourglassGfx[];
+extern const uint8_t filamentGfx[];
 
 extern float recover_height;
 
