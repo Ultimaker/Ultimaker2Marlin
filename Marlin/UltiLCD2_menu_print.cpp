@@ -182,8 +182,8 @@ static void cardUpdir()
 
 static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    //This code uses the card.longFilename as buffer to store the filename, to save memory.
     char buffer[32];
+    memset(buffer, '\0', sizeof(buffer));
     if (nr == 0)
     {
         if (card.atRoot())
@@ -198,7 +198,7 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
         {
             if (LCD_CACHE_ID(idx) == nr)
             {
-                strcpy(buffer, LCD_CACHE_FILENAME(idx));
+                strncpy(buffer, LCD_CACHE_FILENAME(idx), LONG_FILENAME_LENGTH-1);
                 break;
             }
         }
@@ -207,9 +207,9 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
             card.getfilename(nr - 1);
             if (card.longFilename[0])
             {
-                strcpy(buffer, card.longFilename);
+                strncpy(buffer, card.longFilename, LONG_FILENAME_LENGTH-1);
             } else {
-                strcpy(buffer, card.filename);
+                strncpy(buffer, card.filename, LONG_FILENAME_LENGTH-1);
             }
             if (!card.filenameIsDir)
             {
@@ -218,7 +218,7 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
 
             uint8_t idx = nr % LCD_CACHE_COUNT;
             LCD_CACHE_ID(idx) = nr;
-            strcpy(LCD_CACHE_FILENAME(idx), buffer);
+            strncpy(LCD_CACHE_FILENAME(idx), buffer, LONG_FILENAME_LENGTH-1);
             LCD_CACHE_TYPE(idx) = card.filenameIsDir ? 1 : 0;
             if (card.errorCode() && card.sdInserted)
             {
@@ -228,6 +228,7 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
                 card.longFilename[0] = '\0';
             }
         }
+        buffer[20] = '\0';
     }
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
@@ -238,7 +239,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
     {
         return;
     }
-    for(uint8_t idx=0; idx<LCD_CACHE_COUNT; idx++)
+    for(uint8_t idx=0; idx<LCD_CACHE_COUNT; ++idx)
     {
         if (LCD_CACHE_ID(idx) == nr)
         {
@@ -365,7 +366,7 @@ void lcd_menu_print_select()
 
     if (lcd_lib_button_pressed)
     {
-        uint8_t selIndex = uint16_t(SELECTED_SCROLL_MENU_ITEM());
+        uint16_t selIndex = uint16_t(SELECTED_SCROLL_MENU_ITEM());
         if (selIndex == 0)
         {
             if (card.atRoot())
@@ -388,7 +389,7 @@ void lcd_menu_print_select()
                     if (led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
                         analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
                     if (!card.longFilename[0])
-                        strcpy(card.longFilename, card.filename);
+                        strncpy(card.longFilename, card.filename, LONG_FILENAME_LENGTH-1);
                     card.longFilename[20] = '\0';
                     if (strchr(card.longFilename, '.')) strchr(card.longFilename, '.')[0] = '\0';
 

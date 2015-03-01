@@ -160,20 +160,36 @@ const uint8_t menuGfx[] PROGMEM = {
     0x2A, 0x2A, 0x2A, 0x2A, 0x2A
 };
 
+//const uint8_t retractSpeedGfx[] PROGMEM = {
+//    7, 8, //size
+//    0x09, 0x12, 0x24, 0x7F, 0x24, 0x12, 0x09
+//};
+
+//const uint8_t retractLenGfx[] PROGMEM = {
+//    7, 8, //size
+//    0x79, 0x72, 0x64, 0x49, 0x13, 0x27, 0x4F
+//};
+
 const uint8_t retractSpeedGfx[] PROGMEM = {
     7, 8, //size
-    0x09, 0x12, 0x24, 0x7F, 0x24, 0x12, 0x09
+    0x7F, 0x7F, 0x51, 0x55, 0x45, 0x7F, 0x7F
 };
 
 const uint8_t retractLenGfx[] PROGMEM = {
     7, 8, //size
-    0x79, 0x72, 0x64, 0x49, 0x13, 0x27, 0x4F
+    0x7F, 0x7F, 0x41, 0x5F, 0x5F, 0x7F, 0x7F
 };
 
 const uint8_t filamentGfx[] PROGMEM = {
     7, 8, //size
     0x1C, 0x22, 0x4A, 0x52, 0x4C, 0x20, 0x1F
 };
+
+const uint8_t contrastGfx[] PROGMEM = {
+    7, 8, //size
+    0x7F, 0x6E, 0x6C, 0x78, 0x72, 0x67, 0x42
+};
+
 
 static void lcd_menu_print_page_inc() { lcd_lib_beep(); lcd_basic_screen(); ++printing_page; }
 static void lcd_menu_print_page_dec() { lcd_lib_beep(); lcd_basic_screen(); --printing_page; }
@@ -270,10 +286,6 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         else if (nr == menu_index++)
         {
             opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-        }
-        else if (nr == menu_index++)
-        {
-            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_led, 4);
         }
         else if (nr == menu_index++)
         {
@@ -765,25 +777,6 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             {
                 lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
             }
-        }
-        else if (nr == index++)
-        {
-            // brightness
-            if (flags & (MENU_SELECTED | MENU_ACTIVE))
-            {
-                lcd_lib_draw_string_leftP(5, PSTR("LED brightness"));
-                flags |= MENU_STATUSLINE;
-            }
-            // lcd_lib_draw_string_leftP(42, PSTR("LED"));
-            lcd_lib_draw_gfx(LCD_GFX_WIDTH-2*LCD_CHAR_MARGIN_RIGHT-5*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, brightnessGfx);
-            int_to_string(led_brightness_level, buffer, PSTR("%"));
-            LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING
-                                  , BOTTOM_MENU_YPOS
-                                  , 4*LCD_CHAR_SPACING
-                                  , LCD_CHAR_HEIGHT
-                                  , buffer
-                                  , ALIGN_RIGHT | ALIGN_VCENTER
-                                  , flags);
         }
         else if (nr == index++)
         {
@@ -1335,7 +1328,7 @@ void lcd_menu_printing_tg()
         }
 
         uint8_t index = 0;
-        uint8_t len = (printing_page == 1) ? 6 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 4;
+        uint8_t len = (printing_page == 1) ? 5 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 4;
         if (printing_state == PRINT_STATE_WAIT_USER)
         {
             index += (printing_page == 1) ? 3 : 2;

@@ -1108,7 +1108,7 @@ int16_t SdBaseFile::read(void* buf, uint16_t nbyte) {
  * readDir() called before a directory has been opened, this is not
  * a directory file or an I/O error occurred.
  */
-int8_t SdBaseFile::readDir(dir_t* dir, char* longFilename) {
+int16_t SdBaseFile::readDir(dir_t* dir, char* longFilename) {
   int16_t n;
   // if not a directory file or miss-positioned return an error
   if (!isDir() || (0X1F & curPosition_)) return -1;
@@ -1135,23 +1135,28 @@ int8_t SdBaseFile::readDir(dir_t* dir, char* longFilename) {
     	if (VFAT->firstClusterLow == 0 && (VFAT->sequenceNumber & 0x1F) > 0 && (VFAT->sequenceNumber & 0x1F) <= MAX_VFAT_ENTRIES)
     	{
 			//TODO: Store the filename checksum to verify if a none-long filename aware system modified the file table.
-    		n = ((VFAT->sequenceNumber & 0x1F) - 1) * 13;
-			longFilename[n+0] = VFAT->name1[0];
-			longFilename[n+1] = VFAT->name1[2];
-			longFilename[n+2] = VFAT->name1[4];
-			longFilename[n+3] = VFAT->name1[6];
-			longFilename[n+4] = VFAT->name1[8];
-			longFilename[n+5] = VFAT->name2[0];
-			longFilename[n+6] = VFAT->name2[2];
-			longFilename[n+7] = VFAT->name2[4];
-			longFilename[n+8] = VFAT->name2[6];
-			longFilename[n+9] = VFAT->name2[8];
-			longFilename[n+10] = VFAT->name2[10];
-			longFilename[n+11] = VFAT->name3[0];
-			longFilename[n+12] = VFAT->name3[2];
+    		uint8_t i = ((VFAT->sequenceNumber & 0x1F) - 1) * 13;
+			longFilename[i+0] = VFAT->name1[0];
+			longFilename[i+1] = VFAT->name1[2];
+			longFilename[i+2] = VFAT->name1[4];
+			longFilename[i+3] = VFAT->name1[6];
+			longFilename[i+4] = VFAT->name1[8];
+			longFilename[i+5] = VFAT->name2[0];
+			longFilename[i+6] = VFAT->name2[2];
+			longFilename[i+7] = VFAT->name2[4];
+			longFilename[i+8] = VFAT->name2[6];
+			longFilename[i+9] = VFAT->name2[8];
+			longFilename[i+10] = VFAT->name2[10];
+			longFilename[i+11] = VFAT->name3[0];
+			longFilename[i+12] = VFAT->name3[2];
 			//If this VFAT entry is the last one, add a NUL terminator at the end of the string
 			if (VFAT->sequenceNumber & 0x40)
-              longFilename[n+13] = '\0';
+              longFilename[i+13] = '\0';
+
+//    SERIAL_ECHO_START;
+//    SERIAL_ECHOPAIR("longFilename index=", (long unsigned int)(i+13) );
+//    SERIAL_ECHOLN("");
+
 		}
     }
     // return if normal file or subdirectory
@@ -1419,7 +1424,7 @@ bool SdBaseFile::rmRfStar() {
       if (!f.remove()) goto fail;
     }
     // position to next entry if required
-    if (curPosition_ != (32*(index + 1))) {
+    if (curPosition_ != (uint32_t)(32*(index + 1))) {
       if (!seekSet(32*(index + 1))) goto fail;
     }
   }

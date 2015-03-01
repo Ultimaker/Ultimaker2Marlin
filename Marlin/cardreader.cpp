@@ -34,10 +34,10 @@ CardReader::CardReader()
   autostart_atmillis=millis()+5000;
 }
 
-char *createFilename(char *buffer,const dir_t &p) //buffer>12characters
+char *createFilename(char *buffer, const dir_t &p) //buffer>12characters
 {
   char *pos=buffer;
-  for (uint8_t i = 0; i < 11; i++)
+  for (uint8_t i = 0; i < 11; ++i)
   {
     if (p.name[i] == ' ')continue;
     if (i == 8)
@@ -46,7 +46,7 @@ char *createFilename(char *buffer,const dir_t &p) //buffer>12characters
     }
     *pos++=p.name[i];
   }
-  *pos++=0;
+  *pos=0;
   return buffer;
 }
 
@@ -54,30 +54,30 @@ char *createFilename(char *buffer,const dir_t &p) //buffer>12characters
 void  CardReader::lsDive(const char *prepend, SdFile parent)
 {
   dir_t p;
- uint8_t cnt=0;
+  uint8_t cnt=0;
 
-  while (parent.readDir(p, longFilename) > 0)
+  while (parent.readDir(&p, longFilename) > 0)
   {
-    if( DIR_IS_SUBDIR(&p) && lsAction!=LS_Count && lsAction!=LS_GetFilename) // hence LS_SerialPrint
+    if( DIR_IS_SUBDIR(&p) && (lsAction!=LS_Count) && (lsAction!=LS_GetFilename)) // hence LS_SerialPrint
     {
 
-      char path[13*2];
+      char path[14*MAX_DIR_DEPTH];
       char lfilename[13];
-      createFilename(lfilename,p);
+      createFilename(lfilename, p);
 
       path[0]=0;
       if(strlen(prepend)==0) //avoid leading / if already in prepend
       {
-       strcat(path,"/");
+       strcat(path, "/");
       }
-      strcat(path,prepend);
-      strcat(path,lfilename);
-      strcat(path,"/");
+      strcat(path, prepend);
+      strcat(path, lfilename);
+      strcat(path, "/");
 
       //Serial.print(path);
 
       SdFile dir;
-      if(!dir.open(parent,lfilename, O_READ))
+      if(!dir.open(parent, lfilename, O_READ))
       {
         if(lsAction==LS_SerialPrint)
         {
@@ -86,7 +86,10 @@ void  CardReader::lsDive(const char *prepend, SdFile parent)
           SERIAL_ECHOLN(lfilename);
         }
       }
-      lsDive(path,dir);
+      else if (strlen(path) < (14*(MAX_DIR_DEPTH-1)))
+      {
+          lsDive(path, dir);
+      }
       //close done automatically by destructor of SdFile
 
 
@@ -473,7 +476,7 @@ void CardReader::checkautostart(bool force)
   root.rewind();
 
   bool found=false;
-  while (root.readDir(p, NULL) > 0)
+  while (root.readDir(&p, NULL) > 0)
   {
     for(int8_t i=0;i<(int8_t)strlen((char*)p.name);i++)
     p.name[i]=tolower(p.name[i]);
@@ -513,7 +516,6 @@ void CardReader::getfilename(const uint8_t nr)
   nrFiles=nr;
   curDir->rewind();
   lsDive("",*curDir);
-
 }
 
 uint16_t CardReader::getnrfilenames()
