@@ -158,7 +158,7 @@ static void lcd_menu_change_material_remove()
     if (!blocks_queued())
     {
         lcd_lib_beep();
-        led_glow_dir = led_glow = 0;
+        // led_glow_dir = led_glow = 0;
         menu.replace_menu(menu_t(lcd_menu_change_material_remove_wait_user));
         SELECT_MAIN_MENU_ITEM(0);
         //Disable the extruder motor so you can pull out the remaining filament.
@@ -264,7 +264,7 @@ static void lcd_menu_change_material_insert_forward()
     if (!blocks_queued())
     {
         lcd_lib_beep();
-        led_glow_dir = led_glow = 0;
+        // led_glow_dir = led_glow = 0;
 
         digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.
         menu.replace_menu(menu_t(lcd_menu_change_material_insert, MAIN_MENU_ITEM_POS(0)));

@@ -498,7 +498,7 @@ static void lcd_motion_details(uint8_t nr)
     if (nr == 0)
         return;
     else if(nr == 1)
-        int_to_string(acceleration, buffer, PSTR("mm/sec" SQUARED_SYMBOL));
+        int_to_string(acceleration, buffer, PSTR(UNIT_ACCELERATION));
     else if(nr == 2)
         int_to_string(max_xy_jerk, buffer, PSTR("mm/sec"));
     else if(nr == 3)
@@ -530,7 +530,7 @@ static void lcd_menu_maintenance_motion()
             lcd_change_to_previous_menu();
         }
         else if (IS_SELECTED_SCROLL(1))
-            LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec" SQUARED_SYMBOL, 0, 20000);
+            LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", UNIT_ACCELERATION, 0, 20000);
         else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_FLOAT1(max_xy_jerk, "X/Y Jerk", "mm/sec", 0, 100);
         else if (IS_SELECTED_SCROLL(3))

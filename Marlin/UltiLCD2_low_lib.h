@@ -42,6 +42,8 @@ extern int16_t lcd_lib_encoder_pos;
 extern bool lcd_lib_button_pressed;
 extern bool lcd_lib_button_down;
 extern unsigned long last_user_interaction;
+extern uint8_t led_glow;
+extern uint8_t led_glow_dir;
 
 char* int_to_string(int i, char* temp_buffer, const char* p_postfix = NULL);
 char* int_to_time_string(unsigned long i, char* temp_buffer);
@@ -67,9 +69,9 @@ FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t x, uint8_t y, const char* p
 
 // norpchen font symbols
 #define DEGREE_SYMBOL "\x1F"
-#define SQUARED_SYMBOL "\x1E"
-#define CUBED_SYMBOL "\x1D"
-#define PER_SECOND_SYMBOL "/s"
+// #define SQUARED_SYMBOL "\x1E"
+// #define CUBED_SYMBOL "\x1D"
+#define UNIT_ACCELERATION "mm/s\x1E"
 
 #define MILLISECONDS_PER_SECOND 1000UL
 #define MILLISECONDS_PER_MINUTE (MILLISECONDS_PER_SECOND*60UL)

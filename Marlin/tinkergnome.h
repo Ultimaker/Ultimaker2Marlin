@@ -5,6 +5,10 @@
 #define EEPROM_LED_TIMEOUT_OFFSET 0x402
 #define EEPROM_LCD_TIMEOUT_OFFSET 0x404
 #define EEPROM_LCD_CONTRAST_OFFSET 0x406
+#define EEPROM_EXPERT_VERSION_OFFSET 0x407
+#define EEPROM_SLEEP_BRIGHTNESS_OFFSET 0x409
+#define EEPROM_SLEEP_CONTRAST_OFFSET 0x40A
+#define EEPROM_SLEEP_GLOW_OFFSET 0x40B
 
 // customizations and enhancements (added by Lars June 3,2014)
 #define EXTENDED_BEEP 1		// enables extended audio feedback
@@ -16,6 +20,9 @@
 extern uint8_t ui_mode;
 extern uint16_t lcd_timeout;
 extern uint8_t lcd_contrast;
+extern uint8_t led_sleep_glow;
+extern uint8_t lcd_sleep_contrast;
+
 extern const uint8_t standbyGfx[];
 extern const uint8_t startGfx[];
 extern const uint8_t pauseGfx[];

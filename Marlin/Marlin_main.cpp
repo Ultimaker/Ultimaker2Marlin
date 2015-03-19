@@ -185,25 +185,25 @@ uint8_t active_extruder = 0;
 uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
 
-struct machinesettings {
-  machinesettings() : has_saved_settings(0) {}
-  int feedmultiply;
-  int HotendTemperature[EXTRUDERS];
-  int BedTemperature;
-  uint8_t fanSpeed;
-  int extrudemultiply[EXTRUDERS];
-  long max_acceleration_units_per_sq_second[NUM_AXIS];
-  float max_feedrate[NUM_AXIS];
-  float acceleration;
-  float minimumfeedrate;
-  float mintravelfeedrate;
-  long minsegmenttime;
-  float max_xy_jerk;
-  float max_z_jerk;
-  float max_e_jerk;
-  uint8_t has_saved_settings;
-};
-machinesettings machinesettings_tempsave[10];
+//struct machinesettings {
+//  machinesettings() : has_saved_settings(0) {}
+//  int feedmultiply;
+//  int HotendTemperature[EXTRUDERS];
+//  int BedTemperature;
+//  uint8_t fanSpeed;
+//  int extrudemultiply[EXTRUDERS];
+//  long max_acceleration_units_per_sq_second[NUM_AXIS];
+//  float max_feedrate[NUM_AXIS];
+//  float acceleration;
+//  float minimumfeedrate;
+//  float mintravelfeedrate;
+//  long minsegmenttime;
+//  float max_xy_jerk;
+//  float max_z_jerk;
+//  float max_e_jerk;
+//  uint8_t has_saved_settings;
+//};
+//machinesettings machinesettings_tempsave[10];
 
 #ifdef SERVO_ENDSTOPS
   int servo_endstops[] = SERVO_ENDSTOPS;
@@ -2243,75 +2243,75 @@ void process_commands()
     }
     break;
 
-    case 605: // M605 store current set values
-    {
-      uint8_t tmp_select;
-      if (code_seen('S'))
-      {
-        tmp_select = code_value();
-        if (tmp_select>9) tmp_select=9;
-      }
-      else
-        tmp_select = 0;
-      machinesettings_tempsave[tmp_select].feedmultiply = feedmultiply;
-      machinesettings_tempsave[tmp_select].BedTemperature = target_temperature_bed;
-      machinesettings_tempsave[tmp_select].fanSpeed = fanSpeed;
-      for (int i=0; i<EXTRUDERS; i++)
-      {
-        machinesettings_tempsave[tmp_select].HotendTemperature[i] = target_temperature[i];
-        machinesettings_tempsave[tmp_select].extrudemultiply[i] = extrudemultiply[i];
-      }
-      for (int i=0; i<NUM_AXIS; i++)
-      {
-        machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i] = max_acceleration_units_per_sq_second[i];
-        machinesettings_tempsave[tmp_select].max_feedrate[i] = max_feedrate[i];
-      }
-      machinesettings_tempsave[tmp_select].acceleration = acceleration;
-      machinesettings_tempsave[tmp_select].minimumfeedrate = minimumfeedrate;
-      machinesettings_tempsave[tmp_select].mintravelfeedrate = mintravelfeedrate;
-      machinesettings_tempsave[tmp_select].minsegmenttime = minsegmenttime;
-      machinesettings_tempsave[tmp_select].max_xy_jerk = max_xy_jerk;
-      machinesettings_tempsave[tmp_select].max_z_jerk = max_z_jerk;
-      machinesettings_tempsave[tmp_select].max_e_jerk = max_e_jerk;
-      machinesettings_tempsave[tmp_select].has_saved_settings = 1;
-    }
-    break;
-
-    case 606: // M606 recall saved values
-    {
-      uint8_t tmp_select;
-      if (code_seen('S'))
-      {
-        tmp_select = code_value();
-        if (tmp_select>9) tmp_select=9;
-      }
-      else
-        tmp_select = 0;
-      if (machinesettings_tempsave[tmp_select].has_saved_settings > 0)
-      {
-        feedmultiply = machinesettings_tempsave[tmp_select].feedmultiply;
-        target_temperature_bed = machinesettings_tempsave[tmp_select].BedTemperature;
-        fanSpeed = machinesettings_tempsave[tmp_select].fanSpeed;
-        for (int i=0; i<EXTRUDERS; i++)
-        {
-          target_temperature[i] = machinesettings_tempsave[tmp_select].HotendTemperature[i];
-          extrudemultiply[i] = machinesettings_tempsave[tmp_select].extrudemultiply[i];
-        }
-        for (int i=0; i<NUM_AXIS; i++)
-        {
-          max_acceleration_units_per_sq_second[i] = machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i];
-          max_feedrate[i] = machinesettings_tempsave[tmp_select].max_feedrate[i];
-        }
-        acceleration = machinesettings_tempsave[tmp_select].acceleration;
-        minimumfeedrate = machinesettings_tempsave[tmp_select].minimumfeedrate;
-        mintravelfeedrate = machinesettings_tempsave[tmp_select].mintravelfeedrate;
-        minsegmenttime = machinesettings_tempsave[tmp_select].minsegmenttime;
-        max_xy_jerk = machinesettings_tempsave[tmp_select].max_xy_jerk;
-        max_z_jerk = machinesettings_tempsave[tmp_select].max_z_jerk;
-        max_e_jerk = machinesettings_tempsave[tmp_select].max_e_jerk;
-      }
-    }
-    break;
+//    case 605: // M605 store current set values
+//    {
+//      uint8_t tmp_select;
+//      if (code_seen('S'))
+//      {
+//        tmp_select = code_value();
+//        if (tmp_select>9) tmp_select=9;
+//      }
+//      else
+//        tmp_select = 0;
+//      machinesettings_tempsave[tmp_select].feedmultiply = feedmultiply;
+//      machinesettings_tempsave[tmp_select].BedTemperature = target_temperature_bed;
+//      machinesettings_tempsave[tmp_select].fanSpeed = fanSpeed;
+//      for (int i=0; i<EXTRUDERS; i++)
+//      {
+//        machinesettings_tempsave[tmp_select].HotendTemperature[i] = target_temperature[i];
+//        machinesettings_tempsave[tmp_select].extrudemultiply[i] = extrudemultiply[i];
+//      }
+//      for (int i=0; i<NUM_AXIS; i++)
+//      {
+//        machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i] = max_acceleration_units_per_sq_second[i];
+//        machinesettings_tempsave[tmp_select].max_feedrate[i] = max_feedrate[i];
+//      }
+//      machinesettings_tempsave[tmp_select].acceleration = acceleration;
+//      machinesettings_tempsave[tmp_select].minimumfeedrate = minimumfeedrate;
+//      machinesettings_tempsave[tmp_select].mintravelfeedrate = mintravelfeedrate;
+//      machinesettings_tempsave[tmp_select].minsegmenttime = minsegmenttime;
+//      machinesettings_tempsave[tmp_select].max_xy_jerk = max_xy_jerk;
+//      machinesettings_tempsave[tmp_select].max_z_jerk = max_z_jerk;
+//      machinesettings_tempsave[tmp_select].max_e_jerk = max_e_jerk;
+//      machinesettings_tempsave[tmp_select].has_saved_settings = 1;
+//    }
+//    break;
+//
+//    case 606: // M606 recall saved values
+//    {
+//      uint8_t tmp_select;
+//      if (code_seen('S'))
+//      {
+//        tmp_select = code_value();
+//        if (tmp_select>9) tmp_select=9;
+//      }
+//      else
+//        tmp_select = 0;
+//      if (machinesettings_tempsave[tmp_select].has_saved_settings > 0)
+//      {
+//        feedmultiply = machinesettings_tempsave[tmp_select].feedmultiply;
+//        target_temperature_bed = machinesettings_tempsave[tmp_select].BedTemperature;
+//        fanSpeed = machinesettings_tempsave[tmp_select].fanSpeed;
+//        for (int i=0; i<EXTRUDERS; i++)
+//        {
+//          target_temperature[i] = machinesettings_tempsave[tmp_select].HotendTemperature[i];
+//          extrudemultiply[i] = machinesettings_tempsave[tmp_select].extrudemultiply[i];
+//        }
+//        for (int i=0; i<NUM_AXIS; i++)
+//        {
+//          max_acceleration_units_per_sq_second[i] = machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i];
+//          max_feedrate[i] = machinesettings_tempsave[tmp_select].max_feedrate[i];
+//        }
+//        acceleration = machinesettings_tempsave[tmp_select].acceleration;
+//        minimumfeedrate = machinesettings_tempsave[tmp_select].minimumfeedrate;
+//        mintravelfeedrate = machinesettings_tempsave[tmp_select].mintravelfeedrate;
+//        minsegmenttime = machinesettings_tempsave[tmp_select].minsegmenttime;
+//        max_xy_jerk = machinesettings_tempsave[tmp_select].max_xy_jerk;
+//        max_z_jerk = machinesettings_tempsave[tmp_select].max_z_jerk;
+//        max_e_jerk = machinesettings_tempsave[tmp_select].max_e_jerk;
+//      }
+//    }
+//    break;
     #endif//ENABLE_ULTILCD2
 
     case 907: // M907 Set digital trimpot motor current using axis codes.

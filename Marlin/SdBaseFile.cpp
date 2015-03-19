@@ -1131,27 +1131,28 @@ int16_t SdBaseFile::readDir(dir_t* dir, char* longFilename) {
 	if (DIR_IS_LONG_NAME(dir) && longFilename != NULL)
     {
     	vfat_t *VFAT = (vfat_t*)dir;
+    	uint8_t blocknr = (VFAT->sequenceNumber & 0x1F);
 		//Sanity check the VFAT entry. The first cluster is always set to zero. And th esequence number should be higher then 0
-    	if (VFAT->firstClusterLow == 0 && (VFAT->sequenceNumber & 0x1F) > 0 && (VFAT->sequenceNumber & 0x1F) <= MAX_VFAT_ENTRIES)
+    	if ((VFAT->firstClusterLow == 0) && (blocknr > 0) && (blocknr <= MAX_VFAT_ENTRIES))
     	{
 			//TODO: Store the filename checksum to verify if a none-long filename aware system modified the file table.
-    		uint8_t i = ((VFAT->sequenceNumber & 0x1F) - 1) * 13;
-			longFilename[i+0] = VFAT->name1[0];
-			longFilename[i+1] = VFAT->name1[2];
-			longFilename[i+2] = VFAT->name1[4];
-			longFilename[i+3] = VFAT->name1[6];
-			longFilename[i+4] = VFAT->name1[8];
-			longFilename[i+5] = VFAT->name2[0];
-			longFilename[i+6] = VFAT->name2[2];
-			longFilename[i+7] = VFAT->name2[4];
-			longFilename[i+8] = VFAT->name2[6];
-			longFilename[i+9] = VFAT->name2[8];
-			longFilename[i+10] = VFAT->name2[10];
-			longFilename[i+11] = VFAT->name3[0];
-			longFilename[i+12] = VFAT->name3[2];
+    		uint8_t i = (blocknr - 1) * 13;
+			longFilename[i++] = VFAT->name1[0];
+			longFilename[i++] = VFAT->name1[2];
+			longFilename[i++] = VFAT->name1[4];
+			longFilename[i++] = VFAT->name1[6];
+			longFilename[i++] = VFAT->name1[8];
+			longFilename[i++] = VFAT->name2[0];
+			longFilename[i++] = VFAT->name2[2];
+			longFilename[i++] = VFAT->name2[4];
+			longFilename[i++] = VFAT->name2[6];
+			longFilename[i++] = VFAT->name2[8];
+			longFilename[i++] = VFAT->name2[10];
+			longFilename[i++] = VFAT->name3[0];
+			longFilename[i++] = VFAT->name3[2];
 			//If this VFAT entry is the last one, add a NUL terminator at the end of the string
 			if (VFAT->sequenceNumber & 0x40)
-              longFilename[i+13] = '\0';
+              longFilename[i] = '\0';
 
 //    SERIAL_ECHO_START;
 //    SERIAL_ECHOPAIR("longFilename index=", (long unsigned int)(i+13) );

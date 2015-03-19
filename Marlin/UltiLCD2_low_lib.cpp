@@ -46,6 +46,8 @@ unsigned long last_user_interaction=0;
 #define LCD_BUFFER_SIZE  (LCD_GFX_WIDTH * LCD_GFX_HEIGHT / 8)
 uint8_t lcd_buffer[LCD_BUFFER_SIZE];
 uint8_t led_r, led_g, led_b;
+uint8_t led_glow = 0;
+uint8_t led_glow_dir;
 
 /**
  * i2c communiation low level functions.
@@ -217,36 +219,67 @@ void lcd_lib_update_screen()
             if (!screenOff)
             {
                 screenOff ^= 1;
-                i2c_start();
-                i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
-                i2c_send_raw(I2C_LCD_SEND_COMMAND);
-                i2c_send_raw(LCD_COMMAND_DISPLAY_OFF);
-                i2c_end();
+                if (lcd_sleep_contrast > 0)
+                {
+                    // reduce contrast
+                    lcd_lib_contrast(min(lcd_sleep_contrast, lcd_contrast));
+                } else
+                {
+                    // LCD off
+                    i2c_start();
+                    i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+                    i2c_send_raw(I2C_LCD_SEND_COMMAND);
+                    i2c_send_raw(LCD_COMMAND_DISPLAY_OFF);
+                    i2c_end();
+                }
+                if (!led_sleep_glow)
+                {
+                    // screen saver is active - switch off the encoder led
+                    i2c_led_write(2, 0);//PWM0
+                    i2c_led_write(3, 0);//PWM1
+                    i2c_led_write(4, 0);//PWM2
+                }
+            }
+            if (led_sleep_glow)
+            {
+                uint8_t glow = (int(led_glow) * led_sleep_glow) >> 8;
+                lcd_lib_led_color(1 + glow, 1 + glow, 4 + glow);
+//                led_r =  8 + int(led_glow) * led_sleep_glow / 255;
+//                led_g =  8 + int(led_glow) * led_sleep_glow / 255;
+//                led_b = 32 + int(led_glow) * led_sleep_glow / 255;
             }
         }
         else if (screenOff)
         {
             screenOff ^= 1;
-            i2c_start();
-            i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
-            i2c_send_raw(I2C_LCD_SEND_COMMAND);
-            i2c_send_raw(LCD_COMMAND_DISPLAY_ON);
-            i2c_end();
+            if (lcd_sleep_contrast > 0)
+            {
+                // increase contrast back to normal
+                lcd_lib_contrast(lcd_contrast);
+            } else
+            {
+                // LCD on
+                i2c_start();
+                i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
+                i2c_send_raw(I2C_LCD_SEND_COMMAND);
+                i2c_send_raw(LCD_COMMAND_DISPLAY_ON);
+                i2c_end();
+            }
+            lcd_lib_led_color(40,40,54);
         }
     }
 
-    if (screenOff)
+    if (!screenOff || led_sleep_glow)
     {
-        // screen saver is active - switch off the encoder led
-        i2c_led_write(2, 0);//PWM0
-        i2c_led_write(3, 0);//PWM1
-        i2c_led_write(4, 0);//PWM2
-    }
-    else
-    {
+        // set values for encoder led ring
         i2c_led_write(2, led_r);//PWM0
         i2c_led_write(3, led_g);//PWM1
         i2c_led_write(4, led_b);//PWM2
+    }
+
+    if (!screenOff || lcd_sleep_contrast)
+    {
+        // update screen content
         i2c_start();
         i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
         //Set the drawin position to 0,0

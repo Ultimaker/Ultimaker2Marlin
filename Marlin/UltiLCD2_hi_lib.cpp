@@ -6,12 +6,7 @@
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_utils.h"
 
-//menuFunc_t currentMenu;
-//menuFunc_t previousMenu;
 menuFunc_t postMenuCheck;
-// int16_t previousEncoderPos;
-uint8_t led_glow = 0;
-uint8_t led_glow_dir;
 uint8_t minProgress;
 
 const char* lcd_setting_name;
@@ -249,8 +244,10 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, scrollDrawCallbac
 
     int16_t viewDiff = targetViewPos - viewPos;
     viewPos += viewDiff / 4;
-    if (viewDiff > 0) { viewPos ++; led_glow = led_glow_dir = 0; }
-    if (viewDiff < 0) { viewPos --; led_glow = led_glow_dir = 0; }
+//    if (viewDiff > 0) { viewPos ++; led_glow = led_glow_dir = 0; }
+//    if (viewDiff < 0) { viewPos --; led_glow = led_glow_dir = 0; }
+    if (viewDiff > 0) { viewPos ++; }
+    if (viewDiff < 0) { viewPos --; }
 
     uint8_t drawOffset = 10 - (uint16_t(viewPos) % 8);
     uint8_t itemOffset = uint16_t(viewPos) / 8;

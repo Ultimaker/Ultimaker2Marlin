@@ -67,7 +67,6 @@
 		<Unit filename="../Marlin/SdInfo.h" />
 		<Unit filename="../Marlin/SdVolume.cpp" />
 		<Unit filename="../Marlin/SdVolume.h" />
-		<Unit filename="../Marlin/StackList.h" />
 		<Unit filename="../Marlin/UltiLCD2.cpp" />
 		<Unit filename="../Marlin/UltiLCD2.h" />
 		<Unit filename="../Marlin/UltiLCD2_gfx.cpp" />

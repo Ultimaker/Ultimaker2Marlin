@@ -193,7 +193,7 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
             strcpy_P(buffer, PSTR("< BACK"));
         }
     }else{
-        buffer[0] = '\0';
+        // buffer[0] = '\0';
         for(uint8_t idx=0; idx<LCD_CACHE_COUNT; ++idx)
         {
             if (LCD_CACHE_ID(idx) == nr)
@@ -213,7 +213,7 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
             }
             if (!card.filenameIsDir)
             {
-                if (strchr(buffer, '.')) strrchr(buffer, '.')[0] = '\0';
+                if (strrchr(buffer, '.')) strrchr(buffer, '.')[0] = '\0';
             }
 
             uint8_t idx = nr % LCD_CACHE_COUNT;
@@ -282,7 +282,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     {
                         //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
                         card.clearError();
-                        LCD_DETAIL_CACHE_ID() = 255;
+                        LCD_DETAIL_CACHE_ID() = 0xFF;
                     }
                 }
 
@@ -396,19 +396,19 @@ void lcd_menu_print_select()
                     char buffer[64];
                     card.fgets(buffer, sizeof(buffer));
                     buffer[sizeof(buffer)-1] = '\0';
-                    while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
-                    if (strcmp_P(buffer, PSTR(";FLAVOR:UltiGCode")) != 0)
+                    // while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
+                    if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 17) != 0)
                     {
                         card.fgets(buffer, sizeof(buffer));
                         buffer[sizeof(buffer)-1] = '\0';
-                        while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
+                        // while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
                     }
                     card.setIndex(0);
 
                     fanSpeed = 0;
                     feedmultiply = 100;
                     lcd_clearstatus();
-                    if (strcmp_P(buffer, PSTR(";FLAVOR:UltiGCode")) == 0)
+                    if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 17) == 0)
                     {
                         //New style GCode flavor without start/end code.
                         // Temperature settings, filament settings, fan settings, start and end-code are machine controlled.
