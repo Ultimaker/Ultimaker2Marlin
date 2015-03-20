@@ -212,14 +212,10 @@ SRC = wiring.c \
 	wiring_pulse.c \
 	wiring_shift.c WInterrupts.c
 CXXSRC = WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
-	MarlinSerial.cpp Sd2Card.cpp SdBaseFile.cpp SdFatUtil.cpp	\
-	SdFile.cpp SdVolume.cpp motion_control.cpp planner.cpp		\
-	stepper.cpp temperature.cpp cardreader.cpp ConfigurationStore.cpp \
+	MarlinSerial.cpp motion_control.cpp planner.cpp		\
+	stepper.cpp temperature.cpp \
 	watchdog.cpp electronics_test.cpp
-CXXSRC += LiquidCrystal.cpp ultralcd.cpp SPI.cpp Servo.cpp Tone.cpp
-CXXSRC += UltiLCD2.cpp UltiLCD2_gfx.cpp UltiLCD2_hi_lib.cpp UltiLCD2_low_lib.cpp \
-	UltiLCD2_menu_first_run.cpp UltiLCD2_menu_maintenance.cpp UltiLCD2_menu_material.cpp \
-	UltiLCD2_menu_print.cpp lifetime_stats.cpp i2c_capacitance.cpp i2c_driver.cpp \
+CXXSRC += i2c_capacitance.cpp i2c_driver.cpp \
 	fan_driver.cpp temperature_ADS101X.cpp
 
 #Check for Arduino 1.0.0 or higher and use the correct sourcefiles for that version
