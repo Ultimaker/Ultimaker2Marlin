@@ -56,6 +56,8 @@
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
 // G92 - Set current position to coordinates given
+// G1000 - Store the current position/feedrate. (Used for pause&resume handling)
+// G1001 - Return to stored position from G1000, with the given feedrate, and restore the original feedrate after that.
 
 //RepRap M Codes
 // M0   - Unconditional stop - Wait for user to press a button on the LCD (Only if ULTRA_LCD is enabled)
@@ -118,6 +120,7 @@
 // M303 - PID relay autotune S<temperature> sets the target temperature. (default target temperature = 150C)
 // M304 - Set bed PID parameters P I and D
 // M400 - Finish all moves
+// M401 - quickstop - Abort all the planned moves. This will stop the head mid-move, so most likely the head will be out of sync with the stepper position after this.
 // M600 - Pause for filament change X[pos] Y[pos] Z[relative lift] E[initial retract] L[later retract distance for removal]
 // M907 - Set digital trimpot motor current using axis codes.
 // M999 - Restart after being stopped by error
@@ -154,7 +157,6 @@ uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
 
 #ifdef FWRETRACT
-  bool autoretract_enabled=false;
   bool retracted=false;
   float retract_length=4.5, retract_feedrate=25*60, retract_zlift=0.8;
 #if EXTRUDERS > 1
@@ -202,6 +204,9 @@ static uint8_t tmp_extruder;
 
 
 uint8_t Stopped = false;
+
+static float stored_position[NUM_AXIS];
+static float stored_feedrate;
 
 //===========================================================================
 //=============================ROUTINES=============================
@@ -1037,6 +1042,26 @@ void process_commands()
         }
       }
       break;
+    case 1000: // G1000 - store current position&feedrate
+      for(int8_t i=0; i < NUM_AXIS; i++) {
+        stored_position[i] = current_position[i];
+      }
+      stored_feedrate = feedrate;
+      break;
+    case 1001: // G1001 - return to stored position from G1000
+      for(int8_t i=0; i < NUM_AXIS; i++) {
+        if(code_seen(axis_codes[i])) {
+          destination[i] = current_position[i];
+        }
+      }
+      if(code_seen('F')) {
+        next_feedrate = code_value();
+        if (next_feedrate > 0)
+            feedrate = next_feedrate;
+      }
+      prepare_move();
+      feedrate = stored_feedrate;
+      break;
     }
   }
 
@@ -1423,24 +1448,6 @@ void process_commands()
         retract_recover_feedrate = code_value() ;
       }
     }break;
-    case 209: // M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
-    {
-      if(code_seen('S'))
-      {
-        int t= code_value() ;
-        switch(t)
-        {
-          case 0: autoretract_enabled=false;retracted=false;break;
-          case 1: autoretract_enabled=true;retracted=false;break;
-          default:
-            SERIAL_ECHO_START;
-            SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-            SERIAL_ECHO(command_buffer[command_buffer_index_read]);
-            SERIAL_ECHOLNPGM("\"");
-        }
-      }
-
-    }break;
     #endif // FWRETRACT
     #if EXTRUDERS > 1
     case 218: // M218 - set hotend offset (in mm), T<extruder_number> X<offset_on_X> Y<offset_on_Y>
@@ -1564,6 +1571,11 @@ void process_commands()
       st_synchronize();
     }
     break;
+    case 401: // M401 quickstop - Abort all the planned moves. This will stop the head mid-move, so most likely the head will be out of sync with the stepper position after this.
+    {
+      quickStop();
+    }
+    break;
 
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
@@ -1678,40 +1690,6 @@ void get_coordinates()
         next_feedrate = code_value();
         if(next_feedrate > 0.0) feedrate = next_feedrate;
     }
-    #ifdef FWRETRACT
-    if(autoretract_enabled)
-    {
-        if( !(seen[X_AXIS] || seen[Y_AXIS] || seen[Z_AXIS]) && seen[E_AXIS])
-        {
-            float echange=destination[E_AXIS]-current_position[E_AXIS];
-            if(echange<-MIN_RETRACT) //retract
-            {
-                if(!retracted)
-                {
-                    destination[Z_AXIS]+=retract_zlift; //not sure why chaninging current_position negatively does not work.
-                    //if slicer retracted by echange=-1mm and you want to retract 3mm, corrrectede=-2mm additionally
-                    float correctede=-echange-retract_length;
-                    //to generate the additional steps, not the destination is changed, but inversely the current position
-                    current_position[E_AXIS]+=-correctede;
-                    feedrate=retract_feedrate;
-                    retracted=true;
-                }
-            }
-            else if(echange>MIN_RETRACT) //retract_recover
-            {
-                if(retracted)
-                {
-                    //current_position[Z_AXIS]+=-retract_zlift;
-                    //if slicer retracted_recovered by echange=+1mm and you want to retract_recover 3mm, corrrectede=2mm additionally
-                    float correctede=-echange+1*retract_length+retract_recover_length; //total unretract=retract_length+retract_recover_length[surplus]
-                    current_position[E_AXIS]+=correctede; //to generate the additional steps, not the destination is changed, but inversely the current position
-                    feedrate=retract_recover_feedrate;
-                    retracted=false;
-                }
-            }
-        }
-    }
-    #endif //FWRETRACT
 }
 
 void get_arc_coordinates()
