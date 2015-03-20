@@ -356,17 +356,19 @@ void setup()
   SERIAL_ECHOPGM(MSG_PLANNER_BUFFER_BYTES);
   SERIAL_ECHOLN((int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
 
+  watchdog_init();
   if (main_board_power > 300)//HACKERDYHACK, set the steps per unit for Z to 400 for the 16 microstep board.
     axis_steps_per_unit[Z_AXIS] = 400;
   i2cDriverInit();
   initFans();   // Initialize the fan driver
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
-  watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
 #ifdef ENABLE_BED_LEVELING_PROBE
   i2cCapacitanceInit();
 #endif
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM("setup done\n");
 }
 
 
