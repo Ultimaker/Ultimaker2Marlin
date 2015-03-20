@@ -1205,7 +1205,7 @@ ISR(TIMER0_COMPB_vect)
     else if(current_temperature_raw[0] <= minttemp_raw[0]) {
 #endif
         temp_error_cnt[0] += 10;
-        if (temp_error_cnt[0] > 20)
+        if (temp_error_cnt[0] > 100)
             min_temp_error(0);
     }else if (temp_error_cnt[0] > 0)
     {
@@ -1218,7 +1218,7 @@ ISR(TIMER0_COMPB_vect)
     if(current_temperature_raw[1] >= maxttemp_raw[1]) {
 #endif
         temp_error_cnt[1] += 10;
-        if (temp_error_cnt[1] > 20)
+        if (temp_error_cnt[1] > 100)
             max_temp_error(1);
     }
 #if HEATER_1_RAW_LO_TEMP > HEATER_1_RAW_HI_TEMP
@@ -1227,7 +1227,7 @@ ISR(TIMER0_COMPB_vect)
     if(current_temperature_raw[1] <= minttemp_raw[1]) {
 #endif
         temp_error_cnt[1] += 10;
-        if (temp_error_cnt[1] > 20)
+        if (temp_error_cnt[1] > 100)
             min_temp_error(1);
     }else if (temp_error_cnt[1] > 0)
     {
@@ -1241,7 +1241,7 @@ ISR(TIMER0_COMPB_vect)
     if(current_temperature_raw[2] >= maxttemp_raw[2]) {
 #endif
         temp_error_cnt[2] += 10;
-        if (temp_error_cnt[2] > 20)
+        if (temp_error_cnt[2] > 100)
             max_temp_error(2);
     }
 #if HEATER_2_RAW_LO_TEMP > HEATER_2_RAW_HI_TEMP
@@ -1250,7 +1250,7 @@ ISR(TIMER0_COMPB_vect)
     else if(current_temperature_raw[2] <= minttemp_raw[2]) {
 #endif
         temp_error_cnt[2] += 10;
-        if (temp_error_cnt[2] > 20)
+        if (temp_error_cnt[2] > 100)
             min_temp_error(2);
     }else if (temp_error_cnt[2] > 0)
     {
