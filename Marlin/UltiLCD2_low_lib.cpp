@@ -243,10 +243,7 @@ void lcd_lib_update_screen()
             if (led_sleep_glow)
             {
                 uint8_t glow = (int(led_glow) * led_sleep_glow) >> 8;
-                lcd_lib_led_color(1 + glow, 1 + glow, 4 + glow);
-//                led_r =  8 + int(led_glow) * led_sleep_glow / 255;
-//                led_g =  8 + int(led_glow) * led_sleep_glow / 255;
-//                led_b = 32 + int(led_glow) * led_sleep_glow / 255;
+                lcd_lib_led_color(glow, constrain(glow << 1, 0, 160), glow);
             }
         }
         else if (screenOff)

@@ -29,9 +29,9 @@ float dsp_temperature_bed = 20.0;
 char lcd_status_message[LCD_CHARS_PER_LINE+1];
 
 //#define SPECIAL_STARTUP
-#define MILLIS_GLOW  (1000L / 25L)
+#define MILLIS_GLOW  (1000L / 40L)
+// #define MILLIS_GLOW  (25L)
 static unsigned long glow_millis;
-
 
 static void lcd_menu_startup();
 #ifdef SPECIAL_STARTUP
@@ -42,8 +42,6 @@ static void lcd_menu_breakout();
 
 void lcd_init()
 {
-    glow_millis = millis() + MILLIS_GLOW;
-    led_glow = led_glow_dir = 0;
     tinkergnome_init();
     lcd_lib_init();
     if (!lcd_material_verify_material_settings())
@@ -53,6 +51,9 @@ void lcd_init()
             lcd_material_set_material(0, e);
     }
     lcd_material_read_current_material();
+
+    glow_millis = millis() + MILLIS_GLOW;
+    led_glow = led_glow_dir = 0;
 
     // initialize menu stack and show start animation
     *lcd_status_message = 0;

@@ -19,7 +19,7 @@
 
 // low pass filter constant, from 0.0 to 1.0 -- Higher numbers mean more smoothing, less responsiveness.
 // 0.0 would be completely disabled, 1.0 would ignore any changes
-#define LOW_PASS_SMOOTHING 0.95
+#define LOW_PASS_SMOOTHING 0.90
 #define DEFAULT_FILAMENT_AREA 6.3793966
 
 #define LED_DIM_TIME 0		    // 0 min -> off
@@ -312,12 +312,12 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         }
         else if (nr == menu_index++)
         {
-            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_retract_length, 4);
+            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_retract_length, 2);
         }
 #if EXTRUDERS > 1
         else if (nr == menu_index++)
         {
-            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_swap_length, 4);
+            opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_swap_length, 2);
         }
 #endif
         else if (nr == menu_index++)
@@ -1361,7 +1361,8 @@ void lcd_menu_printing_tg()
         uint8_t len = (printing_page == 1) ? 5 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 4;
         if (printing_state == PRINT_STATE_WAIT_USER)
         {
-            index += (printing_page == 1) ? 3 : 2;
+            // index += (printing_page == 1) ? 3 : 2;
+            index += 2;
         }
         else
         {
@@ -1370,7 +1371,8 @@ void lcd_menu_printing_tg()
             if (!menu.isSubmenuSelected() && message && *message)
             {
                 lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, message);
-                index += (printing_page == 1) ? 3 : 2;
+                // index += (printing_page == 1) ? 3 : 2;
+                index += 2;
             }
         }
 
@@ -2798,9 +2800,7 @@ static void lcd_menu_tune_extrude()
     {
         lcd_lib_draw_string_leftP(5, PSTR("Select option"));
     }
-
     lcd_lib_update_screen();
-
 }
 
 static void lcd_extrude_return()
@@ -2820,7 +2820,6 @@ static void lcd_extrude_reset_pos()
     lcd_lib_beep();
     plan_set_e_position(0);
     target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
-    plan_set_e_position(target_position[E_AXIS]/volume_to_filament_length[active_extruder]);
 }
 
 static void lcd_extrude_init_move()
@@ -2869,7 +2868,7 @@ static void lcd_extrude_quit_pull()
     // disable E-steppers
     enquecommand_P(PSTR("M84 E0"));
     target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
-    plan_set_e_position(target_position[E_AXIS]);
+    plan_set_e_position(target_position[E_AXIS]/volume_to_filament_length[active_extruder]);
 }
 
 static void lcd_extrude_pull()
