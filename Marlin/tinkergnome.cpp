@@ -1881,7 +1881,6 @@ static void drawSleepTimerSubmenu (uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
     char buffer[32];
-    if (card.sdprinting) ++nr;
 
     if (nr == index++)
     {
