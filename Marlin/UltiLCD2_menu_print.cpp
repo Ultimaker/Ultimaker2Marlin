@@ -756,6 +756,8 @@ static void tune_item_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("LED Brightness"));
     else if ((ui_mode & UI_MODE_EXPERT) && card.sdprinting && card.pause && (index++ == nr))
         strcpy_P(buffer, PSTR("Move material"));
+    else if (ui_mode & UI_MODE_EXPERT)
+        strcpy_P(buffer, PSTR("Sleep timer"));
     else
         strcpy_P(buffer, PSTR("???"));
 
@@ -859,7 +861,17 @@ void lcd_menu_print_tune()
     {
         lcd_print_pause();
     }
-    lcd_scroll_menu(PSTR("TUNE"), (((ui_mode & UI_MODE_EXPERT) && card.sdprinting && card.pause) ? 6 : 5) + BED_MENU_OFFSET + EXTRUDERS * 2, tune_item_callback, tune_item_details_callback);
+    uint8_t len = 5 + BED_MENU_OFFSET + EXTRUDERS * 2;
+    if (ui_mode & UI_MODE_EXPERT)
+    {
+        ++len; // sleep timer
+        if (card.sdprinting && card.pause)
+        {
+            ++len; // move material
+        }
+    }
+
+    lcd_scroll_menu(PSTR("TUNE"), len , tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         uint8_t index(0);
@@ -895,6 +907,8 @@ void lcd_menu_print_tune()
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
         else if ((ui_mode & UI_MODE_EXPERT) && card.sdprinting && card.pause && IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(NULL, lcd_menu_expert_extrude, lcd_extrude_quit_menu, 0)); // Move material
+        else if ((ui_mode & UI_MODE_EXPERT) && IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_sleeptimer));
     }
 }
 
