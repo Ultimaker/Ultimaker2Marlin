@@ -129,8 +129,8 @@ ISR(TWI_vect, ISR_BLOCK)
             TWDR = current_command->buffer[current_command_buffer_index++];
             TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT); //Data byte will be transmitted and ACK or NOT ACK will be received
         }else{
-            //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
             current_command->finished = true;
+            //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
             i2cDriverExecuteNextCommand();
         }
         break;

@@ -461,7 +461,7 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   if (z < CONFIG_FALL_OFF_BED_LEVELING_HEIGHT)
     bed_leveling_factor = 1.0;
   else if (z < CONFIG_MAX_BED_LEVELING_HEIGHT)
-    bed_leveling_factor = (z - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT) / (CONFIG_MAX_BED_LEVELING_HEIGHT - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT);
+    bed_leveling_factor = 1.0 - ((z - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT) / (CONFIG_MAX_BED_LEVELING_HEIGHT - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT));
   target[Z_AXIS] = lround((z+bed_leveling_factor*(x*planner_bed_leveling_factor[X_AXIS]+y*planner_bed_leveling_factor[Y_AXIS]))*axis_steps_per_unit[Z_AXIS]);
 #else
   target[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
@@ -795,7 +795,7 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
   if (z < CONFIG_FALL_OFF_BED_LEVELING_HEIGHT)
     bed_leveling_factor = 1.0;
   else if (z < CONFIG_MAX_BED_LEVELING_HEIGHT)
-    bed_leveling_factor = (z - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT) / (CONFIG_MAX_BED_LEVELING_HEIGHT - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT);
+    bed_leveling_factor = 1.0 - ((z - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT) / (CONFIG_MAX_BED_LEVELING_HEIGHT - CONFIG_FALL_OFF_BED_LEVELING_HEIGHT));
   position[Z_AXIS] = lround((z+bed_leveling_factor*(x*planner_bed_leveling_factor[X_AXIS]+y*planner_bed_leveling_factor[Y_AXIS]))*axis_steps_per_unit[Z_AXIS]);
 #else
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);

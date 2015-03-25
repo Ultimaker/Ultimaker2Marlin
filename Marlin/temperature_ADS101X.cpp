@@ -113,6 +113,16 @@ bool temperatureADS101XReady()
 
 int16_t temperatureADS101XGetResult()
 {
+    if (i2c_adc_read_buffer[0] == 0xFF && i2c_adc_read_buffer[1] == 0xFF)
+    {
+        //i2c read error.
+        if (!IsStopped())
+        {
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM("I2C_HEAD_COMM_ERROR");
+            Stop(STOP_REASON_I2C_HEAD_COMM_ERROR);
+        }
+    }
     int16_t result = int(i2c_adc_read_buffer[0]) << 4 | int(i2c_adc_read_buffer[1]) >> 4;
     if (result & 0x800)//Fix two complements result.
         result |= 0xF000;

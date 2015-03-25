@@ -421,7 +421,7 @@ void manage_heater()
         disable_heater();
         if(IsStopped() == false) {
           SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Extruder switched off. Temperature difference between temp sensors is too high !");
+          SERIAL_ERRORLNPGM("TEMP_DIFF_ERROR: Extruder switched off. Temperature difference between temp sensors is too high !");
           LCD_ALERTMESSAGEPGM("Err: REDUNDANT TEMP ERROR");
         }
         #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
@@ -893,6 +893,7 @@ void max_temp_error(uint8_t e) {
   disable_heater();
   if(IsStopped() == false) {
     SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("EXTRUDER_MAXTEMP_ERROR:");
     SERIAL_ERRORLN((int)e);
     SERIAL_ERRORLNPGM(": Extruder switched off. MAXTEMP triggered !");
   }
@@ -905,6 +906,7 @@ void min_temp_error(uint8_t e) {
   disable_heater();
   if(IsStopped() == false) {
     SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("EXTRUDER_MINTEMP_ERROR:");
     SERIAL_ERRORLN((int)e);
     SERIAL_ERRORLNPGM(": Extruder switched off. MINTEMP triggered !");
   }
@@ -919,6 +921,7 @@ void bed_max_temp_error(void) {
 #endif
   if(IsStopped() == false) {
     SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM("BED_MAXTEMP_ERROR:");
     SERIAL_ERRORLNPGM("Temperature heated bed switched off. MAXTEMP triggered !!");
   }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE

@@ -373,7 +373,7 @@ void setup()
   i2cCapacitanceInit();
 #endif
   SERIAL_ECHO_START;
-  SERIAL_ECHOPGM("setup done\n");
+  SERIAL_ERRORLNPGM("setup done");
 }
 
 
@@ -570,11 +570,11 @@ static void homeaxis(int axis) {
             st_synchronize();
 
             SERIAL_ERROR_START;
-            SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
+            SERIAL_ERRORLNPGM("Z_ENDSTOP_ERROR: Endstop not pressed after homing down. Endstop broken?");
             Stop(STOP_REASON_Z_ENDSTOP_BROKEN_ERROR);
         }else{
             SERIAL_ERROR_START;
-            SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
+            SERIAL_ERRORLNPGM("XY_ENDSTOP_ERROR: Endstop not pressed after homing down. Endstop broken?");
             Stop(STOP_REASON_XY_ENDSTOP_BROKEN_ERROR);
         }
         return;
@@ -617,11 +617,14 @@ static void homeaxis(int axis) {
     if (endstop_pressed)
     {
         SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM("Endstop still pressed after backing off. Endstop stuck?");
         if (axis == Z_AXIS)
+        {
+            SERIAL_ERRORLNPGM("Z_ENDSTOP_ERROR: Endstop still pressed after backing off. Endstop stuck?");
             Stop(STOP_REASON_Z_ENDSTOP_STUCK_ERROR);
-        else
+        }else{
+            SERIAL_ERRORLNPGM("XY_ENDSTOP_ERROR: Endstop still pressed after backing off. Endstop stuck?");
             Stop(STOP_REASON_XY_ENDSTOP_STUCK_ERROR);
+        }
         endstops_hit_on_purpose();
         return;
     }
@@ -1481,7 +1484,7 @@ void process_commands()
     {
       if(code_seen('S'))
       {
-        feedmultiply = code_value() ;
+        feedmultiply = code_value();
       }
     }
     break;
