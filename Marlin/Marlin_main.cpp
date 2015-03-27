@@ -176,9 +176,9 @@ float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 // Extruder offset, only in XY plane
 #if EXTRUDERS > 1
-float extruder_offset[2][EXTRUDERS] = {
+float extruder_offset[3][EXTRUDERS] = {
 #if defined(EXTRUDER_OFFSET_X) && defined(EXTRUDER_OFFSET_Y)
-  EXTRUDER_OFFSET_X, EXTRUDER_OFFSET_Y
+  EXTRUDER_OFFSET_X, EXTRUDER_OFFSET_Y, 0
 #endif
 };
 #endif
@@ -1947,7 +1947,7 @@ void process_commands()
     }break;
     #endif // FWRETRACT
     #if EXTRUDERS > 1
-    case 218: // M218 - set hotend offset (in mm), T<extruder_number> X<offset_on_X> Y<offset_on_Y>
+    case 218: // M218 - set hotend offset (in mm), T<extruder_number> X<offset_on_X> Y<offset_on_Y> Z<offset_on_Z>
     {
       if(setTargetedHotend(218)){
         break;
@@ -1960,6 +1960,10 @@ void process_commands()
       {
         extruder_offset[Y_AXIS][tmp_extruder] = code_value();
       }
+      if(code_seen('Z'))
+      {
+        extruder_offset[Z_AXIS][tmp_extruder] = code_value();
+      }
       SERIAL_ECHO_START;
       SERIAL_ECHOPGM(MSG_HOTEND_OFFSET);
       for(tmp_extruder = 0; tmp_extruder < EXTRUDERS; tmp_extruder++)
@@ -1968,6 +1972,8 @@ void process_commands()
          SERIAL_ECHO(extruder_offset[X_AXIS][tmp_extruder]);
          SERIAL_ECHO(",");
          SERIAL_ECHO(extruder_offset[Y_AXIS][tmp_extruder]);
+         SERIAL_ECHO(",");
+         SERIAL_ECHO(extruder_offset[Z_AXIS][tmp_extruder]);
       }
       SERIAL_ECHOLN("");
     }break;
@@ -2605,7 +2611,7 @@ void process_commands()
         memcpy(destination, current_position, sizeof(destination));
         // Offset extruder (only by XY)
         int i;
-        for(i = 0; i < 2; i++) {
+        for(i = 0; i < 3; i++) {
            current_position[i] = current_position[i] -
                                  extruder_offset[i][active_extruder] +
                                  extruder_offset[i][tmp_extruder];
