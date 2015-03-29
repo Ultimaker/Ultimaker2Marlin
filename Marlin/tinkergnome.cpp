@@ -2817,14 +2817,15 @@ static void lcd_extrude_temperature()
 static void lcd_extrude_reset_pos()
 {
     lcd_lib_beep();
-    plan_set_e_position(0);
-    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    plan_set_e_position(0.0f);
+    target_position[E_AXIS] = 0.0f;
 }
 
 static void lcd_extrude_init_move()
 {
+    st_synchronize();
+    plan_set_e_position(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS] / volume_to_filament_length[active_extruder]);
     target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
-    plan_set_e_position(target_position[E_AXIS] / volume_to_filament_length[active_extruder]);
 }
 
 static void lcd_extrude_move()
@@ -2833,7 +2834,7 @@ static void lcd_extrude_move()
     {
         if (lcd_tune_value(target_position[E_AXIS], -10000.0, +10000.0, 0.1))
         {
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target_position[E_AXIS], 10, active_extruder);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target_position[E_AXIS] / volume_to_filament_length[active_extruder], 10, active_extruder);
         }
     }
 }
@@ -2846,8 +2847,9 @@ static void lcd_extrude_quit_move()
 
 static void lcd_extrude_init_pull()
 {
+    st_synchronize();
+    plan_set_e_position(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS] / volume_to_filament_length[active_extruder]);
     target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
-    plan_set_e_position(target_position[E_AXIS]/volume_to_filament_length[active_extruder]);
     //Set E motor power lower so the motor will skip instead of grind.
     digipot_current(2, motor_current_setting[2]*2/3);
     //increase max. feedrate and reduce acceleration
@@ -2866,8 +2868,6 @@ static void lcd_extrude_quit_pull()
     digipot_current(2, motor_current_setting[2]);
     // disable E-steppers
     enquecommand_P(PSTR("M84 E0"));
-    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
-    plan_set_e_position(target_position[E_AXIS]/volume_to_filament_length[active_extruder]);
 }
 
 static void lcd_extrude_pull()
