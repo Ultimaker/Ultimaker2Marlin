@@ -64,7 +64,7 @@
 
 // This defines the number of extruders
 #ifndef EXTRUDERS
-#define EXTRUDERS 1
+#define EXTRUDERS 2
 #endif
 
 //// The following define selects which power supply you have. Please choose the one that matches your setup
