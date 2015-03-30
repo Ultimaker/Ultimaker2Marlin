@@ -1,3 +1,6 @@
+* Download the latest version from the <a href="https://github.com/TinkerGnome/Ultimaker2Marlin/releases">Release page</a>
+* Description <a href="http://umforum.ultimaker.com/index.php?/topic/10474-tinker-firmware/">en français</a>
+
 
 ### Changelist for this fork:
 
