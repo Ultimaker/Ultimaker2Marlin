@@ -460,6 +460,8 @@ void manage_heater()
       fanState |= 1;
     if (current_temperature[e] < EXTRUDER_AUTO_FAN_TEMPERATURE - 5)
       fanState |= 2;
+    if (soft_pwm[e] > 0)
+      fanState |= 1;
   }
   if (fanState & 1)
     setHotendCoolingFanSpeed(255);
