@@ -64,7 +64,7 @@
 
 // This defines the number of extruders
 #ifndef EXTRUDERS
-#define EXTRUDERS 1
+#define EXTRUDERS 2
 #endif
 
 //// The following define selects which power supply you have. Please choose the one that matches your setup
@@ -283,8 +283,8 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 #define INVERT_X_DIR true     // for Mendel set to false, for Orca set to true
 #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
 #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E1_DIR true    // for direct drive extruder v9 set to true, for geared extruder set to false
+#define INVERT_E0_DIR true    // for direct drive extruder v9 set to true, for geared extruder set to false
+#define INVERT_E1_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 
 // ENDSTOP SETTINGS:
@@ -322,7 +322,7 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 
 // default settings
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.0,80.0,200,282}  // default steps per unit for ultimaker2
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.0,80.0,200,333}  // default steps per unit for ultimaker2
 #define DEFAULT_MAX_FEEDRATE          {300, 300, 40, 45}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {9000,9000,100,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
