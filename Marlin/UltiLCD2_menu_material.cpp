@@ -766,7 +766,7 @@ void lcd_material_reset_defaults()
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(0), 100);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(0), 2.85);
 
-    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 3);
+    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 1);
 }
 
 void lcd_material_set_material(uint8_t nr, uint8_t e)
