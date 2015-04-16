@@ -95,8 +95,8 @@ void lcd_update()
             lcd_lib_draw_string_centerP(20, PSTR("X or Y switch stuck"));
             break;
         }
-        lcd_lib_draw_stringP(1, 40, PSTR("Contact:"));
-        lcd_lib_draw_stringP(1, 50, PSTR("support@ultimaker.com"));
+        lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+        lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/support"));
         LED_GLOW_ERROR();
         lcd_lib_update_screen();
     }else if (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
