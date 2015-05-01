@@ -216,7 +216,7 @@ int EtoPPressure=0;
 #ifdef FWRETRACT
   bool autoretract_enabled=false;
   bool retracted=false;
-  float retract_length=4.5, retract_feedrate=25*60, retract_zlift=0.8;
+  float retract_length=1.5, retract_feedrate=25*60, retract_zlift=0.8;
 #if EXTRUDERS > 1
   float extruder_swap_retract_length=16.0;
 #endif

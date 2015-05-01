@@ -38,7 +38,7 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
-#define EEPROM_VERSION "V11"
+#define EEPROM_VERSION "F11"
 
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings()
@@ -293,7 +293,7 @@ void Config_ResetDefault()
     led_brightness_level = 100;
     led_mode = LED_MODE_ALWAYS_ON;
     #endif
-    retract_length = 4.5;
+    retract_length = 1.5;
     retract_feedrate = 25 * 60;
 
 SERIAL_ECHO_START;
