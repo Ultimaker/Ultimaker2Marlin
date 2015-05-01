@@ -1157,6 +1157,7 @@ void lcd_menu_print_heatup_tg()
             {
                 menu.reset_submenu();
                 doStartPrint();
+                printing_page = 0;
                 menu.replace_menu(menu_t(lcd_menu_printing_tg), false);
             }
         }
@@ -2631,15 +2632,13 @@ void manage_encoder_position(int8_t encoder_pos_interrupt)
     {
         if ((ui_mode & UI_MODE_EXPERT) && (menu.encoder_acceleration_factor() > 1))
         {
-            if (encoder_pos_interrupt > 0)		// positive -- were we already going positive last time?  If so, increase our accel
+            if (encoder_pos_interrupt > 0)
             {
                 // increase positive acceleration
                 if (accelFactor >= 0)
                     ++accelFactor;
                 else
                     accelFactor = 1;
-                // beep with a pitch changing tone based on the acceleration factor
-                // lcd_lib_beep_ext (500+accelFactor*25, 10);
             }
             else //if (lcd_lib_encoder_pos_interrupt <0)
             {
@@ -2648,7 +2647,6 @@ void manage_encoder_position(int8_t encoder_pos_interrupt)
                     --accelFactor;
                 else
                     accelFactor = -1;
-                // lcd_lib_beep_ext (600+accelFactor*25, 10);
             }
             lcd_lib_tick();
             lcd_lib_encoder_pos += encoder_pos_interrupt * constrain(abs(accelFactor), 1, menu.encoder_acceleration_factor());

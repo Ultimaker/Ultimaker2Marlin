@@ -181,10 +181,21 @@ static void lcd_menu_change_material_remove_wait_user_ready()
     menu.replace_menu(menu_t(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0)));
 }
 
+static void lcd_change_to_materisl_main()
+{
+    // return to material main menu
+    lcd_lib_beep();
+    while (menu.currentMenu().processMenuFunc != lcd_menu_material_main) {
+        if (!menu.return_to_previous(false)) {
+            break;
+        }
+    }
+}
+
 static void lcd_menu_change_material_remove_wait_user()
 {
     LED_GLOW();
-    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_change_to_materisl_main, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
     lcd_lib_update_screen();
 }

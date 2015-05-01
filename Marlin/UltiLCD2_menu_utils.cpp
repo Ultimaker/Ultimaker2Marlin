@@ -68,7 +68,7 @@ void LCDMenu::replace_menu(menu_t nextMenu, bool beep)
     }
 }
 
-void LCDMenu::return_to_previous(bool beep)
+bool LCDMenu::return_to_previous(bool beep)
 {
     if (currentIndex>0)
     {
@@ -87,7 +87,9 @@ void LCDMenu::return_to_previous(bool beep)
         {
             menuStack[currentIndex].initMenuFunc();
         }
+        return true;
     }
+    return false;
 }
 
 void LCDMenu::return_to_main(bool beep)

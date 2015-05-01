@@ -108,7 +108,7 @@ public:
     void init_menu(menu_t nextMenu, bool beep = false);
     void add_menu(menu_t nextMenu, bool beep = true);
     void replace_menu(menu_t nextMenu, bool beep = true);
-    void return_to_previous(bool beep = true);
+    bool return_to_previous(bool beep = true);
     void return_to_main(bool beep = true);
 
     const menu_t & currentMenu() const { return menuStack[currentIndex]; }

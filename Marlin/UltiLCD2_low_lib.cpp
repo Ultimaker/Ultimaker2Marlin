@@ -844,26 +844,6 @@ void lcd_lib_tick( )
 
 }
 
-//-----------------------------------------------------------------------------------------------------------------
-// freq in Hz, duration in milliseconds -- note that there will be a
-// minimum time of one cycle.  ie: specifying a freq of 100Hz
-// would mean one cycle takes 10ms, and that is the
-// minimum time for the duration.
-void lcd_lib_beep_ext( unsigned int freq, unsigned int dur )
-{
-#if EXTENDED_BEEP
-	freq = 500000UL/freq;
-	unsigned long start_time = millis();
-	while (millis() - start_time < dur)
-    {
-        WRITE(BEEPER, HIGH);
-        _delay_us (freq);
-        WRITE(BEEPER, LOW);
-        _delay_us(freq);
-    }
-	// WRITE(BEEPER,0);
-#endif
-}
 
 int8_t lcd_lib_encoder_pos_interrupt = 0;
 int16_t lcd_lib_encoder_pos = 0;
