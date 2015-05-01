@@ -294,7 +294,7 @@ void Config_ResetDefault()
     led_mode = LED_MODE_ALWAYS_ON;
     #endif
     retract_length = 1.5;
-    retract_feedrate = 25 * 60;
+    retract_feedrate = 20 * 60;
 
 SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");

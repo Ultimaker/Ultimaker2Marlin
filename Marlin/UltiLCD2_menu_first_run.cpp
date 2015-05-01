@@ -368,8 +368,8 @@ static void lcd_menu_first_run_material_load_insert()
     lcd_info_screen(lcd_menu_first_run_material_load_forward, runMaterialForward, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(13);
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
-    lcd_lib_draw_string_centerP(20, PSTR("from the rear of"));
-    lcd_lib_draw_string_centerP(30, PSTR("your Ultimaker2,"));
+    lcd_lib_draw_string_centerP(20, PSTR("into the top of"));
+    lcd_lib_draw_string_centerP(30, PSTR("the printhead,"));
     lcd_lib_draw_string_centerP(40, PSTR("above the arrow."));
     lcd_lib_update_screen();
 }

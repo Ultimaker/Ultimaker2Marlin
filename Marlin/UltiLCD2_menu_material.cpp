@@ -245,8 +245,8 @@ static void lcd_menu_change_material_insert_wait_user()
 
     lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
-    lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
-    lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
+    lcd_lib_draw_string_centerP(20, PSTR("into the top of"));
+    lcd_lib_draw_string_centerP(30, PSTR("the printhead,"));
     lcd_lib_draw_string_centerP(40, PSTR("above the arrow."));
     lcd_lib_update_screen();
 }
