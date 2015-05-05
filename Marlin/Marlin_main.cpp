@@ -1356,19 +1356,34 @@ void process_commands()
           SERIAL_PROTOCOL_F(degBed(),1);
           SERIAL_PROTOCOLPGM(" /");
           SERIAL_PROTOCOL_F(degTargetBed(),1);
+          SERIAL_PROTOCOLPGM(" B@:");
+          SERIAL_PROTOCOL(getHeaterPower(-1));          
         #endif //TEMP_BED_PIN
+        
+        SERIAL_PROTOCOLPGM(" @:");
+        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
+          
+        #if (EXTRUDERS > 1)
+          for (int8_t e = 0; e < EXTRUDERS; ++e) {
+            SERIAL_PROTOCOLPGM(" T");
+            SERIAL_PROTOCOL(e);
+            SERIAL_PROTOCOLPGM(":");
+            SERIAL_PROTOCOL_F(degHotend(e), 1);
+            SERIAL_PROTOCOLPGM(" /");
+            SERIAL_PROTOCOL_F(degTargetHotend(e), 1);
+            SERIAL_PROTOCOLPGM(" @");
+            SERIAL_PROTOCOL(e);
+            SERIAL_PROTOCOLPGM(":");
+            SERIAL_PROTOCOL(getHeaterPower(e));
+          }
+        #endif
       #else
         SERIAL_ERROR_START;
         SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
       #endif
-
-        SERIAL_PROTOCOLPGM(" @:");
-        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
-
-        SERIAL_PROTOCOLPGM(" B@:");
-        SERIAL_PROTOCOL(getHeaterPower(-1));
-
-        SERIAL_PROTOCOLLN("");
+      
+      SERIAL_PROTOCOLLN("");
+      
       return;
       break;
     case 109:
