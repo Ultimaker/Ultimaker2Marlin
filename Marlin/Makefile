@@ -216,7 +216,7 @@ CXXSRC = WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
 	stepper.cpp temperature.cpp \
 	watchdog.cpp electronics_test.cpp
 CXXSRC += i2c_capacitance.cpp i2c_driver.cpp \
-	fan_driver.cpp temperature_ADS101X.cpp
+	fan_driver.cpp temperature_ADS101X.cpp led_rgbw_pca9632.cpp
 
 #Check for Arduino 1.0.0 or higher and use the correct sourcefiles for that version
 ifeq ($(shell [ $(ARDUINO_VERSION) -ge 100 ] && echo true), true)
