@@ -36,6 +36,7 @@
 #include "pins_arduino.h"
 #include "i2c_driver.h"
 #include "i2c_capacitance.h"
+#include "led_rgbw_pca9632.h"
 #include "fan_driver.h"
 
 #define VERSION_STRING  "1.0.0"
@@ -372,6 +373,7 @@ void setup()
 #ifdef ENABLE_BED_LEVELING_PROBE
   i2cCapacitanceInit();
 #endif
+  ledRGBWInit();
   SERIAL_ECHO_START;
   SERIAL_ERRORLNPGM("setup done");
 }
@@ -1113,6 +1115,19 @@ void process_commands()
           digitalWrite(pin_number, pin_status);
           analogWrite(pin_number, pin_status);
         }
+		if (pin_number == LED_PIN)
+		{
+		  uint8_t r = 0;
+		  uint8_t g = 0;
+		  uint8_t b = 0;
+          if (code_seen('R'))
+            r = code_value();
+          if (code_seen('G'))
+            g = code_value();
+          if (code_seen('B'))
+            b = code_value();
+		  ledRGBWUpdate(r, g, b, pin_status);
+		}
       }
      break;
     case 104: // M104
