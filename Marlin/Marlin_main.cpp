@@ -1123,13 +1123,13 @@ void process_commands()
 		uint8_t g = 0;
 		uint8_t b = 0;
 		uint8_t w = 0;
-        if (code_seen('R'))
+        if (code_seen('r'))
           r = code_value();
-        if (code_seen('G'))
+        if (code_seen('g'))
           g = code_value();
-        if (code_seen('B'))
+        if (code_seen('b'))
           b = code_value();
-        if (code_seen('W'))
+        if (code_seen('w'))
           w = code_value();
 	    ledRGBWUpdate(r, g, b, w);
       }
