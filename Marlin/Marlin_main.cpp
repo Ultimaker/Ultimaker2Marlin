@@ -1115,21 +1115,25 @@ void process_commands()
           digitalWrite(pin_number, pin_status);
           analogWrite(pin_number, pin_status);
         }
-		if (pin_number == LED_PIN)
-		{
-		  uint8_t r = 0;
-		  uint8_t g = 0;
-		  uint8_t b = 0;
-          if (code_seen('R'))
-            r = code_value();
-          if (code_seen('G'))
-            g = code_value();
-          if (code_seen('B'))
-            b = code_value();
-		  ledRGBWUpdate(r, g, b, pin_status);
-		}
       }
      break;
+    case 142:
+      {
+	    uint8_t r = 0;
+		uint8_t g = 0;
+		uint8_t b = 0;
+		uint8_t w = 0;
+        if (code_seen('R'))
+          r = code_value();
+        if (code_seen('G'))
+          g = code_value();
+        if (code_seen('B'))
+          b = code_value();
+        if (code_seen('W'))
+          w = code_value();
+	    ledRGBWUpdate(r, g, b, w);
+      }
+      break;
     case 104: // M104
       if(setTargetedHotend(104)){
         break;
