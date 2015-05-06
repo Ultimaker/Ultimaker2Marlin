@@ -109,7 +109,7 @@
 // M207 - set retract length S[positive mm] F[feedrate mm/sec] Z[additional zlift/hop]
 // M208 - set recover=unretract length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
 // M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
-// M218 - set hotend offset (in mm): T<extruder_number> X<offset_on_X> Y<offset_on_Y>
+// M218 - set hotend offset (in mm): T<extruder_number> X<offset_on_X> Y<offset_on_Y> Z<offset_on_Z>
 // M220 S<factor in percent>- set speed factor override percentage
 // M221 S<factor in percent>- set extrude factor override percentage
 // M240 - Trigger a camera to take a photograph
@@ -685,7 +685,7 @@ float probeWithCapacitiveSensor()
             manage_heater();
             manage_inactivity();
             uint16_t value = 0;
-            if (i2cCapacitanceDone(value))
+            if (i2cCapacitanceDone(value) && value != 0xFFFF)
             {
                 z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
                 sensor_value_total += value;
@@ -755,10 +755,15 @@ float probeWithCapacitiveSensor()
     */
         //Solve the line-line intersection to get the proper position where the bed was hit. At index [1] we are sure to be above the bed. At index[2] we are already on the bed. So the intersection point is somewhere between [1] and [2].
         float f = float((sensor_value_list[2]-(sensor_value_list[3]-sensor_value_list[2]))-sensor_value_list[1])/float((sensor_value_list[1]-sensor_value_list[0])-(sensor_value_list[3]-sensor_value_list[2]));
-        float z_height = z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
-        z_target = z_height;
-        z_distance = 1.0;
-        total_z_height += z_height;
+        if (f > 0.0 && f < 1.0)
+        {
+            float z_height = z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
+            z_target = z_height;
+            z_distance = 1.0;
+            total_z_height += z_height;
+        }else{
+            loop_counter --;
+        }
     }
     return total_z_height / CONFIG_BED_LEVEL_PROBE_REPEAT;
 }
