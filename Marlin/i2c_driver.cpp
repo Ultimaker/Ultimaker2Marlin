@@ -147,18 +147,22 @@ ISR(TWI_vect, ISR_BLOCK)
         i2cDriverExecuteNextCommand();
         break;
     case TW_MR_DATA_ACK: //0x50
-    case TW_MR_DATA_NACK: //0x58
         /** data received, ACK returned */
-        /** data received, NACK returned */
         current_command->buffer[current_command_buffer_index++] = TWDR;
         if (current_command_buffer_index < current_command->buffer_size)
         {
             TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT) | _BV(TWEA); //Data byte will be received and ACK will be returned
         }else{
-            //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
-            current_command->finished = true;
-            i2cDriverExecuteNextCommand();
+            // Do a read with a NACK. Cannot generate a start/stop condition at this point according to the datasheet.
+            // First need to do a NACK.
+            TWCR = _BV(TWIE) | _BV(TWEN) | _BV(TWINT); //Data byte will be received and NACK will be returned
         }
+        break;
+    case TW_MR_DATA_NACK: //0x58
+        /** data received, NACK returned */
+        //i2cDriverExecuteNextCommand will initiate a repeated START or a normal STOP action.
+        current_command->finished = true;
+        i2cDriverExecuteNextCommand();
         break;
 
     /* Misc */
