@@ -756,7 +756,7 @@ float probeWithCapacitiveSensor()
         }
     */
         //Solve the line-line intersection to get the proper position where the bed was hit. At index [1] we are sure to be above the bed. At index[2] we are already on the bed. So the intersection point is somewhere between [1] and [2].
-        float f = float((sensor_value_list[2]-(sensor_value_list[3]-sensor_value_list[2]))-sensor_value_list[1])/float((sensor_value_list[1]-sensor_value_list[0])-(sensor_value_list[3]-sensor_value_list[2]));
+        float f = float(sensor_value_list[1]-(sensor_value_list[3]*3-2*sensor_value_list[4]))/float((sensor_value_list[4]-sensor_value_list[3])-(sensor_value_list[2]-sensor_value_list[1]))-1.0;
         if (f > 0.0 && f < 1.0)
         {
             float z_height = z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
