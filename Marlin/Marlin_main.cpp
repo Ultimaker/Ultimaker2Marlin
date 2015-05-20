@@ -689,61 +689,64 @@ float probeWithCapacitiveSensor()
             manage_heater();
             manage_inactivity();
             uint16_t value = 0;
-            if (i2cCapacitanceDone(value) && value != 0xFFFF && value != previous_value)
+            if (i2cCapacitanceDone(value))
             {
-                previous_value = value;
-                z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-                sensor_value_total += value;
-                cnt++;
-                if (cnt == sample_count)
+                if (value != 0xFFFF && value != previous_value)
                 {
-                    z_position_total /= sample_count;
-                    sensor_value_total /= sample_count;
-                    
-                    if (previous_sensor_value != 0)
+                    previous_value = value;
+                    z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
+                    sensor_value_total += value;
+                    cnt++;
+                    if (cnt == sample_count)
                     {
-                        for(uint8_t n=1; n<6; n++)
+                        z_position_total /= sample_count;
+                        sensor_value_total /= sample_count;
+                        
+                        if (previous_sensor_value != 0)
                         {
-                            sensor_value_list[n - 1] = sensor_value_list[n];
-                            z_position_list[n - 1] = z_position_list[n];
-                        }
-                        sensor_value_list[5] = sensor_value_total;
-                        z_position_list[5] = z_position_total;
-
-                        if (sensor_value_total > previous_sensor_value + max_diff / 3)
-                        {
-                            max_sensor_value = sensor_value_total;
-                            steady_counter = 0;
-                        }else{
-                            steady_counter++;
-                            if (steady_counter > 2)
+                            for(uint8_t n=1; n<6; n++)
                             {
-                                quickStop();
-                                current_position[X_AXIS] = destination[X_AXIS];
-                                current_position[Y_AXIS] = destination[Y_AXIS];
-                                current_position[Z_AXIS] = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-                                plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+                                sensor_value_list[n - 1] = sensor_value_list[n];
+                                z_position_list[n - 1] = z_position_list[n];
                             }
-                        }
+                            sensor_value_list[5] = sensor_value_total;
+                            z_position_list[5] = z_position_total;
 
-                        int16_t diff = sensor_value_total - previous_sensor_value;
-                        if (diff > max_diff)
-                            max_diff = diff;
+                            if (sensor_value_total > previous_sensor_value + max_diff / 3)
+                            {
+                                max_sensor_value = sensor_value_total;
+                                steady_counter = 0;
+                            }else{
+                                steady_counter++;
+                                if (steady_counter > 2)
+                                {
+                                    quickStop();
+                                    current_position[X_AXIS] = destination[X_AXIS];
+                                    current_position[Y_AXIS] = destination[Y_AXIS];
+                                    current_position[Z_AXIS] = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
+                                    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+                                }
+                            }
+
+                            int16_t diff = sensor_value_total - previous_sensor_value;
+                            if (diff > max_diff)
+                                max_diff = diff;
+                        }
+                        previous_sensor_value = sensor_value_total;
+        /*
+                        MSerial.print(z_position_total);
+                        MSerial.print(' ');
+                        MSerial.print(float(sensor_value_total) / 100.0f);
+                        MSerial.print(' ');
+                        MSerial.print(float(max_sensor_value) / 100.0f);
+                        MSerial.print(' ');
+                        MSerial.print(float(max_diff) / 100.0f);
+                        MSerial.println();
+        */
+                        cnt = 0;
+                        sensor_value_total = 0;
+                        z_position_total = 0;
                     }
-                    previous_sensor_value = sensor_value_total;
-    /*
-                    MSerial.print(z_position_total);
-                    MSerial.print(' ');
-                    MSerial.print(float(sensor_value_total) / 100.0f);
-                    MSerial.print(' ');
-                    MSerial.print(float(max_sensor_value) / 100.0f);
-                    MSerial.print(' ');
-                    MSerial.print(float(max_diff) / 100.0f);
-                    MSerial.println();
-    */
-                    cnt = 0;
-                    sensor_value_total = 0;
-                    z_position_total = 0;
                 }
                 i2cCapacitanceStart();
             }
