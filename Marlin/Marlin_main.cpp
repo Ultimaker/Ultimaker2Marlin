@@ -691,7 +691,7 @@ float probeWithCapacitiveSensor()
             uint16_t value = 0;
             if (i2cCapacitanceDone(value) && value != 0xFFFF && value != previous_value)
             {
-                previous_value = previous_value;
+                previous_value = value;
                 z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
                 sensor_value_total += value;
                 cnt++;
