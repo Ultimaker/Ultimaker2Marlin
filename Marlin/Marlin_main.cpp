@@ -652,6 +652,7 @@ static void homeaxis(int axis) {
 #ifdef ENABLE_BED_LEVELING_PROBE
 float probeWithCapacitiveSensor()
 {
+    const unsigned int sample_count = 100;
     float total_z_height = 0.0;
     float z_target = 0.0;
     float z_distance = 5.0;
@@ -672,6 +673,7 @@ float probeWithCapacitiveSensor()
         int16_t max_sensor_value = 0;
         int16_t previous_sensor_value = 0;
         uint8_t steady_counter = 0;
+        uint16_t previous_value = 0;
 
         float sensor_value_list[6];
         float z_position_list[6];
@@ -687,15 +689,16 @@ float probeWithCapacitiveSensor()
             manage_heater();
             manage_inactivity();
             uint16_t value = 0;
-            if (i2cCapacitanceDone(value) && value != 0xFFFF)
+            if (i2cCapacitanceDone(value) && value != 0xFFFF && value != previous_value)
             {
+                previous_value = previous_value;
                 z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
                 sensor_value_total += value;
                 cnt++;
-                if (cnt == 1000)
+                if (cnt == sample_count)
                 {
-                    z_position_total /= 1000;
-                    sensor_value_total /= 1000;
+                    z_position_total /= sample_count;
+                    sensor_value_total /= sample_count;
                     
                     if (previous_sensor_value != 0)
                     {
@@ -745,7 +748,7 @@ float probeWithCapacitiveSensor()
                 i2cCapacitanceStart();
             }
         }
-    /*
+    
         MSerial.println();
         for(uint8_t n=0; n<6; n++)
         {
@@ -754,9 +757,10 @@ float probeWithCapacitiveSensor()
             MSerial.print(float(sensor_value_list[n]) / 100.0f);
             MSerial.println();
         }
-    */
+    
         //Solve the line-line intersection to get the proper position where the bed was hit. At index [1] we are sure to be above the bed. At index[2] we are already on the bed. So the intersection point is somewhere between [1] and [2].
         float f = float(sensor_value_list[1]-(sensor_value_list[3]*3-2*sensor_value_list[4]))/float((sensor_value_list[4]-sensor_value_list[3])-(sensor_value_list[2]-sensor_value_list[1]))-1.0;
+        MSerial.println(f);
         if (f > 0.0 && f < 1.0)
         {
             float z_height = z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
