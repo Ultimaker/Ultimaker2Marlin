@@ -657,7 +657,7 @@ float probeWithCapacitiveSensor()
     float z_target = 0.0;
     float z_distance = 5.0;
 
-    feedrate = 1;
+    feedrate = 0.5;
     for(uint8_t loop_counter = 0; loop_counter < CONFIG_BED_LEVEL_PROBE_REPEAT; loop_counter++)
     {
         destination[Z_AXIS] = z_target + z_distance;
