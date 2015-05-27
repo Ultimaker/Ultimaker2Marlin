@@ -38,6 +38,7 @@
 #include "i2c_capacitance.h"
 #include "led_rgbw_pca9632.h"
 #include "fan_driver.h"
+#include "cap_sense_probe.h"
 
 #define VERSION_STRING  "1.0.0"
 
@@ -649,135 +650,6 @@ static void homeaxis(int axis) {
 }
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
 
-#ifdef ENABLE_BED_LEVELING_PROBE
-float probeWithCapacitiveSensor()
-{
-    const unsigned int sample_count = 100;
-    float total_z_height = 0.0;
-    float z_target = 0.0;
-    float z_distance = 5.0;
-
-    feedrate = 0.5;
-    for(uint8_t loop_counter = 0; loop_counter < CONFIG_BED_LEVEL_PROBE_REPEAT; loop_counter++)
-    {
-        destination[Z_AXIS] = z_target + z_distance;
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
-        st_synchronize();
-        destination[Z_AXIS] = z_target - z_distance;
-        plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate, active_extruder);
-        uint16_t cnt = 0;
-        long sensor_value_total = 0;
-        float z_position_total = 0.0;
-        
-        int16_t max_diff = 0;
-        int16_t max_sensor_value = 0;
-        int16_t previous_sensor_value = 0;
-        uint8_t steady_counter = 0;
-        uint16_t previous_value = 0;
-
-        float sensor_value_list[6];
-        float z_position_list[6];
-        for(uint8_t n=0; n<6; n++)
-        {
-            sensor_value_list[n] = 0;
-            z_position_list[n] = 0;
-        }
-
-        i2cCapacitanceStart();
-        while(blocks_queued())
-        {
-            manage_heater();
-            manage_inactivity();
-            uint16_t value = 0;
-            if (i2cCapacitanceDone(value))
-            {
-                if (value != 0xFFFF && value != previous_value)
-                {
-                    previous_value = value;
-                    z_position_total += float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-                    sensor_value_total += value;
-                    cnt++;
-                    if (cnt == sample_count)
-                    {
-                        z_position_total /= sample_count;
-                        sensor_value_total /= sample_count;
-                        
-                        if (previous_sensor_value != 0)
-                        {
-                            for(uint8_t n=1; n<6; n++)
-                            {
-                                sensor_value_list[n - 1] = sensor_value_list[n];
-                                z_position_list[n - 1] = z_position_list[n];
-                            }
-                            sensor_value_list[5] = sensor_value_total;
-                            z_position_list[5] = z_position_total;
-
-                            if (sensor_value_total > previous_sensor_value + max_diff / 3)
-                            {
-                                max_sensor_value = sensor_value_total;
-                                steady_counter = 0;
-                            }else{
-                                steady_counter++;
-                                if (steady_counter > 2)
-                                {
-                                    quickStop();
-                                    current_position[X_AXIS] = destination[X_AXIS];
-                                    current_position[Y_AXIS] = destination[Y_AXIS];
-                                    current_position[Z_AXIS] = float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS];
-                                    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-                                }
-                            }
-
-                            int16_t diff = sensor_value_total - previous_sensor_value;
-                            if (diff > max_diff)
-                                max_diff = diff;
-                        }
-                        previous_sensor_value = sensor_value_total;
-        /*
-                        MSerial.print(z_position_total);
-                        MSerial.print(' ');
-                        MSerial.print(float(sensor_value_total) / 100.0f);
-                        MSerial.print(' ');
-                        MSerial.print(float(max_sensor_value) / 100.0f);
-                        MSerial.print(' ');
-                        MSerial.print(float(max_diff) / 100.0f);
-                        MSerial.println();
-        */
-                        cnt = 0;
-                        sensor_value_total = 0;
-                        z_position_total = 0;
-                    }
-                }
-                i2cCapacitanceStart();
-            }
-        }
-    
-        MSerial.println();
-        for(uint8_t n=0; n<6; n++)
-        {
-            MSerial.print(z_position_list[n]);
-            MSerial.print(' ');
-            MSerial.print(float(sensor_value_list[n]) / 100.0f);
-            MSerial.println();
-        }
-    
-        //Solve the line-line intersection to get the proper position where the bed was hit. At index [1] we are sure to be above the bed. At index[2] we are already on the bed. So the intersection point is somewhere between [1] and [2].
-        float f = float(sensor_value_list[1]-(sensor_value_list[3]*3-2*sensor_value_list[4]))/float((sensor_value_list[4]-sensor_value_list[3])-(sensor_value_list[2]-sensor_value_list[1]))-1.0;
-        MSerial.println(f);
-        if (f > 0.0 && f < 1.0)
-        {
-            float z_height = z_position_list[1] + (z_position_list[2] - z_position_list[1]) * f;
-            z_target = z_height;
-            z_distance = 1.0;
-            total_z_height += z_height;
-        }else{
-            loop_counter --;
-        }
-    }
-    return total_z_height / CONFIG_BED_LEVEL_PROBE_REPEAT;
-}
-#endif//ENABLE_BED_LEVELING_PROBE
-
 void process_commands()
 {
   unsigned long codenum; //throw away variable
@@ -995,7 +867,7 @@ void process_commands()
           destination[Y_AXIS] = CONFIG_BED_LEVELING_POINT1_Y;
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
           st_synchronize();
-          float height_1 = probeWithCapacitiveSensor();
+          float height_1 = probeWithCapacitiveSensor(CONFIG_BED_LEVELING_POINT1_X, CONFIG_BED_LEVELING_POINT1_Y);
 
           destination[Z_AXIS] = CONFIG_BED_LEVELING_Z_HEIGHT;
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
@@ -1003,7 +875,7 @@ void process_commands()
           destination[Y_AXIS] = CONFIG_BED_LEVELING_POINT2_Y;
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
           st_synchronize();
-          float height_2 = probeWithCapacitiveSensor();
+          float height_2 = probeWithCapacitiveSensor(CONFIG_BED_LEVELING_POINT2_X, CONFIG_BED_LEVELING_POINT2_Y);
 
           destination[Z_AXIS] = CONFIG_BED_LEVELING_Z_HEIGHT;
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
@@ -1011,7 +883,7 @@ void process_commands()
           destination[Y_AXIS] = CONFIG_BED_LEVELING_POINT3_Y;
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
           st_synchronize();
-          float height_3 = probeWithCapacitiveSensor();
+          float height_3 = probeWithCapacitiveSensor(CONFIG_BED_LEVELING_POINT3_X, CONFIG_BED_LEVELING_POINT3_Y);
           destination[Z_AXIS] = height_3;
           //Position the head at exactly the height, so we can use this as Z0 later.
           plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[X_AXIS], active_extruder);
@@ -1034,7 +906,7 @@ void process_commands()
       }
       break;
     case 30: // G30 Probe Z at current position and report result.
-      destination[Z_AXIS] = probeWithCapacitiveSensor();
+      destination[Z_AXIS] = probeWithCapacitiveSensor(destination[X_AXIS], destination[Y_AXIS]);
       plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
       MSerial.println(destination[Z_AXIS]);
       break;
@@ -1605,6 +1477,63 @@ void process_commands()
             manage_inactivity();
         }
         MSerial.println(value, HEX);
+      }
+    break;
+    case 311://M311, calculate cap sensor noise
+      {
+        const uint16_t sample_count = 10000;
+        uint16_t previous_value = 0;
+        uint16_t min_value = 0xFFFF;
+        uint16_t max_value = 0;
+        uint32_t average = 0;
+        for(uint16_t n=0; n<sample_count; n++)
+        {
+            uint16_t value = previous_value;
+            while(previous_value == value)
+            {
+                i2cCapacitanceStart();
+                while(!i2cCapacitanceDone(value))
+                {
+                    manage_heater();
+                    manage_inactivity();
+                }
+            }
+            previous_value = value;
+            average += value;
+            if (value < min_value)
+                min_value = value;
+            if (value > max_value)
+                max_value = value;
+        }
+        average /= sample_count;
+
+        uint32_t std_dev = 0;
+        for(uint16_t n=0; n<sample_count; n++)
+        {
+            uint16_t value = previous_value;
+            while(previous_value == value)
+            {
+                i2cCapacitanceStart();
+                while(!i2cCapacitanceDone(value))
+                {
+                    manage_heater();
+                    manage_inactivity();
+                }
+            }
+            previous_value = value;
+            
+            std_dev += (average - value) * (average - value);
+        }
+        std_dev /= sample_count;
+
+        SERIAL_ECHOPGM("Average: ");
+        MSerial.println(average);
+        SERIAL_ECHOPGM("Min: ");
+        MSerial.println(min_value);
+        SERIAL_ECHOPGM("Max: ");
+        MSerial.println(max_value);
+        SERIAL_ECHOPGM("Stddev^2: ");
+        MSerial.println(std_dev);
       }
     break;
 #endif//ENABLE_BED_LEVELING_PROBE
