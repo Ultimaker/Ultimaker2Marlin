@@ -596,7 +596,7 @@ static void lcd_print_flow_nozzle0()
 #if EXTRUDERS > 1
 static void lcd_print_tune_nozzle1()
 {
-    lcd_tune_temperature(target_temperature[1], 0, get_maxtemp(1) - 15);
+    lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15);
 }
 
 static void lcd_print_flow_nozzle1()
