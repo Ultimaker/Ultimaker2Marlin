@@ -881,7 +881,7 @@ void process_commands()
   unsigned long codenum; //throw away variable
   char *starpos = NULL;
 
-  if (printing_state != PRINT_STATE_RECOVER)
+  if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START))
     printing_state = PRINT_STATE_NORMAL;
 
   if(code_seen('G'))
@@ -971,8 +971,9 @@ void process_commands()
     case 28: //G28 Home all Axis one at a time
       if (printing_state == PRINT_STATE_RECOVER)
         break;
+      if (printing_state != PRINT_STATE_START)
+        printing_state = PRINT_STATE_HOMING;
 
-      printing_state = PRINT_STATE_HOMING;
       saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
       feedmultiply = 100;
@@ -2500,7 +2501,9 @@ void process_commands()
     SERIAL_ECHO(cmdbuffer[bufindr]);
     SERIAL_ECHOLNPGM("\"");
   }
-  printing_state = PRINT_STATE_NORMAL;
+
+  if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START))
+    printing_state = PRINT_STATE_NORMAL;
 
   ClearToSend();
 }
@@ -2673,7 +2676,11 @@ void prepare_move()
       destination[i] = current_position[i] + difference[i] * fraction;
     }
     calculate_delta(destination);
-    if (printing_state != PRINT_STATE_RECOVER)
+    if (card.sdprinting && (printing_state == PRINT_STATE_RECOVER) && (destination[Z_AXIS] >= recover_height-0.01f))
+    {
+      recover_start_print();
+    }
+    else if (printing_state != PRINT_STATE_RECOVER)
     {
       plan_buffer_line(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS],
                        destination[E_AXIS], feedrate*feedmultiply/60/100.0,
@@ -2681,7 +2688,14 @@ void prepare_move()
     }
   }
 #else
-  if (printing_state != PRINT_STATE_RECOVER)
+  if (card.sdprinting && (printing_state == PRINT_STATE_RECOVER) && (destination[Z_AXIS] >= recover_height-0.01f))
+  {
+      for(uint8_t i=0; i < NUM_AXIS; i++) {
+          recover_position[i] = destination[i];
+      }
+      recover_start_print();
+  }
+  else if (printing_state != PRINT_STATE_RECOVER)
   {
     // Do not use feedmultiply for E or Z only moves
     if( (current_position[X_AXIS] == destination [X_AXIS]) && (current_position[Y_AXIS] == destination [Y_AXIS])) {
@@ -2694,10 +2708,6 @@ void prepare_move()
 #endif
   for(int8_t i=0; i < NUM_AXIS; i++) {
     current_position[i] = destination[i];
-  }
-  if ((printing_state == PRINT_STATE_RECOVER) && (abs(current_position[Z_AXIS]-recover_height) < 0.01f))
-  {
-      recover_start_print();
   }
 }
 

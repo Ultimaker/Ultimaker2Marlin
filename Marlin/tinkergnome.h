@@ -29,8 +29,10 @@ extern const uint8_t pauseGfx[];
 extern const uint8_t backGfx[];
 extern const uint8_t hourglassGfx[];
 extern const uint8_t filamentGfx[];
+extern const uint8_t menuGfx[];
 
 extern float recover_height;
+extern float recover_position[NUM_AXIS];
 
 void tinkergnome_init();
 void lcd_menu_maintenance_expert();
@@ -44,6 +46,10 @@ void lcd_menu_expert_extrude();
 void lcd_extrude_quit_menu();
 void lcd_menu_sleeptimer();
 void recover_start_print();
+void lcd_menu_recover_init();
+void lcd_menu_expert_recover();
+
+char* int_to_time_string_tg(unsigned long i, char* temp_buffer);
 
 #endif//ULTI_LCD2_MENU_TINKERGNOME_H
 
