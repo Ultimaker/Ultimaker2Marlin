@@ -249,4 +249,8 @@ extern uint8_t active_extruder;
   # define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1 }
 #endif
 
+extern "C"{
+  int freeMemory();
+}
+
 #endif

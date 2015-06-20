@@ -43,6 +43,7 @@
 #include "language.h"
 #include "pins_arduino.h"
 #include "tinkergnome.h"
+#include "machinesettings.h"
 
 #if NUM_SERVOS > 0
 #include "Servo.h"
@@ -204,6 +205,8 @@ uint8_t fanSpeedPercent=100;
 //  uint8_t has_saved_settings;
 //};
 //machinesettings machinesettings_tempsave[10];
+
+MachineSettings machinesettings;
 
 #ifdef SERVO_ENDSTOPS
   int servo_endstops[] = SERVO_ENDSTOPS;
@@ -2244,16 +2247,17 @@ void process_commands()
     }
     break;
 
-//    case 605: // M605 store current set values
-//    {
-//      uint8_t tmp_select;
-//      if (code_seen('S'))
-//      {
-//        tmp_select = code_value();
-//        if (tmp_select>9) tmp_select=9;
-//      }
-//      else
-//        tmp_select = 0;
+    case 605: // M605 store current set values
+    {
+      uint8_t tmp_select;
+      if (code_seen('S'))
+      {
+        tmp_select = code_value();
+        if (tmp_select>9) tmp_select=9;
+      }
+      else
+        tmp_select = 0;
+
 //      machinesettings_tempsave[tmp_select].feedmultiply = feedmultiply;
 //      machinesettings_tempsave[tmp_select].BedTemperature = target_temperature_bed;
 //      machinesettings_tempsave[tmp_select].fanSpeed = fanSpeed;
@@ -2275,19 +2279,26 @@ void process_commands()
 //      machinesettings_tempsave[tmp_select].max_z_jerk = max_z_jerk;
 //      machinesettings_tempsave[tmp_select].max_e_jerk = max_e_jerk;
 //      machinesettings_tempsave[tmp_select].has_saved_settings = 1;
-//    }
-//    break;
-//
-//    case 606: // M606 recall saved values
-//    {
-//      uint8_t tmp_select;
-//      if (code_seen('S'))
-//      {
-//        tmp_select = code_value();
-//        if (tmp_select>9) tmp_select=9;
-//      }
-//      else
-//        tmp_select = 0;
+
+        machinesettings.store(tmp_select);
+
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM(MSG_FREE_MEMORY);
+        SERIAL_ECHOLN(freeMemory());
+      }
+    break;
+
+    case 606: // M606 recall saved values
+    {
+      uint8_t tmp_select;
+      if (code_seen('S'))
+      {
+        tmp_select = code_value();
+        if (tmp_select>9) tmp_select=9;
+      }
+      else
+        tmp_select = 0;
+
 //      if (machinesettings_tempsave[tmp_select].has_saved_settings > 0)
 //      {
 //        feedmultiply = machinesettings_tempsave[tmp_select].feedmultiply;
@@ -2311,8 +2322,13 @@ void process_commands()
 //        max_z_jerk = machinesettings_tempsave[tmp_select].max_z_jerk;
 //        max_e_jerk = machinesettings_tempsave[tmp_select].max_e_jerk;
 //      }
-//    }
-//    break;
+
+        machinesettings.recall(tmp_select);
+        SERIAL_ECHO_START;
+        SERIAL_ECHOPGM(MSG_FREE_MEMORY);
+        SERIAL_ECHOLN(freeMemory());
+    }
+    break;
     #endif//ENABLE_ULTILCD2
 
     case 907: // M907 Set digital trimpot motor current using axis codes.
