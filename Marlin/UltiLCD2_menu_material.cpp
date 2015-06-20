@@ -774,7 +774,7 @@ void lcd_material_reset_defaults()
     eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(1), 107);
     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(1), 2.85);
 
-    strcpy_P(buffer, PSTR("UPET"));
+    strcpy_P(buffer, PSTR("CPE"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(2), 5);
     eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(2), 250);
     eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(2), 60);
@@ -851,7 +851,7 @@ void lcd_material_store_current_material()
 
 bool lcd_material_verify_material_settings()
 {
-    bool hasUPET = false;
+    bool hasCPE = false;
     
     uint8_t cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (cnt < 2 || cnt > EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
@@ -876,13 +876,20 @@ bool lcd_material_verify_material_settings()
 
         eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(cnt), 8);
         if (strcmp_P(card.longFilename, PSTR("UPET")) == 0)
-            hasUPET = true;
+        {
+            strcpy_P(card.longFilename, PSTR("CPE"));
+            eeprom_write_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(cnt), 4);
+        }
+        if (strcmp_P(card.longFilename, PSTR("CPE")) == 0)
+        {
+            hasCPE = true;
+        }
     }
     cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
-    if (!hasUPET && cnt < EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
+    if (!hasCPE && cnt < EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
     {
-        strcpy_P(card.longFilename, PSTR("UPET"));
-        eeprom_write_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(cnt), 5);
+        strcpy_P(card.longFilename, PSTR("CPE"));
+        eeprom_write_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(cnt), 4);
         eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(cnt), 250);
         eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(cnt), 60);
         eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(cnt), 50);
