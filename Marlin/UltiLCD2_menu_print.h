@@ -35,7 +35,7 @@ void doStartPrint();
 void lcd_change_to_menu_change_material_return();
 void lcd_menu_print_pause();
 void lcd_menu_print_resume();
-
+void lcd_menu_print_heatup();
 //extern bool primed;
 
 #endif//ULTI_LCD2_MENU_PRINT_H

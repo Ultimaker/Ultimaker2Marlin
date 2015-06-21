@@ -36,6 +36,7 @@
 #include "temperature.h"
 #include "watchdog.h"
 #include "Sd2Card.h"
+#include "tinkergnome.h"
 
 
 //===========================================================================
@@ -413,9 +414,6 @@ void manage_heater()
 
   updateTemperaturesFromRawValues();
 
-  if(printing_state == PRINT_STATE_RECOVER)
-    return;
-
   #ifdef HEATER_0_USES_MAX6675
   if (current_temperature[0] > 1023 || current_temperature[0] > maxttemp[0])
   {
@@ -426,19 +424,21 @@ void manage_heater()
 	  min_temp_error(0);
   }
   #endif
+  int target_temp;
+
   for(int e = 0; e < EXTRUDERS; e++)
   {
-
+    target_temp = (printing_state == PRINT_STATE_RECOVER) ? recover_temperature[e] : target_temperature[e];
   #ifdef PIDTEMP
     pid_input = current_temperature[e];
 
     #ifndef PID_OPENLOOP
-        pid_error[e] = target_temperature[e] - pid_input;
+        pid_error[e] = target_temp - pid_input;
         if(pid_error[e] > PID_FUNCTIONAL_RANGE) {
           pid_output = BANG_MAX;
           pid_reset[e] = true;
         }
-        else if(pid_error[e] < -PID_FUNCTIONAL_RANGE || target_temperature[e] == 0) {
+        else if(pid_error[e] < -PID_FUNCTIONAL_RANGE || target_temp == 0) {
           pid_output = 0;
           pid_reset[e] = true;
         }
@@ -459,7 +459,7 @@ void manage_heater()
         }
         temp_dState[e] = pid_input;
     #else
-          pid_output = constrain(target_temperature[e], 0, PID_MAX);
+          pid_output = constrain(target_temp, 0, PID_MAX);
     #endif //PID_OPENLOOP
     #ifdef PID_DEBUG
     SERIAL_ECHO_START;
@@ -478,7 +478,7 @@ void manage_heater()
     #endif //PID_DEBUG
   #else /* PID off */
     pid_output = 0;
-    if(current_temperature[e] < target_temperature[e]) {
+    if(current_temperature[e] < target_temp) {
       pid_output = PID_MAX;
     }
   #endif

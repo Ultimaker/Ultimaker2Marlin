@@ -57,6 +57,7 @@
 uint8_t ui_mode = UI_MODE_STANDARD;
 float recover_height = 0.0f;
 float recover_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
+int recover_temperature[EXTRUDERS] = { 0 };
 uint16_t lcd_timeout = LED_DIM_TIME;
 uint8_t lcd_contrast = 0xDF;
 uint8_t lcd_sleep_contrast = 0;
@@ -2090,7 +2091,7 @@ static void lcd_recover_zvalue()
     lcd_tune_value(recover_height, min_pos[Z_AXIS], max_pos[Z_AXIS], 0.01f);
 }
 
-static void reset_printing_state()
+void reset_printing_state()
 {
     printing_state = PRINT_STATE_NORMAL;
 }
@@ -2223,6 +2224,10 @@ void lcd_menu_maintenance_expert()
         }
         else if (IS_SELECTED_SCROLL(6))
         {
+            for (uint8_t i=0; i<EXTRUDERS; ++i)
+            {
+                recover_temperature[i] = target_temperature[i];
+            }
             printing_state = PRINT_STATE_RECOVER;
             // select file
             lcd_clear_cache();
@@ -3239,7 +3244,7 @@ void recover_start_print()
         printing_state = PRINT_STATE_START;
         enquecommand_P(PSTR("G28"));
         enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
-        menu.replace_menu(menu_t(lcd_menu_print_heatup_tg));
+        menu.replace_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_print_heatup_tg : lcd_menu_print_heatup));
     }
 }
 

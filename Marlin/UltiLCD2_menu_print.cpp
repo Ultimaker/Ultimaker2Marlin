@@ -20,7 +20,7 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 
-static void lcd_menu_print_heatup();
+void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error();
 static void lcd_menu_print_classic_warning();
@@ -190,7 +190,8 @@ static void userStartPrint()
     }
     else
     {
-        lcd_remove_menu();
+        // lcd_remove_menu();
+        menu.replace_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
         doStartPrint();
     }
 }
@@ -383,7 +384,7 @@ void lcd_menu_print_select()
     if (nrOfFiles == 0)
     {
         if (card.atRoot())
-            lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("OK"));
+            lcd_info_screen(reset_printing_state, lcd_change_to_previous_menu, PSTR("OK"));
         else
             lcd_info_screen(lcd_menu_print_select, cardUpdir, PSTR("OK"));
         lcd_lib_draw_string_centerP(25, PSTR("No files found!"));
@@ -495,7 +496,7 @@ void lcd_menu_print_select()
     lcd_scroll_menu(PSTR("SD CARD"), nrOfFiles+1, lcd_sd_menu_filename_callback, lcd_sd_menu_details_callback);
 }
 
-static void lcd_menu_print_heatup()
+void lcd_menu_print_heatup()
 {
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
 
@@ -673,7 +674,7 @@ static void lcd_menu_print_error()
 
 static void lcd_menu_print_classic_warning()
 {
-    lcd_question_screen((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing, userStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, lcd_remove_menu, PSTR("CANCEL"));
+    lcd_question_screen(NULL, userStartPrint, PSTR("CONTINUE"), lcd_menu_print_select, lcd_remove_menu, PSTR("CANCEL"));
 
     lcd_lib_draw_string_centerP(10, PSTR("This file will"));
     lcd_lib_draw_string_centerP(20, PSTR("override machine"));
