@@ -89,7 +89,7 @@ static void userAbortPrint()
 
 static void checkPrintFinished()
 {
-    if ((printing_state != PRINT_STATE_RECOVER) && !card.sdprinting && !is_command_queued())
+    if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START) && !card.sdprinting && !is_command_queued())
     {
         abortPrint();
         recover_height = 0.0f;

@@ -408,13 +408,13 @@ void manage_heater()
   float pid_input;
   float pid_output;
 
-  if(printing_state == PRINT_STATE_RECOVER)
-    return;
-
   if(temp_meas_ready != true)   //better readability
     return;
 
   updateTemperaturesFromRawValues();
+
+  if(printing_state == PRINT_STATE_RECOVER)
+    return;
 
   #ifdef HEATER_0_USES_MAX6675
   if (current_temperature[0] > 1023 || current_temperature[0] > maxttemp[0])
