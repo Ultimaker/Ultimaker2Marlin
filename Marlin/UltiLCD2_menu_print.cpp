@@ -872,8 +872,8 @@ void lcd_menu_print_tune_heatup_nozzle1()
         target_temperature[1] = int(target_temperature[1]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
         if (target_temperature[1] < 0)
             target_temperature[1] = 0;
-        if (target_temperature[1] > maxttemp[1] - 15)
-            target_temperature[1] = maxttemp[1] - 15;
+        if (target_temperature[1] > get_maxtemp(1) - 15)
+            target_temperature[1] = get_maxtemp(1) - 15;
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
