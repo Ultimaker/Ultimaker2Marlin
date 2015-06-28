@@ -71,6 +71,7 @@
 // given number of milliseconds.  This gets the fan spinning reliably
 // before setting a PWM value. (Does not work with software PWM for fan on Sanguinololu)
 #define FAN_KICKSTART_TIME 200
+#define FAN_KICKSTART_MINPWM 20
 
 // Extruder cooling fans
 // Configure fan pin outputs to automatically turn on/off when the associated

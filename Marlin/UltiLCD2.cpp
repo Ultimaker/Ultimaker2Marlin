@@ -52,7 +52,7 @@ void lcd_init()
     }
     lcd_material_read_current_material();
 
-    glow_millis = millis() + MILLIS_GLOW;
+    glow_millis = millis() + 600;
     led_glow = led_glow_dir = 0;
 
     // initialize menu stack and show start animation
@@ -77,7 +77,7 @@ void lcd_update()
             if (led_glow == 0) led_glow_dir = 0;
         }else{
             led_glow+=2;
-            if (led_glow == 126) led_glow_dir = 1;
+            if (led_glow >= 126) led_glow_dir = 1;
         }
     }
 
@@ -153,6 +153,8 @@ void lcd_menu_startup()
 
     LED_GLOW();
     lcd_lib_clear();
+
+    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR(STRING_CONFIG_H_AUTHOR));
 
     if (led_glow < 84)
     {

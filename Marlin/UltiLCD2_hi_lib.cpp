@@ -165,65 +165,6 @@ void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags)
     }
 }
 
-/*
-void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback_t entryNameCallback, entryDetailsCallback_t entryDetailsCallback)
-{
-    if (lcd_lib_button_pressed)
-		return;//Selection possibly changed the menu, so do not update it this cycle.
-
-    if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
-        lcd_lib_encoder_pos = 0;
-
-	static int16_t viewPos = 0;
-	if (lcd_lib_encoder_pos < 0) lcd_lib_encoder_pos += entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
-	if (lcd_lib_encoder_pos >= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM) lcd_lib_encoder_pos -= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
-
-    uint8_t selIndex = uint16_t(lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
-
-    lcd_lib_clear();
-
-    int16_t targetViewPos = selIndex * 8 - 15;
-
-    int16_t viewDiff = targetViewPos - viewPos;
-    viewPos += viewDiff / 4;
-    if (viewDiff > 0) { viewPos ++; led_glow = led_glow_dir = 0; }
-    if (viewDiff < 0) { viewPos --; led_glow = led_glow_dir = 0; }
-
-    uint8_t drawOffset = 10 - (uint16_t(viewPos) % 8);
-    uint8_t itemOffset = uint16_t(viewPos) / 8;
-    char buffer[32];
-    for(uint8_t n=0; n<6; n++)
-    {
-        uint8_t itemIdx = n + itemOffset;
-        if (itemIdx >= entryCount)
-            continue;
-
-        char* ptr = entryNameCallback(itemIdx, buffer);
-		//ptr[10] = '\0';
-		ptr[20] = '\0';
-        if (itemIdx == selIndex)
-        {
-            //lcd_lib_set(3, drawOffset+8*n-1, 62, drawOffset+8*n+7);
-            lcd_lib_set(3, drawOffset+8*n-1, 124, drawOffset+8*n+7);
-            lcd_lib_clear_string(4, drawOffset+8*n, ptr);
-        }else{
-            lcd_lib_draw_string(4, drawOffset+8*n, ptr);
-        }
-    }
-    lcd_lib_set(3, 0, 124, 8);
-    lcd_lib_clear(3, 47, 124, 63);
-    lcd_lib_clear(3, 9, 124, 9);
-
-    lcd_lib_draw_hline(3, 124, 50);
-
-    lcd_lib_clear_string_centerP(1, menuNameP);
-
-	entryDetailsCallback(selIndex);
-
-    lcd_lib_update_screen();
-}
-*/
-
 void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, scrollDrawCallback_t entryDrawCallback, entryDetailsCallback_t entryDetailsCallback)
 {
     if (lcd_lib_button_pressed)

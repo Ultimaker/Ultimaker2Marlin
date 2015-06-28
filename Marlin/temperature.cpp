@@ -92,22 +92,24 @@ static volatile bool temp_meas_ready = false;
   // static float pid_output[EXTRUDERS];
   static bool pid_reset[EXTRUDERS];
 #endif //PIDTEMP
-#ifdef PIDTEMPBED
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
   //static cannot be external:
-  static float temp_iState_bed = { 0 };
-  static float temp_dState_bed = { 0 };
   static float pTerm_bed;
   static float iTerm_bed;
-  static float dTerm_bed;
   //int output;
+  static float temp_iState_bed = { 0 };
+  static float temp_dState_bed = { 0 };
+  static float dTerm_bed;
   static float pid_error_bed;
   static float temp_iState_min_bed;
   static float temp_iState_max_bed;
-#else //PIDTEMPBED
-	static unsigned long  previous_millis_bed_heater;
+//#else //PIDTEMPBED
 #endif //PIDTEMPBED
-  static unsigned char soft_pwm[EXTRUDERS];
+#if TEMP_SENSOR_BED != 0
+  static unsigned long  previous_millis_bed_heater;
+#endif
   static unsigned char soft_pwm_bed;
+  static unsigned char soft_pwm[EXTRUDERS];
 #ifdef FAN_SOFT_PWM
   static unsigned char soft_pwm_fan;
 #endif
@@ -321,8 +323,11 @@ void updatePID()
      temp_iState_max[e] = PID_INTEGRAL_DRIVE_MAX / Ki;
   }
 #endif
-#ifdef PIDTEMPBED
-  temp_iState_max_bed = PID_INTEGRAL_DRIVE_MAX / bedKi;
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
+  if (pidTempBed())
+  {
+    temp_iState_max_bed = PID_INTEGRAL_DRIVE_MAX / bedKi;
+  }
 #endif
 }
 
@@ -570,15 +575,20 @@ void manage_heater()
     }
   }
 
-  #ifndef PIDTEMPBED
-  if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
-    return;
-  previous_millis_bed_heater = millis();
-  #endif
-
   #if TEMP_SENSOR_BED != 0
 
+//  #ifndef PIDTEMPBED
+  if (!pidTempBed())
+  {
+    if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
+      return;
+    previous_millis_bed_heater = millis();
+  }
+//  #endif
+
   #ifdef PIDTEMPBED
+  if (pidTempBed())
+  {
     pid_input = current_temperature_bed;
 
     #ifndef PID_OPENLOOP
@@ -606,8 +616,11 @@ void manage_heater()
 	  else {
 	    soft_pwm_bed = 0;
 	  }
-
-    #elif !defined(BED_LIMIT_SWITCHING)
+  }
+  else // printbed bang-bang mode
+  #endif//!PIDTEMPBED
+  {
+    #if !defined(BED_LIMIT_SWITCHING)
       // Check if temperature is within the correct range
       if((current_temperature_bed > BED_MINTEMP) && (current_temperature_bed < BED_MAXTEMP))
       {
@@ -644,6 +657,7 @@ void manage_heater()
         WRITE(HEATER_BED_PIN,LOW);
       }
     #endif
+  }
   #endif
 }
 
@@ -765,7 +779,7 @@ void tp_init()
     temp_iState_min[e] = 0.0;
     temp_iState_max[e] = PID_INTEGRAL_DRIVE_MAX / Ki;
 #endif //PIDTEMP
-#ifdef PIDTEMPBED
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
     temp_iState_min_bed = 0.0;
     temp_iState_max_bed = PID_INTEGRAL_DRIVE_MAX / bedKi;
 #endif //PIDTEMPBED
@@ -981,7 +995,7 @@ void disable_heater()
     #endif
   #endif
 
-  #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
+  #if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1) && (TEMP_SENSOR_BED != 0)
     target_temperature_bed=0;
     soft_pwm_bed=0;
     #ifdef PIDTEMPBED

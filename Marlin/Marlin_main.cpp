@@ -661,6 +661,7 @@ void get_command()
 
     return;
   }
+
   static uint32_t endOfLineFilePosition = 0;
   while( !card.eof()  && buflen < BUFSIZE) {
     int16_t n=card.get();
@@ -695,9 +696,8 @@ void get_command()
         stoptime=millis();
         char time[30];
         unsigned long t=(stoptime-starttime)/1000;
-        int hours, minutes;
-        minutes=(t/60)%60;
-        hours=t/60/60;
+        int minutes=(t/60)%60;
+        int hours=t/60/60;
         sprintf_P(time, PSTR("%i hours %i minutes"),hours, minutes);
         SERIAL_ECHO_START;
         SERIAL_ECHOLN(time);
@@ -1942,19 +1942,22 @@ void process_commands()
     #ifdef PIDTEMPBED
     case 304: // M304
       {
-        if(code_seen('P')) bedKp = code_value();
-        if(code_seen('I')) bedKi = scalePID_i(code_value());
-        if(code_seen('D')) bedKd = scalePID_d(code_value());
+        if (pidTempBed())
+        {
+            if(code_seen('P')) bedKp = code_value();
+            if(code_seen('I')) bedKi = scalePID_i(code_value());
+            if(code_seen('D')) bedKd = scalePID_d(code_value());
 
-        updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
-        SERIAL_PROTOCOL(" p:");
-        SERIAL_PROTOCOL(bedKp);
-        SERIAL_PROTOCOL(" i:");
-        SERIAL_PROTOCOL(unscalePID_i(bedKi));
-        SERIAL_PROTOCOL(" d:");
-        SERIAL_PROTOCOL(unscalePID_d(bedKd));
-        SERIAL_PROTOCOLLN("");
+            updatePID();
+            SERIAL_PROTOCOL(MSG_OK);
+            SERIAL_PROTOCOL(" p:");
+            SERIAL_PROTOCOL(bedKp);
+            SERIAL_PROTOCOL(" i:");
+            SERIAL_PROTOCOL(unscalePID_i(bedKi));
+            SERIAL_PROTOCOL(" d:");
+            SERIAL_PROTOCOL(unscalePID_d(bedKd));
+            SERIAL_PROTOCOLLN("");
+        }
       }
       break;
     #endif //PIDTEMP
@@ -2256,36 +2259,12 @@ void process_commands()
         if (tmp_select>9) tmp_select=9;
       }
       else
+      {
         tmp_select = 0;
-
-//      machinesettings_tempsave[tmp_select].feedmultiply = feedmultiply;
-//      machinesettings_tempsave[tmp_select].BedTemperature = target_temperature_bed;
-//      machinesettings_tempsave[tmp_select].fanSpeed = fanSpeed;
-//      for (int i=0; i<EXTRUDERS; i++)
-//      {
-//        machinesettings_tempsave[tmp_select].HotendTemperature[i] = target_temperature[i];
-//        machinesettings_tempsave[tmp_select].extrudemultiply[i] = extrudemultiply[i];
-//      }
-//      for (int i=0; i<NUM_AXIS; i++)
-//      {
-//        machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i] = max_acceleration_units_per_sq_second[i];
-//        machinesettings_tempsave[tmp_select].max_feedrate[i] = max_feedrate[i];
-//      }
-//      machinesettings_tempsave[tmp_select].acceleration = acceleration;
-//      machinesettings_tempsave[tmp_select].minimumfeedrate = minimumfeedrate;
-//      machinesettings_tempsave[tmp_select].mintravelfeedrate = mintravelfeedrate;
-//      machinesettings_tempsave[tmp_select].minsegmenttime = minsegmenttime;
-//      machinesettings_tempsave[tmp_select].max_xy_jerk = max_xy_jerk;
-//      machinesettings_tempsave[tmp_select].max_z_jerk = max_z_jerk;
-//      machinesettings_tempsave[tmp_select].max_e_jerk = max_e_jerk;
-//      machinesettings_tempsave[tmp_select].has_saved_settings = 1;
-
-        machinesettings.store(tmp_select);
-
-        SERIAL_ECHO_START;
-        SERIAL_ECHOPGM(MSG_FREE_MEMORY);
-        SERIAL_ECHOLN(freeMemory());
       }
+
+      machinesettings.store(tmp_select);
+    }
     break;
 
     case 606: // M606 recall saved values
@@ -2297,36 +2276,10 @@ void process_commands()
         if (tmp_select>9) tmp_select=9;
       }
       else
+      {
         tmp_select = 0;
-
-//      if (machinesettings_tempsave[tmp_select].has_saved_settings > 0)
-//      {
-//        feedmultiply = machinesettings_tempsave[tmp_select].feedmultiply;
-//        target_temperature_bed = machinesettings_tempsave[tmp_select].BedTemperature;
-//        fanSpeed = machinesettings_tempsave[tmp_select].fanSpeed;
-//        for (int i=0; i<EXTRUDERS; i++)
-//        {
-//          target_temperature[i] = machinesettings_tempsave[tmp_select].HotendTemperature[i];
-//          extrudemultiply[i] = machinesettings_tempsave[tmp_select].extrudemultiply[i];
-//        }
-//        for (int i=0; i<NUM_AXIS; i++)
-//        {
-//          max_acceleration_units_per_sq_second[i] = machinesettings_tempsave[tmp_select].max_acceleration_units_per_sq_second[i];
-//          max_feedrate[i] = machinesettings_tempsave[tmp_select].max_feedrate[i];
-//        }
-//        acceleration = machinesettings_tempsave[tmp_select].acceleration;
-//        minimumfeedrate = machinesettings_tempsave[tmp_select].minimumfeedrate;
-//        mintravelfeedrate = machinesettings_tempsave[tmp_select].mintravelfeedrate;
-//        minsegmenttime = machinesettings_tempsave[tmp_select].minsegmenttime;
-//        max_xy_jerk = machinesettings_tempsave[tmp_select].max_xy_jerk;
-//        max_z_jerk = machinesettings_tempsave[tmp_select].max_z_jerk;
-//        max_e_jerk = machinesettings_tempsave[tmp_select].max_e_jerk;
-//      }
-
-        machinesettings.recall(tmp_select);
-        SERIAL_ECHO_START;
-        SERIAL_ECHOPGM(MSG_FREE_MEMORY);
-        SERIAL_ECHOLN(freeMemory());
+      }
+      machinesettings.recall(tmp_select);
     }
     break;
     #endif//ENABLE_ULTILCD2

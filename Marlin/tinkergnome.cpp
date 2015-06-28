@@ -49,6 +49,8 @@
 #define SET_SLEEP_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_CONTRAST_OFFSET, n); } while(0)
 #define GET_SLEEP_GLOW() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_GLOW_OFFSET))
 #define SET_SLEEP_GLOW(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_GLOW_OFFSET, n); } while(0)
+#define GET_PID_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
+#define SET_PID_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
 
 #define UNIT_FLOW "mm\x1D/s"
 #define UNIT_SPEED "mm/s"
@@ -62,6 +64,7 @@ uint16_t lcd_timeout = LED_DIM_TIME;
 uint8_t lcd_contrast = 0xDF;
 uint8_t lcd_sleep_contrast = 0;
 uint8_t led_sleep_glow = 0;
+uint8_t pid_flags = PID_FLAG_NOZZLE | PID_FLAG_BED;
 
 static uint16_t led_timeout = LED_DIM_TIME;
 static uint8_t led_sleep_brightness = 0;
@@ -235,6 +238,10 @@ void tinkergnome_init()
         ui_mode = UI_MODE_STANDARD;
 
     uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version > 1)
+    {
+        pid_flags = GET_PID_FLAGS();
+    }
     if (version > 0)
     {
         led_sleep_brightness = GET_SLEEP_BRIGHTNESS();
@@ -1433,18 +1440,22 @@ static void lcd_expert_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     }
     else if (nr == 4)
     {
-        buffer[0] = ' ';
-        strcpy_P(buffer+1, PSTR("Move axis"));
+        strcpy_P(buffer+1, PSTR("Buildplate PID"));
     }
     else if (nr == 5)
     {
-        strcpy_P(buffer+1, PSTR("Adjust Z position"));
+        buffer[0] = ' ';
+        strcpy_P(buffer+1, PSTR("Move axis"));
     }
     else if (nr == 6)
     {
-        strcpy_P(buffer+1, PSTR("Recover print"));
+        strcpy_P(buffer+1, PSTR("Adjust Z position"));
     }
     else if (nr == 7)
+    {
+        strcpy_P(buffer+1, PSTR("Recover print"));
+    }
+    else if (nr == 8)
     {
         strcpy_P(buffer+1, PSTR("Disable steppers"));
     }
@@ -1485,6 +1496,72 @@ static void lcd_uimode_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
+static void lcd_buildplate_pid_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
+{
+    char buffer[20];
+    if (nr == 0)
+    {
+        strcpy_P(buffer, PSTR("< RETURN"));
+    }
+    else if (nr == 1)
+    {
+        buffer[0] = pidTempBed() ? '>' : ' ';
+        strcpy_P(buffer+1, PSTR("On"));
+    }
+    else if (nr == 2)
+    {
+        buffer[0] = pidTempBed() ? ' ' : '>';
+        strcpy_P(buffer+1, PSTR("Off"));
+    }
+    else
+    {
+        buffer[0] = ' ';
+        strcpy_P(buffer+1, PSTR("???"));
+    }
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
+}
+
+static void lcd_buildplate_pid_details(uint8_t nr)
+{
+    // nothing displayed
+}
+
+static void lcd_pidflags_store(uint8_t flags)
+{
+    SET_PID_FLAGS(flags);
+    uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version < 2)
+    {
+        SET_EXPERT_VERSION(1);
+    }
+}
+
+void lcd_menu_buildplate_pid()
+{
+    lcd_scroll_menu(PSTR("Buildplate PID"), 3, lcd_buildplate_pid_item, lcd_buildplate_pid_details);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED_SCROLL(1))
+        {
+            if (!pidTempBed())
+            {
+                pid_flags |= PID_FLAG_BED;
+                lcd_pidflags_store(pid_flags);
+            }
+        }
+        else if (IS_SELECTED_SCROLL(2))
+        {
+            if (pidTempBed())
+            {
+                pid_flags &= ~PID_FLAG_BED;
+                lcd_pidflags_store(pid_flags);
+            }
+        }
+        menu.return_to_previous();
+    }
+}
+
 static void lcd_expert_details(uint8_t nr)
 {
     char buffer[32];
@@ -1504,6 +1581,17 @@ static void lcd_expert_details(uint8_t nr)
     else if(nr == 3)
     {
         int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
+    }
+    else if(nr == 4)
+    {
+        if (pidTempBed())
+        {
+            strcpy_P(buffer, PSTR("PID controlled"));
+        }
+        else
+        {
+            strcpy_P(buffer, PSTR("Off (bang-bang mode)"));
+        }
     }
     else
     {
@@ -2045,21 +2133,102 @@ void lcd_menu_sleeptimer()
     lcd_lib_update_screen();
 }
 
+static void drawRecoverFileSubmenu (uint8_t nr, uint8_t &flags)
+{
+    uint8_t index(0);
+
+    if (nr == index++)
+    {
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT*2
+                           , BOTTOM_MENU_YPOS
+                           , 48
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Tune menu"));
+            flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("TUNE"));
+            lcd_lib_clear_gfx(2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, menuGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("TUNE"));
+            lcd_lib_draw_gfx(2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, menuGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, standbyGfx);
+            lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 5, PSTR("Abort print"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT*2
+                                , BOTTOM_MENU_YPOS
+                                , 48
+                                , LCD_CHAR_HEIGHT
+                                , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("ABORT"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + 10, BOTTOM_MENU_YPOS, standbyGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("ABORT"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + 10, BOTTOM_MENU_YPOS, standbyGfx);
+        }
+    }
+}
+
+static void recover_abort()
+{
+    reset_printing_state();
+    menu.return_to_main();
+}
+
+static const menu_t & get_recoverfile_menuoption(uint8_t nr, menu_t &opt)
+{
+    uint8_t menu_index = 0;
+    if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_print_tune);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, recover_abort);
+    }
+    return opt;
+}
+
 static void lcd_menu_recover_file()
 {
     char buffer[32];
     LED_GLOW();
     // analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
-    lcd_info_screen(lcd_return_to_main_menu, NULL, PSTR("CANCEL"));
 
+    lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
-    lcd_lib_draw_string_left(5, card.longFilename);
+
+    menu.process_submenu(get_recoverfile_menuoption, 2);
 
     lcd_lib_draw_string_centerP(20, PSTR("Reading file..."));
     lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+2*LCD_CHAR_SPACING, 35, PSTR("Z"));
     char *c = float_to_string(current_position[Z_AXIS], buffer, PSTR(" / "));
     c = float_to_string(recover_height, c, NULL);
     lcd_lib_draw_string_center(35, buffer);
+
+    uint8_t flags = 0;
+    for (uint8_t index=0; index<2; ++index)
+    {
+        menu.drawSubMenu(drawRecoverFileSubmenu, index, flags);
+    }
+    if (!(flags & MENU_STATUSLINE))
+    {
+        lcd_lib_draw_string_left(5, card.longFilename);
+    }
 
     lcd_lib_update_screen();
 }
@@ -2073,17 +2242,6 @@ static void lcd_recover_start()
     plan_set_e_position(0);
     menu.replace_menu(menu_t(lcd_menu_recover_file));
     card.startFileprint();
-
-
-//    while (printing_state == PRINT_STATE_RECOVER)
-//    {
-//        manage_heater();
-//        manage_inactivity();
-//        lcd_update();
-//        lifetime_stats_tick();
-//    }
-
-
 }
 
 static void lcd_recover_zvalue()
@@ -2198,7 +2356,7 @@ void lcd_menu_expert_recover()
 
 void lcd_menu_maintenance_expert()
 {
-    lcd_scroll_menu(PSTR("Expert settings"), 8, lcd_expert_item, lcd_expert_details);
+    lcd_scroll_menu(PSTR("Expert settings"), 9, lcd_expert_item, lcd_expert_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(1))
@@ -2216,13 +2374,17 @@ void lcd_menu_maintenance_expert()
         }
         else if (IS_SELECTED_SCROLL(4))
         {
-            menu.add_menu(menu_t(lcd_menu_move_axes, MAIN_MENU_ITEM_POS(0)));
+            menu.add_menu(menu_t(lcd_menu_buildplate_pid));
         }
         else if (IS_SELECTED_SCROLL(5))
         {
-            menu.add_menu(menu_t(lcd_prepare_buildplate_adjust, lcd_menu_simple_buildplate_init, NULL, ENCODER_NO_SELECTION));
+            menu.add_menu(menu_t(lcd_menu_move_axes, MAIN_MENU_ITEM_POS(0)));
         }
         else if (IS_SELECTED_SCROLL(6))
+        {
+            menu.add_menu(menu_t(lcd_prepare_buildplate_adjust, lcd_menu_simple_buildplate_init, NULL, ENCODER_NO_SELECTION));
+        }
+        else if (IS_SELECTED_SCROLL(7))
         {
             for (uint8_t i=0; i<EXTRUDERS; ++i)
             {
@@ -2234,7 +2396,7 @@ void lcd_menu_maintenance_expert()
             card.release();
             menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
         }
-        else if (IS_SELECTED_SCROLL(7))
+        else if (IS_SELECTED_SCROLL(8))
         {
             // disable steppers
             enquecommand_P(PSTR("M84"));
@@ -2822,7 +2984,7 @@ static void lcd_extrude_headtofront()
 {
     lcd_lib_beep();
     enquecommand_P(PSTR("G28 X0 Y0"));
-    enquecommand_P(PSTR("G1 F12000 X110 Y10"));
+    enquecommand_P(PSTR("G1 F12000 X110 Y5"));
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
 

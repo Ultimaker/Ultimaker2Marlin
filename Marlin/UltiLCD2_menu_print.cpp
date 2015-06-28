@@ -41,6 +41,7 @@ void lcd_clear_cache()
 void abortPrint()
 {
     postMenuCheck = NULL;
+    stoptime=millis();
     lifetime_stats_print_end();
     doCooldown();
 
@@ -400,6 +401,7 @@ void lcd_menu_print_select()
         {
             if (card.atRoot())
             {
+                reset_printing_state();
                 menu.return_to_previous();
             }else{
                 lcd_clear_cache();
@@ -716,7 +718,26 @@ void lcd_menu_print_ready()
     //unsigned long printTimeSec = (stoptime-starttime)/1000;
     if (current_temperature[0] > 60 || current_temperature_bed > 40)
     {
-        lcd_lib_draw_string_centerP(15, PSTR("Printer cooling down"));
+        lcd_lib_draw_hline(3, 124, 13);
+        // lcd_lib_draw_string_left(5, card.longFilename);
+
+        char buffer[32];
+        unsigned long t=(stoptime-starttime)/1000;
+
+        char *c = buffer;
+        strcpy_P(c, PSTR("Time ")); c += 5;
+        c = int_to_time_string_tg(t, c);
+        if (t < 60)
+        {
+                strcat_P(c, PSTR("min"));
+        }
+        else
+        {
+                strcat_P(c, PSTR("h"));
+        }
+        lcd_lib_draw_string_center(5, buffer);
+
+        lcd_lib_draw_string_centerP(16, PSTR("Printer cooling down"));
 
         int16_t progress = 124 - (current_temperature[0] - 60);
         if (progress < 0) progress = 0;
@@ -728,14 +749,13 @@ void lcd_menu_print_ready()
             minProgress = progress;
 
         lcd_progressbar(progress);
-        char buffer[16];
-        char* c = buffer;
+        c = buffer;
         for(uint8_t e=0; e<EXTRUDERS; e++)
             c = int_to_string(dsp_temperature[e], c, PSTR("C "));
 #if TEMP_SENSOR_BED != 0
         int_to_string(dsp_temperature_bed, c, PSTR("C"));
 #endif
-        lcd_lib_draw_string_center(25, buffer);
+        lcd_lib_draw_string_center(26, buffer);
     }else{
         menu.replace_menu(menu_t(lcd_menu_print_ready_cooled_down), false);
     }
@@ -751,7 +771,27 @@ static void lcd_menu_print_ready_cooled_down()
     lcd_info_screen(NULL, postPrintReady, PSTR("BACK TO MENU"));
 
     LED_GLOW();
-    lcd_lib_draw_string_centerP(10, PSTR("Print finished"));
+
+    lcd_lib_draw_hline(3, 124, 13);
+    // lcd_lib_draw_string_left(5, card.longFilename);
+
+    char buffer[32];
+    unsigned long t=(stoptime-starttime)/1000;
+
+    char *c = buffer;
+    strcpy_P(c, PSTR("Time ")); c += 5;
+    c = int_to_time_string_tg(t, c);
+    if (t < 60)
+    {
+            strcat_P(c, PSTR("min"));
+    }
+    else
+    {
+            strcat_P(c, PSTR("h"));
+    }
+    lcd_lib_draw_string_center(5, buffer);
+
+    lcd_lib_draw_string_centerP(17, PSTR("Print finished"));
     lcd_lib_draw_string_centerP(30, PSTR("You can remove"));
     lcd_lib_draw_string_centerP(40, PSTR("the print."));
 
@@ -1024,7 +1064,7 @@ void lcd_print_pause()
             }
 
             char buffer[32];
-            sprintf_P(buffer, PSTR("M601 X5 Y10 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
+            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
             enquecommand(buffer);
             primed = false;
 

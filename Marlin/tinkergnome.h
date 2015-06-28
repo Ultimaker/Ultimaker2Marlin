@@ -9,6 +9,7 @@
 #define EEPROM_SLEEP_BRIGHTNESS_OFFSET 0x409
 #define EEPROM_SLEEP_CONTRAST_OFFSET 0x40A
 #define EEPROM_SLEEP_GLOW_OFFSET 0x40B
+#define EEPROM_PID_FLAGS 0x40C
 
 // customizations and enhancements (added by Lars June 3,2014)
 #define EXTENDED_BEEP 1		// enables extended audio feedback
@@ -17,11 +18,16 @@
 #define UI_MODE_STANDARD 0
 #define UI_MODE_EXPERT 1
 
+// PID control flags
+#define PID_FLAG_NOZZLE 1
+#define PID_FLAG_BED 2
+
 extern uint8_t ui_mode;
 extern uint16_t lcd_timeout;
 extern uint8_t lcd_contrast;
 extern uint8_t led_sleep_glow;
 extern uint8_t lcd_sleep_contrast;
+extern uint8_t pid_flags;
 
 extern const uint8_t standbyGfx[];
 extern const uint8_t startGfx[];
@@ -52,6 +58,8 @@ void lcd_menu_expert_recover();
 void reset_printing_state();
 
 char* int_to_time_string_tg(unsigned long i, char* temp_buffer);
+
+inline bool pidTempBed() { return (pid_flags & PID_FLAG_BED); }
 
 #endif//ULTI_LCD2_MENU_TINKERGNOME_H
 
