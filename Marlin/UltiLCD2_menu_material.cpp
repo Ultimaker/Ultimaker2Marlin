@@ -157,7 +157,7 @@ static void lcd_menu_change_material_remove()
 
     if (!blocks_queued())
     {
-        lcd_lib_beep();
+        lcd_lib_keyclick();
         // led_glow_dir = led_glow = 0;
         menu.replace_menu(menu_t(lcd_menu_change_material_remove_wait_user));
         SELECT_MAIN_MENU_ITEM(0);
@@ -184,7 +184,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
 static void lcd_change_to_materisl_main()
 {
     // return to material main menu
-    lcd_lib_beep();
+    lcd_lib_keyclick();
     while (menu.currentMenu().processMenuFunc != lcd_menu_material_main) {
         if (!menu.return_to_previous(false)) {
             break;
@@ -274,7 +274,7 @@ static void lcd_menu_change_material_insert_forward()
 
     if (!blocks_queued())
     {
-        lcd_lib_beep();
+        lcd_lib_keyclick();
         // led_glow_dir = led_glow = 0;
 
         digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.

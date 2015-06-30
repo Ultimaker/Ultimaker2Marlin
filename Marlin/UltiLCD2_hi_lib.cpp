@@ -209,7 +209,10 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, scrollDrawCallbac
 
     lcd_lib_clear_string_centerP(1, menuNameP);
 
-	entryDetailsCallback(selIndex);
+    if (entryDetailsCallback)
+    {
+        entryDetailsCallback(selIndex);
+    }
 
     lcd_lib_update_screen();
 }

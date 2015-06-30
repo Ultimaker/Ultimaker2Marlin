@@ -11,12 +11,31 @@
 #define EEPROM_SLEEP_GLOW_OFFSET 0x40B
 #define EEPROM_PID_FLAGS 0x40C
 
-// customizations and enhancements (added by Lars June 3,2014)
-#define EXTENDED_BEEP 1		// enables extended audio feedback
+#define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
+#define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
+#define GET_LED_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LED_TIMEOUT_OFFSET))
+#define SET_LED_TIMEOUT(n) do { eeprom_write_word((uint16_t*)EEPROM_LED_TIMEOUT_OFFSET, n); } while(0)
+#define GET_LCD_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET))
+#define SET_LCD_TIMEOUT(n) do { eeprom_write_word((uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET, n); } while(0)
+#define GET_LCD_CONTRAST() (eeprom_read_byte((const uint8_t*)EEPROM_LCD_CONTRAST_OFFSET))
+#define SET_LCD_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_LCD_CONTRAST_OFFSET, n); } while(0)
+#define GET_EXPERT_VERSION() (eeprom_read_word((const uint16_t*)EEPROM_EXPERT_VERSION_OFFSET))
+#define SET_EXPERT_VERSION(n) do { eeprom_write_word((uint16_t*)EEPROM_EXPERT_VERSION_OFFSET, n); } while(0)
+#define GET_SLEEP_BRIGHTNESS() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_BRIGHTNESS_OFFSET))
+#define SET_SLEEP_BRIGHTNESS(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_BRIGHTNESS_OFFSET, n); } while(0)
+#define GET_SLEEP_CONTRAST() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_CONTRAST_OFFSET))
+#define SET_SLEEP_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_CONTRAST_OFFSET, n); } while(0)
+#define GET_SLEEP_GLOW() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_GLOW_OFFSET))
+#define SET_SLEEP_GLOW(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_GLOW_OFFSET, n); } while(0)
+#define GET_PID_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
+#define SET_PID_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
 
 // UI Mode
-#define UI_MODE_STANDARD 0
-#define UI_MODE_EXPERT 1
+#define UI_MODE_STANDARD  0
+#define UI_MODE_EXPERT    1
+
+#define UI_BEEP_SHORT    32
+#define UI_BEEP_OFF      64
 
 // PID control flags
 #define PID_FLAG_NOZZLE 1
@@ -56,6 +75,9 @@ void recover_start_print();
 void lcd_menu_recover_init();
 void lcd_menu_expert_recover();
 void reset_printing_state();
+
+bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max);
+void lcd_lib_draw_bargraph( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, float value );
 
 char* int_to_time_string_tg(unsigned long i, char* temp_buffer);
 

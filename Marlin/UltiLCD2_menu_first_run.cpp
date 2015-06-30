@@ -399,7 +399,7 @@ static void lcd_menu_first_run_material_load_forward()
 
     if (!blocks_queued())
     {
-        lcd_lib_beep();
+        lcd_lib_keyclick();
         // led_glow_dir = led_glow = 0;
         digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
         menu.replace_menu(menu_t(lcd_menu_first_run_material_load_wait));

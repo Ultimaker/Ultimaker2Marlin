@@ -819,30 +819,44 @@ void lcd_lib_clear_gfx(uint8_t x, uint8_t y, const uint8_t* gfx)
     }
 }
 
+#define _BEEP(c, n) for(int8_t _i=0;_i<c;_i++) { WRITE(BEEPER, HIGH); _delay_us(n); WRITE(BEEPER, LOW); _delay_us(n); }
+void lcd_lib_keyclick()
+{
+    if (ui_mode & UI_BEEP_OFF)
+    {
+        return;
+    }
+    else if (ui_mode & UI_BEEP_SHORT)
+    {
+        _BEEP(15, 60);
+        _BEEP(10, 50);
+    }
+    else
+    {
+        lcd_lib_beep();
+    }
+}
+
 void lcd_lib_beep()
 {
-#define _BEEP(c, n) for(int8_t _i=0;_i<c;_i++) { WRITE(BEEPER, HIGH); _delay_us(n); WRITE(BEEPER, LOW); _delay_us(n); }
     _BEEP(20, 366);
     _BEEP(10, 150);
-#undef _BEEP
 }
 
 //-----------------------------------------------------------------------------------------------------------------
 // very short tick for UI feedback -- 1 millisecond  long
-void lcd_lib_tick( )
+void lcd_lib_tick()
 {
-#if EXTENDED_BEEP
-	for (int a =0; a<10; ++a)
-    {
-        WRITE(BEEPER, HIGH);
-        _delay_us (50);
-        WRITE(BEEPER, LOW);
-        _delay_us(50);
-    }
-	// WRITE(BEEPER,0);
-#endif
-
+    _BEEP(10, 50);
+//	for (int a =0; a<10; ++a)
+//    {
+//        WRITE(BEEPER, HIGH);
+//        _delay_us (50);
+//        WRITE(BEEPER, LOW);
+//        _delay_us(50);
+//    }
 }
+#undef _BEEP
 
 
 int8_t lcd_lib_encoder_pos_interrupt = 0;

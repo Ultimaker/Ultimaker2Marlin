@@ -23,7 +23,7 @@ void LCDMenu::init_menu_switch(bool beep)
     LED_NORMAL();
     if (beep)
     {
-        lcd_lib_beep();
+        lcd_lib_keyclick();
     }
 }
 
@@ -276,7 +276,7 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
                         // "instant tuning"
                         lcd_lib_encoder_pos = 0;
                         LED_INPUT();
-                        lcd_lib_beep();
+                        lcd_lib_keyclick();
 
                         selectedSubmenu = index;
                         activeSubmenu = menuItem;
@@ -312,7 +312,7 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
     {
         if (lcd_lib_button_pressed)
         {
-            lcd_lib_beep();
+            lcd_lib_keyclick();
             reset_submenu();
         }
         else

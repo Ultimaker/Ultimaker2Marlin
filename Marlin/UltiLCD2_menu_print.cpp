@@ -405,7 +405,7 @@ void lcd_menu_print_select()
                 menu.return_to_previous();
             }else{
                 lcd_clear_cache();
-                lcd_lib_beep();
+                lcd_lib_keyclick();
                 card.updir();
             }
         }else{
@@ -487,7 +487,7 @@ void lcd_menu_print_select()
                     }
                 }
             }else{
-                lcd_lib_beep();
+                lcd_lib_keyclick();
                 lcd_clear_cache();
                 card.chdir(card.filename);
                 SELECT_SCROLL_MENU_ITEM(0);
@@ -575,25 +575,6 @@ void lcd_change_to_menu_change_material_return()
 
 static void lcd_menu_print_printing()
 {
-//    if (card.pause)
-//    {
-//        lcd_tripple_menu(PSTR("RESUME|PRINT"), PSTR("CHANGE|MATERIAL"), PSTR("TUNE"));
-//        if (lcd_lib_button_pressed)
-//        {
-//            if (IS_SELECTED_MAIN(0) && movesplanned() < 1)
-//            {
-//                card.pause = false;
-//                lcd_lib_beep();
-//            }else if (IS_SELECTED_MAIN(1) && movesplanned() < 1)
-//            {
-//                menu.add_menu(menu_t(lcd_change_to_menu_change_material_return), false);
-//                menu.add_menu(menu_t(lcd_menu_change_material_preheat));
-//            }
-//            else if (IS_SELECTED_MAIN(2))
-//                menu.add_menu(menu_t(lcd_menu_print_tune));
-//        }
-//    }
-//    else
     if (card.pause)
     {
         menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
@@ -1067,18 +1048,9 @@ void lcd_print_pause()
             sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
             enquecommand(buffer);
             primed = false;
-
-
-//            if (current_position[Z_AXIS] < Z_MAX_POS - 60)
-//                enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
-//            else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
-//                enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
-//            else
-//                enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
         }
         else if (!pauseRequested)
         {
-            // lcd_lib_beep();
             pauseRequested = true;
         }
     }

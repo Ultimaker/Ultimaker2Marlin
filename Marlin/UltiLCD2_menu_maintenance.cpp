@@ -25,6 +25,7 @@ static void lcd_menu_advanced_stats();
 static void lcd_menu_maintenance_motion();
 static void lcd_menu_advanced_factory_reset();
 static void homeHead();
+static void lcd_menu_preferences();
 
 void lcd_menu_maintenance()
 {
@@ -51,13 +52,9 @@ static void lcd_advanced_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     uint8_t index(0);
     char buffer[32];
     if (nr == index++)
-    {
         strcpy_P(buffer, PSTR("< RETURN"));
-    }
     else if (nr == index++)
-    {
-        strcpy_P(buffer, PSTR("LED settings"));
-    }
+        strcpy_P(buffer, PSTR("Preferences"));
     else if (nr == index++)
 #if EXTRUDERS < 2
         strcpy_P(buffer, PSTR("Heatup nozzle"));
@@ -88,20 +85,10 @@ static void lcd_advanced_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 #endif
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Set fan speed"));
-    else if (nr == index++)
-        strcpy_P(buffer, PSTR("Retraction settings"));
-    else if (nr == index++)
-        strcpy_P(buffer, PSTR("Motion settings"));
     else if ((ui_mode & UI_MODE_EXPERT) && (nr == index++))
         strcpy_P(buffer, PSTR("Adjust buildplate"));
     else if (nr == index++)
-        strcpy_P(buffer, PSTR("Expert settings"));
-    else if (nr == index++)
-        strcpy_P(buffer, PSTR("Version"));
-    else if (nr == index++)
-        strcpy_P(buffer, PSTR("Runtime stats"));
-    else if (nr == index++)
-        strcpy_P(buffer, PSTR("Factory reset"));
+        strcpy_P(buffer, PSTR("Expert functions"));
     else
         strcpy_P(buffer, PSTR("???"));
 
@@ -115,14 +102,12 @@ static void lcd_advanced_details(uint8_t nr)
     if (!(ui_mode & UI_MODE_EXPERT) && (nr > 8+BED_MENU_OFFSET+2*EXTRUDERS))
         ++nr;
 
-    if (nr == 1)
-    {
-        int_to_string(led_brightness_level, buffer, PSTR("%"));
-    }else if (nr == 2)
+    if (nr == 2)
     {
         int_to_string(int(target_temperature[0]), int_to_string(int(dsp_temperature[0]), buffer, PSTR("C/")), PSTR("C"));
 #if EXTRUDERS > 1
-    }else if (nr == 3)
+    }
+    else if (nr == 3)
     {
         int_to_string(int(target_temperature[1]), int_to_string(int(dsp_temperature[1]), buffer, PSTR("C/")), PSTR("C"));
 #endif
@@ -134,11 +119,108 @@ static void lcd_advanced_details(uint8_t nr)
     }else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS * 2)
     {
         int_to_string(int(fanSpeed) * 100 / 255, buffer, PSTR("%"));
-    }else if (nr == 11 + BED_MENU_OFFSET + EXTRUDERS * 2)
+    }
+    else
     {
-        lcd_lib_draw_stringP(5, BOTTOM_MENU_YPOS, PSTR(STRING_CONFIG_H_AUTHOR));
         return;
-    }else{
+    }
+    lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, buffer);
+}
+
+static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
+{
+    uint8_t index(0);
+    char buffer[32];
+    if (nr == index++)
+        strcpy_P(buffer, PSTR("< RETURN"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("User interface"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("LED settings"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Click sound"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Sleep timer"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Screen contrast"));
+#if TEMP_SENSOR_BED != 0
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Buildplate PID"));
+#endif
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Retraction settings"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Motion settings"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Version"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Runtime stats"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Factory reset"));
+    else
+        strcpy_P(buffer, PSTR("???"));
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
+}
+
+static void lcd_preferences_details(uint8_t nr)
+{
+    char buffer[32];
+    buffer[0] = '\0';
+
+    if (nr == 1)
+    {
+        if (ui_mode & UI_MODE_EXPERT)
+        {
+            strcpy_P(buffer, PSTR("Geek Mode"));
+        }
+        else
+        {
+            strcpy_P(buffer, PSTR("Standard Mode"));
+        }
+    }
+    else if (nr == 2)
+    {
+        int_to_string(led_brightness_level, buffer, PSTR("%"));
+    }
+    else if (nr == 3)
+    {
+        if (ui_mode & UI_BEEP_OFF)
+        {
+            strcpy_P(buffer, PSTR("Off"));
+        }
+        else if (ui_mode & UI_BEEP_SHORT)
+        {
+            strcpy_P(buffer, PSTR("Short tick"));
+        }
+        else
+        {
+            strcpy_P(buffer, PSTR("Standard"));
+        }
+    }
+    else if (nr == 5)
+    {
+        int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
+    }
+#if TEMP_SENSOR_BED != 0
+    else if (nr == 6)
+    {
+        if (pidTempBed())
+        {
+            strcpy_P(buffer, PSTR("PID controlled"));
+        }
+        else
+        {
+            strcpy_P(buffer, PSTR("Off (bang-bang mode)"));
+        }
+    }
+#endif
+    else if (nr == 8+BED_MENU_OFFSET)
+    {
+        strcpy_P(buffer, PSTR(STRING_CONFIG_H_AUTHOR));
+    }
+    else
+    {
         return;
     }
     lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, buffer);
@@ -158,14 +240,14 @@ static void lcd_menu_maintenance_advanced_return()
 
 void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu((ui_mode & UI_MODE_EXPERT) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_EXPERT) ? 14 : 13), lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu((ui_mode & UI_MODE_EXPERT) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_EXPERT) ? 9 : 8), lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
         if (IS_SELECTED_SCROLL(index++))
             menu.return_to_previous();
         else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_maintenance_led, 0, lcd_lib_encoder_pos));
+            menu.add_menu(menu_t(lcd_menu_preferences, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
         {
             active_extruder = 0;
@@ -186,17 +268,17 @@ void lcd_menu_maintenance_advanced()
 #endif
         else if (IS_SELECTED_SCROLL(index++))
         {
-            lcd_lib_beep();
+            lcd_lib_keyclick();
             homeHead();
         }
         else if (IS_SELECTED_SCROLL(index++))
         {
-            lcd_lib_beep();
+            lcd_lib_keyclick();
             enquecommand_P(PSTR("G28 Z0"));
         }
         else if (IS_SELECTED_SCROLL(index++))
         {
-            lcd_lib_beep();
+            lcd_lib_keyclick();
             enquecommand_P(PSTR("G28 Z0"));
             enquecommand_P(PSTR("G1 Z40"));
         }
@@ -245,22 +327,12 @@ void lcd_menu_maintenance_advanced()
         {
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
         }
-        else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0)));
-        else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
         else if ((ui_mode & UI_MODE_EXPERT) && (IS_SELECTED_SCROLL(index++)))
         {
             menu.add_menu(menu_t(lcd_menu_first_run_start_bed_leveling, SCROLL_MENU_ITEM_POS(0)));
         }
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_expert, SCROLL_MENU_ITEM_POS(0)));
-        else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0)));
-        else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0)));
-        else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_advanced_factory_reset, MAIN_MENU_ITEM_POS(1)));
     }
 }
 
@@ -404,10 +476,7 @@ static void doFactoryReset()
     eeprom_write_byte((uint8_t*)101, 0);
     eeprom_write_byte((uint8_t*)102, 0);
     eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
-    eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, 0);
-    eeprom_write_word((uint16_t*)EEPROM_LED_TIMEOUT_OFFSET, 0);
-    eeprom_write_word((uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET, 0);
-    eeprom_write_byte((uint8_t*)EEPROM_LCD_CONTRAST_OFFSET, 0xDF);
+    eeprom_write_word((uint16_t*)EEPROM_EXPERT_VERSION_OFFSET, 0xFFFF);
     eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
     doMachineRestart();
 }
@@ -603,23 +672,268 @@ static void lcd_menu_maintenance_led()
         else if (IS_SELECTED_SCROLL(2))
         {
             led_mode = LED_MODE_ALWAYS_ON;
-            lcd_lib_beep();
+            lcd_lib_keyclick();
         }
         else if (IS_SELECTED_SCROLL(3))
         {
             led_mode = LED_MODE_ALWAYS_OFF;
-            lcd_lib_beep();
+            lcd_lib_keyclick();
         }
         else if (IS_SELECTED_SCROLL(4))
         {
             led_mode = LED_MODE_WHILE_PRINTING;
-            lcd_lib_beep();
+            lcd_lib_keyclick();
         }
         else if (IS_SELECTED_SCROLL(5))
         {
             led_mode = LED_MODE_BLINK_ON_DONE;
-            lcd_lib_beep();
+            lcd_lib_keyclick();
         }
+    }
+}
+
+// -----------------------------------------
+
+static void lcd_pidflags_store(uint8_t flags)
+{
+    SET_PID_FLAGS(flags);
+    uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version < 2)
+    {
+        SET_EXPERT_VERSION(1);
+    }
+}
+
+static void lcd_uimode_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
+{
+    char buffer[20] = {' '};
+
+    if (nr == 0)
+    {
+        strcpy_P(buffer, PSTR("< RETURN"));
+    }
+    else if (nr == 1)
+    {
+        if (!(ui_mode & UI_MODE_EXPERT))
+        {
+            strcpy_P(buffer, PSTR(">"));
+        }
+        strcpy_P(buffer+1, PSTR("Standard Mode"));
+    }
+    else if (nr == 2)
+    {
+        if (ui_mode & UI_MODE_EXPERT)
+        {
+            strcpy_P(buffer, PSTR(">"));
+        }
+        strcpy_P(buffer+1, PSTR("Geek Mode"));
+    }
+    else
+    {
+        strcpy_P(buffer+1, PSTR("???"));
+    }
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
+}
+
+static void lcd_clicksound_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
+{
+    char buffer[20] = {' '};
+    if (nr == 0)
+    {
+        strcpy_P(buffer, PSTR("< RETURN"));
+    }
+    else if (nr == 1)
+    {
+        if (!(ui_mode & (UI_BEEP_OFF | UI_BEEP_SHORT)))
+        {
+            strcpy_P(buffer, PSTR(">"));
+        }
+        strcpy_P(buffer+1, PSTR("Standard beep"));
+    }
+    else if (nr == 2)
+    {
+        if (ui_mode & UI_BEEP_SHORT)
+        {
+            strcpy_P(buffer, PSTR(">"));
+        }
+        strcpy_P(buffer+1, PSTR("Short tick"));
+    }
+    else if (nr == 3)
+    {
+        if (ui_mode & UI_BEEP_OFF)
+        {
+            strcpy_P(buffer, PSTR(">"));
+        }
+        strcpy_P(buffer+1, PSTR("Off"));
+    }
+    else
+    {
+        strcpy_P(buffer, PSTR(" ???"));
+    }
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
+}
+
+static void lcd_buildplate_pid_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
+{
+    char buffer[20];
+    if (nr == 0)
+    {
+        strcpy_P(buffer, PSTR("< RETURN"));
+    }
+    else if (nr == 1)
+    {
+        buffer[0] = pidTempBed() ? '>' : ' ';
+        strcpy_P(buffer+1, PSTR("On"));
+    }
+    else if (nr == 2)
+    {
+        buffer[0] = pidTempBed() ? ' ' : '>';
+        strcpy_P(buffer+1, PSTR("Off"));
+    }
+    else
+    {
+        buffer[0] = ' ';
+        strcpy_P(buffer+1, PSTR("???"));
+    }
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
+}
+
+static void lcd_menu_uimode()
+{
+    lcd_scroll_menu(PSTR("User interface"), 3, lcd_uimode_item, NULL);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED_SCROLL(1))
+        {
+            ui_mode &= ~UI_MODE_EXPERT;
+        }
+        else if (IS_SELECTED_SCROLL(2))
+        {
+            ui_mode |= UI_MODE_EXPERT;
+        }
+        if (ui_mode != GET_UI_MODE())
+        {
+            SET_UI_MODE(ui_mode);
+        }
+        menu.return_to_previous();
+    }
+}
+
+static void lcd_menu_clicksound()
+{
+    lcd_scroll_menu(PSTR("Click sound"), 4, lcd_clicksound_item, NULL);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED_SCROLL(1))
+        {
+            ui_mode &= ~UI_BEEP_OFF;
+            ui_mode &= ~UI_BEEP_SHORT;
+        }
+        else if (IS_SELECTED_SCROLL(2))
+        {
+            ui_mode &= ~UI_BEEP_OFF;
+            ui_mode |= UI_BEEP_SHORT;
+        }
+        else if (IS_SELECTED_SCROLL(3))
+        {
+            ui_mode &= ~UI_BEEP_SHORT;
+            ui_mode |= UI_BEEP_OFF;
+        }
+        if (ui_mode != GET_UI_MODE())
+        {
+            SET_UI_MODE(ui_mode);
+        }
+        menu.return_to_previous();
+    }
+}
+
+static void lcd_menu_screen_contrast()
+{
+    if (lcd_tune_byte(lcd_contrast, 0, 100))
+    {
+        lcd_contrast = constrain(lcd_contrast, 1, 255);
+        lcd_lib_contrast(lcd_contrast);
+    }
+    if (lcd_lib_button_pressed)
+    {
+        SET_LCD_CONTRAST(lcd_contrast);
+        menu.return_to_previous();
+    }
+
+    lcd_lib_clear();
+    lcd_lib_draw_string_centerP(10, PSTR("Screen contrast"));
+    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
+
+    char buffer[32];
+    int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
+
+    lcd_lib_draw_string_center(22, buffer);
+
+    lcd_lib_draw_bargraph(LCD_CHAR_MARGIN_LEFT+2*LCD_CHAR_SPACING, 34, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-2*LCD_CHAR_SPACING, 40, float(lcd_contrast)/255);
+
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_buildplate_pid()
+{
+    lcd_scroll_menu(PSTR("Buildplate PID"), 3, lcd_buildplate_pid_item, NULL);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED_SCROLL(1))
+        {
+            if (!pidTempBed())
+            {
+                pid_flags |= PID_FLAG_BED;
+                lcd_pidflags_store(pid_flags);
+            }
+        }
+        else if (IS_SELECTED_SCROLL(2))
+        {
+            if (pidTempBed())
+            {
+                pid_flags &= ~PID_FLAG_BED;
+                lcd_pidflags_store(pid_flags);
+            }
+        }
+        menu.return_to_previous();
+    }
+}
+
+static void lcd_menu_preferences()
+{
+    lcd_scroll_menu("PREFERENCES", BED_MENU_OFFSET + 11, lcd_preferences_item, lcd_preferences_details);
+    if (lcd_lib_button_pressed)
+    {
+        uint8_t index = 0;
+        if (IS_SELECTED_SCROLL(index++))
+            menu.return_to_previous();
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_uimode));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_maintenance_led, 0, 4));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_clicksound));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_sleeptimer));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_screen_contrast, 0, 4));
+#if TEMP_SENSOR_BED != 0
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_buildplate_pid));
+#endif
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0)));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0)));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_advanced_stats, SCROLL_MENU_ITEM_POS(0)));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_advanced_factory_reset, MAIN_MENU_ITEM_POS(1)));
     }
 }
 

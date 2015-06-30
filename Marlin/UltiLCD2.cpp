@@ -52,7 +52,7 @@ void lcd_init()
     }
     lcd_material_read_current_material();
 
-    glow_millis = millis() + 600;
+    glow_millis = millis() + 750;
     led_glow = led_glow_dir = 0;
 
     // initialize menu stack and show start animation
@@ -151,14 +151,17 @@ void lcd_menu_startup()
 {
     lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
 
+    if (!lcd_lib_update_ready())
+        led_glow = 0;
+
     LED_GLOW();
     lcd_lib_clear();
 
+    lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR(STRING_CONFIG_H_AUTHOR));
 
-    if (led_glow < 84)
+    if ((led_glow > 0) && (led_glow < 84))
     {
-        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
         for(uint8_t n=0;n<10;n++)
         {
             if (led_glow*2 >= n + 20)
@@ -175,12 +178,14 @@ void lcd_menu_startup()
         //lcd_lib_clear_gfx(0, 22, ultimakerTextGfx);
         lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
     */
-    }else{
-        //led_glow--;
-        //lcd_lib_draw_gfx(80, 0, ultimakerRobotGfx);
-        //lcd_lib_clear_gfx(0, 22, ultimakerTextOutlineGfx);
-        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
     }
+//    else
+//    {
+//        //led_glow--;
+//        //lcd_lib_draw_gfx(80, 0, ultimakerRobotGfx);
+//        //lcd_lib_clear_gfx(0, 22, ultimakerTextOutlineGfx);
+//        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
+//    }
     lcd_lib_update_screen();
 
     if (led_mode == LED_MODE_ALWAYS_ON)
