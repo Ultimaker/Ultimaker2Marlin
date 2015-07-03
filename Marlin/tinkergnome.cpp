@@ -3096,12 +3096,13 @@ void recover_start_print()
     {
         // recover print from current position
         card.sdprinting = false;
-        quickStop();
+        // quickStop();
         clear_command_queue();
         printing_state = PRINT_STATE_START;
         enquecommand_P(PSTR("G28"));
         enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
-        menu.replace_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_print_heatup_tg : lcd_menu_print_heatup));
+        menu.return_to_main();
+        menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_print_heatup_tg : lcd_menu_print_heatup));
     }
 }
 
