@@ -115,10 +115,10 @@ void doStartPrint()
     }
     else if (printing_state != PRINT_STATE_START)
     {
-        // zero the extruder position
         active_extruder = 0;
     }
 
+    // zero the extruder position
     current_position[E_AXIS] = 0.0;
     plan_set_e_position(0);
 
@@ -185,14 +185,15 @@ void doStartPrint()
 
 static void userStartPrint()
 {
+    menu.return_to_main();
     if (printing_state == PRINT_STATE_RECOVER)
     {
-        menu.replace_menu(menu_t(lcd_menu_recover_init, lcd_menu_expert_recover, NULL, MAIN_MENU_ITEM_POS(3)));
+        menu.add_menu(menu_t(lcd_menu_recover_init, lcd_menu_expert_recover, NULL, MAIN_MENU_ITEM_POS(3)));
     }
     else
     {
         // lcd_remove_menu();
-        menu.replace_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
+        menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
         doStartPrint();
     }
 }
@@ -439,6 +440,8 @@ void lcd_menu_print_select()
                     fanSpeed = 0;
                     feedmultiply = 100;
                     lcd_clearstatus();
+                    menu.return_to_main();
+
                     if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 17) == 0)
                     {
                         //New style GCode flavor without start/end code.
@@ -462,18 +465,20 @@ void lcd_menu_print_select()
 
                         if (printing_state == PRINT_STATE_RECOVER)
                         {
-                            menu.replace_menu(menu_t(lcd_menu_recover_init, lcd_menu_expert_recover, NULL, MAIN_MENU_ITEM_POS(3)));
+                            menu.add_menu(menu_t(lcd_menu_recover_init, lcd_menu_expert_recover, NULL, MAIN_MENU_ITEM_POS(3)));
                         }
                         else
                         {
                             enquecommand_P(PSTR("G28"));
                             enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
                             if (ui_mode & UI_MODE_EXPERT)
-                                menu.replace_menu(menu_t(lcd_menu_print_heatup_tg));
+                                menu.add_menu(menu_t(lcd_menu_print_heatup_tg));
                             else
-                                menu.replace_menu(menu_t(lcd_menu_print_heatup));
+                                menu.add_menu(menu_t(lcd_menu_print_heatup));
                         }
-                    }else{
+                    }
+                    else
+                    {
                         //Classic gcode file
 
                         //Set the settings to defaults so the classic GCode has full control
@@ -483,7 +488,7 @@ void lcd_menu_print_select()
                             volume_to_filament_length[e] = 1.0;
                             extrudemultiply[e] = 100;
                         }
-                        menu.replace_menu(menu_t(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0)));
+                        menu.add_menu(menu_t(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0)));
                     }
                 }
             }else{

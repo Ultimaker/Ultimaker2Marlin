@@ -1897,7 +1897,15 @@ static void drawRecoverFileSubmenu (uint8_t nr, uint8_t &flags)
 
 static void recover_abort()
 {
+    quickStop();
+    clear_command_queue();
+
+    for(uint8_t n=0; n<EXTRUDERS; n++)
+        setTargetHotend(0, n);
+    fanSpeed = 0;
     reset_printing_state();
+    doCooldown();
+
     menu.return_to_main();
 }
 
@@ -1964,6 +1972,7 @@ static void lcd_recover_zvalue()
 void reset_printing_state()
 {
     printing_state = PRINT_STATE_NORMAL;
+    card.sdprinting = false;
 }
 
 static const menu_t & get_recover_menuoption(uint8_t nr, menu_t &opt)
@@ -3092,18 +3101,21 @@ void lcd_menu_expert_extrude()
 
 void recover_start_print()
 {
-    if (card.sdprinting)
-    {
+//    if (card.sdprinting)
+//    {
         // recover print from current position
-        card.sdprinting = false;
-        // quickStop();
-        clear_command_queue();
-        printing_state = PRINT_STATE_START;
-        enquecommand_P(PSTR("G28"));
-        enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
-        menu.return_to_main();
-        menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_print_heatup_tg : lcd_menu_print_heatup));
-    }
+    card.sdprinting = false;
+    quickStop();
+    clear_command_queue();
+    printing_state = PRINT_STATE_START;
+
+    // move to heatup position
+    enquecommand_P(PSTR("G28"));
+    enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
+
+    menu.return_to_main();
+    menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_print_heatup_tg : lcd_menu_print_heatup));
+//    }
 }
 
 #endif//ENABLE_ULTILCD2
