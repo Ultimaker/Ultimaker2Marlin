@@ -904,7 +904,7 @@ static void lcd_menu_buildplate_pid()
 
 static void lcd_menu_preferences()
 {
-    lcd_scroll_menu("PREFERENCES", BED_MENU_OFFSET + 11, lcd_preferences_item, lcd_preferences_details);
+    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 11, lcd_preferences_item, lcd_preferences_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
