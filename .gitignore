@@ -13,7 +13,6 @@ Marlin/Visual Micro/Upload.vmps.xml
 Marlin/Visual Micro/.Marlin.vsarduino.h
 Marlin/Visual Micro/Compile.vmps.xml
 Marlin/Visual Micro/Configuration.Debug.vmps.xml
-<<<<<<< HEAD
 Marlin/_Ultimaker2Dual
 Marlin/_Ultimaker2
 *.bak
@@ -21,7 +20,5 @@ Marlin/_Ultimaker2
 .bin
 .obj
 resources
-=======
 _*
 Marlin/resources
->>>>>>> master
