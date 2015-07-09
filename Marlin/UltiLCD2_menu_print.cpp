@@ -27,7 +27,8 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
-static void lcd_menu_print_error();
+static void lcd_menu_print_error_sd();
+static void lcd_menu_print_error_position();
 static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
@@ -102,10 +103,16 @@ static void checkPrintFinished()
         abortPrint();
         currentMenu = lcd_menu_print_ready;
         SELECT_MAIN_MENU_ITEM(0);
+    }else if (position_error)
+    {
+        quickStop();
+        abortPrint();
+        currentMenu = lcd_menu_print_error_position;
+        SELECT_MAIN_MENU_ITEM(0);
     }else if (card.errorCode())
     {
         abortPrint();
-        currentMenu = lcd_menu_print_error;
+        currentMenu = lcd_menu_print_error_sd;
         SELECT_MAIN_MENU_ITEM(0);
     }
 }
@@ -116,6 +123,7 @@ static void doStartPrint()
 	current_position[E_AXIS] = 0.0;
 	plan_set_e_position(0);
 	primed = false;
+	position_error = false;
 
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
@@ -595,7 +603,7 @@ static void lcd_menu_print_printing()
     lcd_lib_update_screen();
 }
 
-static void lcd_menu_print_error()
+static void lcd_menu_print_error_sd()
 {
     LED_GLOW_ERROR();
     lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
@@ -607,6 +615,18 @@ static void lcd_menu_print_error()
     strcpy_P(buffer, PSTR("Code:"));
     int_to_string(card.errorCode(), buffer+5);
     lcd_lib_draw_string_center(40, buffer);
+
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_print_error_position()
+{
+    LED_GLOW_ERROR();
+    lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
+
+    lcd_lib_draw_string_centerP(15, PSTR("ERROR:"));
+    lcd_lib_draw_string_centerP(25, PSTR("Tried printing out"));
+    lcd_lib_draw_string_centerP(35, PSTR("of printing area"));
 
     lcd_lib_update_screen();
 }
