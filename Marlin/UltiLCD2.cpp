@@ -66,6 +66,15 @@ void lcd_update()
     if (IsStopped())
     {
         lcd_lib_clear();
+        lcd_lib_draw_gfx(0, 0, spool1);
+        lcd_lib_update_screen();
+        delay(200);
+        lcd_lib_clear();
+        lcd_lib_draw_gfx(0, 0, spool2);
+        lcd_lib_update_screen();
+        delay(200);
+
+        /*
         lcd_lib_draw_string_centerP(10, PSTR("ERROR - STOPPED"));
         switch(StoppedReason())
         {
@@ -99,6 +108,7 @@ void lcd_update()
         lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/support"));
         LED_GLOW_ERROR();
         lcd_lib_update_screen();
+        */
     }else if (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
     {
         if (!serialScreenShown)
