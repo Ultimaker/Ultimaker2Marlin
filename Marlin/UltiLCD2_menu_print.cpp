@@ -530,6 +530,10 @@ static void lcd_menu_print_printing()
             if (IS_SELECTED_MAIN(0) && movesplanned() < 1)
             {
                 card.pause = false;
+                if (card.sdprinting)
+                {
+                    primed = true;
+                }
                 lcd_lib_beep();
             }else if (IS_SELECTED_MAIN(1) && movesplanned() < 1)
                 lcd_change_to_menu_change_material(lcd_change_to_menu_change_material_return);
@@ -946,6 +950,8 @@ static void lcd_menu_print_pause()
                 enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
             else
                 enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
+
+            primed = false;
         }
         else{
             pauseRequested = true;
