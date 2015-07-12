@@ -41,6 +41,8 @@
 
 #define LCD_COMMAND_SET_ADDRESSING_MODE     0x20
 
+unsigned long last_user_interaction=0;
+
 /** Backbuffer for LCD */
 uint8_t lcd_buffer[LCD_GFX_WIDTH * LCD_GFX_HEIGHT / 8];
 uint8_t led_r, led_g, led_b;
@@ -87,7 +89,7 @@ void lcd_lib_init()
 
     SET_OUTPUT(I2C_SDA_PIN);
     SET_OUTPUT(I2C_SCL_PIN);
-    
+
     //Set unused pins in the 10 pin connector to GND to improve shielding of the cable.
     SET_OUTPUT(LCD_PINS_D4); WRITE(LCD_PINS_D4, 0); //RXD3/PJ1
     SET_OUTPUT(LCD_PINS_ENABLE); WRITE(LCD_PINS_ENABLE, 0); //TXD3/PJ0
@@ -783,12 +785,14 @@ void lcd_lib_buttons_update_interrupt()
 
 void lcd_lib_buttons_update()
 {
-    lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
-    lcd_lib_encoder_pos_interrupt = 0;
-
     uint8_t buttonState = !READ(BTN_ENC);
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);
     lcd_lib_button_down = buttonState;
+
+    if (lcd_lib_button_down || lcd_lib_encoder_pos_interrupt!=0 ) last_user_interaction=millis();
+
+    lcd_lib_encoder_pos += lcd_lib_encoder_pos_interrupt;
+    lcd_lib_encoder_pos_interrupt = 0;
 }
 
 char* int_to_string(int i, char* temp_buffer, const char* p_postfix)

@@ -23,6 +23,8 @@ extern struct materialSettings material[EXTRUDERS];
 #define FILAMENT_INSERT_FAST_SPEED    100   //Speed during the forward length
 #define FILAMENT_INSERT_EXTRUDE_SPEED 2     //Final speed when extruding
 
+#define FILAMENT_CHANGE_TIMEOUT       120   //timeout for change material wizard (in seconds)
+
 #define EEPROM_MATERIAL_SETTINGS_OFFSET 0x800
 #define EEPROM_MATERIAL_SETTINGS_MAX_COUNT 16
 #define EEPROM_MATERIAL_SETTINGS_SIZE   (8 + 16)
