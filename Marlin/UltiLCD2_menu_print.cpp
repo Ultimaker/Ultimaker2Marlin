@@ -530,6 +530,10 @@ static void lcd_menu_print_printing()
             if (IS_SELECTED_MAIN(0) && movesplanned() < 1)
             {
                 card.pause = false;
+                if (card.sdprinting)
+                {
+                    primed = true;
+                }
                 lcd_lib_beep();
             }else if (IS_SELECTED_MAIN(1) && movesplanned() < 1)
                 lcd_change_to_menu_change_material(lcd_change_to_menu_change_material_return);
@@ -957,6 +961,8 @@ static void lcd_menu_print_pause()
             char buffer[32];
             sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
             enquecommand(buffer);
+
+            primed = false;
         }
         else{
             pauseRequested = true;
