@@ -84,6 +84,19 @@ static void lcd_menu_material_main_return()
     currentMenu = lcd_menu_material_main;
 }
 
+static bool check_material_timeout()
+{
+    if (millis() - last_user_interaction > FILAMENT_CHANGE_TIMEOUT*1000L)
+    {
+        doCooldown();
+        cancelMaterialInsert();
+        lcd_lib_beep();
+        enquecommand_P(PSTR("G28 X0 Y0"));
+        currentMenu = lcd_menu_main;
+    }
+    return true;
+}
+
 static void lcd_menu_material_main()
 {
     lcd_tripple_menu(PSTR("CHANGE"), PSTR("SETTINGS"), PSTR("RETURN"));
@@ -189,11 +202,14 @@ static void lcd_menu_change_material_remove_wait_user_ready()
 
 static void lcd_menu_change_material_remove_wait_user()
 {
-    LED_GLOW();
+    if (check_material_timeout())
+    {
+        LED_GLOW();
+        lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
+        lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
+        lcd_lib_update_screen();
+    }
 
-    lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
-    lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
-    lcd_lib_update_screen();
 }
 
 void lcd_change_to_menu_insert_material(menuFunc_t return_menu)
@@ -235,20 +251,23 @@ static void lcd_menu_insert_material_preheat()
 
 static void lcd_menu_change_material_insert_wait_user()
 {
-    LED_GLOW();
-
-    if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 2)
+    if (check_material_timeout())
     {
-        plan_set_e_position(0);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_SPEED, active_extruder);
-    }
+        LED_GLOW();
 
-    lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
-    lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
-    lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
-    lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
-    lcd_lib_draw_string_centerP(40, PSTR("above the arrow."));
-    lcd_lib_update_screen();
+        if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 2)
+        {
+            plan_set_e_position(0);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_SPEED, active_extruder);
+        }
+
+        lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
+        lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
+        lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
+        lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
+        lcd_lib_draw_string_centerP(40, PSTR("above the arrow."));
+        lcd_lib_update_screen();
+    }
 }
 
 static void lcd_menu_change_material_insert_wait_user_ready()
@@ -296,24 +315,28 @@ static void materialInsertReady()
 {
     plan_set_e_position(0);
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -END_OF_PRINT_RETRACTION / volume_to_filament_length[active_extruder], 25*60, active_extruder);
+    doCooldown();
     cancelMaterialInsert();
 }
 
 static void lcd_menu_change_material_insert()
 {
-    LED_GLOW();
-
-    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
-    lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
-    lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
-
-    if (movesplanned() < 2)
+    if (check_material_timeout())
     {
-        plan_set_e_position(0);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
-    }
+        LED_GLOW();
 
-    lcd_lib_update_screen();
+        lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
+        lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
+        lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
+
+        if (movesplanned() < 2)
+        {
+            plan_set_e_position(0);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
+        }
+
+        lcd_lib_update_screen();
+    }
 }
 
 static char* lcd_menu_change_material_select_material_callback(uint8_t nr)
@@ -852,7 +875,7 @@ void lcd_material_store_current_material()
 bool lcd_material_verify_material_settings()
 {
     bool hasCPE = false;
-    
+
     uint8_t cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (cnt < 2 || cnt > EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
         return false;
@@ -895,7 +918,7 @@ bool lcd_material_verify_material_settings()
         eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(cnt), 50);
         eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(cnt), 100);
         eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(cnt), 2.85);
-        
+
         eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), cnt + 1);
     }
     return true;
