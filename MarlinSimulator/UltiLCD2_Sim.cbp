@@ -37,12 +37,10 @@
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="C:/Software/SecretMarlin/UltiLCD2_Sim/" />
-			<Add directory="D:/SDL-1.2.15/include" />
 		</Compiler>
 		<Linker>
 			<Add library="SDLmain" />
 			<Add library="SDL" />
-			<Add directory="D:/SDL-1.2.15/lib" />
 		</Linker>
 		<Unit filename="../Marlin/Configuration.h" />
 		<Unit filename="../Marlin/ConfigurationStore.cpp" />
