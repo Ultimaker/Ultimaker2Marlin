@@ -27,7 +27,8 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
-static void lcd_menu_print_error();
+static void lcd_menu_print_error_sd();
+static void lcd_menu_print_error_position();
 static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_abort();
 static void lcd_menu_print_ready();
@@ -102,10 +103,16 @@ static void checkPrintFinished()
         abortPrint();
         currentMenu = lcd_menu_print_ready;
         SELECT_MAIN_MENU_ITEM(0);
+    }else if (position_error)
+    {
+        quickStop();
+        abortPrint();
+        currentMenu = lcd_menu_print_error_position;
+        SELECT_MAIN_MENU_ITEM(0);
     }else if (card.errorCode())
     {
         abortPrint();
-        currentMenu = lcd_menu_print_error;
+        currentMenu = lcd_menu_print_error_sd;
         SELECT_MAIN_MENU_ITEM(0);
     }
 }
@@ -116,6 +123,7 @@ static void doStartPrint()
 	current_position[E_AXIS] = 0.0;
 	plan_set_e_position(0);
 	primed = false;
+	position_error = false;
 
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
@@ -522,6 +530,10 @@ static void lcd_menu_print_printing()
             if (IS_SELECTED_MAIN(0) && movesplanned() < 1)
             {
                 card.pause = false;
+                if (card.sdprinting)
+                {
+                    primed = true;
+                }
                 lcd_lib_beep();
             }else if (IS_SELECTED_MAIN(1) && movesplanned() < 1)
                 lcd_change_to_menu_change_material(lcd_change_to_menu_change_material_return);
@@ -595,7 +607,7 @@ static void lcd_menu_print_printing()
     lcd_lib_update_screen();
 }
 
-static void lcd_menu_print_error()
+static void lcd_menu_print_error_sd()
 {
     LED_GLOW_ERROR();
     lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
@@ -607,6 +619,18 @@ static void lcd_menu_print_error()
     strcpy_P(buffer, PSTR("Code:"));
     int_to_string(card.errorCode(), buffer+5);
     lcd_lib_draw_string_center(40, buffer);
+
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_print_error_position()
+{
+    LED_GLOW_ERROR();
+    lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
+
+    lcd_lib_draw_string_centerP(15, PSTR("ERROR:"));
+    lcd_lib_draw_string_centerP(25, PSTR("Tried printing out"));
+    lcd_lib_draw_string_centerP(35, PSTR("of printing area"));
 
     lcd_lib_update_screen();
 }
@@ -920,12 +944,25 @@ static void lcd_menu_print_pause()
         {
             pauseRequested = false;
             card.pause = true;
-            if (current_position[Z_AXIS] < Z_MAX_POS - 60)
-                enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
+
+            // move z up according to the current height - but minimum to z=70mm (above the gantry height)
+            uint16_t zdiff = 0;
+            if (current_position[Z_AXIS] < 70)
+                zdiff = max(70 - floor(current_position[Z_AXIS]), 20);
+            else if (current_position[Z_AXIS] < Z_MAX_POS - 60)
+            {
+                zdiff = 20;
+            }
             else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
-                enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
-            else
-                enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
+            {
+                zdiff = 2;
+            }
+
+            char buffer[32];
+            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
+            enquecommand(buffer);
+
+            primed = false;
         }
         else{
             pauseRequested = true;

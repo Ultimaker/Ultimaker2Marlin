@@ -212,6 +212,7 @@ machinesettings machinesettings_tempsave[10];
 int ValvePressure=0;
 int EtoPPressure=0;
 #endif
+bool position_error;
 
 #ifdef FWRETRACT
   bool autoretract_enabled=false;
@@ -2542,15 +2543,15 @@ void get_arc_coordinates()
 void clamp_to_software_endstops(float target[3])
 {
   if (min_software_endstops) {
-    if (target[X_AXIS] < min_pos[X_AXIS]) target[X_AXIS] = min_pos[X_AXIS];
-    if (target[Y_AXIS] < min_pos[Y_AXIS]) target[Y_AXIS] = min_pos[Y_AXIS];
-    if (target[Z_AXIS] < min_pos[Z_AXIS]) target[Z_AXIS] = min_pos[Z_AXIS];
+    if (target[X_AXIS] < min_pos[X_AXIS]) { target[X_AXIS] = min_pos[X_AXIS]; position_error = true; }
+    if (target[Y_AXIS] < min_pos[Y_AXIS]) { target[Y_AXIS] = min_pos[Y_AXIS]; position_error = true; }
+    if (target[Z_AXIS] < min_pos[Z_AXIS]) { target[Z_AXIS] = min_pos[Z_AXIS]; position_error = true; }
   }
 
   if (max_software_endstops) {
-    if (target[X_AXIS] > max_pos[X_AXIS]) target[X_AXIS] = max_pos[X_AXIS];
-    if (target[Y_AXIS] > max_pos[Y_AXIS]) target[Y_AXIS] = max_pos[Y_AXIS];
-    if (target[Z_AXIS] > max_pos[Z_AXIS]) target[Z_AXIS] = max_pos[Z_AXIS];
+    if (target[X_AXIS] > max_pos[X_AXIS]) { target[X_AXIS] = max_pos[X_AXIS]; position_error = true; }
+    if (target[Y_AXIS] > max_pos[Y_AXIS]) { target[Y_AXIS] = max_pos[Y_AXIS]; position_error = true; }
+    if (target[Z_AXIS] > max_pos[Z_AXIS]) { target[Z_AXIS] = max_pos[Z_AXIS]; position_error = true; }
   }
 }
 
