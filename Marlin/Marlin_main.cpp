@@ -2472,10 +2472,6 @@ void get_coordinates()
             destination[i] = (float)code_value() + (axis_relative_modes[i] || relative_mode)*current_position[i];
             seen[i]=true;
         }
-        else
-        {
-            destination[i] = current_position[i]; //Are these else lines really needed?
-        }
     }
     if(code_seen('F'))
     {
