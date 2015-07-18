@@ -192,7 +192,7 @@ static void userStartPrint()
     }
     else
     {
-        // lcd_remove_menu();
+        recover_height = 0.0f;
         menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
         doStartPrint();
     }
@@ -469,6 +469,7 @@ void lcd_menu_print_select()
                         }
                         else
                         {
+                            recover_height = 0.0f;
                             enquecommand_P(PSTR("G28"));
                             enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
                             if (ui_mode & UI_MODE_EXPERT)
@@ -742,8 +743,10 @@ void lcd_menu_print_ready()
         int_to_string(dsp_temperature_bed, c, PSTR("C"));
 #endif
         lcd_lib_draw_string_center(26, buffer);
-    }else{
-        menu.replace_menu(menu_t(lcd_menu_print_ready_cooled_down), false);
+    }
+    else
+    {
+        menu.replace_menu(menu_t(lcd_menu_print_ready_cooled_down, MAIN_MENU_ITEM_POS(0)), false);
     }
     lcd_lib_update_screen();
 }
@@ -1078,21 +1081,34 @@ void lcd_print_abort()
     menu.add_menu(menu_t(lcd_menu_print_abort, MAIN_MENU_ITEM_POS(1)));
 }
 
+static void lcd_menu_print_resume_ready()
+{
+    menu.return_to_previous();
+    primed = true;
+    pauseRequested = false;
+    card.pause = false;
+}
+
 static void lcd_print_resume()
 {
-    card.pause = false;
-    pauseRequested = false;
     if (card.sdprinting)
     {
-        primed = true;
+        menu.replace_menu(menu_t(lcd_menu_print_resume_ready));
+        check_preheat();
     }
-    menu.return_to_previous();
+    else
+    {
+        menu.return_to_previous();
+    }
 }
 
 static void lcd_print_change_material()
 {
-    menu.add_menu(menu_t(lcd_change_to_menu_change_material_return), false);
-    menu.add_menu(menu_t(lcd_menu_change_material_preheat));
+    if (!movesplanned())
+    {
+        menu.add_menu(menu_t(lcd_change_to_menu_change_material_return), false);
+        menu.add_menu(menu_t(lcd_menu_change_material_preheat));
+    }
 }
 
 static void lcd_show_pause_menu()
@@ -1341,6 +1357,11 @@ void lcd_menu_print_resume()
     {
         lcd_print_pause();
     }
+    if (movesplanned())
+    {
+        last_user_interaction = millis();
+    }
+
     lcd_lib_clear();
     lcd_lib_draw_vline(64, 5, 46);
     lcd_lib_draw_hline(3, 124, 50);

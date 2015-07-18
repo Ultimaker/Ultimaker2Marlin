@@ -5,6 +5,8 @@
 #include "UltiLCD2_gfx.h"
 #include "UltiLCD2_menu_utils.h"
 
+#define HEATER_TIMEOUT 180   //timeout for nozzle heater (in seconds)
+
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom);
 void lcd_basic_screen();
 void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel = NULL, const char* cancelButtonText = NULL);
@@ -16,6 +18,11 @@ void lcd_progressbar(uint8_t progress);
 void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags);
 
 void lcd_menu_edit_setting();
+
+bool check_heater_timeout();
+bool check_preheat();
+
+extern int backup_temperature[EXTRUDERS];
 
 extern const char* lcd_setting_name;
 extern const char* lcd_setting_postfix;

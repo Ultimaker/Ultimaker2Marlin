@@ -99,11 +99,7 @@ public:
     // constructor
     LCDMenu() : currentIndex(0), selectedSubmenu(-1) {}
 
-    void processEvents()
-    {
-        if (menuStack[currentIndex].processMenuFunc)
-            menuStack[currentIndex].processMenuFunc();
-    }
+    void processEvents();
 
     void init_menu(menu_t nextMenu, bool beep = false);
     void add_menu(menu_t nextMenu, bool beep = true);

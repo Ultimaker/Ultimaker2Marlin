@@ -171,21 +171,7 @@ void lcd_menu_startup()
             else
                 lcd_lib_clear(0, 22+n*2, 127, 23+n*2);
         }
-    /*
-    }else if (led_glow < 86) {
-        led_glow--;
-        //lcd_lib_set();
-        //lcd_lib_clear_gfx(0, 22, ultimakerTextGfx);
-        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
-    */
     }
-//    else
-//    {
-//        //led_glow--;
-//        //lcd_lib_draw_gfx(80, 0, ultimakerRobotGfx);
-//        //lcd_lib_clear_gfx(0, 22, ultimakerTextOutlineGfx);
-//        lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
-//    }
     lcd_lib_update_screen();
 
     if (led_mode == LED_MODE_ALWAYS_ON)
@@ -241,8 +227,6 @@ void doCooldown()
         setTargetHotend(0, n);
     setTargetBed(0);
     fanSpeed = 0;
-
-    //quickStop();         //Abort all moves already in the planner
 }
 
 static void lcd_main_print()

@@ -17,8 +17,22 @@ static int16_t lastEncoderPos = 0;
 // menu stack handling
 // --------------------------------------------------------------------------
 
+void LCDMenu::processEvents()
+{
+    if (!card.sdprinting || card.pause)
+    {
+        // cool down nozzle after timeout
+        check_heater_timeout();
+    }
+    if (menuStack[currentIndex].processMenuFunc)
+    {
+        menuStack[currentIndex].processMenuFunc();
+    }
+}
+
 void LCDMenu::init_menu_switch(bool beep)
 {
+    last_user_interaction = millis();
     minProgress = 0;
     LED_NORMAL();
     if (beep)

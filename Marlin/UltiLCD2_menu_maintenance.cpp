@@ -372,7 +372,12 @@ static void lcd_menu_maintenance_extrude()
             lcd_lib_encoder_pos = 0;
         }
     }
-    if (lcd_lib_button_pressed)
+    // reset heater timeout until target temperature is reached
+    if ((degHotend(active_extruder) < 100) || (degHotend(active_extruder) < (degTargetHotend(active_extruder) - 20)))
+    {
+        last_user_interaction = millis();
+    }
+    if (lcd_lib_button_pressed || (millis() - last_user_interaction > HEATER_TIMEOUT*1000L))
     {
         set_extrude_min_temp(EXTRUDE_MINTEMP);
         target_temperature[active_extruder] = 0;

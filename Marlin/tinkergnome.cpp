@@ -2817,8 +2817,11 @@ static void lcd_menu_tune_extrude()
 static void lcd_extrude_return()
 {
     set_extrude_min_temp(EXTRUDE_MINTEMP);
-    if (!card.sdprinting) target_temperature[active_extruder] = 0;
     menu.return_to_previous();
+    if (!card.sdprinting)
+    {
+        target_temperature[active_extruder] = 0;
+    }
 }
 
 static void lcd_extrude_temperature()
@@ -3078,6 +3081,12 @@ void lcd_extrude_quit_menu()
 
 void lcd_menu_expert_extrude()
 {
+    // reset heater timeout until target temperature is reached
+    if ((degHotend(active_extruder) < 100) || (degHotend(active_extruder) < (degTargetHotend(active_extruder) - 20)))
+    {
+        last_user_interaction = millis();
+    }
+
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
@@ -3096,7 +3105,6 @@ void lcd_menu_expert_extrude()
     }
 
     lcd_lib_update_screen();
-
 }
 
 void recover_start_print()
