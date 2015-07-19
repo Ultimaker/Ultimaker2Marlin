@@ -207,6 +207,7 @@ extern uint8_t fanSpeedPercent;
 extern int ValvePressure;
 extern int EtoPPressure;
 #endif
+extern bool position_error;
 
 #ifdef FAN_SOFT_PWM
 extern unsigned char fanSpeedSoftPwm;

@@ -22,7 +22,8 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 
 void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
-static void lcd_menu_print_error();
+static void lcd_menu_print_error_sd();
+static void lcd_menu_print_error_position();
 static void lcd_menu_print_classic_warning();
 static void lcd_menu_print_ready_cooled_down();
 static void lcd_menu_print_tune_retraction();
@@ -95,10 +96,15 @@ static void checkPrintFinished()
         abortPrint();
         recover_height = 0.0f;
         menu.replace_menu(menu_t(lcd_menu_print_ready, MAIN_MENU_ITEM_POS(0)));
+    }else if (position_error)
+    {
+        quickStop();
+        abortPrint();
+        menu.replace_menu(menu_t(lcd_menu_print_error_position, MAIN_MENU_ITEM_POS(0)));
     }else if (card.errorCode())
     {
         abortPrint();
-        menu.replace_menu(menu_t(lcd_menu_print_error, MAIN_MENU_ITEM_POS(0)));
+        menu.replace_menu(menu_t(lcd_menu_print_error_sd, MAIN_MENU_ITEM_POS(0)));
     }
 }
 
@@ -109,8 +115,6 @@ void doStartPrint()
 
     if (printing_state == PRINT_STATE_RECOVER)
     {
-//        enquecommand_P(PSTR("G28"));
-//        enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
         return;
     }
     else if (printing_state != PRINT_STATE_START)
@@ -125,6 +129,7 @@ void doStartPrint()
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
 	primed = false;
+	position_error = false;
 
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
@@ -645,7 +650,7 @@ static void lcd_menu_print_printing()
     }
 }
 
-static void lcd_menu_print_error()
+static void lcd_menu_print_error_sd()
 {
     LED_GLOW_ERROR();
     lcd_info_screen(lcd_return_to_main_menu, NULL, PSTR("RETURN TO MAIN"));
@@ -657,6 +662,18 @@ static void lcd_menu_print_error()
     strcpy_P(buffer, PSTR("Code:"));
     int_to_string(card.errorCode(), buffer+5);
     lcd_lib_draw_string_center(40, buffer);
+
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_print_error_position()
+{
+    LED_GLOW_ERROR();
+    lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
+
+    lcd_lib_draw_string_centerP(15, PSTR("ERROR:"));
+    lcd_lib_draw_string_centerP(25, PSTR("Tried printing out"));
+    lcd_lib_draw_string_centerP(35, PSTR("of printing area"));
 
     lcd_lib_update_screen();
 }
@@ -1055,6 +1072,7 @@ void lcd_print_pause()
             char buffer[32];
             sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
             enquecommand(buffer);
+
             primed = false;
         }
         else if (!pauseRequested)
