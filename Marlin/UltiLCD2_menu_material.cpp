@@ -852,7 +852,7 @@ void lcd_material_store_current_material()
 bool lcd_material_verify_material_settings()
 {
     bool hasCPE = false;
-    
+
     uint8_t cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (cnt < 2 || cnt > EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
         return false;
@@ -895,7 +895,7 @@ bool lcd_material_verify_material_settings()
         eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(cnt), 50);
         eeprom_write_word(EEPROM_MATERIAL_FLOW_OFFSET(cnt), 100);
         eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(cnt), 2.85);
-        
+
         eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), cnt + 1);
     }
     return true;
