@@ -116,6 +116,7 @@ void lcd_change_to_menu_change_material(menuFunc_t return_menu)
 
 static void lcd_menu_change_material_preheat()
 {
+    last_user_interaction = millis();
     setTargetHotend(material[active_extruder].temperature, active_extruder);
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20 - 10;
@@ -158,6 +159,7 @@ static void lcd_menu_change_material_preheat()
 
 static void lcd_menu_change_material_remove()
 {
+    last_user_interaction = millis();
     lcd_info_screen(post_change_material_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Reversing material"));
 
@@ -185,6 +187,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
 {
     plan_set_e_position(0);
     lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0));
+    check_preheat();
 }
 
 static void lcd_menu_change_material_remove_wait_user()
@@ -204,6 +207,7 @@ void lcd_change_to_menu_insert_material(menuFunc_t return_menu)
 
 static void lcd_menu_insert_material_preheat()
 {
+    last_user_interaction = millis();
     setTargetHotend(material[active_extruder].temperature, active_extruder);
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20 - 10;
@@ -237,7 +241,7 @@ static void lcd_menu_change_material_insert_wait_user()
 {
     LED_GLOW();
 
-    if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 2)
+    if (target_temperature[active_extruder] && (printing_state == PRINT_STATE_NORMAL) && (movesplanned() < 2))
     {
         plan_set_e_position(0);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_SPEED, active_extruder);
@@ -253,6 +257,11 @@ static void lcd_menu_change_material_insert_wait_user()
 
 static void lcd_menu_change_material_insert_wait_user_ready()
 {
+    // heat up nozzle (if necessary)
+    if (!check_preheat())
+    {
+        return;
+    }
     //Override the max feedrate and acceleration values to get a better insert speed and speedup/slowdown
     float old_max_feedrate_e = max_feedrate[E_AXIS];
     float old_retract_acceleration = retract_acceleration;
@@ -271,6 +280,7 @@ static void lcd_menu_change_material_insert_wait_user_ready()
 
 static void lcd_menu_change_material_insert_forward()
 {
+    last_user_interaction = millis();
     lcd_info_screen(post_change_material_menu, cancelMaterialInsert);
     lcd_lib_draw_stringP(3, 20, PSTR("Forwarding material"));
 
@@ -301,19 +311,27 @@ static void materialInsertReady()
 
 static void lcd_menu_change_material_insert()
 {
-    LED_GLOW();
-
-    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
-    lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
-    lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
-
-    if (movesplanned() < 2)
+    if (target_temperature[active_extruder])
     {
-        plan_set_e_position(0);
-        plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
-    }
+        LED_GLOW();
 
-    lcd_lib_update_screen();
+        lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
+        lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
+        lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
+
+        if (movesplanned() < 2)
+        {
+            plan_set_e_position(0);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 0.5 / volume_to_filament_length[active_extruder], FILAMENT_INSERT_EXTRUDE_SPEED, active_extruder);
+        }
+
+        lcd_lib_update_screen();
+    }
+    else
+    {
+        materialInsertReady();
+        lcd_change_to_menu(lcd_menu_change_material_select_material);
+    }
 }
 
 static char* lcd_menu_change_material_select_material_callback(uint8_t nr)

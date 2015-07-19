@@ -96,6 +96,8 @@ static void checkPrintFinished()
     if (pauseRequested)
     {
         lcd_menu_print_pause();
+        if (movesplanned())
+            last_user_interaction = millis();
     }
 
     if (!card.sdprinting && !is_command_queued())
@@ -520,21 +522,31 @@ static void lcd_change_to_menu_change_material_return()
     currentMenu = lcd_menu_print_printing;
 }
 
+static void lcd_menu_print_resume_ready()
+{
+    lcd_change_to_menu(lcd_menu_print_printing, ENCODER_NO_SELECTION, false);
+    card.pause = false;
+    pauseRequested = false;
+    if (card.sdprinting)
+    {
+        primed = true;
+    }
+}
+
 static void lcd_menu_print_printing()
 {
     if (card.pause)
     {
+        if (movesplanned())
+            last_user_interaction = millis();
+
         lcd_tripple_menu(PSTR("RESUME|PRINT"), PSTR("CHANGE|MATERIAL"), PSTR("TUNE"));
         if (lcd_lib_button_pressed)
         {
             if (IS_SELECTED_MAIN(0) && movesplanned() < 1)
             {
-                card.pause = false;
-                if (card.sdprinting)
-                {
-                    primed = true;
-                }
-                lcd_lib_beep();
+                lcd_change_to_menu(lcd_menu_print_resume_ready);
+                check_preheat();
             }else if (IS_SELECTED_MAIN(1) && movesplanned() < 1)
                 lcd_change_to_menu_change_material(lcd_change_to_menu_change_material_return);
             else if (IS_SELECTED_MAIN(2))

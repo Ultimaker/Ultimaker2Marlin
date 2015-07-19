@@ -181,7 +181,7 @@ static void lcd_menu_maintenance_advanced()
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
-            
+
             lcd_change_to_menu_insert_material(lcd_menu_maintenance_advanced_return);
         }
         else if (IS_SELECTED_SCROLL(6 + BED_MENU_OFFSET + EXTRUDERS))
@@ -250,11 +250,16 @@ void lcd_menu_maintenance_extrude()
             lcd_lib_encoder_pos = 0;
         }
     }
-    if (lcd_lib_button_pressed)
+    if (lcd_lib_button_pressed || !target_temperature[active_extruder])
     {
         set_extrude_min_temp(EXTRUDE_MINTEMP);
         target_temperature[active_extruder] = 0;
         lcd_change_to_menu(previousMenu, previousEncoderPos);
+    }
+    // reset heater timeout until target temperature is reached
+    if ((degTargetHotend(active_extruder) < 120) || (degHotend(active_extruder) < (degTargetHotend(active_extruder) - 20)))
+    {
+        last_user_interaction = millis();
     }
 
     lcd_lib_clear();
