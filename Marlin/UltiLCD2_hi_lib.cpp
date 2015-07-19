@@ -18,6 +18,7 @@ uint8_t lcd_setting_type;
 int16_t lcd_setting_min;
 int16_t lcd_setting_max;
 
+uint8_t heater_timeout = 3;
 int backup_temperature[EXTRUDERS] = { 0 };
 
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
@@ -293,7 +294,7 @@ static void lcd_menu_material_reheat()
 
 bool check_heater_timeout()
 {
-    if (millis() - last_user_interaction > HEATER_TIMEOUT*1000L)
+    if (heater_timeout && (millis()-last_user_interaction > heater_timeout*MILLISECONDS_PER_MINUTE))
     {
         if (target_temperature[active_extruder])
         {

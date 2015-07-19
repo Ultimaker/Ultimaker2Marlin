@@ -143,6 +143,8 @@ static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("Sleep timer"));
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Screen contrast"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Heater timeout"));
 #if TEMP_SENSOR_BED != 0
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Buildplate PID"));
@@ -202,8 +204,19 @@ static void lcd_preferences_details(uint8_t nr)
     {
         int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
     }
-#if TEMP_SENSOR_BED != 0
     else if (nr == 6)
+    {
+        if (heater_timeout)
+        {
+            int_to_string(heater_timeout, buffer, PSTR(" min"));
+        }
+        else
+        {
+            strcpy_P(buffer, PSTR("off"));
+        }
+    }
+#if TEMP_SENSOR_BED != 0
+    else if (nr == 7)
     {
         if (pidTempBed())
         {
@@ -215,7 +228,7 @@ static void lcd_preferences_details(uint8_t nr)
         }
     }
 #endif
-    else if (nr == 8+BED_MENU_OFFSET)
+    else if (nr == 9+BED_MENU_OFFSET)
     {
         strcpy_P(buffer, PSTR(STRING_CONFIG_H_AUTHOR));
     }
@@ -377,7 +390,7 @@ static void lcd_menu_maintenance_extrude()
     {
         last_user_interaction = millis();
     }
-    if (lcd_lib_button_pressed || (millis() - last_user_interaction > HEATER_TIMEOUT*1000L))
+    if (lcd_lib_button_pressed)
     {
         set_extrude_min_temp(EXTRUDE_MINTEMP);
         target_temperature[active_extruder] = 0;
@@ -907,6 +920,47 @@ static void lcd_menu_buildplate_pid()
     }
 }
 
+static void lcd_heater_timeout_store(uint8_t timeout)
+{
+    heater_timeout = timeout;
+    uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version < 3)
+    {
+        SET_EXPERT_VERSION(2);
+        SET_HEATER_TIMEOUT(timeout);
+    }
+    else if (timeout != GET_HEATER_TIMEOUT())
+    {
+        SET_HEATER_TIMEOUT(timeout);
+    }
+}
+
+static void lcd_menu_heater_timeout()
+{
+    lcd_tune_value(heater_timeout, 0, 60);
+
+    if (lcd_lib_button_pressed)
+    {
+        lcd_heater_timeout_store(heater_timeout);
+        menu.return_to_previous();
+    }
+
+    lcd_lib_clear();
+    lcd_lib_draw_string_centerP(10, PSTR("Nozzle"));
+    lcd_lib_draw_string_centerP(20, PSTR("heater timeout"));
+    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
+
+    char buffer[32];
+    if (heater_timeout)
+        int_to_string(heater_timeout, buffer, PSTR(" min"));
+    else
+        strcpy_P(buffer, PSTR("off"));
+
+    lcd_lib_draw_string_center(35, buffer);
+
+    lcd_lib_update_screen();
+}
+
 static void lcd_menu_preferences()
 {
     lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 11, lcd_preferences_item, lcd_preferences_details);
@@ -925,6 +979,8 @@ static void lcd_menu_preferences()
             menu.add_menu(menu_t(lcd_menu_sleeptimer));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_screen_contrast, 0, 4));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_heater_timeout, 0, 2));
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_buildplate_pid));

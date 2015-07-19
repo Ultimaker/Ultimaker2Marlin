@@ -10,6 +10,7 @@
 #define EEPROM_SLEEP_CONTRAST_OFFSET 0x40A
 #define EEPROM_SLEEP_GLOW_OFFSET 0x40B
 #define EEPROM_PID_FLAGS 0x40C
+#define EEPROM_HEATER_TIMEOUT 0x40D
 
 #define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
 #define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
@@ -29,6 +30,8 @@
 #define SET_SLEEP_GLOW(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_GLOW_OFFSET, n); } while(0)
 #define GET_PID_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
 #define SET_PID_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
+#define GET_HEATER_TIMEOUT() (eeprom_read_byte((const uint8_t*)EEPROM_HEATER_TIMEOUT))
+#define SET_HEATER_TIMEOUT(n) do { eeprom_write_byte((uint8_t*)EEPROM_HEATER_TIMEOUT, n); } while(0)
 
 // UI Mode
 #define UI_MODE_STANDARD  0
@@ -77,6 +80,7 @@ void lcd_menu_expert_recover();
 void reset_printing_state();
 
 bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max);
+void lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max);
 void lcd_lib_draw_bargraph( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, float value );
 
 char* int_to_time_string_tg(unsigned long i, char* temp_buffer);
