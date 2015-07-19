@@ -390,7 +390,7 @@ static void lcd_menu_maintenance_extrude()
     {
         last_user_interaction = millis();
     }
-    if (lcd_lib_button_pressed)
+    if (lcd_lib_button_pressed || !target_temperature[active_extruder])
     {
         set_extrude_min_temp(EXTRUDE_MINTEMP);
         target_temperature[active_extruder] = 0;

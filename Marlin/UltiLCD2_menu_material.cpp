@@ -160,8 +160,6 @@ static void lcd_menu_change_material_remove()
     if (!blocks_queued())
     {
         lcd_lib_keyclick();
-        // led_glow_dir = led_glow = 0;
-        last_user_interaction = millis();
         menu.replace_menu(menu_t(lcd_menu_change_material_remove_wait_user));
         SELECT_MAIN_MENU_ITEM(0);
         //Disable the extruder motor so you can pull out the remaining filament.
@@ -216,7 +214,6 @@ void lcd_menu_insert_material_preheat()
         for(uint8_t e=0; e<EXTRUDERS; e++)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
 
-        last_user_interaction = millis();
         menu.replace_menu(menu_t(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0)));
         temp = target;
     }
