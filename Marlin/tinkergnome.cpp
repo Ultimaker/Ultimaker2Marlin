@@ -2198,9 +2198,36 @@ static void stopMove()
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 }
 
+static void start_move(AxisEnum axis, int8_t speed)
+{
+    if (!speed)
+    {
+        stopMove();
+    }
+    else if (speed != movingSpeed)
+    {
+        for (uint8_t i=0; i<NUM_AXIS; ++i)
+        {
+            target_position[i] = constrain(st_get_position(i)/axis_steps_per_unit[i], min_pos[i], max_pos[i]);
+        }
+
+        plan_set_position(target_position[X_AXIS], target_position[Y_AXIS], target_position[Z_AXIS], target_position[E_AXIS]);
+        target_position[axis] = (speed < 0) ? min_pos[axis] : max_pos[axis];
+
+        movingSpeed = speed;
+        plan_buffer_line(target_position[X_AXIS], target_position[Y_AXIS], target_position[Z_AXIS], target_position[E_AXIS], abs(movingSpeed), active_extruder);
+        quickDiscard();
+    }
+}
+
 static void lcd_move_axis(AxisEnum axis, float diff)
 {
-    if (endstop_reached(axis, movingSpeed) || lcd_lib_button_pressed || ((lcd_lib_encoder_pos < 0) && (movingSpeed > 0)) || ((lcd_lib_encoder_pos > 0) && (movingSpeed < 0)))
+    float pos = st_get_position(axis)/axis_steps_per_unit[axis];
+    if (endstop_reached(axis, movingSpeed) || lcd_lib_button_pressed ||
+        ((lcd_lib_encoder_pos < 0) && (movingSpeed > 0)) ||
+        ((lcd_lib_encoder_pos > 0) && (movingSpeed < 0)) ||
+        (movingSpeed < 0 && (pos <= min_pos[axis])) ||
+        (movingSpeed > 0 && (pos >= max_pos[axis])))
     {
         // stop moving
         stopMove();
@@ -2213,41 +2240,14 @@ static void lcd_move_axis(AxisEnum axis, float diff)
     }
     else
     {
-        if (lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM < 0)
+        last_user_interaction = millis();
+        int8_t direction = constrain(lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM, -1, +1);
+        int8_t newSpeed = constrain(movingSpeed + direction, -15, +15);
+
+        if (direction)
         {
-            --movingSpeed;
             lcd_lib_encoder_pos = 0;
-        }
-        else if (lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM > 0)
-        {
-            ++movingSpeed;
-            lcd_lib_encoder_pos = 0;
-        }
-        if (movingSpeed != 0)
-        {
-            movingSpeed = constrain(movingSpeed, -15, 15);
-            uint8_t steps = min(abs(movingSpeed)*2, (BLOCK_BUFFER_SIZE - movesplanned()) >> 1);
-            for (uint8_t i = 0; i < steps; ++i)
-            {
-                target_position[axis] = round((current_position[axis]+float(movingSpeed)*diff)/diff)*diff;
-                current_position[axis] = constrain(target_position[axis], min_pos[axis], max_pos[axis]);
-                plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], abs(movingSpeed), active_extruder);
-                if (endstop_reached(axis, movingSpeed))
-                {
-                    // quickstop
-                    stopMove();
-                    break;
-                }
-                else if ((movingSpeed < 0 && (target_position[axis] < min_pos[axis])) || ((movingSpeed > 0) && (target_position[axis] > max_pos[axis])))
-                {
-                    // stop planner
-                    lcd_lib_encoder_pos = 0;
-                    movingSpeed = 0;
-                    delayMove = true;
-                    last_user_interaction = millis();
-                    break;
-                }
-            }
+            start_move(axis, newSpeed);
         }
     }
 }
@@ -2326,28 +2326,8 @@ static const menu_t & get_move_menuoption(uint8_t nr, menu_t &opt)
     }
     else if (nr == index++)
     {
-        // x position
-        opt.setData(MENU_INPLACE_EDIT, init_target_positions, lcd_position_x_axis, NULL, 4);
-    }
-    else if (nr == index++)
-    {
-        // x home
-        opt.setData(MENU_NORMAL, lcd_home_x_axis);
-    }
-    else if (nr == index++)
-    {
         // y move
         opt.setData(MENU_INPLACE_EDIT, init_target_positions, lcd_move_y_axis, stopMove, 2);
-    }
-    else if (nr == index++)
-    {
-        // y position
-        opt.setData(MENU_INPLACE_EDIT, init_target_positions, lcd_position_y_axis, NULL, 4);
-    }
-    else if (nr == index++)
-    {
-        // y home
-        opt.setData(MENU_NORMAL, lcd_home_y_axis);
     }
     else if (nr == index++)
     {
@@ -2356,8 +2336,28 @@ static const menu_t & get_move_menuoption(uint8_t nr, menu_t &opt)
     }
     else if (nr == index++)
     {
+        // x position
+        opt.setData(MENU_INPLACE_EDIT, init_target_positions, lcd_position_x_axis, NULL, 4);
+    }
+    else if (nr == index++)
+    {
+        // y position
+        opt.setData(MENU_INPLACE_EDIT, init_target_positions, lcd_position_y_axis, NULL, 4);
+    }
+    else if (nr == index++)
+    {
         // z position
         opt.setData(MENU_INPLACE_EDIT, init_target_positions, lcd_position_z_axis, NULL, 5);
+    }
+    else if (nr == index++)
+    {
+        // x home
+        opt.setData(MENU_NORMAL, lcd_home_x_axis);
+    }
+    else if (nr == index++)
+    {
+        // y home
+        opt.setData(MENU_NORMAL, lcd_home_y_axis);
     }
     else if (nr == index++)
     {
@@ -2439,6 +2439,48 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
     }
     else if (nr == index++)
     {
+        // y move
+        if (flags & MENU_ACTIVE)
+        {
+            drawMoveDetails();
+            flags |= MENU_STATUSLINE;
+        }
+        else if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Move Y axis"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING
+                                , 29
+                                , LCD_CHAR_SPACING*3
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("Y")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+    else if (nr == index++)
+    {
+        // z move
+        if (flags & MENU_ACTIVE)
+        {
+            drawMoveDetails();
+            flags |= MENU_STATUSLINE;
+        }
+        else if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Move Z axis"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING
+                                , 41
+                                , LCD_CHAR_SPACING*3
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("Z")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+    else if (nr == index++)
+    {
         // x position
         if (flags & MENU_SELECTED)
         {
@@ -2448,6 +2490,40 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
         float_to_string(st_get_position(X_AXIS) / axis_steps_per_unit[X_AXIS], buffer, PSTR("mm"));
         LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
                               , 17
+                              , 48
+                              , LCD_CHAR_HEIGHT
+                              , buffer
+                              , ALIGN_RIGHT | ALIGN_VCENTER
+                              , flags);
+    }
+    else if (nr == index++)
+    {
+        // y position
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Y axis position"));
+            flags |= MENU_STATUSLINE;
+        }
+        float_to_string(st_get_position(Y_AXIS) / axis_steps_per_unit[Y_AXIS], buffer, PSTR("mm"));
+        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
+                              , 29
+                              , 48
+                              , LCD_CHAR_HEIGHT
+                              , buffer
+                              , ALIGN_RIGHT | ALIGN_VCENTER
+                              , flags);
+    }
+    else if (nr == index++)
+    {
+        // z position
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Z axis position"));
+            flags |= MENU_STATUSLINE;
+        }
+        float_to_string(st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS], buffer, PSTR("mm"));
+        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
+                              , 41
                               , 48
                               , LCD_CHAR_HEIGHT
                               , buffer
@@ -2478,44 +2554,6 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
     }
     else if (nr == index++)
     {
-        // y move
-        if (flags & MENU_ACTIVE)
-        {
-            drawMoveDetails();
-            flags |= MENU_STATUSLINE;
-        }
-        else if (flags & MENU_SELECTED)
-        {
-            lcd_lib_draw_string_leftP(5, PSTR("Move Y axis"));
-            flags |= MENU_STATUSLINE;
-        }
-        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING
-                                , 29
-                                , LCD_CHAR_SPACING*3
-                                , LCD_CHAR_HEIGHT
-                                , PSTR("Y")
-                                , ALIGN_CENTER
-                                , flags);
-    }
-    else if (nr == index++)
-    {
-        // y position
-        if (flags & MENU_SELECTED)
-        {
-            lcd_lib_draw_string_leftP(5, PSTR("Y axis position"));
-            flags |= MENU_STATUSLINE;
-        }
-        float_to_string(st_get_position(Y_AXIS) / axis_steps_per_unit[Y_AXIS], buffer, PSTR("mm"));
-        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
-                              , 29
-                              , 48
-                              , LCD_CHAR_HEIGHT
-                              , buffer
-                              , ALIGN_RIGHT | ALIGN_VCENTER
-                              , flags);
-    }
-    else if (nr == index++)
-    {
         // y home
         if (flags & MENU_SELECTED)
         {
@@ -2535,44 +2573,6 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
         {
             lcd_lib_draw_gfx(LCD_GFX_WIDTH - 3*LCD_CHAR_MARGIN_RIGHT - LCD_CHAR_SPACING + 1, 29, homeGfx);
         }
-    }
-    else if (nr == index++)
-    {
-        // z move
-        if (flags & MENU_ACTIVE)
-        {
-            drawMoveDetails();
-            flags |= MENU_STATUSLINE;
-        }
-        else if (flags & MENU_SELECTED)
-        {
-            lcd_lib_draw_string_leftP(5, PSTR("Move Z axis"));
-            flags |= MENU_STATUSLINE;
-        }
-        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING
-                                , 41
-                                , LCD_CHAR_SPACING*3
-                                , LCD_CHAR_HEIGHT
-                                , PSTR("Z")
-                                , ALIGN_CENTER
-                                , flags);
-    }
-    else if (nr == index++)
-    {
-        // z position
-        if (flags & MENU_SELECTED)
-        {
-            lcd_lib_draw_string_leftP(5, PSTR("Z axis position"));
-            flags |= MENU_STATUSLINE;
-        }
-        float_to_string(st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS], buffer, PSTR("mm"));
-        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
-                              , 41
-                              , 48
-                              , LCD_CHAR_HEIGHT
-                              , buffer
-                              , ALIGN_RIGHT | ALIGN_VCENTER
-                              , flags);
     }
     else if (nr == index++)
     {
