@@ -289,7 +289,6 @@ static void lcd_menu_material_reheat()
     else
         minProgress = progress;
 
-    // lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(10, PSTR("Heating printhead"));
 
@@ -297,7 +296,6 @@ static void lcd_menu_material_reheat()
     char *c = int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[active_extruder]), c, PSTR("C"));
     lcd_lib_draw_string_center(24, buffer);
-    // lcd_lib_draw_heater(LCD_GFX_WIDTH/2-2, 40, getHeaterPower(active_extruder));
 
     lcd_progressbar(progress);
 
