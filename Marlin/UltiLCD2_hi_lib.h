@@ -35,7 +35,6 @@ void lcd_menu_edit_setting();
 bool check_heater_timeout();
 bool check_preheat();
 
-extern uint8_t heater_timeout;
 extern int backup_temperature[EXTRUDERS];
 
 extern const char* lcd_setting_name;
