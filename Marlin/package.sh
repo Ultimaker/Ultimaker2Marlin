@@ -76,20 +76,20 @@ fi
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
-checkTool git "git: http://git-scm.com/"
-checkTool curl "curl: http://curl.haxx.se/"
+# checkTool git "git: http://git-scm.com/"
+# checkTool curl "curl: http://curl.haxx.se/"
 
-checkTool avr-gcc "avr-gcc: http://winavr.sourceforge.net/ "
-#Check if we have 7zip, needed to extract and packup a bunch of packages for windows.
-checkTool 7z "7zip: http://www.7-zip.org/"
-checkTool $MAKE "mingw: http://www.mingw.org/"
+# checkTool avr-gcc "avr-gcc: http://winavr.sourceforge.net/ "
+# #Check if we have 7zip, needed to extract and packup a bunch of packages for windows.
+# checkTool 7z "7zip: http://www.7-zip.org/"
+# checkTool $MAKE "mingw: http://www.mingw.org/"
 
-#For building under MacOS we need gnutar instead of tar
-if [ -z `which gnutar` ]; then
-	TAR=tar
-else
-	TAR=gnutar
-fi
+# #For building under MacOS we need gnutar instead of tar
+# if [ -z `which gnutar` ]; then
+# 	TAR=tar
+# else
+# 	TAR=gnutar
+# fi
 
 #############################
 # Build the required firmwares

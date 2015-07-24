@@ -37,7 +37,6 @@
 			<Add option="-DEXTRUDERS=1" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
-			<Add directory="C:/Software/SecretMarlin/UltiLCD2_Sim/" />
 			<Add directory="../../SDL-1.2.15/include" />
 		</Compiler>
 		<Linker>

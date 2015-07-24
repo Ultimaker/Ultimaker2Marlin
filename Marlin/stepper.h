@@ -76,7 +76,6 @@ void finishAndDisableSteppers();
 extern block_t *current_block;  // A pointer to the block currently being traced
 
 void quickStop();
-void quickDiscard();
 
 void digitalPotWrite(int address, int value);
 void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2);

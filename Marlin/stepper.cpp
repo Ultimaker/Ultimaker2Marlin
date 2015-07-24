@@ -943,17 +943,6 @@ void quickStop()
   ENABLE_STEPPER_DRIVER_INTERRUPT();
 }
 
-void quickDiscard()
-{
-  DISABLE_STEPPER_DRIVER_INTERRUPT();
-  for (int moves_queued=(block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1); moves_queued>1; --moves_queued)
-  {
-    plan_discard_current_block();
-  }
-  current_block = NULL;
-  ENABLE_STEPPER_DRIVER_INTERRUPT();
-}
-
 void digitalPotWrite(int address, int value) // From Arduino DigitalPotControl example
 {
   #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
