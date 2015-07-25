@@ -37,6 +37,9 @@
 #define UNIT_SPEED "mm/s"
 #define DEGREE_SLASH "\x1F/"
 
+// Use the lcd_cache memory to store manual moving positions
+#define TARGET_POS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
+
 uint8_t ui_mode = UI_MODE_EXPERT;
 float recover_height = 0.0f;
 float recover_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
@@ -53,7 +56,7 @@ static uint8_t led_sleep_brightness = 0;
 // these are used to maintain a simple low-pass filter on the speeds - thanks norpchen
 static float e_smoothed_speed[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0.0, 0.0, 0.0);
 static float nominal_speed = 0.0;
-static float target_position[NUM_AXIS];
+// static float target_position[NUM_AXIS];
 static int8_t movingSpeed = 0;
 static bool delayMove = false;
 static uint8_t printing_page = 0;
@@ -1441,7 +1444,7 @@ static void init_target_positions()
     delayMove = false;
     for (uint8_t i=0; i<NUM_AXIS; ++i)
     {
-        target_position[i] = current_position[i] = st_get_position(i)/axis_steps_per_unit[i];
+        TARGET_POS(i) = current_position[i] = st_get_position(i)/axis_steps_per_unit[i];
     }
 }
 
@@ -1575,7 +1578,7 @@ void lcd_menu_simple_buildplate_init()
     float zPos = st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS];
     if ((commands_queued() < 1) && (zPos < 35.01f))
     {
-        menu.replace_menu(menu_t(lcd_simple_buildplate_init, lcd_menu_simple_buildplate, lcd_simple_buildplate_quit, MAIN_MENU_ITEM_POS(3)), false);
+        menu.replace_menu(menu_t(lcd_simple_buildplate_init, lcd_menu_simple_buildplate, lcd_simple_buildplate_quit, 0), false);
     }
 
     lcd_lib_draw_string_centerP(8, PSTR("Move Z until the"));
@@ -2175,9 +2178,9 @@ static void plan_move(AxisEnum axis)
     if (!is_command_queued() && !blocks_queued())
     {
         // enque next move
-        if ((abs(target_position[axis] - current_position[axis])>0.005) && !endstop_reached(axis, (target_position[axis]>current_position[axis]) ? 1 : -1))
+        if ((abs(TARGET_POS(axis) - current_position[axis])>0.005) && !endstop_reached(axis, (TARGET_POS(axis)>current_position[axis]) ? 1 : -1))
         {
-            current_position[axis] = target_position[axis];
+            current_position[axis] = TARGET_POS(axis);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[axis]/800, active_extruder);
         }
     }
@@ -2193,7 +2196,7 @@ static void stopMove()
     delayMove = true;
     for (uint8_t i=0; i<NUM_AXIS; ++i)
     {
-        target_position[i] = current_position[i] = constrain(st_get_position(i)/axis_steps_per_unit[i], min_pos[i], max_pos[i]);
+        TARGET_POS(i) = current_position[i] = constrain(st_get_position(i)/axis_steps_per_unit[i], min_pos[i], max_pos[i]);
     }
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 }
@@ -2234,8 +2237,8 @@ static void lcd_move_axis(AxisEnum axis, float diff)
             uint8_t steps = min(abs(movingSpeed)*2, (BLOCK_BUFFER_SIZE - movesplanned()) >> 1);
             for (uint8_t i = 0; i < steps; ++i)
             {
-                target_position[axis] = round((current_position[axis]+float(movingSpeed)*diff)/diff)*diff;
-                current_position[axis] = constrain(target_position[axis], min_pos[axis], max_pos[axis]);
+                TARGET_POS(axis) = round((current_position[axis]+float(movingSpeed)*diff)/diff)*diff;
+                current_position[axis] = constrain(TARGET_POS(axis), min_pos[axis], max_pos[axis]);
                 plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], abs(movingSpeed), active_extruder);
                 if (endstop_reached(axis, movingSpeed))
                 {
@@ -2243,7 +2246,7 @@ static void lcd_move_axis(AxisEnum axis, float diff)
                     stopMove();
                     break;
                 }
-                else if ((movingSpeed < 0 && (target_position[axis] < min_pos[axis])) || ((movingSpeed > 0) && (target_position[axis] > max_pos[axis])))
+                else if ((movingSpeed < 0 && (TARGET_POS(axis) < min_pos[axis])) || ((movingSpeed > 0) && (TARGET_POS(axis) > max_pos[axis])))
                 {
                     // stop planner
                     lcd_lib_encoder_pos = 0;
@@ -2274,19 +2277,19 @@ static void lcd_move_z_axis()
 
 static void lcd_position_x_axis()
 {
-    lcd_tune_value(target_position[X_AXIS], min_pos[X_AXIS], max_pos[X_AXIS], 0.05f);
+    lcd_tune_value(TARGET_POS(X_AXIS), min_pos[X_AXIS], max_pos[X_AXIS], 0.05f);
     plan_move(X_AXIS);
 }
 
 static void lcd_position_y_axis()
 {
-    lcd_tune_value(target_position[Y_AXIS], min_pos[Y_AXIS], max_pos[Y_AXIS], 0.05f);
+    lcd_tune_value(TARGET_POS(Y_AXIS), min_pos[Y_AXIS], max_pos[Y_AXIS], 0.05f);
     plan_move(Y_AXIS);
 }
 
 static void lcd_position_z_axis()
 {
-    lcd_tune_value(target_position[Z_AXIS], min_pos[Z_AXIS], max_pos[Z_AXIS], 0.01f);
+    lcd_tune_value(TARGET_POS(Z_AXIS), min_pos[Z_AXIS], max_pos[Z_AXIS], 0.01f);
     plan_move(Z_AXIS);
 }
 
@@ -2843,23 +2846,23 @@ static void lcd_extrude_reset_pos()
 {
     lcd_lib_keyclick();
     plan_set_e_position(0.0f);
-    target_position[E_AXIS] = 0.0f;
+    TARGET_POS(E_AXIS) = 0.0f;
 }
 
 static void lcd_extrude_init_move()
 {
     st_synchronize();
     plan_set_e_position(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS] / volume_to_filament_length[active_extruder]);
-    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    TARGET_POS(E_AXIS) = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
 }
 
 static void lcd_extrude_move()
 {
     if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 3)
     {
-        if (lcd_tune_value(target_position[E_AXIS], -10000.0, +10000.0, 0.1))
+        if (lcd_tune_value(TARGET_POS(E_AXIS), -10000.0, +10000.0, 0.1))
         {
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target_position[E_AXIS] / volume_to_filament_length[active_extruder], 10, active_extruder);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS) / volume_to_filament_length[active_extruder], 10, active_extruder);
         }
     }
 }
@@ -2874,7 +2877,7 @@ static void lcd_extrude_init_pull()
 {
     st_synchronize();
     plan_set_e_position(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS] / volume_to_filament_length[active_extruder]);
-    target_position[E_AXIS] = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    TARGET_POS(E_AXIS) = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
     //Set E motor power lower so the motor will skip instead of grind.
     digipot_current(2, motor_current_setting[2]*2/3);
     //increase max. feedrate and reduce acceleration
@@ -2901,8 +2904,8 @@ static void lcd_extrude_pull()
     {
         if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 1)
         {
-            target_position[E_AXIS] -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target_position[E_AXIS], FILAMENT_REVERSAL_SPEED*2/3, active_extruder);
+            TARGET_POS(E_AXIS) -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS), FILAMENT_REVERSAL_SPEED*2/3, active_extruder);
         }
     } else {
         quickStop();
@@ -3092,7 +3095,7 @@ void lcd_extrude_quit_menu()
 void lcd_menu_expert_extrude()
 {
     // reset heater timeout until target temperature is reached
-    if ((degHotend(active_extruder) < 100) || (degHotend(active_extruder) < (degTargetHotend(active_extruder) - 20)))
+    if ((target_temperature[active_extruder]) && ((current_temperature[active_extruder] < 100) || (current_temperature[active_extruder] < (target_temperature[active_extruder] - 20))))
     {
         last_user_interaction = millis();
     }

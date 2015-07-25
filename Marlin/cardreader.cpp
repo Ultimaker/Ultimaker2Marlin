@@ -8,8 +8,6 @@
 
 #ifdef SDSUPPORT
 
-
-
 CardReader::CardReader()
 {
    filesize = 0;
@@ -51,7 +49,7 @@ char *createFilename(char *buffer, const dir_t &p) //buffer>12characters
 }
 
 
-void  CardReader::lsDive(const char *prepend, SdFile parent)
+void  CardReader::lsDive(SdFile &parent, SdFile** parents, uint8_t dirDepth)
 {
   dir_t p;
   uint8_t cnt=0;
@@ -61,22 +59,11 @@ void  CardReader::lsDive(const char *prepend, SdFile parent)
     if( DIR_IS_SUBDIR(&p) && (lsAction!=LS_Count) && (lsAction!=LS_GetFilename)) // hence LS_SerialPrint
     {
 
-      char path[13*2];
       char lfilename[13];
       createFilename(lfilename, p);
 
-      path[0]=0;
-      if(strlen(prepend)==0) //avoid leading / if already in prepend
-      {
-       strcat(path, "/");
-      }
-      strcat(path, prepend);
-      strcat(path, lfilename);
-      strcat(path, "/");
-
-      //Serial.print(path);
-
       SdFile dir;
+
       if(!dir.open(parent, lfilename, O_READ))
       {
         if(lsAction==LS_SerialPrint)
@@ -86,12 +73,11 @@ void  CardReader::lsDive(const char *prepend, SdFile parent)
           SERIAL_ECHOLN(lfilename);
         }
       }
-      else if (strlen(path) < (14*(MAX_DIR_DEPTH-1)))
-      {
-          lsDive(path, dir);
+      else if (parents && (dirDepth < MAX_DIR_DEPTH)) {
+        parents[dirDepth] = &dir;
+        lsDive(dir, parents, dirDepth+1);
       }
       //close done automatically by destructor of SdFile
-
 
     }
     else
@@ -119,7 +105,17 @@ void  CardReader::lsDive(const char *prepend, SdFile parent)
       createFilename(filename,p);
       if(lsAction==LS_SerialPrint)
       {
-        SERIAL_PROTOCOL(prepend);
+        char lfilename[13];
+        SERIAL_PROTOCOLPGM("/");
+        for (uint8_t d=0; d<dirDepth; ++d) {
+          if (parents[d]->getFilename(lfilename)) {
+            SERIAL_PROTOCOL(lfilename);
+            SERIAL_PROTOCOLPGM("/");
+          }
+          else {
+            break;
+          }
+        }
         SERIAL_PROTOCOLLN(filename);
       }
       else if(lsAction==LS_Count)
@@ -139,11 +135,10 @@ void  CardReader::lsDive(const char *prepend, SdFile parent)
 void CardReader::ls()
 {
   lsAction=LS_SerialPrint;
-  if(lsAction==LS_Count)
-  nrFiles=0;
-
   root.rewind();
-  lsDive("",root);
+  SdFile* lsParents[MAX_DIR_DEPTH];
+  memset(lsParents, 0, sizeof(lsParents));
+  lsDive(root, lsParents, 0);
 }
 
 
@@ -328,7 +323,6 @@ void CardReader::openFile(const char* name,bool read)
 #endif
     }
   }
-
 }
 
 void CardReader::removeFile(const char* name)
@@ -338,7 +332,6 @@ void CardReader::removeFile(const char* name)
   file.close();
   sdprinting = false;
   pause = false;
-
 
   SdFile myDir;
   curDir=&root;
@@ -381,7 +374,6 @@ void CardReader::removeFile(const char* name)
         //SERIAL_ECHOLN(fname);
         break;
       }
-
     }
   }
   else //relative path
@@ -400,7 +392,6 @@ void CardReader::removeFile(const char* name)
       SERIAL_PROTOCOL(fname);
       SERIAL_PROTOCOLLNPGM(".");
     }
-
 }
 
 void CardReader::getStatus()
@@ -420,6 +411,7 @@ void CardReader::getStatus()
     SERIAL_PROTOCOLLN(card.errorCode());
   }
 }
+
 void CardReader::write_command(char *buf)
 {
   char* begin = buf;
@@ -448,7 +440,6 @@ bool CardReader::write_string(char* buffer)
     file.write(buffer);
     return file.writeError;
 }
-
 
 void CardReader::checkautostart(bool force)
 {
@@ -480,9 +471,6 @@ void CardReader::checkautostart(bool force)
   {
     for(int8_t i=0;i<(int8_t)strlen((char*)p.name);i++)
     p.name[i]=tolower(p.name[i]);
-    //Serial.print((char*)p.name);
-    //Serial.print(" ");
-    //Serial.println(autoname);
     if(p.name[9]!='~') //skip safety copies
     if(strncmp((char*)p.name,autoname,5)==0)
     {
@@ -515,7 +503,7 @@ void CardReader::getfilename(const uint8_t nr)
   lsAction=LS_GetFilename;
   nrFiles=nr;
   curDir->rewind();
-  lsDive("",*curDir);
+  lsDive(*curDir, NULL, 0);
 }
 
 uint16_t CardReader::getnrfilenames()
@@ -524,7 +512,7 @@ uint16_t CardReader::getnrfilenames()
   lsAction=LS_Count;
   nrFiles=0;
   curDir->rewind();
-  lsDive("",*curDir);
+  lsDive(*curDir, NULL, 0);
   //SERIAL_ECHOLN(nrFiles);
   return nrFiles;
 }

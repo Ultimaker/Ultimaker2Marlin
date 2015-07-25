@@ -484,7 +484,6 @@ void setup()
   #endif
 }
 
-
 void loop()
 {
   if(buflen < (BUFSIZE-1))
@@ -1271,15 +1270,11 @@ void process_commands()
       card.closefile();
       break;
     case 26: //M26 - Set SD index
-      if (printing_state == PRINT_STATE_RECOVER)
-        break;
       if(card.isOk() && code_seen('S')) {
         card.setIndex(code_value_long());
       }
       break;
     case 27: //M27 - Get SD status
-      if (printing_state == PRINT_STATE_RECOVER)
-        break;
       card.getStatus();
       break;
     case 28: //M28 - Start SD write
@@ -1310,8 +1305,6 @@ void process_commands()
       }
       break;
     case 923: //M923 - Select file and start printing
-      if (printing_state == PRINT_STATE_RECOVER)
-        break;
       starpos = (strchr(strchr_pointer + 4,'*'));
       if(starpos!=NULL)
         *(starpos-1)='\0';

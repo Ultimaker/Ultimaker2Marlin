@@ -31,7 +31,7 @@ void sim_check_interrupts()
     unsigned int ticks = SDL_GetTicks();
     int tickDiff = ticks - prevTicks;
     prevTicks = ticks;
-    
+
     if (!(SREG & _BV(SREG_I)))
         return;
 
@@ -53,13 +53,13 @@ void sim_check_interrupts()
         twiIntStart = 0;
     }
 #endif
-    
+
     //if (tickDiff > 1)
     //    printf("Ticks slow! %i\n", tickDiff);
     if (tickDiff > 0)
     {
         ms_callback();
-    
+
         cli();
         for(int n=0;n<tickDiff;n++)
         {
@@ -68,9 +68,9 @@ void sim_check_interrupts()
             if (TIMSK0 & _BV(TOIE0))
                 TIMER0_OVF_vect();
         }
-        
+
         //Timer1 runs at 16Mhz / 8 ticks per second.
-        unsigned int waveformMode = ((TCCR1B & (_BV(WGM13) | _BV(WGM12))) >> 1) | (TCCR1A & (_BV(WGM11) | _BV(WGM10)));
+//        unsigned int waveformMode = ((TCCR1B & (_BV(WGM13) | _BV(WGM12))) >> 1) | (TCCR1A & (_BV(WGM11) | _BV(WGM10)));
         unsigned int clockSource = TCCR1B & (_BV(CS12) | _BV(CS11) | _BV(CS10));
         unsigned int tickCount = F_CPU * tickDiff / 1000;
         unsigned int ticks = TCNT1;
@@ -86,7 +86,7 @@ void sim_check_interrupts()
         case 7: tickCount = 0; break;
         }
         tickCount *= 4;//For some reason the stepper speed is to slow, so cheat the timer routine.
-        
+
         if (tickCount > 0 && OCR1A > 0)
         {
             ticks += tickCount;
@@ -124,6 +124,6 @@ void sim_setup(sim_ms_callback_t callback)
         fclose(f);
     }
     ms_callback = callback;
-        
+
     UCSR0A = 0;
 }

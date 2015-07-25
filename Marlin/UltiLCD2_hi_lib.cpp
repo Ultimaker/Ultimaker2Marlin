@@ -296,7 +296,7 @@ bool check_heater_timeout()
 {
     if (heater_timeout && (millis()-last_user_interaction > heater_timeout*MILLISECONDS_PER_MINUTE))
     {
-        if (target_temperature[active_extruder])
+        if (target_temperature[active_extruder] > (EXTRUDE_MINTEMP - 40))
         {
             for(uint8_t n=0; n<EXTRUDERS; ++n)
             {
