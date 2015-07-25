@@ -105,7 +105,7 @@ private:
   LsAction lsAction; //stored for recursion.
   int16_t nrFiles; //counter for the files in the current directory and recycled as position counter for getting the nrFiles'th name in the directory.
   char* diveDirName;
-  void lsDive(const char *prepend,SdFile parent);
+  void lsDive(SdFile &parent, SdFile** parents, uint8_t dirDepth);
 };
 extern CardReader card;
 #define IS_SD_PRINTING (card.sdprinting)
