@@ -101,7 +101,6 @@ void  CardReader::lsDive(SdFile &parent, SdFile** parents, uint8_t dirDepth)
         if(p.name[8]!='G') continue;
         if(p.name[9]=='~') continue;
       }
-      //if(cnt++!=nr) continue;
       createFilename(filename,p);
       if(lsAction==LS_SerialPrint)
       {
