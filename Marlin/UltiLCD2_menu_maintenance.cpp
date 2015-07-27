@@ -963,7 +963,7 @@ static void lcd_menu_heater_timeout()
 
 static void lcd_menu_preferences()
 {
-    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 11, lcd_preferences_item, lcd_preferences_details);
+    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 12, lcd_preferences_item, lcd_preferences_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
