@@ -972,7 +972,7 @@ static void lcd_menu_preferences()
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_uimode));
         else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_maintenance_led, 0, 4));
+            menu.add_menu(menu_t(lcd_menu_maintenance_led));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_clicksound));
         else if (IS_SELECTED_SCROLL(index++))
