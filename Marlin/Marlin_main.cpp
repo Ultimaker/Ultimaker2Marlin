@@ -231,7 +231,7 @@ uint8_t printing_state;
 //=============================private variables=============================
 //===========================================================================
 const char axis_codes[NUM_AXIS] = {'X', 'Y', 'Z', 'E'};
-static float destination[NUM_AXIS] = {  0.0, 0.0, 0.0, 0.0};
+static float destination[NUM_AXIS] = {0.0, 0.0, 0.0, 0.0};
 #ifdef DELTA
 static float delta[3] = {0.0, 0.0, 0.0};
 #endif
@@ -2612,13 +2612,13 @@ void process_commands()
         // Offset extruder (only by XY)
         int i;
         for(i = 0; i < 3; i++) {
-           current_position[i] = current_position[i] -
+           destination[i] = current_position[i] -
                                  extruder_offset[i][active_extruder] +
                                  extruder_offset[i][tmp_extruder];
         }
         // Set the new active extruder and position
         active_extruder = tmp_extruder;
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+        plan_set_position(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS]);
         // Move to the old position if 'F' was in the parameters
         if(make_move && Stopped == false) {
            prepare_move();
@@ -2674,6 +2674,10 @@ void get_coordinates()
         {
             destination[i] = (float)code_value() + (axis_relative_modes[i] || relative_mode)*current_position[i];
             seen[i]=true;
+        }
+        else
+        {
+            destination[i] = current_position[i];
         }
     }
     if(code_seen('F'))
