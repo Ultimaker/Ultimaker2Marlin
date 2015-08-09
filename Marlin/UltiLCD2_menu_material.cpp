@@ -390,7 +390,7 @@ static void lcd_menu_change_material_select_material()
 static void lcd_menu_material_export_done()
 {
     lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
-    lcd_info_screen(lcd_menu_material_select, NULL, PSTR("Ok"));
+    lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("Ok"));
     lcd_lib_draw_string_centerP(20, PSTR("Saved materials"));
     lcd_lib_draw_string_centerP(30, PSTR("to the SD card"));
     lcd_lib_draw_string_centerP(40, PSTR("in MATERIAL.TXT"));
@@ -403,7 +403,7 @@ static void lcd_menu_material_export()
     {
         LED_GLOW();
         lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
-        lcd_info_screen(lcd_menu_material_select);
+        lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
         lcd_lib_draw_string_centerP(25, PSTR("Please insert card"));
         lcd_lib_update_screen();
@@ -412,7 +412,7 @@ static void lcd_menu_material_export()
     }
     if (!card.isOk())
     {
-        lcd_info_screen(lcd_menu_material_select);
+        lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(16, PSTR("Reading card..."));
         lcd_lib_update_screen();
         card.initsd();
@@ -470,7 +470,7 @@ static void lcd_menu_material_export()
 static void lcd_menu_material_import_done()
 {
     lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
-    lcd_info_screen(lcd_menu_material_select, NULL, PSTR("Ok"));
+    lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("Ok"));
     lcd_lib_draw_string_centerP(20, PSTR("Loaded materials"));
     lcd_lib_draw_string_centerP(30, PSTR("from the SD card"));
     lcd_lib_update_screen();
@@ -482,7 +482,7 @@ static void lcd_menu_material_import()
     {
         LED_GLOW();
         lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
-        lcd_info_screen(lcd_menu_material_select);
+        lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
         lcd_lib_draw_string_centerP(25, PSTR("Please insert card"));
         lcd_lib_update_screen();
@@ -491,7 +491,7 @@ static void lcd_menu_material_import()
     }
     if (!card.isOk())
     {
-        lcd_info_screen(lcd_menu_material_select);
+        lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(16, PSTR("Reading card..."));
         lcd_lib_update_screen();
         card.initsd();
@@ -502,7 +502,7 @@ static void lcd_menu_material_import()
     card.openFile("MATERIAL.TXT", true);
     if (!card.isFileOpen())
     {
-        lcd_info_screen(lcd_menu_material_select);
+        lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(15, PSTR("No export file"));
         lcd_lib_draw_string_centerP(25, PSTR("Found on card."));
         lcd_lib_update_screen();

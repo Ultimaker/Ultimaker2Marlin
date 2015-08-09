@@ -363,7 +363,7 @@ void lcd_menu_print_select()
     {
         LED_GLOW();
         lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
-        lcd_info_screen(lcd_change_to_previous_menu);
+        lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
         lcd_lib_draw_string_centerP(25, PSTR("Please insert card"));
         lcd_lib_update_screen();
@@ -372,7 +372,7 @@ void lcd_menu_print_select()
     }
     if (!card.isOk())
     {
-        lcd_info_screen(lcd_change_to_previous_menu);
+        lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(16, PSTR("Reading card..."));
         lcd_lib_update_screen();
         lcd_clear_cache();
@@ -653,7 +653,7 @@ static void lcd_menu_print_printing()
 static void lcd_menu_print_error_sd()
 {
     LED_GLOW_ERROR();
-    lcd_info_screen(lcd_return_to_main_menu, NULL, PSTR("RETURN TO MAIN"));
+    lcd_info_screen(NULL, lcd_return_to_main_menu, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
     lcd_lib_draw_string_centerP(20, PSTR("reading"));
@@ -669,7 +669,7 @@ static void lcd_menu_print_error_sd()
 static void lcd_menu_print_error_position()
 {
     LED_GLOW_ERROR();
-    lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
+    lcd_info_screen(NULL, lcd_return_to_main_menu, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(15, PSTR("ERROR:"));
     lcd_lib_draw_string_centerP(25, PSTR("Tried printing out"));

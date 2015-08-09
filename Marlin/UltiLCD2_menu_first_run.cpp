@@ -525,7 +525,7 @@ static void lcd_menu_first_run_print_card_detect()
 {
     if (!card.sdInserted)
     {
-        lcd_info_screen(lcd_return_to_main_menu);
+        lcd_info_screen(NULL, lcd_return_to_main_menu);
         DRAW_PROGRESS_NR(21);
         lcd_lib_draw_string_centerP(20, PSTR("Please insert SD-card"));
         lcd_lib_draw_string_centerP(30, PSTR("that came with"));
@@ -537,7 +537,7 @@ static void lcd_menu_first_run_print_card_detect()
 
     if (!card.isOk())
     {
-        lcd_info_screen(lcd_return_to_main_menu);
+        lcd_info_screen(NULL, lcd_return_to_main_menu);
         DRAW_PROGRESS_NR(21);
         lcd_lib_draw_string_centerP(30, PSTR("Reading card..."));
         lcd_lib_update_screen();
