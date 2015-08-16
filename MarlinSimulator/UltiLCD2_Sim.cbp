@@ -76,6 +76,8 @@
 		<Unit filename="../Marlin/UltiLCD2_low_lib.h" />
 		<Unit filename="../Marlin/UltiLCD2_menu_first_run.cpp" />
 		<Unit filename="../Marlin/UltiLCD2_menu_first_run.h" />
+		<Unit filename="../Marlin/UltiLCD2_menu_main.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_menu_main.h" />
 		<Unit filename="../Marlin/UltiLCD2_menu_maintenance.cpp" />
 		<Unit filename="../Marlin/UltiLCD2_menu_maintenance.h" />
 		<Unit filename="../Marlin/UltiLCD2_menu_material.cpp" />

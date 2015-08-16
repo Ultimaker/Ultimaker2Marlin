@@ -35,8 +35,10 @@ void manage_heater(); //it is critical that this is called periodically.
 // do not use these routines and variables outside of temperature.cpp
 extern int target_temperature[EXTRUDERS];
 extern float current_temperature[EXTRUDERS];
+#if TEMP_SENSOR_BED != 0
 extern int target_temperature_bed;
 extern float current_temperature_bed;
+#endif
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   extern float redundant_temperature;
 #endif
@@ -61,40 +63,43 @@ FORCE_INLINE float degHotend(uint8_t extruder) {
   return current_temperature[extruder];
 };
 
+#if TEMP_SENSOR_BED != 0
 FORCE_INLINE float degBed() {
   return current_temperature_bed;
-};
-
-FORCE_INLINE float degTargetHotend(uint8_t extruder) {
-  return target_temperature[extruder];
 };
 
 FORCE_INLINE float degTargetBed() {
   return target_temperature_bed;
 };
 
-FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
-  target_temperature[extruder] = celsius;
-};
-
 FORCE_INLINE void setTargetBed(const float &celsius) {
   target_temperature_bed = celsius;
-};
-
-FORCE_INLINE bool isHeatingHotend(uint8_t extruder){
-  return target_temperature[extruder] > current_temperature[extruder];
 };
 
 FORCE_INLINE bool isHeatingBed() {
   return target_temperature_bed > current_temperature_bed;
 };
 
-FORCE_INLINE bool isCoolingHotend(uint8_t extruder) {
-  return target_temperature[extruder] < current_temperature[extruder];
-};
-
 FORCE_INLINE bool isCoolingBed() {
   return target_temperature_bed < current_temperature_bed;
+};
+#endif // TEMP_SENSOR_BED
+
+FORCE_INLINE float degTargetHotend(uint8_t extruder) {
+  return target_temperature[extruder];
+};
+
+
+FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
+  target_temperature[extruder] = celsius;
+};
+
+FORCE_INLINE bool isHeatingHotend(uint8_t extruder){
+  return target_temperature[extruder] > current_temperature[extruder];
+};
+
+FORCE_INLINE bool isCoolingHotend(uint8_t extruder) {
+  return target_temperature[extruder] < current_temperature[extruder];
 };
 
 #define degHotend0() degHotend(0)

@@ -710,8 +710,7 @@ static void lcd_menu_maintenance_led()
     }
 }
 
-// -----------------------------------------
-
+#if TEMP_SENSOR_BED != 0
 static void lcd_pidflags_store(uint8_t flags)
 {
     SET_PID_FLAGS(flags);
@@ -721,6 +720,7 @@ static void lcd_pidflags_store(uint8_t flags)
         SET_EXPERT_VERSION(1);
     }
 }
+#endif // TEMP_SENSOR_BED
 
 static void lcd_uimode_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
@@ -793,6 +793,7 @@ static void lcd_clicksound_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
+#if TEMP_SENSOR_BED != 0
 static void lcd_buildplate_pid_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     char buffer[20];
@@ -818,6 +819,7 @@ static void lcd_buildplate_pid_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
+#endif // TEMP_SENSOR_BED
 
 static void lcd_menu_uimode()
 {
@@ -895,6 +897,7 @@ static void lcd_menu_screen_contrast()
     lcd_lib_update_screen();
 }
 
+#if TEMP_SENSOR_BED != 0
 static void lcd_menu_buildplate_pid()
 {
     lcd_scroll_menu(PSTR("Buildplate PID"), 3, lcd_buildplate_pid_item, NULL);
@@ -919,6 +922,7 @@ static void lcd_menu_buildplate_pid()
         menu.return_to_previous();
     }
 }
+#endif // TEMP_SENSOR_BED
 
 static void lcd_heater_timeout_store(uint8_t timeout)
 {

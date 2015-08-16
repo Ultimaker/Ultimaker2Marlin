@@ -459,7 +459,7 @@ void CardReader::checkautostart(bool force)
 
   char autoname[30];
   sprintf_P(autoname, PSTR("auto%i.g"), lastnr);
-  for(int8_t i=0;i<(int8_t)strlen(autoname);i++)
+  for(uint8_t i=0;i<(uint8_t)strlen(autoname);i++)
     autoname[i]=tolower(autoname[i]);
   dir_t p;
 
@@ -468,7 +468,7 @@ void CardReader::checkautostart(bool force)
   bool found=false;
   while (root.readDir(&p, NULL) > 0)
   {
-    for(int8_t i=0;i<(int8_t)strlen((char*)p.name);i++)
+    for(uint8_t i=0;i<(uint8_t)strlen((char*)p.name);i++)
     p.name[i]=tolower(p.name[i]);
     if(p.name[9]!='~') //skip safety copies
     if(strncmp((char*)p.name,autoname,5)==0)

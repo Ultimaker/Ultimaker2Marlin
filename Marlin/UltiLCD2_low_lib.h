@@ -69,6 +69,8 @@ FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t x, uint8_t y, const char* p
 
 // norpchen font symbols
 #define DEGREE_SYMBOL "\x1F"
+#define DEGREE_SLASH "\x1F/"
+
 // #define SQUARED_SYMBOL "\x1E"
 // #define CUBED_SYMBOL "\x1D"
 #define UNIT_ACCELERATION "mm/s\x1E"

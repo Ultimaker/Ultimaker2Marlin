@@ -26,7 +26,9 @@ class MachineSettings {
     typedef struct {
 	  int feedmultiply;
 	  int HotendTemperature[EXTRUDERS];
+#if TEMP_SENSOR_BED != 0
 	  int BedTemperature;
+#endif
 	  uint8_t fanSpeed;
 	  int extrudemultiply[EXTRUDERS];
 	  long max_acceleration_units_per_sq_second[NUM_AXIS];

@@ -43,11 +43,13 @@
 //=============================public variables============================
 //===========================================================================
 int target_temperature[EXTRUDERS] = { 0 };
-int target_temperature_bed = 0;
 int current_temperature_raw[EXTRUDERS] = { 0 };
 float current_temperature[EXTRUDERS] = { 0.0 };
+#if TEMP_SENSOR_BED != 0
+int target_temperature_bed = 0;
 int current_temperature_bed_raw = 0;
 float current_temperature_bed = 0.0;
+#endif // TEMP_SENSOR_BED
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   int redundant_temperature_raw = 0;
   float redundant_temperature = 0.0;
@@ -145,7 +147,9 @@ static float max_heating_start_temperature[EXTRUDERS];
 #endif
 
 static float analog2temp(int raw, uint8_t e);
+#if TEMP_SENSOR_BED != 0
 static float analog2tempBed(int raw);
+#endif // TEMP_SENSOR_BED
 static void updateTemperaturesFromRawValues();
 
 #ifdef WATCH_TEMP_PERIOD
@@ -213,8 +217,11 @@ void PID_autotune(float temp, int extruder, int ncycles)
     if(temp_meas_ready == true) { // temp sample ready
       updateTemperaturesFromRawValues();
 
+#if TEMP_SENSOR_BED != 0
       input = (extruder<0)?current_temperature_bed:current_temperature[extruder];
-
+#else
+      input = (extruder<0)?0:current_temperature[extruder];
+#endif
       max=max(max,input);
       min=min(min,input);
       if(heating == true && input > temp) {
@@ -709,6 +716,7 @@ static float analog2temp(int raw, uint8_t e) {
   return ((raw * ((5.0 * 100.0) / 1024.0) / OVERSAMPLENR) * TEMP_SENSOR_AD595_GAIN) + TEMP_SENSOR_AD595_OFFSET;
 }
 
+#if TEMP_SENSOR_BED != 0
 // Derived from RepRap FiveD extruder::getTemperature()
 // For bed temperature measurement.
 static float analog2tempBed(int raw) {
@@ -738,6 +746,7 @@ static float analog2tempBed(int raw) {
     return 0;
   #endif
 }
+#endif // TEMP_SENSOR_BED
 
 /* Called to get the raw values into the the actual temperatures. The raw values are created in interrupt context,
     and this function is called from normal context as it is too slow to run in interrupts and will block the stepper routine otherwise */
@@ -751,7 +760,9 @@ static void updateTemperaturesFromRawValues()
     {
         current_temperature[e] = analog2temp(current_temperature_raw[e], e);
     }
-    current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
+    #if TEMP_SENSOR_BED != 0
+      current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
+    #endif
     #ifdef TEMP_SENSOR_1_AS_REDUNDANT
       redundant_temperature = analog2temp(redundant_temperature_raw, 1);
     #endif
@@ -970,7 +981,9 @@ void disable_heater()
 {
   for(int i=0;i<EXTRUDERS;i++)
     setTargetHotend(0,i);
-  setTargetBed(0);
+  #if TEMP_SENSOR_BED != 0
+    setTargetBed(0);
+  #endif
   #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
   target_temperature[0]=0;
   soft_pwm[0]=0;
@@ -1267,7 +1280,7 @@ ISR(TIMER0_COMPB_vect)
 #if EXTRUDERS > 2
       current_temperature_raw[2] = raw_temp_2_value;
 #endif
-#if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1)
+#if defined(TEMP_BED_PIN) && (TEMP_BED_PIN > -1) && (TEMP_SENSOR_BED != 0)
       current_temperature_bed_raw = raw_temp_bed_value;
 #endif
     }

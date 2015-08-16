@@ -1377,7 +1377,9 @@ void process_commands()
       }
       break;
     case 140: // M140 set bed temp
+#if TEMP_SENSOR_BED != 0
       if (code_seen('S')) setTargetBed(code_value());
+#endif // TEMP_SENSOR_BED
       break;
     case 105 : // M105
       if(setTargetedHotend(105)){
@@ -1388,7 +1390,7 @@ void process_commands()
         SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
         SERIAL_PROTOCOLPGM(" /");
         SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder),1);
-        #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
+        #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1 && TEMP_SENSOR_BED != 0
           SERIAL_PROTOCOLPGM(" B:");
           SERIAL_PROTOCOL_F(degBed(),1);
           SERIAL_PROTOCOLPGM(" /");
@@ -1491,7 +1493,7 @@ void process_commands()
       }
       break;
     case 190: // M190 - Wait for bed heater to reach target.
-    #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
+    #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1 && TEMP_SENSOR_BED != 0
         printing_state = PRINT_STATE_HEATING_BED;
         LCD_MESSAGEPGM(MSG_BED_HEATING);
         if (code_seen('S')) setTargetBed(code_value());

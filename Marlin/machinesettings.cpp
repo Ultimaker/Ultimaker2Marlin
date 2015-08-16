@@ -39,7 +39,9 @@ bool MachineSettings::store(uint8_t index)
         }
     }
     settings[index]->feedmultiply = feedmultiply;
+#if TEMP_SENSOR_BED != 0
     settings[index]->BedTemperature = target_temperature_bed;
+#endif // TEMP_SENSOR_BED
     settings[index]->fanSpeed = fanSpeed;
     for (int i=0; i<EXTRUDERS; i++)
     {
@@ -75,7 +77,9 @@ bool MachineSettings::recall(uint8_t index)
     }
 
     feedmultiply = settings[index]->feedmultiply;
+#if TEMP_SENSOR_BED != 0
     target_temperature_bed = settings[index]->BedTemperature;
+#endif // TEMP_SENSOR_BED
     fanSpeed = settings[index]->fanSpeed;
     for (int i=0; i<EXTRUDERS; i++)
     {

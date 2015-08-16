@@ -1,6 +1,8 @@
 #ifndef ULTI_LCD2_MENU_TINKERGNOME_H
 #define ULTI_LCD2_MENU_TINKERGNOME_H
 
+#include "temperature.h"
+
 #define EEPROM_UI_MODE_OFFSET 0x401
 #define EEPROM_LED_TIMEOUT_OFFSET 0x402
 #define EEPROM_LCD_TIMEOUT_OFFSET 0x404
@@ -81,11 +83,18 @@ void reset_printing_state();
 
 bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max);
 void lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max);
+void lcd_tune_value(int &value, int _min, int _max);
+
 void lcd_lib_draw_bargraph( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, float value );
 
 char* int_to_time_string_tg(unsigned long i, char* temp_buffer);
 
-inline bool pidTempBed() { return (pid_flags & PID_FLAG_BED); }
-
+FORCE_INLINE bool pidTempBed() { return (pid_flags & PID_FLAG_BED); }
+FORCE_INLINE void lcd_print_tune_nozzle0() { lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15); }
+#if EXTRUDERS > 1
+FORCE_INLINE void lcd_print_tune_nozzle1() { lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15); }
+#endif
+#if TEMP_SENSOR_BED != 0
+FORCE_INLINE void lcd_print_tune_bed() { lcd_tune_value(target_temperature_bed, 0, BED_MAXTEMP - 15); }
+#endif
 #endif//ULTI_LCD2_MENU_TINKERGNOME_H
-

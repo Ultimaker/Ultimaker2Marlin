@@ -35,7 +35,6 @@
 
 #define UNIT_FLOW "mm\x1D/s"
 #define UNIT_SPEED "mm/s"
-#define DEGREE_SLASH "\x1F/"
 
 // Use the lcd_cache memory to store manual moving positions
 #define TARGET_POS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
@@ -195,16 +194,11 @@ static void lcd_menu_print_page_inc() { lcd_lib_keyclick(); lcd_basic_screen(); 
 static void lcd_menu_print_page_dec() { lcd_lib_keyclick(); lcd_basic_screen(); --printing_page; }
 static void lcd_print_tune_speed();
 static void lcd_print_tune_fan();
-static void lcd_print_tune_nozzle0();
 static void lcd_print_flow_nozzle0();
 #if EXTRUDERS > 1
-static void lcd_print_tune_nozzle1();
 static void lcd_print_flow_nozzle1();
 static void lcd_print_tune_swap_length();
 #endif // EXTRUDERS
-#if TEMP_SENSOR_BED != 0
-static void lcd_print_tune_bed();
-#endif
 static void lcd_print_tune_retract_length();
 static void lcd_print_tune_retract_speed();
 static void lcd_print_tune_accel();
@@ -500,7 +494,7 @@ static void lcd_progressline(uint8_t progress)
     }
 }
 
-static void lcd_tune_value(int &value, int _min, int _max)
+void lcd_tune_value(int &value, int _min, int _max)
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
@@ -582,11 +576,6 @@ static void lcd_print_tune_fan()
     lcd_tune_byte(fanSpeed, 0, 100);
 }
 
-static void lcd_print_tune_nozzle0()
-{
-    lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15);
-}
-
 static void lcd_print_flow_nozzle0()
 {
     if (target_temperature[0]>0) {
@@ -595,11 +584,6 @@ static void lcd_print_flow_nozzle0()
 }
 
 #if EXTRUDERS > 1
-static void lcd_print_tune_nozzle1()
-{
-    lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15);
-}
-
 static void lcd_print_flow_nozzle1()
 {
     if (target_temperature[1]>0)
@@ -609,12 +593,6 @@ static void lcd_print_flow_nozzle1()
 }
 #endif
 
-#if TEMP_SENSOR_BED != 0
-static void lcd_print_tune_bed()
-{
-    lcd_tune_value(target_temperature_bed, 0, BED_MAXTEMP - 15);
-}
-#endif
 
 //static void lcd_print_tune_led()
 //{
@@ -1152,8 +1130,10 @@ void lcd_menu_print_heatup_tg()
             target_temperature[e] = material[e].temperature;
         }
 
+#if TEMP_SENSOR_BED != 0
         if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
         {
+#endif // TEMP_SENSOR_BED
             bool ready = true;
             for(uint8_t e=0; e<EXTRUDERS; e++)
                 if (current_temperature[e] < target_temperature[e] - TEMP_WINDOW)
@@ -1166,8 +1146,8 @@ void lcd_menu_print_heatup_tg()
                 printing_page = 0;
                 menu.replace_menu(menu_t(lcd_menu_printing_tg), false);
             }
-        }
 #if TEMP_SENSOR_BED != 0
+        }
     }
 #endif
 

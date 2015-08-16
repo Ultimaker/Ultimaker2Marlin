@@ -31,8 +31,6 @@ extern float dsp_temperature_bed;
 #define LED_MODE_WHILE_PRINTING 2
 #define LED_MODE_BLINK_ON_DONE  3
 
-void lcd_menu_main();
-
 #endif
 
 #endif//ULTI_LCD2_H

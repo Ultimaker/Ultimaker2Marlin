@@ -524,8 +524,10 @@ void lcd_menu_print_heatup()
             target_temperature[e] = material[e].temperature;
         }
 
+#if TEMP_SENSOR_BED != 0
         if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
         {
+#endif // TEMP_SENSOR_BED
             bool ready = true;
             for(uint8_t e=0; e<EXTRUDERS; e++)
                 if (current_temperature[e] < target_temperature[e] - TEMP_WINDOW)
@@ -541,10 +543,10 @@ void lcd_menu_print_heatup()
                     menu.replace_menu(menu_t(lcd_menu_print_printing), false);
                 }
             }
-        }
 #if TEMP_SENSOR_BED != 0
+        }
     }
-#endif
+#endif // TEMP_SENSOR_BED
 
     uint8_t progress = 125;
     for(uint8_t e=0; e<EXTRUDERS; e++)
@@ -606,11 +608,13 @@ static void lcd_menu_print_printing()
             int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer, PSTR("C/")), PSTR("C"));
             lcd_lib_draw_string_center(30, buffer);
             break;
+#if TEMP_SENSOR_BED != 0
         case PRINT_STATE_HEATING_BED:
             lcd_lib_draw_string_centerP(20, PSTR("Heating buildplate"));
             int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer, PSTR("C/")), PSTR("C"));
             lcd_lib_draw_string_center(30, buffer);
             break;
+#endif
         }
         float printTimeMs = (millis() - starttime);
         float printTimeSec = printTimeMs / 1000L;
@@ -719,8 +723,12 @@ void lcd_menu_print_ready()
     else if (led_mode == LED_MODE_BLINK_ON_DONE)
         analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
     lcd_info_screen(NULL, postPrintReady, PSTR("BACK TO MENU"));
-    //unsigned long printTimeSec = (stoptime-starttime)/1000;
+
+#if TEMP_SENSOR_BED != 0
     if (current_temperature[0] > 60 || current_temperature_bed > 40)
+#else
+    if (current_temperature[0] > 60)
+#endif // TEMP_SENSOR_BED
     {
         lcd_lib_draw_hline(3, 124, 13);
         // lcd_lib_draw_string_left(5, card.longFilename);

@@ -819,7 +819,7 @@ void lcd_lib_clear_gfx(uint8_t x, uint8_t y, const uint8_t* gfx)
     }
 }
 
-#define _BEEP(c, n) for(int8_t _i=0;_i<c;_i++) { WRITE(BEEPER, HIGH); _delay_us(n); WRITE(BEEPER, LOW); _delay_us(n); }
+#define _BEEP(c, n) for(uint8_t _i=0;_i<c;_i++) { WRITE(BEEPER, HIGH); _delay_us(n); WRITE(BEEPER, LOW); _delay_us(n); }
 void lcd_lib_keyclick()
 {
     if (ui_mode & UI_BEEP_OFF)
