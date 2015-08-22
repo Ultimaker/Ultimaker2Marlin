@@ -74,7 +74,13 @@ static void lcd_advanced_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Raise buildplate"));
     else if (nr == index++)
+#if EXTRUDERS < 2
         strcpy_P(buffer, PSTR("Insert material"));
+#else
+        strcpy_P(buffer, PSTR("Insert material (1)"));
+    else if (nr == index++)
+        strcpy_P(buffer, PSTR("Insert material (2)"));
+#endif
     else if (nr == index++)
 #if EXTRUDERS < 2
         strcpy_P(buffer, PSTR("Move material"));
@@ -116,7 +122,7 @@ static void lcd_advanced_details(uint8_t nr)
     {
         int_to_string(int(target_temperature_bed), int_to_string(int(dsp_temperature_bed), buffer, PSTR("C/")), PSTR("C"));
 #endif
-    }else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS * 2)
+    }else if (nr == 5 + BED_MENU_OFFSET + EXTRUDERS * 3)
     {
         int_to_string(int(fanSpeed) * 100 / 255, buffer, PSTR("%"));
     }
@@ -253,7 +259,7 @@ static void lcd_menu_maintenance_advanced_return()
 
 void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu((ui_mode & UI_MODE_EXPERT) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 2*EXTRUDERS + ((ui_mode & UI_MODE_EXPERT) ? 9 : 8), lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu((ui_mode & UI_MODE_EXPERT) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 3*EXTRUDERS + ((ui_mode & UI_MODE_EXPERT) ? 8 : 7), lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
@@ -298,12 +304,25 @@ void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(index++))
         {
             char buffer[32];
+            active_extruder = 0;
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
             menu.add_menu(menu_t(lcd_menu_maintenance_advanced_return));
             menu.add_menu(menu_t(lcd_menu_insert_material_preheat));
         }
+#if EXTRUDERS > 1
+        else if (IS_SELECTED_SCROLL(index++))
+        {
+            char buffer[32];
+            active_extruder = 1;
+            enquecommand_P(PSTR("G28 X0 Y0"));
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+            enquecommand(buffer);
+            menu.add_menu(menu_t(lcd_menu_maintenance_advanced_return));
+            menu.add_menu(menu_t(lcd_menu_insert_material_preheat));
+        }
+#endif
         else if (IS_SELECTED_SCROLL(index++))
         {
             set_extrude_min_temp(0);
