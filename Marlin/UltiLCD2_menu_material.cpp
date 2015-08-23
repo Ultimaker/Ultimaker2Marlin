@@ -39,7 +39,6 @@ static void lcd_menu_change_material_insert_wait_user_ready();
 static void lcd_menu_change_material_insert_forward();
 static void lcd_menu_change_material_insert();
 static void lcd_menu_change_material_select_material();
-static void lcd_menu_material_select();
 static void lcd_menu_material_selected();
 static void lcd_menu_material_settings();
 static void lcd_menu_material_settings_store();
@@ -76,7 +75,7 @@ void lcd_menu_material()
 #endif
 }
 
-static void lcd_menu_material_main_return()
+void lcd_menu_material_main_return()
 {
     doCooldown();
     enquecommand_P(PSTR("G28 X0 Y0"));
@@ -143,7 +142,13 @@ void lcd_menu_change_material_preheat()
         minProgress = progress;
 
     lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
-    lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead"));
+    lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle"));
+#if EXTRUDERS > 1
+    char buffer[8];
+    strcpy_P(buffer, "(");
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(3+(15*LCD_CHAR_SPACING), 10, buffer);
+#endif
     lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
 
     lcd_progressbar(progress);
@@ -155,6 +160,13 @@ static void lcd_menu_change_material_remove()
 {
     last_user_interaction = millis();
     lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
+#if EXTRUDERS > 1
+    lcd_lib_draw_stringP(3, 10, PSTR("Extruder"));
+    char buffer[8];
+    strcpy_P(buffer, "(");
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(3+(9*LCD_CHAR_SPACING), 10, buffer);
+#endif
     lcd_lib_draw_stringP(3, 20, PSTR("Reversing material"));
 
     if (!blocks_queued())
@@ -197,7 +209,16 @@ static void lcd_menu_change_material_remove_wait_user()
 {
     LED_GLOW();
     lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_change_to_material_main, cancelMaterialInsert, PSTR("CANCEL"));
+#if EXTRUDERS > 1
+    lcd_lib_draw_stringP(3, 10, PSTR("Extruder"));
+    char buffer[8];
+    strcpy_P(buffer, "(");
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(3+(9*LCD_CHAR_SPACING), 10, buffer);
+    lcd_lib_draw_stringP(3, 20, PSTR("Remove material"));
+#else
     lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
+#endif
     lcd_lib_update_screen();
 }
 
@@ -225,8 +246,17 @@ void lcd_menu_insert_material_preheat()
         minProgress = progress;
 
     lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
-    lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead for"));
+#if EXTRUDERS > 1
+    lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle"));
+    char buffer[8];
+    strcpy_P(buffer, "(");
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(3+(15*LCD_CHAR_SPACING), 10, buffer);
+    lcd_lib_draw_stringP(3, 20, PSTR("for insertion"));
+#else
+    lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle for"));
     lcd_lib_draw_stringP(3, 20, PSTR("material insertion"));
+#endif
 
     lcd_progressbar(progress);
 
@@ -244,10 +274,21 @@ static void lcd_menu_change_material_insert_wait_user()
     }
 
     lcd_question_screen(NULL, lcd_menu_change_material_insert_wait_user_ready, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
+#if EXTRUDERS > 1
+    lcd_lib_draw_stringP(3, 10, PSTR("Insert new material"));
+    lcd_lib_draw_stringP(3, 20, PSTR("for extruder"));
+    char buffer[8];
+    strcpy_P(buffer, "(");
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(3+(13*LCD_CHAR_SPACING), 20, buffer);
+    lcd_lib_draw_stringP(3, 30, PSTR("from the backside of"));
+    lcd_lib_draw_stringP(3, 40, PSTR("your machine"));
+#else
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
     lcd_lib_draw_string_centerP(20, PSTR("from the backside of"));
     lcd_lib_draw_string_centerP(30, PSTR("your machine,"));
     lcd_lib_draw_string_centerP(40, PSTR("above the arrow."));
+#endif
     lcd_lib_update_screen();
 
 }
@@ -280,6 +321,13 @@ static void lcd_menu_change_material_insert_forward()
 {
     last_user_interaction = millis();
     lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
+#if EXTRUDERS > 1
+    lcd_lib_draw_stringP(3, 10, PSTR("Extruder"));
+    char buffer[8];
+    strcpy_P(buffer, "(");
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(3+(9*LCD_CHAR_SPACING), 10, buffer);
+#endif
     lcd_lib_draw_stringP(3, 20, PSTR("Forwarding material"));
 
     if (!blocks_queued())
@@ -322,8 +370,17 @@ static void lcd_menu_change_material_insert()
         LED_GLOW();
 
         lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
+#if EXTRUDERS > 1
+        lcd_lib_draw_stringP(3, 20, PSTR("Wait till material"));
+        lcd_lib_draw_stringP(3, 30, PSTR("comes out nozzle"));
+        char buffer[8];
+        strcpy_P(buffer, "(");
+        int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+        lcd_lib_draw_string(3+(17*LCD_CHAR_SPACING), 30, buffer);
+#else
         lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
         lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
+#endif
 
         if (movesplanned() < 2)
         {
@@ -621,7 +678,7 @@ static void lcd_material_select_details_callback(uint8_t nr)
     }
 }
 
-static void lcd_menu_material_select()
+void lcd_menu_material_select()
 {
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
 

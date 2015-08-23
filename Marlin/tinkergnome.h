@@ -60,6 +60,7 @@ extern const uint8_t backGfx[];
 extern const uint8_t hourglassGfx[];
 extern const uint8_t filamentGfx[];
 extern const uint8_t menuGfx[];
+extern const uint8_t bedTempGfx[];
 
 extern float recover_height;
 extern float recover_position[NUM_AXIS];

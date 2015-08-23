@@ -2982,7 +2982,12 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
         if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(buffer, PSTR("Nozzle "));
-            int_to_string(target_temperature[active_extruder], int_to_string(dsp_temperature[active_extruder], buffer+strlen(buffer), PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
+            char *c=buffer+7;
+#if EXTRUDERS > 1
+            strcpy_P(c, "(");
+            c=int_to_string(active_extruder+1, c+1, PSTR(") "));
+#endif
+            int_to_string(target_temperature[active_extruder], int_to_string(dsp_temperature[active_extruder], c, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
             lcd_lib_draw_string_left(5, buffer);
             flags |= MENU_STATUSLINE;
         }
@@ -3094,7 +3099,13 @@ void lcd_menu_expert_extrude()
     }
     if (!(flags & MENU_STATUSLINE))
     {
-        lcd_lib_draw_string_leftP(5, PSTR("Move material"));
+        lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, 5, PSTR("Move material"));
+#if EXTRUDERS > 1
+    char buffer[8];
+    strcpy_P(buffer, "(");
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+(14*LCD_CHAR_SPACING), 5, buffer);
+#endif
     }
 
     lcd_lib_update_screen();

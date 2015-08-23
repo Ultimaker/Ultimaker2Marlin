@@ -259,7 +259,7 @@ static void lcd_menu_maintenance_advanced_return()
 
 void lcd_menu_maintenance_advanced()
 {
-    lcd_scroll_menu((ui_mode & UI_MODE_EXPERT) ? PSTR("MAINTENANCE") : PSTR("ADVANCED"), BED_MENU_OFFSET + 3*EXTRUDERS + ((ui_mode & UI_MODE_EXPERT) ? 8 : 7), lcd_advanced_item, lcd_advanced_details);
+    lcd_scroll_menu(PSTR("ADVANCED"), BED_MENU_OFFSET + 3*EXTRUDERS + ((ui_mode & UI_MODE_EXPERT) ? 8 : 7), lcd_advanced_item, lcd_advanced_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;

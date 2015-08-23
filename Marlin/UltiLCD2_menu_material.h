@@ -43,5 +43,7 @@ void lcd_material_read_current_material();
 void lcd_material_store_current_material();
 void lcd_menu_change_material_preheat();
 void lcd_menu_insert_material_preheat();
+void lcd_menu_material_main_return();
+void lcd_menu_material_select();
 
 #endif//ULTI_LCD2_MENU_MATERIAL_H

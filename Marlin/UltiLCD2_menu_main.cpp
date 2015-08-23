@@ -109,19 +109,153 @@ static void lcd_cooldown()
 #if TEMP_SENSOR_BED != 0
     setTargetBed(0);
 #endif
+    menu.return_to_previous();
 }
 
-// return heatup menu option
+#if EXTRUDERS > 1
+static void lcd_material_change()
+{
+
+    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
+
+    if (lcd_lib_button_pressed)
+    {
+        uint8_t index = SELECTED_MAIN_MENU_ITEM();
+        if (index < 2)
+        {
+            active_extruder = index;
+            minProgress = 0;
+            char buffer[32];
+            enquecommand_P(PSTR("G28 X0 Y0"));
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+            enquecommand(buffer);
+            menu.replace_menu(menu_t(lcd_menu_material_main_return));
+            menu.add_menu(menu_t(lcd_menu_change_material_preheat));
+        }
+        else
+        {
+            menu.return_to_previous();
+        }
+    }
+
+    lcd_lib_update_screen();
+}
+#endif
+
+static void init_material_change()
+{
+#if EXTRUDERS > 1
+    menu.add_menu(menu_t(lcd_material_change, MAIN_MENU_ITEM_POS(0)));
+#else
+    minProgress = 0;
+    char buffer[32];
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+    enquecommand(buffer);
+    menu.replace_menu(menu_t(lcd_menu_material_main_return));
+    menu.add_menu(menu_t(lcd_menu_change_material_preheat));
+#endif
+}
+
+
+#if EXTRUDERS > 1
+static void lcd_material_move()
+{
+    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
+
+    if (lcd_lib_button_pressed)
+    {
+        uint8_t index = SELECTED_MAIN_MENU_ITEM();
+        if (index < 2)
+        {
+            active_extruder = index;
+            if (current_temperature[active_extruder] < (material[active_extruder].temperature / 2))
+            {
+                target_temperature[active_extruder] = material[active_extruder].temperature;
+            }
+            menu.replace_menu(menu_t(lcd_menu_expert_extrude, MAIN_MENU_ITEM_POS(5)));
+            menu.set_selection(5);
+        }
+        else
+        {
+            menu.return_to_previous();
+        }
+    }
+
+    lcd_lib_update_screen();
+}
+#endif
+
+static void init_material_move()
+{
+#if EXTRUDERS > 1
+    menu.add_menu(menu_t(lcd_material_move, MAIN_MENU_ITEM_POS(0)));
+#else
+    if (current_temperature[active_extruder] < (material[active_extruder].temperature / 2))
+    {
+        target_temperature[active_extruder] = material[active_extruder].temperature;
+    }
+    menu.add_menu(menu_t(lcd_menu_expert_extrude, MAIN_MENU_ITEM_POS(5)));
+    menu.set_selection(5);
+#endif
+}
+
+#if EXTRUDERS > 1
+static void lcd_material_settings()
+{
+    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
+
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED_MAIN(0))
+        {
+            active_extruder = 0;
+            menu.replace_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
+        }
+        else if (IS_SELECTED_MAIN(1))
+        {
+            active_extruder = 1;
+            menu.replace_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
+        }
+        else if (IS_SELECTED_MAIN(2))
+            menu.return_to_previous();
+    }
+
+    lcd_lib_update_screen();
+}
+#endif
+
+static void init_material_settings()
+{
+#if EXTRUDERS > 1
+    menu.add_menu(menu_t(lcd_material_settings, SCROLL_MENU_ITEM_POS(0)));
+#else
+    menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
+#endif
+}
+
+static void lcd_main_print()
+{
+    lcd_clear_cache();
+    card.release();
+    menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
+}
+
+// return preheat menu option
 static const menu_t & get_preheat_menuoption(uint8_t nr, menu_t &opt)
 {
     uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
-        opt.setData(MENU_NORMAL, lcd_print_tune);
+        opt.setData(MENU_NORMAL, lcd_main_print);
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_NORMAL, lcd_print_abort);
+        opt.setData(MENU_NORMAL, lcd_cooldown);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, lcd_change_to_previous_menu);
     }
     else if (nr == menu_index++)
     {
@@ -154,44 +288,66 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
     {
         LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT*2
                            , BOTTOM_MENU_YPOS
-                           , 48
+                           , 35
                            , LCD_CHAR_HEIGHT
                            , flags);
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_draw_string_leftP(5, PSTR("Tune menu"));
+            lcd_lib_draw_string_leftP(5, PSTR("Start print"));
             flags |= MENU_STATUSLINE;
-            lcd_lib_clear_stringP(LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("TUNE"));
-            lcd_lib_clear_gfx(2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, menuGfx);
+            lcd_lib_clear_stringP(LCD_CHAR_MARGIN_LEFT + LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("PRINT"));
+            // lcd_lib_clear_gfx(1*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, startGfx);
         }
         else
         {
-            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING+1, BOTTOM_MENU_YPOS, PSTR("TUNE"));
-            lcd_lib_draw_gfx(2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, menuGfx);
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT + LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("PRINT"));
+            // lcd_lib_draw_gfx(1*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, startGfx);
         }
     }
     else if (nr == index++)
     {
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, standbyGfx);
-            lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 5, PSTR("Abort print"));
+            // lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, backGfx);
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, 5, PSTR("Cooldown and return"));
             flags |= MENU_STATUSLINE;
         }
-        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT*2
-                                , BOTTOM_MENU_YPOS
-                                , 48
-                                , LCD_CHAR_HEIGHT
-                                , flags);
+        LCDMenu::drawMenuBox(49
+                           , BOTTOM_MENU_YPOS
+                           , 35
+                           , LCD_CHAR_HEIGHT
+                           , flags);
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("ABORT"));
-            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + 10, BOTTOM_MENU_YPOS, standbyGfx);
+            lcd_lib_clear_stringP(49+LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("COOL"));
         }
         else
         {
-            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 3*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("ABORT"));
-            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + 10, BOTTOM_MENU_YPOS, standbyGfx);
+            lcd_lib_draw_stringP(49+LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("COOL"));
+        }
+    }
+    else if (nr == index++)
+    {
+        if (flags & MENU_SELECTED)
+        {
+            // lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, backGfx);
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, 5, PSTR("Return to main menu"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuBox(89
+                           , BOTTOM_MENU_YPOS
+                           , 35
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_stringP(89 + LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            // lcd_lib_clear_gfx(86, BOTTOM_MENU_YPOS, backGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(89 + LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            // lcd_lib_draw_gfx(86, BOTTOM_MENU_YPOS, backGfx);
         }
     }
     else if (nr == index++)
@@ -210,7 +366,7 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
         }
         int_to_string(target_temperature[0], buffer, PSTR(DEGREE_SYMBOL));
         LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING
-                          , 51-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT)
+                          , 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT)
                           , 24
                           , LCD_CHAR_HEIGHT
                           , buffer
@@ -230,7 +386,7 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
         }
         int_to_string(target_temperature[1], buffer, PSTR(DEGREE_SYMBOL));
         LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING
-                              , 42-(BED_MENU_OFFSET*LCD_LINE_HEIGHT)
+                              , 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT)
                               , 24
                               , LCD_CHAR_HEIGHT
                               , buffer
@@ -251,7 +407,7 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
         }
         int_to_string(target_temperature_bed, buffer, PSTR(DEGREE_SYMBOL));
         LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-4*LCD_CHAR_SPACING
-                              , 42
+                              , 40
                               , 24
                               , LCD_CHAR_HEIGHT
                               , buffer
@@ -261,11 +417,83 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
 #endif
 }
 
-static void lcd_main_print()
+static void lcd_main_preheat()
 {
-    lcd_clear_cache();
-    card.release();
-    menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
+    lcd_basic_screen();
+    lcd_lib_draw_hline(3, 124, 13);
+
+    char buffer[32];
+#if TEMP_SENSOR_BED != 0
+    if (current_temperature_bed > target_temperature_bed - 10)
+    {
+#endif
+        // set preheat nozzle temperature
+        for(uint8_t e=0; e<EXTRUDERS; ++e)
+        {
+            if (target_temperature[e] < 1)
+            {
+                target_temperature[e] = (material[e].temperature /5*4);
+                target_temperature[e] -= target_temperature[e] % 10;
+            }
+        }
+#if TEMP_SENSOR_BED != 0
+    }
+#endif
+
+    // bed temperature
+    uint8_t ypos = 40;
+#if TEMP_SENSOR_BED != 0
+    // bed temperature
+    lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-26, ypos, PSTR("/"));
+    int_to_string(dsp_temperature_bed, buffer, PSTR(DEGREE_SYMBOL));
+    lcd_lib_draw_string_right(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-34, ypos, buffer);
+    lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-71, ypos, bedTempGfx);
+    // lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(-1));
+    ypos -= LCD_LINE_HEIGHT+1;
+#endif // TEMP_SENSOR_BED
+#if EXTRUDERS > 1
+    // temperature second extruder
+    lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-26, ypos, PSTR("/"));
+    int_to_string(dsp_temperature[1], buffer, PSTR(DEGREE_SYMBOL));
+    lcd_lib_draw_string_right(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-34, ypos, buffer);
+    lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(1));
+    ypos -= LCD_LINE_HEIGHT+1;
+#endif // EXTRUDERS
+    // temperature first extruder
+    lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-26, ypos, PSTR("/"));
+    int_to_string(dsp_temperature[0], buffer, PSTR(DEGREE_SYMBOL));
+    lcd_lib_draw_string_right(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-34, ypos, buffer);
+    lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(0));
+
+    menu.process_submenu(get_preheat_menuoption, EXTRUDERS + BED_MENU_OFFSET + 3);
+
+    uint8_t flags = 0;
+    for (uint8_t index=0; index<EXTRUDERS + BED_MENU_OFFSET + 3; ++index)
+    {
+        menu.drawSubMenu(drawPreheatSubmenu, index, flags);
+    }
+    if (!(flags & MENU_STATUSLINE))
+    {
+        lcd_lib_draw_string_leftP(5, PSTR("PREHEAT"));
+    }
+
+    lcd_lib_update_screen();
+}
+
+static void init_preheat()
+{
+    // init preheat Temperature settings
+#if TEMP_SENSOR_BED != 0
+    target_temperature_bed = 0;
+#endif
+    for(uint8_t e=0; e<EXTRUDERS; e++)
+    {
+        target_temperature[e] = 0;//material[e].temperature;
+#if TEMP_SENSOR_BED != 0
+        target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
+#endif
+    }
+    menu.add_menu(lcd_main_preheat);
 }
 
 static void lcd_main_material()
@@ -342,15 +570,27 @@ static const menu_t & get_main_expert(uint8_t nr, menu_t &opt)
     uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
+        opt.setData(MENU_NORMAL, init_preheat);
+    }
+    else if (nr == menu_index++)
+    {
         opt.setData(MENU_NORMAL, lcd_main_print);
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_NORMAL, lcd_main_material);
+        opt.setData(MENU_NORMAL, lcd_main_maintenance);
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_NORMAL, lcd_main_maintenance);
+        opt.setData(MENU_NORMAL, init_material_settings);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, init_material_move);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_NORMAL, init_material_change);
     }
     return opt;
 }
@@ -360,32 +600,62 @@ void drawMainExpert(uint8_t nr, uint8_t &flags)
     uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
-        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
-                                , LCD_LINE_HEIGHT
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+2
+                                , 17
                                 , 52
-                                , LCD_LINE_HEIGHT*4
+                                , 13
+                                , PSTR("PREHEAT")
+                                , ALIGN_LEFT | ALIGN_VCENTER
+                                , flags);
+    }
+    else if (nr == menu_index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+2
+                                , 31
+                                , 52
+                                , 13
                                 , PSTR("PRINT")
-                                , ALIGN_CENTER
+                                , ALIGN_LEFT | ALIGN_VCENTER
+                                , flags);
+    }
+    else if (nr == menu_index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+2
+                                , 45
+                                , 52
+                                , 13
+                                , PSTR("ADVANCED")
+                                , ALIGN_LEFT | ALIGN_VCENTER
                                 , flags);
     }
     else if (nr == menu_index++)
     {
         LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+3
-                                , LCD_LINE_HEIGHT
+                                , 17
                                 , 52
-                                , LCD_LINE_HEIGHT*4
-                                , PSTR("MATERIAL")
-                                , ALIGN_CENTER
+                                , 13
+                                , PSTR("SETTINGS")
+                                , ALIGN_LEFT | ALIGN_VCENTER
                                 , flags);
     }
     else if (nr == menu_index++)
     {
-        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 7*LCD_CHAR_SPACING
-                                , BOTTOM_MENU_YPOS
-                                , 14*LCD_CHAR_SPACING
-                                , LCD_CHAR_HEIGHT
-                                , PSTR("ADVANCED")
-                                , ALIGN_CENTER
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+3
+                                , 31
+                                , 52
+                                , 13
+                                , PSTR("MOVE")
+                                , ALIGN_LEFT | ALIGN_VCENTER
+                                , flags);
+    }
+    else if (nr == menu_index++)
+    {
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT+3
+                                , 45
+                                , 52
+                                , 13
+                                , PSTR("CHANGE")
+                                , ALIGN_LEFT | ALIGN_VCENTER
                                 , flags);
     }
 }
@@ -393,8 +663,20 @@ void drawMainExpert(uint8_t nr, uint8_t &flags)
 void lcd_menu_main()
 {
     lcd_lib_clear();
-    lcd_lib_draw_vline(64, 5, 46);
-    lcd_lib_draw_hline(3, 124, 50);
+
+    if (ui_mode & UI_MODE_EXPERT)
+    {
+        lcd_lib_draw_vline(LCD_GFX_WIDTH/2, 5, 60);
+        lcd_lib_set(0, 0, LCD_GFX_WIDTH-1, 12);
+        lcd_lib_clear(LCD_GFX_WIDTH/2, 1, LCD_GFX_WIDTH/2, 12);
+        lcd_lib_clear_string_center_atP(32, 4, PSTR("START"));
+        lcd_lib_clear_string_center_atP(96, 4, PSTR("MATERIAL"));
+    }
+    else
+    {
+        lcd_lib_draw_vline(64, 5, 46);
+        lcd_lib_draw_hline(3, 124, 50);
+    }
 
     if (lcd_lib_button_down && !menu.isSubmenuSelected())
     {
@@ -406,7 +688,7 @@ void lcd_menu_main()
     {
         if (ui_mode & UI_MODE_EXPERT)
         {
-            menu.process_submenu(get_main_expert, 3);
+            menu.process_submenu(get_main_expert, 6);
         }
         else
         {
@@ -415,7 +697,7 @@ void lcd_menu_main()
     }
     if (ui_mode & UI_MODE_EXPERT)
     {
-        for (uint8_t index=0; index<3; ++index)
+        for (uint8_t index=0; index<6; ++index)
         {
             menu.drawSubMenu(drawMainExpert, index);
         }
