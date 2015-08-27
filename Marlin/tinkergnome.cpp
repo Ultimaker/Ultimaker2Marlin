@@ -1123,9 +1123,9 @@ void lcd_menu_print_heatup_tg()
     if (current_temperature_bed > target_temperature_bed - 10)
     {
 #endif
-        for(uint8_t e=0; e<EXTRUDERS; e++)
+        for(uint8_t e=0; e<EXTRUDERS; ++e)
         {
-            if (target_temperature[e] > 0)
+            if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
             target_temperature[e] = material[e].temperature;
         }
@@ -1541,7 +1541,7 @@ void lcd_prepare_buildplate_adjust()
     add_homeing[Z_AXIS] = 0;
     enquecommand_P(PSTR("G28 Z0 X0 Y0"));
     char buffer[32];
-    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2, Y_MAX_LENGTH/2);
+    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), Y_MAX_LENGTH/2 + int(min_pos[Y_AXIS]));
     enquecommand(buffer);
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
@@ -2680,8 +2680,12 @@ static void lcd_extrude_homehead()
 static void lcd_extrude_headtofront()
 {
     lcd_lib_keyclick();
+    // move to center front
+    char buffer[32];
+    sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+
     enquecommand_P(PSTR("G28 X0 Y0"));
-    enquecommand_P(PSTR("G1 F12000 X110 Y5"));
+    enquecommand(buffer);
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
@@ -3113,21 +3117,20 @@ void lcd_menu_expert_extrude()
 
 void recover_start_print()
 {
-//    if (card.sdprinting)
-//    {
-        // recover print from current position
+    // recover print from current position
     card.sdprinting = false;
     quickStop();
     clear_command_queue();
     printing_state = PRINT_STATE_START;
 
     // move to heatup position
+    char buffer[32];
+    sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
     enquecommand_P(PSTR("G28"));
-    enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
+    enquecommand(buffer);
 
     menu.return_to_main();
     menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_print_heatup_tg : lcd_menu_print_heatup));
-//    }
 }
 
 #endif//ENABLE_ULTILCD2

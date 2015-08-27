@@ -103,37 +103,33 @@ static void lcd_menu_breakout()
 
 static void lcd_cooldown()
 {
-    for(uint8_t n=0; n<EXTRUDERS; n++)
+    for(uint8_t n=0; n<EXTRUDERS; ++n)
+    {
         setTargetHotend(0, n);
+    }
 
 #if TEMP_SENSOR_BED != 0
     setTargetBed(0);
 #endif
-    menu.return_to_previous();
+    // menu.return_to_previous();
 }
 
 #if EXTRUDERS > 1
-static void lcd_material_change()
+static void lcd_select_nozzle()
 {
-
     lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
 
     if (lcd_lib_button_pressed)
     {
-        uint8_t index = SELECTED_MAIN_MENU_ITEM();
+        uint8_t index(SELECTED_MAIN_MENU_ITEM());
         if (index < 2)
         {
             active_extruder = index;
-            minProgress = 0;
-            char buffer[32];
-            enquecommand_P(PSTR("G28 X0 Y0"));
-            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
-            enquecommand(buffer);
-            menu.replace_menu(menu_t(lcd_menu_material_main_return));
-            menu.add_menu(menu_t(lcd_menu_change_material_preheat));
+            menu.return_to_previous();
         }
         else
         {
+            menu.return_to_previous();
             menu.return_to_previous();
         }
     }
@@ -141,94 +137,55 @@ static void lcd_material_change()
     lcd_lib_update_screen();
 }
 #endif
+
+static void start_material_change()
+{
+    minProgress = 0;
+    char buffer[32];
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+    enquecommand(buffer);
+    menu.replace_menu(menu_t(lcd_menu_material_main_return));
+    menu.add_menu(menu_t(lcd_menu_change_material_preheat));
+}
 
 static void init_material_change()
 {
 #if EXTRUDERS > 1
-    menu.add_menu(menu_t(lcd_material_change, MAIN_MENU_ITEM_POS(0)));
+    menu.add_menu(menu_t(start_material_change));
+    menu.add_menu(menu_t(lcd_select_nozzle, MAIN_MENU_ITEM_POS(0)));
 #else
-    minProgress = 0;
-    char buffer[32];
-    enquecommand_P(PSTR("G28 X0 Y0"));
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
-    enquecommand(buffer);
-    menu.replace_menu(menu_t(lcd_menu_material_main_return));
-    menu.add_menu(menu_t(lcd_menu_change_material_preheat));
+    menu.add_menu(menu_t(start_material_change));
 #endif
 }
 
-
-#if EXTRUDERS > 1
-static void lcd_material_move()
+static void start_material_move()
 {
-    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
-
-    if (lcd_lib_button_pressed)
-    {
-        uint8_t index = SELECTED_MAIN_MENU_ITEM();
-        if (index < 2)
-        {
-            active_extruder = index;
-            if (current_temperature[active_extruder] < (material[active_extruder].temperature / 2))
-            {
-                target_temperature[active_extruder] = material[active_extruder].temperature;
-            }
-            menu.replace_menu(menu_t(lcd_menu_expert_extrude, MAIN_MENU_ITEM_POS(5)));
-            menu.set_selection(5);
-        }
-        else
-        {
-            menu.return_to_previous();
-        }
-    }
-
-    lcd_lib_update_screen();
-}
-#endif
-
-static void init_material_move()
-{
-#if EXTRUDERS > 1
-    menu.add_menu(menu_t(lcd_material_move, MAIN_MENU_ITEM_POS(0)));
-#else
+    set_extrude_min_temp(0);
+    enquecommand_P(PSTR("G92 E0"));
     if (current_temperature[active_extruder] < (material[active_extruder].temperature / 2))
     {
         target_temperature[active_extruder] = material[active_extruder].temperature;
     }
-    menu.add_menu(menu_t(lcd_menu_expert_extrude, MAIN_MENU_ITEM_POS(5)));
+    menu.replace_menu(menu_t(lcd_menu_expert_extrude, MAIN_MENU_ITEM_POS(5)));
     menu.set_selection(5);
-#endif
 }
 
-#if EXTRUDERS > 1
-static void lcd_material_settings()
+static void init_material_move()
 {
-    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
-
-    if (lcd_lib_button_pressed)
-    {
-        if (IS_SELECTED_MAIN(0))
-        {
-            active_extruder = 0;
-            menu.replace_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
-        }
-        else if (IS_SELECTED_MAIN(1))
-        {
-            active_extruder = 1;
-            menu.replace_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
-        }
-        else if (IS_SELECTED_MAIN(2))
-            menu.return_to_previous();
-    }
-
-    lcd_lib_update_screen();
-}
+#if EXTRUDERS > 1
+    menu.add_menu(menu_t(start_material_move));
+    menu.add_menu(menu_t(lcd_select_nozzle, MAIN_MENU_ITEM_POS(0)));
+#else
+    menu.add_menu(menu_t(start_material_move));
 #endif
+}
 
 static void init_material_settings()
 {
 #if EXTRUDERS > 1
-    menu.add_menu(menu_t(lcd_material_settings, SCROLL_MENU_ITEM_POS(0)));
+    menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
+    menu.add_menu(menu_t(lcd_select_nozzle, MAIN_MENU_ITEM_POS(0)));
 #else
     menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
 #endif

@@ -9,10 +9,9 @@
 #define LCD_CACHE_FILENAME(n) ((char*)&lcd_cache[2*LCD_CACHE_COUNT + (n) * LONG_FILENAME_LENGTH])
 #define LCD_DETAIL_CACHE_START ((LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))+1)
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
-extern uint8_t lcd_cache[LCD_CACHE_SIZE];
+#define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 #define LCD_CACHE_ID(n) lcd_cache[(n)]
-
-#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y5"
+extern uint8_t lcd_cache[LCD_CACHE_SIZE];
 
 void lcd_menu_print_select();
 void lcd_clear_cache();

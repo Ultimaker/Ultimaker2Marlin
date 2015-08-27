@@ -18,7 +18,6 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
 #define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
-#define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 
 void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
@@ -299,10 +298,10 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
                                 LCD_DETAIL_CACHE_TIME() = strtol(buffer + 6, 0, 0);
                             else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(0) = strtol(buffer + 10, 0, 0);
+                                LCD_DETAIL_CACHE_MATERIAL(0) = strtol(buffer + 10, 0, 10);
 #if EXTRUDERS > 1
                             else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(1) = strtol(buffer + 11 ,0 ,0);
+                                LCD_DETAIL_CACHE_MATERIAL(1) = strtol(buffer + 11, 0, 10);
 #endif
                         }
                     }
@@ -457,6 +456,10 @@ void lcd_menu_print_select()
                         fanSpeedPercent = 0;
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
+                            SERIAL_ECHOPGM("MATERIAL_");
+                            SERIAL_ECHO(e+1);
+                            SERIAL_ECHOPGM(": ");
+                            SERIAL_ECHOLN(LCD_DETAIL_CACHE_MATERIAL(e));
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
                                 continue;
                             target_temperature[e] = 0;//material[e].temperature;
@@ -475,8 +478,12 @@ void lcd_menu_print_select()
                         else
                         {
                             recover_height = 0.0f;
+                            // move to heatup position
+                            char buffer[32];
+                            sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
                             enquecommand_P(PSTR("G28"));
-                            enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
+                            enquecommand(buffer);
+
                             if (ui_mode & UI_MODE_EXPERT)
                                 menu.add_menu(menu_t(lcd_menu_print_heatup_tg));
                             else
