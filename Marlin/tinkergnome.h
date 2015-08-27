@@ -13,6 +13,7 @@
 #define EEPROM_SLEEP_GLOW_OFFSET 0x40B
 #define EEPROM_PID_FLAGS 0x40C
 #define EEPROM_HEATER_TIMEOUT 0x40D
+#define EEPROM_AXIS_LIMITS 0x40E  // 24 Byte
 
 #define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
 #define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
@@ -61,6 +62,8 @@ extern const uint8_t hourglassGfx[];
 extern const uint8_t filamentGfx[];
 extern const uint8_t menuGfx[];
 extern const uint8_t bedTempGfx[];
+extern const uint8_t checkbox_on[];
+extern const uint8_t checkbox_off[];
 
 extern float recover_height;
 extern float recover_position[NUM_AXIS];

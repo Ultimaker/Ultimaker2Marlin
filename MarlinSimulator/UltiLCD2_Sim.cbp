@@ -5,6 +5,7 @@
 		<Option title="UltiLCD2_Sim" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="Marlin\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output=".bin/Debug/UltiLCD2_Sim" prefix_auto="1" extension_auto="1" />
@@ -115,7 +116,9 @@
 		<Unit filename="../Marlin/ultralcd_implementation_hitachi_HD44780.h" />
 		<Unit filename="../Marlin/ultralcd_implementation_ultiboard_v2.h" />
 		<Unit filename="../Marlin/ultralcd_st7920_u8glib_rrd.h" />
-		<Unit filename="../Marlin/watchdog.cpp" />
+		<Unit filename="../Marlin/watchdog.cpp">
+			<Option virtualFolder="Marlin/" />
+		</Unit>
 		<Unit filename="../Marlin/watchdog.h" />
 		<Unit filename="arduino_sim/Arduino.h" />
 		<Unit filename="arduino_sim/HardwareSerial.cpp" />

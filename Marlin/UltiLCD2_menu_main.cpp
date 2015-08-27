@@ -14,6 +14,9 @@
 #include "UltiLCD2_menu_utils.h"
 #include "tinkergnome.h"
 
+
+#define PREHEAT_FLAG(n) (lcd_cache[2*LCD_CACHE_COUNT+n])
+
 #define BREAKOUT_PADDLE_WIDTH 21
 //Use the lcd_cache memory to store breakout data, so we do not waste memory.
 #define ball_x (*(int16_t*)&lcd_cache[3*5])
@@ -105,11 +108,13 @@ static void lcd_cooldown()
 {
     for(uint8_t n=0; n<EXTRUDERS; ++n)
     {
+        PREHEAT_FLAG(n+1) = 0;
         setTargetHotend(0, n);
     }
 
 #if TEMP_SENSOR_BED != 0
     setTargetBed(0);
+    PREHEAT_FLAG(0) = 0;
 #endif
     // menu.return_to_previous();
 }
@@ -198,6 +203,53 @@ static void lcd_main_print()
     menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
 }
 
+static void lcd_toggle_preheat_nozzle0()
+{
+    PREHEAT_FLAG(1) = !PREHEAT_FLAG(1);
+    if (PREHEAT_FLAG(1))
+    {
+
+    }
+    else
+    {
+        setTargetHotend(0, 0);
+    }
+}
+
+#if EXTRUDERS > 1
+static void lcd_toggle_preheat_nozzle1()
+{
+    PREHEAT_FLAG(2) = !PREHEAT_FLAG(2);
+    if (PREHEAT_FLAG(2))
+    {
+
+    }
+    else
+    {
+        setTargetHotend(0, 1);
+    }
+}
+#endif
+
+#if TEMP_SENSOR_BED != 0
+static void lcd_toggle_preheat_bed()
+{
+    PREHEAT_FLAG(0) = !PREHEAT_FLAG(0);
+    if (PREHEAT_FLAG(0))
+    {
+        target_temperature_bed = 0;
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+        {
+            target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
+        }
+    }
+    else
+    {
+        target_temperature_bed = 0;
+    }
+}
+#endif
+
 // return preheat menu option
 static const menu_t & get_preheat_menuoption(uint8_t nr, menu_t &opt)
 {
@@ -214,6 +266,25 @@ static const menu_t & get_preheat_menuoption(uint8_t nr, menu_t &opt)
     {
         opt.setData(MENU_NORMAL, lcd_change_to_previous_menu);
     }
+    else if (nr == menu_index++)
+    {
+        // toggle heatup nozzle 1
+        opt.setData(MENU_NORMAL, lcd_toggle_preheat_nozzle0);
+    }
+#if EXTRUDERS > 1
+    else if (nr == menu_index++)
+    {
+        // toggle heatup nozzle 2
+        opt.setData(MENU_NORMAL, lcd_toggle_preheat_nozzle1);
+    }
+#endif
+#if TEMP_SENSOR_BED != 0
+    else if (nr == menu_index++)
+    {
+        // toggle heatup buildplate
+        opt.setData(MENU_NORMAL, lcd_toggle_preheat_bed);
+    }
+#endif
     else if (nr == menu_index++)
     {
         // temp nozzle 1
@@ -266,7 +337,7 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
         if (flags & MENU_SELECTED)
         {
             // lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, backGfx);
-            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, 5, PSTR("Cooldown and return"));
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, 5, PSTR("Cool down all"));
             flags |= MENU_STATUSLINE;
         }
         LCDMenu::drawMenuBox(49
@@ -307,6 +378,89 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
             // lcd_lib_draw_gfx(86, BOTTOM_MENU_YPOS, backGfx);
         }
     }
+    else if (nr == index++)
+    {
+        // flag nozzle 1
+        if (flags & MENU_SELECTED)
+        {
+#if EXTRUDERS < 2
+            strcpy_P(buffer, PSTR("Nozzle: "));
+            strcpy_P(buffer+8, PREHEAT_FLAG(1) ? PSTR("on") : PSTR("off"));
+#else
+            strcpy_P(buffer, PSTR("Nozzle(1): "));
+            strcpy_P(buffer+11, PREHEAT_FLAG(1) ? PSTR("on") : PSTR("off"));
+#endif
+            lcd_lib_draw_string_left(5, buffer);
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT
+                           , 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT)
+                           , 3*LCD_CHAR_SPACING
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(1)?checkbox_on:checkbox_off);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(1)?checkbox_on:checkbox_off);
+        }
+    }
+#if EXTRUDERS > 1
+    else if (nr == index++)
+    {
+        // flag nozzle 1
+        if (flags & MENU_SELECTED)
+        {
+            strcpy_P(buffer, PSTR("Nozzle(2): "));
+            strcpy_P(buffer+11, PREHEAT_FLAG(2) ? PSTR("on") : PSTR("off"));
+
+            lcd_lib_draw_string_left(5, buffer);
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT
+                           , 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT)
+                           , 3*LCD_CHAR_SPACING
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(2)?checkbox_on:checkbox_off);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(2)?checkbox_on:checkbox_off);
+        }
+    }
+#endif
+#if TEMP_SENSOR_BED != 0
+    else if (nr == index++)
+    {
+        // flag nozzle 1
+        if (flags & MENU_SELECTED)
+        {
+            strcpy_P(buffer, PSTR("Buildplate: "));
+            strcpy_P(buffer+12, PREHEAT_FLAG(0) ? PSTR("on") : PSTR("off"));
+
+            lcd_lib_draw_string_left(5, buffer);
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT
+                           , 40
+                           , 3*LCD_CHAR_SPACING
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 40, PREHEAT_FLAG(0)?checkbox_on:checkbox_off);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 40, PREHEAT_FLAG(0)?checkbox_on:checkbox_off);
+        }
+    }
+#endif
     else if (nr == index++)
     {
         // temp nozzle 1
@@ -381,13 +535,13 @@ static void lcd_main_preheat()
 
     char buffer[32];
 #if TEMP_SENSOR_BED != 0
-    if (current_temperature_bed > target_temperature_bed - 10)
+    if ((!PREHEAT_FLAG(0)) | (current_temperature_bed > target_temperature_bed - 10))
     {
 #endif
         // set preheat nozzle temperature
         for(uint8_t e=0; e<EXTRUDERS; ++e)
         {
-            if (target_temperature[e] < 1)
+            if ((PREHEAT_FLAG(e+1)) & (target_temperature[e] < 1))
             {
                 target_temperature[e] = (material[e].temperature /5*4);
                 target_temperature[e] -= target_temperature[e] % 10;
@@ -422,19 +576,22 @@ static void lcd_main_preheat()
     lcd_lib_draw_string_right(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-34, ypos, buffer);
     lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(0));
 
-    menu.process_submenu(get_preheat_menuoption, EXTRUDERS + BED_MENU_OFFSET + 3);
+    menu.process_submenu(get_preheat_menuoption, 2*EXTRUDERS + 2*BED_MENU_OFFSET + 3);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<EXTRUDERS + BED_MENU_OFFSET + 3; ++index)
+    for (uint8_t index=0; index<2*EXTRUDERS + 2*BED_MENU_OFFSET + 3; ++index)
     {
         menu.drawSubMenu(drawPreheatSubmenu, index, flags);
     }
     if (!(flags & MENU_STATUSLINE))
     {
-        lcd_lib_draw_string_leftP(5, PSTR("PREHEAT"));
+        lcd_lib_draw_string_leftP(5, PSTR("Preheat"));
     }
 
     lcd_lib_update_screen();
+
+    // prevent heater timeout
+    last_user_interaction = millis();
 }
 
 static void init_preheat()
@@ -445,12 +602,17 @@ static void init_preheat()
 #endif
     for(uint8_t e=0; e<EXTRUDERS; e++)
     {
+        PREHEAT_FLAG(e+1) = 0;
         target_temperature[e] = 0;//material[e].temperature;
 #if TEMP_SENSOR_BED != 0
         target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
+        if (target_temperature_bed > 0)
+        {
+            PREHEAT_FLAG(0) = 1;
+        }
 #endif
     }
-    menu.add_menu(lcd_main_preheat);
+    menu.add_menu(menu_t(lcd_main_preheat, MAIN_MENU_ITEM_POS(0)));
 }
 
 static void lcd_main_material()

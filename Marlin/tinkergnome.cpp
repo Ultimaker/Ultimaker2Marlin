@@ -189,6 +189,15 @@ const uint8_t contrastGfx[] PROGMEM = {
     0x7F, 0x6E, 0x6C, 0x78, 0x72, 0x67, 0x42
 };
 
+const uint8_t checkbox_on[] PROGMEM = {
+    7, 8, //size
+    0x1C, 0x3E, 0x7F, 0x7F, 0x7F, 0x3E, 0x1C
+};
+
+const uint8_t checkbox_off[] PROGMEM = {
+    7, 8, //size
+    0x1C, 0x22, 0x41, 0x41, 0x41, 0x22, 0x1C
+};
 
 static void lcd_menu_print_page_inc() { lcd_lib_keyclick(); lcd_basic_screen(); ++printing_page; }
 static void lcd_menu_print_page_dec() { lcd_lib_keyclick(); lcd_basic_screen(); --printing_page; }
@@ -211,6 +220,12 @@ static char* float_to_string2(float f, char* temp_buffer, const char* p_postfix)
 void tinkergnome_init()
 {
     uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version > 3)
+    {
+        // read axis limits from eeprom
+        eeprom_read_block(min_pos, (uint8_t*)EEPROM_AXIS_LIMITS, sizeof(min_pos));
+        eeprom_read_block(max_pos, (uint8_t*)(EEPROM_AXIS_LIMITS+sizeof(min_pos)), sizeof(max_pos));
+    }
     if (version > 2)
     {
         heater_timeout = GET_HEATER_TIMEOUT();
@@ -1578,6 +1593,20 @@ void lcd_menu_simple_buildplate_init()
 
     lcd_lib_update_screen();
 }
+
+static void lcd_axislimit_store()
+{
+    eeprom_write_block(min_pos, (uint8_t *)EEPROM_AXIS_LIMITS, sizeof(min_pos));
+    eeprom_write_block(max_pos, (uint8_t *)(EEPROM_AXIS_LIMITS+sizeof(min_pos)), sizeof(max_pos));
+
+    uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version < 4)
+    {
+        SET_EXPERT_VERSION(3);
+    }
+    menu.return_to_previous();
+}
+
 
 static void lcd_sleeptimer_store()
 {
