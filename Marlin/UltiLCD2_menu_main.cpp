@@ -116,6 +116,7 @@ static void lcd_cooldown()
     setTargetBed(0);
     PREHEAT_FLAG(0) = 0;
 #endif
+    printing_state = PRINT_STATE_NORMAL;
     // menu.return_to_previous();
 }
 
@@ -146,7 +147,7 @@ static void lcd_select_nozzle()
 static void start_material_change()
 {
     minProgress = 0;
-    char buffer[32];
+    char buffer[32] = {0};
     enquecommand_P(PSTR("G28 X0 Y0"));
     sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
     enquecommand(buffer);
@@ -310,7 +311,7 @@ static const menu_t & get_preheat_menuoption(uint8_t nr, menu_t &opt)
 static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
-    char buffer[32];
+    char buffer[32] = {0};
 
     if (nr == index++)
     {
@@ -533,7 +534,7 @@ static void lcd_main_preheat()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    char buffer[32];
+    char buffer[32] = {0};
 #if TEMP_SENSOR_BED != 0
     if ((!PREHEAT_FLAG(0)) | (current_temperature_bed > target_temperature_bed - 10))
     {
@@ -589,9 +590,6 @@ static void lcd_main_preheat()
     }
 
     lcd_lib_update_screen();
-
-    // prevent heater timeout
-    last_user_interaction = millis();
 }
 
 static void init_preheat()
@@ -612,6 +610,7 @@ static void init_preheat()
         }
 #endif
     }
+    printing_state = PRINT_STATE_HEATING;
     menu.add_menu(menu_t(lcd_main_preheat, MAIN_MENU_ITEM_POS(0)));
 }
 

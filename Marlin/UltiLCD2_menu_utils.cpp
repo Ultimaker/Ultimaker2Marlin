@@ -19,7 +19,7 @@ static int16_t lastEncoderPos = 0;
 
 void LCDMenu::processEvents()
 {
-    if (!card.sdprinting || card.pause)
+    if ((printing_state != PRINT_STATE_HEATING) && (printing_state != PRINT_STATE_START) && (!card.sdprinting || card.pause))
     {
         // cool down nozzle after timeout
         check_heater_timeout();
@@ -168,7 +168,7 @@ void LCDMenu::drawMenuBox(uint8_t left, uint8_t top, uint8_t width, uint8_t heig
 void LCDMenu::drawMenuString(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags)
 {
     drawMenuBox(left, top, width, height, flags);
-    char buffer[32];
+    char buffer[32] = {0};
     const char* split = strchr(str, '|');
 
     uint8_t textX1;
@@ -250,7 +250,7 @@ void LCDMenu::drawMenuString(uint8_t left, uint8_t top, uint8_t width, uint8_t h
 
 void LCDMenu::drawMenuString_P(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     strcpy_P(buffer, str);
     drawMenuString(left, top, width, height, buffer, textAlign, flags);
 }

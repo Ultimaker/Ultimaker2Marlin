@@ -762,17 +762,52 @@ static const PROGMEM type array##_P[3] =        \
 static inline type array(int axis)          \
     { return pgm_read_any(&array##_P[axis]); }
 
-XYZ_CONSTS_FROM_CONFIG(float, base_min_pos,    MIN_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_max_pos,    MAX_POS);
-XYZ_CONSTS_FROM_CONFIG(float, base_home_pos,   HOME_POS);
-XYZ_CONSTS_FROM_CONFIG(float, max_length,      MAX_LENGTH);
+//XYZ_CONSTS_FROM_CONFIG(float, base_min_pos,    MIN_POS);
+//XYZ_CONSTS_FROM_CONFIG(float, base_max_pos,    MAX_POS);
+//XYZ_CONSTS_FROM_CONFIG(float, base_home_pos,   HOME_POS);
+//XYZ_CONSTS_FROM_CONFIG(float, max_length,      MAX_LENGTH);
 XYZ_CONSTS_FROM_CONFIG(float, home_retract_mm, HOME_RETRACT_MM);
 XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
 
 static void axis_is_at_home(int axis) {
-  current_position[axis] = base_home_pos(axis) + add_homeing[axis];
-  min_pos[axis] =          base_min_pos(axis);// + add_homeing[axis];
-  max_pos[axis] =          base_max_pos(axis);// + add_homeing[axis];
+    float baseHomePos;
+#ifdef BED_CENTER_AT_0_0
+    float maxLength = max_pos[axis] - min_pos[axis];
+#endif
+    if (axis == Z_AXIS)
+    {
+        if (home_dir(axis) == -1)
+        {
+            baseHomePos = min_pos[axis];
+        }
+        else
+        {
+            baseHomePos = max_pos[axis];
+        }
+    }
+    else
+    {
+        if (home_dir(axis) == -1)
+        {
+            #ifdef BED_CENTER_AT_0_0
+                baseHomePos = maxLength * -0.5;
+            #else
+                baseHomePos = min_pos[axis];
+            #endif
+        }
+        else
+        {
+            #ifdef BED_CENTER_AT_0_0
+                baseHomePos = maxLength * 0.5;
+            #else
+                baseHomePos = max_pos[axis];
+            #endif
+        }
+    }
+
+    current_position[axis] = baseHomePos + add_homeing[axis];
+    // min_pos[axis] =          base_min_pos(axis);// + add_homeing[axis];
+    // max_pos[axis] =          base_max_pos(axis);// + add_homeing[axis];
 }
 
 static void homeaxis(int axis) {
@@ -790,7 +825,7 @@ static void homeaxis(int axis) {
 
     current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-    destination[axis] = 1.5 * max_length(axis) * home_dir(axis);
+    destination[axis] = 1.5 * (max_pos[axis]-min_pos[axis]) * home_dir(axis);
     feedrate = homing_feedrate[axis];
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
@@ -2655,7 +2690,7 @@ void prepare_move()
 #else
   if (card.sdprinting && (printing_state == PRINT_STATE_RECOVER) && (destination[Z_AXIS] >= recover_height-0.01f))
   {
-      for(uint8_t i=0; i < NUM_AXIS; i++) {
+      for(uint8_t i=0; i < NUM_AXIS; ++i) {
           recover_position[i] = destination[i];
       }
 

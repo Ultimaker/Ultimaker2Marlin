@@ -46,7 +46,7 @@ void abortPrint()
     doCooldown();
 
     clear_command_queue();
-    char buffer[32];
+    char buffer[32] = {0};
     if (card.sdprinting)
     {
     	// we're not printing any more
@@ -109,17 +109,13 @@ static void checkPrintFinished()
 
 void doStartPrint()
 {
-    float priming_z = min(PRIMING_HEIGHT + recover_height, max_pos[Z_AXIS]-PRIMING_HEIGHT);
-    uint8_t current_extruder = active_extruder;
-
     if (printing_state == PRINT_STATE_RECOVER)
     {
         return;
     }
-    else if (printing_state != PRINT_STATE_START)
-    {
-        active_extruder = 0;
-    }
+
+    float priming_z = min(PRIMING_HEIGHT + recover_height, max_pos[Z_AXIS]-PRIMING_HEIGHT);
+    uint8_t current_extruder = active_extruder;
 
     // zero the extruder position
     current_position[E_AXIS] = 0.0;
@@ -173,10 +169,10 @@ void doStartPrint()
         current_position[E_AXIS] = recover_position[E_AXIS];
         plan_set_e_position(recover_position[E_AXIS]);
         plan_buffer_line(recover_position[X_AXIS], recover_position[Y_AXIS], recover_position[Z_AXIS], recover_position[E_AXIS], min(homing_feedrate[X_AXIS], homing_feedrate[Z_AXIS]), active_extruder);
-        for(int8_t i=0; i < NUM_AXIS; i++) {
+        for(uint8_t i=0; i < NUM_AXIS; ++i) {
             current_position[i] = recover_position[i];
         }
-      }
+    }
 
     printing_state = PRINT_STATE_NORMAL;
     active_extruder = current_extruder;
@@ -197,6 +193,7 @@ static void userStartPrint()
     else
     {
         recover_height = 0.0f;
+        active_extruder = 0;
         menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
         doStartPrint();
     }
@@ -209,7 +206,7 @@ static void cardUpdir()
 
 static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     memset(buffer, '\0', sizeof(buffer));
     if (nr == 0)
     {
@@ -478,11 +475,13 @@ void lcd_menu_print_select()
                         else
                         {
                             recover_height = 0.0f;
+                            active_extruder = 0;
                             // move to heatup position
-                            char buffer[32];
+                            char buffer[32] = {0};
                             sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
                             enquecommand_P(PSTR("G28"));
                             enquecommand(buffer);
+                            printing_state = PRINT_STATE_NORMAL;
 
                             if (ui_mode & UI_MODE_EXPERT)
                                 menu.add_menu(menu_t(lcd_menu_print_heatup_tg));
@@ -521,7 +520,7 @@ void lcd_menu_print_heatup()
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
 
 #if TEMP_SENSOR_BED != 0
-    if (current_temperature_bed > target_temperature_bed - 10)
+    if (current_temperature_bed > target_temperature_bed - TEMP_WINDOW*2)
     {
 #endif
         for(uint8_t e=0; e<EXTRUDERS; e++)
@@ -529,6 +528,7 @@ void lcd_menu_print_heatup()
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
             target_temperature[e] = material[e].temperature;
+            printing_state = PRINT_STATE_START;
         }
 
 #if TEMP_SENSOR_BED != 0
@@ -603,7 +603,7 @@ static void lcd_menu_print_printing()
     {
         lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_pause, lcd_select_first_submenu, PSTR("PAUSE"));
         uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
-        char buffer[32];
+        char buffer[32] = {0};
         switch(printing_state)
         {
         default:
@@ -740,7 +740,7 @@ void lcd_menu_print_ready()
         lcd_lib_draw_hline(3, 124, 13);
         // lcd_lib_draw_string_left(5, card.longFilename);
 
-        char buffer[32];
+        char buffer[32] = {0};
         unsigned long t=(stoptime-starttime)/1000;
 
         char *c = buffer;
@@ -796,7 +796,7 @@ static void lcd_menu_print_ready_cooled_down()
     lcd_lib_draw_hline(3, 124, 13);
     // lcd_lib_draw_string_left(5, card.longFilename);
 
-    char buffer[32];
+    char buffer[32] = {0};
     unsigned long t=(stoptime-starttime)/1000;
 
     char *c = buffer;
@@ -822,7 +822,7 @@ static void lcd_menu_print_ready_cooled_down()
 static void tune_item_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     uint8_t index = 0;
-    char buffer[32];
+    char buffer[32] = {0};
     if (index++ == nr)
         strcpy_P(buffer, PSTR("< RETURN"));
 //    else if (index++ == nr)
@@ -863,7 +863,7 @@ static void tune_item_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void tune_item_details_callback(uint8_t nr)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     if (nr == 1)
         int_to_string(feedmultiply, buffer, PSTR("%"));
     else if (nr == 2)
@@ -918,7 +918,7 @@ void lcd_menu_print_tune_heatup_nozzle0()
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
-    char buffer[16];
+    char buffer[16] = {0};
     int_to_string(int(dsp_temperature[0]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
@@ -943,7 +943,7 @@ void lcd_menu_print_tune_heatup_nozzle1()
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle2 temperature:"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
-    char buffer[16];
+    char buffer[16] = {0};
     int_to_string(int(dsp_temperature[1]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[1]), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
@@ -1011,7 +1011,7 @@ void lcd_menu_print_tune()
 
 static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -1030,7 +1030,7 @@ static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void lcd_retraction_details(uint8_t nr)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     if(nr == 1)
         float_to_string(retract_length, buffer, PSTR("mm"));
     else if(nr == 2)
@@ -1084,7 +1084,7 @@ void lcd_print_pause()
                 zdiff = 2;
             }
 
-            char buffer[32];
+            char buffer[32] = {0};
             sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
             enquecommand(buffer);
 

@@ -35,8 +35,8 @@
 			<Add option="-D__AVR_ATmega2560__=1" />
 			<Add option="-DARDUINO=106" />
 			<Add option="-DF_CPU=16000000" />
-			<Add option="-DEXTRUDERS=2" />
-			<Add option="-DTEMP_SENSOR_1=20" />
+			<Add option="-DEXTRUDERS=1" />
+			<Add option="-DTEMP_SENSOR_1=0" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="../../SDL-1.2.15/include" />

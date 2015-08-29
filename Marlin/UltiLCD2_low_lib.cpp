@@ -1019,12 +1019,12 @@ char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
     *c++ = '.';
     *c++ = ((i/10)%10)+'0';
     *c++ = ((i)%10)+'0';
-    *c = '\0';
     if (p_postfix)
     {
         strcpy_P(c, p_postfix);
         c += strlen_P(p_postfix);
     }
+    *c = '\0';
     return c;
 }
 

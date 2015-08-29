@@ -50,7 +50,7 @@ void lcd_menu_maintenance()
 static void lcd_advanced_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     uint8_t index(0);
-    char buffer[32];
+    char buffer[32] = {0};
     if (nr == index++)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == index++)
@@ -103,7 +103,7 @@ static void lcd_advanced_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void lcd_advanced_details(uint8_t nr)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     buffer[0] = '\0';
     if (!(ui_mode & UI_MODE_EXPERT) && (nr > 8+BED_MENU_OFFSET+2*EXTRUDERS))
         ++nr;
@@ -136,7 +136,7 @@ static void lcd_advanced_details(uint8_t nr)
 static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     uint8_t index(0);
-    char buffer[32];
+    char buffer[32] = {0};
     if (nr == index++)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == index++)
@@ -160,6 +160,8 @@ static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Motion settings"));
     else if (nr == index++)
+        strcpy_P(buffer, PSTR("Print area"));
+    else if (nr == index++)
         strcpy_P(buffer, PSTR("Version"));
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Runtime stats"));
@@ -173,7 +175,7 @@ static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void lcd_preferences_details(uint8_t nr)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     buffer[0] = '\0';
 
     if (nr == 1)
@@ -234,7 +236,7 @@ static void lcd_preferences_details(uint8_t nr)
         }
     }
 #endif
-    else if (nr == 9+BED_MENU_OFFSET)
+    else if (nr == 10+BED_MENU_OFFSET)
     {
         strcpy_P(buffer, PSTR(STRING_CONFIG_H_AUTHOR));
     }
@@ -303,7 +305,7 @@ void lcd_menu_maintenance_advanced()
         }
         else if (IS_SELECTED_SCROLL(index++))
         {
-            char buffer[32];
+            char buffer[32] = {0};
             active_extruder = 0;
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
@@ -314,7 +316,7 @@ void lcd_menu_maintenance_advanced()
 #if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(index++))
         {
-            char buffer[32];
+            char buffer[32] = {0};
             active_extruder = 1;
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
@@ -385,7 +387,7 @@ static void lcd_menu_maintenance_advanced_heatup()
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
-    char buffer[16];
+    char buffer[16] = {0};
     int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/"));
     int_to_string(int(target_temperature[active_extruder]), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
@@ -421,7 +423,7 @@ static void lcd_menu_maintenance_extrude()
     lcd_lib_draw_string_centerP(40, PSTR("Rotate to extrude"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
 
-    char buffer[32];
+    char buffer[32] = {0};
     ;
     int_to_string(int(target_temperature[active_extruder]), int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/")), PSTR("C"));
     lcd_lib_draw_string_center(20, buffer);
@@ -447,7 +449,7 @@ void lcd_menu_maintenance_advanced_bed_heatup()
     lcd_lib_clear();
     lcd_lib_draw_string_centerP(20, PSTR("Buildplate temp.:"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
-    char buffer[16];
+    char buffer[16] = {0};
     int_to_string(int(dsp_temperature_bed), buffer, PSTR("C/"));
     int_to_string(int(target_temperature_bed), buffer+strlen(buffer), PSTR("C"));
     lcd_lib_draw_string_center(30, buffer);
@@ -468,7 +470,7 @@ static void lcd_menu_advanced_stats()
 {
     lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("Return"));
     lcd_lib_draw_string_centerP(10, PSTR("Machine on for:"));
-    char buffer[16];
+    char buffer[16] = {0};
     char* c = int_to_string(lifetime_minutes / 60, buffer, PSTR(":"));
     if (lifetime_minutes % 60 < 10)
         *c++ = '0';
@@ -529,7 +531,7 @@ static void lcd_menu_advanced_factory_reset()
 
 static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -544,7 +546,7 @@ static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void lcd_retraction_details(uint8_t nr)
 {
-    char buffer[16];
+    char buffer[16] = {0};
     if (nr == 0)
         return;
     else if(nr == 1)
@@ -573,7 +575,7 @@ static void lcd_menu_maintenance_retraction()
 
 static void lcd_motion_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -600,7 +602,7 @@ static void lcd_motion_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void lcd_motion_details(uint8_t nr)
 {
-    char buffer[16];
+    char buffer[16] = {0};
     if (nr == 0)
         return;
     else if(nr == 1)
@@ -656,7 +658,7 @@ static void lcd_menu_maintenance_motion()
 
 static void lcd_led_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     if (nr == 0)
         strcpy_P(buffer, PSTR("< RETURN"));
     else if (nr == 1)
@@ -679,7 +681,7 @@ static void lcd_led_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void lcd_led_details(uint8_t nr)
 {
-    char buffer[16];
+    char buffer[16] = {0};
     if (nr == 0)
         return;
     else if(nr == 1)
@@ -730,9 +732,9 @@ static void lcd_menu_maintenance_led()
 }
 
 #if TEMP_SENSOR_BED != 0
-static void lcd_pidflags_store(uint8_t flags)
+static void lcd_expertflags_store(uint8_t flags)
 {
-    SET_PID_FLAGS(flags);
+    SET_EXPERT_FLAGS(flags);
     uint16_t version = GET_EXPERT_VERSION()+1;
     if (version < 2)
     {
@@ -906,7 +908,7 @@ static void lcd_menu_screen_contrast()
     lcd_lib_draw_string_centerP(10, PSTR("Screen contrast"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
 
-    char buffer[32];
+    char buffer[32] = {0};
     int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
 
     lcd_lib_draw_string_center(22, buffer);
@@ -926,16 +928,16 @@ static void lcd_menu_buildplate_pid()
         {
             if (!pidTempBed())
             {
-                pid_flags |= PID_FLAG_BED;
-                lcd_pidflags_store(pid_flags);
+                expert_flags |= FLAG_PID_BED;
+                lcd_expertflags_store(expert_flags);
             }
         }
         else if (IS_SELECTED_SCROLL(2))
         {
             if (pidTempBed())
             {
-                pid_flags &= ~PID_FLAG_BED;
-                lcd_pidflags_store(pid_flags);
+                expert_flags &= ~FLAG_PID_BED;
+                lcd_expertflags_store(expert_flags);
             }
         }
         menu.return_to_previous();
@@ -973,7 +975,7 @@ static void lcd_menu_heater_timeout()
     lcd_lib_draw_string_centerP(20, PSTR("heater timeout"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
 
-    char buffer[32];
+    char buffer[32] = {0};
     if (heater_timeout)
         int_to_string(heater_timeout, buffer, PSTR(" min"));
     else
@@ -986,7 +988,7 @@ static void lcd_menu_heater_timeout()
 
 static void lcd_menu_preferences()
 {
-    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 12, lcd_preferences_item, lcd_preferences_details);
+    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 13, lcd_preferences_item, lcd_preferences_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
@@ -1012,6 +1014,8 @@ static void lcd_menu_preferences()
             menu.add_menu(menu_t(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(init_target_limits, lcd_menu_axeslimit, NULL, MAIN_MENU_ITEM_POS(1)));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))

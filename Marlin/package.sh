@@ -8,7 +8,7 @@
 #############################
 
 ##Which version name are we appending to the final archive
-export BUILD_NAME=15.08
+export BUILD_NAME=15.09-RC1
 
 #############################
 # Support functions
@@ -117,12 +117,12 @@ sleep 2
 mkdir _Ultimaker2
 $MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2 DEFINES="'STRING_CONFIG_H_AUTHOR=\"Tinker_${BUILD_NAME}\"' TEMP_SENSOR_1=0 EXTRUDERS=1"
 
-# $MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2Dual DEFINES="'STRING_CONFIG_H_AUTHOR=\"Tinker_${BUILD_NAME}\"' TEMP_SENSOR_1=20 EXTRUDERS=2" clean
-# sleep 2
-# mkdir _Ultimaker2Dual
-# $MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2Dual DEFINES="'STRING_CONFIG_H_AUTHOR=\"Tinker_${BUILD_NAME}\"' TEMP_SENSOR_1=20 EXTRUDERS=2"
-# cd -
+$MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2Dual DEFINES="'STRING_CONFIG_H_AUTHOR=\"Tinker_${BUILD_NAME}\"' TEMP_SENSOR_1=20 EXTRUDERS=2" clean
+sleep 2
+mkdir _Ultimaker2Dual
+$MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2Dual DEFINES="'STRING_CONFIG_H_AUTHOR=\"Tinker_${BUILD_NAME}\"' TEMP_SENSOR_1=20 EXTRUDERS=2"
+#cd -
 
 cp _Ultimaker2/Marlin.hex resources/firmware/TinkerGnome-MarlinUltimaker2-${BUILD_NAME}.hex
-# cp _Ultimaker2Dual/Marlin.hex resources/firmware/TinkerGnome-MarlinUltimaker2-dual-${BUILD_NAME}.hex
+cp _Ultimaker2Dual/Marlin.hex resources/firmware/TinkerGnome-MarlinUltimaker2-dual-${BUILD_NAME}.hex
 

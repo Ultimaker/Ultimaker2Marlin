@@ -31,8 +31,8 @@
 #define SET_SLEEP_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_CONTRAST_OFFSET, n); } while(0)
 #define GET_SLEEP_GLOW() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_GLOW_OFFSET))
 #define SET_SLEEP_GLOW(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_GLOW_OFFSET, n); } while(0)
-#define GET_PID_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
-#define SET_PID_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
+#define GET_EXPERT_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
+#define SET_EXPERT_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
 #define GET_HEATER_TIMEOUT() (eeprom_read_byte((const uint8_t*)EEPROM_HEATER_TIMEOUT))
 #define SET_HEATER_TIMEOUT(n) do { eeprom_write_byte((uint8_t*)EEPROM_HEATER_TIMEOUT, n); } while(0)
 
@@ -44,15 +44,15 @@
 #define UI_BEEP_OFF      64
 
 // PID control flags
-#define PID_FLAG_NOZZLE 1
-#define PID_FLAG_BED 2
+#define FLAG_PID_NOZZLE 1
+#define FLAG_PID_BED 2
 
 extern uint8_t ui_mode;
 extern uint16_t lcd_timeout;
 extern uint8_t lcd_contrast;
 extern uint8_t led_sleep_glow;
 extern uint8_t lcd_sleep_contrast;
-extern uint8_t pid_flags;
+extern uint8_t expert_flags;
 
 extern const uint8_t standbyGfx[];
 extern const uint8_t startGfx[];
@@ -83,6 +83,8 @@ void lcd_menu_sleeptimer();
 void recover_start_print();
 void lcd_menu_recover_init();
 void lcd_menu_expert_recover();
+void lcd_menu_axeslimit();
+void init_target_limits();
 void reset_printing_state();
 
 bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max);
@@ -93,7 +95,7 @@ void lcd_lib_draw_bargraph( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, floa
 
 char* int_to_time_string_tg(unsigned long i, char* temp_buffer);
 
-FORCE_INLINE bool pidTempBed() { return (pid_flags & PID_FLAG_BED); }
+FORCE_INLINE bool pidTempBed() { return (expert_flags & FLAG_PID_BED); }
 FORCE_INLINE void lcd_print_tune_nozzle0() { lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15); }
 #if EXTRUDERS > 1
 FORCE_INLINE void lcd_print_tune_nozzle1() { lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15); }
