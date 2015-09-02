@@ -476,7 +476,7 @@ static char* float_to_string2(float f, char* temp_buffer, const char* p_postfix)
 char* int_to_time_string_tg(unsigned long i, char* temp_buffer)
 {
     char* c = temp_buffer;
-    uint8_t hours = i / 60 / 60;
+    uint16_t hours = constrain(i / 60 / 60, 0, 999);
     uint8_t mins = (i / 60) % 60;
     uint8_t secs = i % 60;
 
