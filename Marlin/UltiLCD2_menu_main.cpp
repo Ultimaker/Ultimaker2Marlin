@@ -14,7 +14,6 @@
 #include "UltiLCD2_menu_utils.h"
 #include "tinkergnome.h"
 
-
 #define PREHEAT_FLAG(n) (lcd_cache[2*LCD_CACHE_COUNT+n])
 
 #define BREAKOUT_PADDLE_WIDTH 21
@@ -207,15 +206,13 @@ static void lcd_main_print()
 static void lcd_toggle_preheat_nozzle0()
 {
     PREHEAT_FLAG(1) = !PREHEAT_FLAG(1);
-    if (PREHEAT_FLAG(1))
-    {
-
-    }
-    else
+    if (!PREHEAT_FLAG(1))
     {
         setTargetHotend(0, 0);
     }
 }
+
+static void lcd_preheat_tune_nozzle0() { lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15); PREHEAT_FLAG(1) = (target_temperature[0]>0); }
 
 #if EXTRUDERS > 1
 static void lcd_toggle_preheat_nozzle1()
@@ -230,6 +227,8 @@ static void lcd_toggle_preheat_nozzle1()
         setTargetHotend(0, 1);
     }
 }
+
+static void lcd_preheat_tune_nozzle1() { lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15); PREHEAT_FLAG(2) = (target_temperature[0]>0); }
 #endif
 
 #if TEMP_SENSOR_BED != 0
@@ -249,6 +248,8 @@ static void lcd_toggle_preheat_bed()
         target_temperature_bed = 0;
     }
 }
+
+static void lcd_preheat_tune_bed() { lcd_tune_value(target_temperature_bed, 0, BED_MAXTEMP - 15); PREHEAT_FLAG(0) = (target_temperature_bed>0); }
 #endif
 
 // return preheat menu option
@@ -289,20 +290,20 @@ static const menu_t & get_preheat_menuoption(uint8_t nr, menu_t &opt)
     else if (nr == menu_index++)
     {
         // temp nozzle 1
-        opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_nozzle0);
+        opt.setData(MENU_INPLACE_EDIT, lcd_preheat_tune_nozzle0);
     }
 #if EXTRUDERS > 1
     else if (nr == menu_index++)
     {
         // temp nozzle 2
-        opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_nozzle1);
+        opt.setData(MENU_INPLACE_EDIT, lcd_preheat_tune_nozzle1);
     }
 #endif
 #if TEMP_SENSOR_BED != 0
     else if (nr == menu_index++)
     {
         // temp buildplate
-        opt.setData(MENU_INPLACE_EDIT, lcd_print_tune_bed);
+        opt.setData(MENU_INPLACE_EDIT, lcd_preheat_tune_bed);
     }
 #endif
     return opt;

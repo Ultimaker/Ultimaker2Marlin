@@ -1,5 +1,5 @@
-#ifndef ULTI_LCD2_MENU_TINKERGNOME_H
-#define ULTI_LCD2_MENU_TINKERGNOME_H
+#ifndef TINKERGNOME_H
+#define TINKERGNOME_H
 
 #include "temperature.h"
 
@@ -103,4 +103,4 @@ FORCE_INLINE void lcd_print_tune_nozzle1() { lcd_tune_value(target_temperature[1
 #if TEMP_SENSOR_BED != 0
 FORCE_INLINE void lcd_print_tune_bed() { lcd_tune_value(target_temperature_bed, 0, BED_MAXTEMP - 15); }
 #endif
-#endif//ULTI_LCD2_MENU_TINKERGNOME_H
+#endif //TINKERGNOME_H

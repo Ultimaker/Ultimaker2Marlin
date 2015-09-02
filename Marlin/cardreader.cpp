@@ -193,6 +193,7 @@ void CardReader::setroot()
 
   curDir=&workDir;
 }
+
 void CardReader::release()
 {
   sdprinting = false;
@@ -217,7 +218,6 @@ void CardReader::pauseSDPrint()
   }
 }
 
-
 void CardReader::openLogFile(const char* name)
 {
   logging = true;
@@ -231,7 +231,6 @@ void CardReader::openFile(const char* name,bool read)
   file.close();
   sdprinting = false;
   pause = false;
-
 
   SdFile myDir;
   curDir=&root;
@@ -274,7 +273,6 @@ void CardReader::openFile(const char* name,bool read)
         //SERIAL_ECHOLN(fname);
         break;
       }
-
     }
   }
   else //relative path
@@ -551,7 +549,6 @@ void CardReader::updir()
       workDirParents[d] = workDirParents[d+1];
   }
 }
-
 
 void CardReader::printingHasFinished()
 {
