@@ -14,7 +14,6 @@
 #include "pins.h"
 #include "tinkergnome.h"
 
-
 //static void lcd_menu_maintenance_advanced();
 static void lcd_menu_maintenance_advanced_heatup();
 static void lcd_menu_maintenance_led();
@@ -538,6 +537,8 @@ static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("Retract length"));
     else if (nr == 2)
         strcpy_P(buffer, PSTR("Retract speed"));
+    else if (nr == 3)
+        strcpy_P(buffer, PSTR("End of print length"));
     else
         strcpy_P(buffer, PSTR("???"));
 
@@ -553,23 +554,40 @@ static void lcd_retraction_details(uint8_t nr)
         float_to_string(retract_length, buffer, PSTR("mm"));
     else if(nr == 2)
         int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
+    else if(nr == 3)
+        float_to_string(end_of_print_retraction, buffer, PSTR("mm"));
     lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
 }
 
 static void lcd_menu_maintenance_retraction()
 {
-    lcd_scroll_menu(PSTR("RETRACTION"), 3, lcd_retraction_item, lcd_retraction_details);
+    lcd_scroll_menu(PSTR("RETRACTION"), 4, lcd_retraction_item, lcd_retraction_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
         {
-            Config_StoreSettings();
+            // store settings
+            float length;
+            float speed;
+            int offset = 146;
+            Config_Read(offset, &length);
+            Config_Read(offset, &speed);
+            if ((length != retract_length) || (speed != retract_feedrate))
+            {
+                Config_StoreSettings();
+            }
+            if (end_of_print_retraction != GET_END_RETRACT())
+            {
+                endofprint_retract_store();
+            }
             lcd_change_to_previous_menu();
         }
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
         else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
+        else if (IS_SELECTED_SCROLL(3))
+            LCD_EDIT_SETTING_FLOAT001(end_of_print_retraction, "End of print retract", "mm", 0, 50);
     }
 }
 

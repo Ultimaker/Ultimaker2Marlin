@@ -21,6 +21,22 @@ int16_t lcd_setting_max;
 uint8_t heater_timeout = 3;
 int backup_temperature[EXTRUDERS] = { 0 };
 
+#ifndef eeprom_read_float
+//Arduino IDE compatibility, lacks the eeprom_read_float function
+float eeprom_read_float(const float* addr)
+{
+    union { uint32_t i; float f; } n;
+    n.i = eeprom_read_dword((uint32_t*)addr);
+    return n.f;
+}
+void eeprom_write_float(const float* addr, float f)
+{
+    union { uint32_t i; float f; } n;
+    n.f = f;
+    eeprom_write_dword((uint32_t*)addr, n.i);
+}
+#endif
+
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom)
 {
     if (lcd_lib_encoder_pos != ENCODER_NO_SELECTION)

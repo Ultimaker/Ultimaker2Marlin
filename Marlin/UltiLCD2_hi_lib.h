@@ -5,6 +5,11 @@
 #include "UltiLCD2_gfx.h"
 #include "UltiLCD2_menu_utils.h"
 
+#ifndef eeprom_read_float
+//Arduino IDE compatibility, lacks the eeprom_read_float function
+float eeprom_read_float(const float* addr);
+void eeprom_write_float(const float* addr, float f);
+#endif
 
 void lcd_tripple_menu(const char* left, const char* right, const char* bottom);
 void lcd_basic_screen();

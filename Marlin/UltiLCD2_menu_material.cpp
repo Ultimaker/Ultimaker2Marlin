@@ -10,22 +10,7 @@
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_utils.h"
-
-#ifndef eeprom_read_float
-//Arduino IDE compatibility, lacks the eeprom_read_float function
-float inline eeprom_read_float(float* addr)
-{
-    union { uint32_t i; float f; } n;
-    n.i = eeprom_read_dword((uint32_t*)addr);
-    return n.f;
-}
-void inline eeprom_write_float(float* addr, float f)
-{
-    union { uint32_t i; float f; } n;
-    n.f = f;
-    eeprom_write_dword((uint32_t*)addr, n.i);
-}
-#endif
+#include "tinkergnome.h"
 
 struct materialSettings material[EXTRUDERS];
 
@@ -350,7 +335,7 @@ static void lcd_menu_change_material_insert_forward()
 static void materialInsertReady()
 {
     plan_set_e_position(0);
-    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], -END_OF_PRINT_RETRACTION-retract_length / volume_to_filament_length[active_extruder], 25*60, active_extruder);
+    plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], (-end_of_print_retraction-retract_length) / volume_to_filament_length[active_extruder], 25*60, active_extruder);
     digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
     lcd_remove_menu();
     if (!card.sdprinting)

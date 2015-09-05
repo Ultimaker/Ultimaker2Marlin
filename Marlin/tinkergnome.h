@@ -14,6 +14,7 @@
 #define EEPROM_PID_FLAGS 0x40C
 #define EEPROM_HEATER_TIMEOUT 0x40D
 #define EEPROM_AXIS_LIMITS 0x40E  // 24 Byte
+#define EEPROM_END_RETRACT 0x426  // 4 Byte
 
 #define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
 #define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
@@ -35,6 +36,8 @@
 #define SET_EXPERT_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
 #define GET_HEATER_TIMEOUT() (eeprom_read_byte((const uint8_t*)EEPROM_HEATER_TIMEOUT))
 #define SET_HEATER_TIMEOUT(n) do { eeprom_write_byte((uint8_t*)EEPROM_HEATER_TIMEOUT, n); } while(0)
+#define GET_END_RETRACT() (eeprom_read_float((const float*)EEPROM_END_RETRACT))
+#define SET_END_RETRACT(n) do { eeprom_write_float((float*)EEPROM_END_RETRACT, n); } while(0)
 
 // UI Mode
 #define UI_MODE_STANDARD  0
@@ -69,6 +72,8 @@ extern float recover_height;
 extern float recover_position[NUM_AXIS];
 extern int recover_temperature[EXTRUDERS];
 
+extern float end_of_print_retraction;
+
 void tinkergnome_init();
 void lcd_menu_maintenance_expert();
 void lcd_menu_print_heatup_tg();
@@ -86,6 +91,7 @@ void lcd_menu_expert_recover();
 void lcd_menu_axeslimit();
 void init_target_limits();
 void reset_printing_state();
+void endofprint_retract_store();
 
 bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max);
 void lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max);

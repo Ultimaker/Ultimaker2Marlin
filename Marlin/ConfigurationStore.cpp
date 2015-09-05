@@ -300,3 +300,11 @@ SERIAL_ECHO_START;
 SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
 
 }
+
+void Config_Read(int &offset, float *value)
+{
+    int pos=EEPROM_OFFSET+offset;
+    _EEPROM_readData(pos, (uint8_t*)value, sizeof(float));
+    offset=pos-EEPROM_OFFSET;
+}
+

@@ -62,7 +62,7 @@ void abortPrint()
     if (primed)
     {
         // set up the end of print retraction
-        sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+        sprintf_P(buffer, PSTR("G92 E%i"), int((end_of_print_retraction / volume_to_filament_length[active_extruder])+0.5f));
         enquecommand(buffer);
         // perform the retraction at the standard retract speed
         sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
@@ -146,7 +146,7 @@ void doStartPrint()
             primed = true;
         }
         // undo the end-of-print retraction
-        plan_set_e_position((- END_OF_PRINT_RETRACTION) / volume_to_filament_length[e]);
+        plan_set_e_position((- end_of_print_retraction) / volume_to_filament_length[e]);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], END_OF_PRINT_RECOVERY_SPEED, e);
 
         // perform additional priming
@@ -157,7 +157,7 @@ void doStartPrint()
         // for extruders other than the first one, perform end of print retraction
         if (e > 0)
         {
-            plan_set_e_position((volume_to_filament_length[e] + END_OF_PRINT_RETRACTION) / volume_to_filament_length[e]);
+            plan_set_e_position((volume_to_filament_length[e] + end_of_print_retraction) / volume_to_filament_length[e]);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, e);
         }
 #endif
@@ -1018,8 +1018,10 @@ static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("Retract length"));
     else if (nr == 2)
         strcpy_P(buffer, PSTR("Retract speed"));
-#if EXTRUDERS > 1
     else if (nr == 3)
+        strcpy_P(buffer, PSTR("End of print length"));
+#if EXTRUDERS > 1
+    else if (nr == 4)
         strcpy_P(buffer, PSTR("Extruder change len"));
 #endif
     else
@@ -1035,8 +1037,10 @@ static void lcd_retraction_details(uint8_t nr)
         float_to_string(retract_length, buffer, PSTR("mm"));
     else if(nr == 2)
         int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
-#if EXTRUDERS > 1
     else if(nr == 3)
+        float_to_string(end_of_print_retraction, buffer, PSTR("mm"));
+#if EXTRUDERS > 1
+    else if(nr == 4)
         int_to_string(extruder_swap_retract_length, buffer, PSTR("mm"));
 #endif
     else
@@ -1046,7 +1050,7 @@ static void lcd_retraction_details(uint8_t nr)
 
 static void lcd_menu_print_tune_retraction()
 {
-    lcd_scroll_menu(PSTR("RETRACTION"), 3 + (EXTRUDERS > 1 ? 1 : 0), lcd_retraction_item, lcd_retraction_details);
+    lcd_scroll_menu(PSTR("RETRACTION"), 4 + (EXTRUDERS > 1 ? 1 : 0), lcd_retraction_item, lcd_retraction_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -1055,8 +1059,10 @@ static void lcd_menu_print_tune_retraction()
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
         else if (IS_SELECTED_SCROLL(2))
             LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
-#if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(3))
+            LCD_EDIT_SETTING_FLOAT001(end_of_print_retraction, "End of print retract", "mm", 0, 50);
+#if EXTRUDERS > 1
+        else if (IS_SELECTED_SCROLL(4))
             LCD_EDIT_SETTING_FLOAT001(extruder_swap_retract_length, "Extruder change", "mm", 0, 50);
 #endif
     }
@@ -1085,7 +1091,7 @@ void lcd_print_pause()
             }
 
             char buffer[32] = {0};
-            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
+            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%f"), zdiff, end_of_print_retraction);
             enquecommand(buffer);
 
             primed = false;

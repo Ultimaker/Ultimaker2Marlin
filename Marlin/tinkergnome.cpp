@@ -40,6 +40,8 @@
 #define TARGET_POS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
 #define TARGET_MIN(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
 #define TARGET_MAX(n) (*(float*)&lcd_cache[sizeof(min_pos) + (n) * sizeof(float)])
+#define OLD_FEEDRATE  (*(float*)&lcd_cache[0])
+#define OLD_ACCEL     (*(float*)&lcd_cache[sizeof(float)])
 
 uint8_t ui_mode = UI_MODE_EXPERT;
 float recover_height = 0.0f;
@@ -50,6 +52,7 @@ uint8_t lcd_contrast = 0xDF;
 uint8_t lcd_sleep_contrast = 0;
 uint8_t led_sleep_glow = 0;
 uint8_t expert_flags = FLAG_PID_NOZZLE;
+float end_of_print_retraction = END_OF_PRINT_RETRACTION;
 
 static uint16_t led_timeout = LED_DIM_TIME;
 static uint8_t led_sleep_brightness = 0;
@@ -61,9 +64,6 @@ static float nominal_speed = 0.0;
 static int8_t movingSpeed = 0;
 static bool delayMove = false;
 static uint8_t printing_page = 0;
-
-static float old_max_feedrate_e;
-static float old_retract_acceleration;
 
 const uint8_t thermometerGfx[] PROGMEM = {
     5, 8, //size
@@ -222,6 +222,15 @@ static char* float_to_string2(float f, char* temp_buffer, const char* p_postfix)
 void tinkergnome_init()
 {
     uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version > 4)
+    {
+        // read end of print retraction length from eeprom
+        end_of_print_retraction = GET_END_RETRACT();
+    }
+    else
+    {
+        end_of_print_retraction = END_OF_PRINT_RETRACTION;
+    }
     if (version > 3)
     {
         // read axis limits from eeprom
@@ -1602,6 +1611,18 @@ void lcd_menu_simple_buildplate_init()
     lcd_lib_update_screen();
 }
 
+void endofprint_retract_store()
+{
+    SET_END_RETRACT(end_of_print_retraction);
+
+    uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version < 5)
+    {
+        SET_EXPERT_VERSION(4);
+    }
+    menu.return_to_previous();
+}
+
 static void lcd_axislimit_store()
 {
     memcpy(min_pos, lcd_cache, sizeof(min_pos));
@@ -1617,7 +1638,6 @@ static void lcd_axislimit_store()
     }
     menu.return_to_previous();
 }
-
 
 static void lcd_sleeptimer_store()
 {
@@ -3138,8 +3158,8 @@ static void lcd_extrude_init_pull()
     //Set E motor power lower so the motor will skip instead of grind.
     digipot_current(2, motor_current_setting[2]*2/3);
     //increase max. feedrate and reduce acceleration
-    old_max_feedrate_e = max_feedrate[E_AXIS];
-    old_retract_acceleration = retract_acceleration;
+    OLD_FEEDRATE = max_feedrate[E_AXIS];
+    OLD_ACCEL = retract_acceleration;
     max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
     retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
 }
@@ -3147,8 +3167,8 @@ static void lcd_extrude_init_pull()
 static void lcd_extrude_quit_pull()
 {
     // reset feeedrate and acceleration to default
-    max_feedrate[E_AXIS] = old_max_feedrate_e;
-    retract_acceleration = old_retract_acceleration;
+    max_feedrate[E_AXIS] = OLD_FEEDRATE;
+    retract_acceleration = OLD_ACCEL;
     //Set E motor power to default.
     digipot_current(2, motor_current_setting[2]);
     // disable E-steppers

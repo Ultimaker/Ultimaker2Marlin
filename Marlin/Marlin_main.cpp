@@ -732,7 +732,6 @@ void get_command()
 
 }
 
-
 float code_value()
 {
   return (strtod(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL));
@@ -1183,7 +1182,7 @@ void process_commands()
         if(code_seen(axis_codes[i])) {
            if(i == E_AXIS) {
              current_position[i] = code_value();
-             plan_set_e_position(current_position[E_AXIS]);
+             plan_set_e_position(current_position[i]);
            }
            else {
              current_position[i] = code_value();
