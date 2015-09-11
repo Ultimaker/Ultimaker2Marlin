@@ -1154,7 +1154,7 @@ void lcd_menu_print_heatup_tg()
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
             target_temperature[e] = material[e].temperature;
-            printing_state = PRINT_STATE_START;
+            // printing_state = PRINT_STATE_START;
         }
 
 #if TEMP_SENSOR_BED != 0
@@ -1173,7 +1173,7 @@ void lcd_menu_print_heatup_tg()
             if (ready)
             {
                 menu.reset_submenu();
-                printing_state = PRINT_STATE_NORMAL;
+                // printing_state = PRINT_STATE_NORMAL;
                 doStartPrint();
                 printing_page = 0;
                 menu.replace_menu(menu_t(lcd_menu_printing_tg), false);
@@ -2169,22 +2169,22 @@ void init_target_limits()
 
 static void lcd_limit_xmin()
 {
-    lcd_tune_value(TARGET_MIN(X_AXIS), -99.0f, +999.0f, 0.1f);
+    lcd_tune_value(TARGET_MIN(X_AXIS), -99.0f, TARGET_MAX(X_AXIS), 0.1f);
 }
 
 static void lcd_limit_xmax()
 {
-    lcd_tune_value(TARGET_MAX(X_AXIS), -99.0f, +999.0f, 0.1f);
+    lcd_tune_value(TARGET_MAX(X_AXIS), TARGET_MIN(X_AXIS), +999.0f, 0.1f);
 }
 
 static void lcd_limit_ymin()
 {
-    lcd_tune_value(TARGET_MIN(Y_AXIS), -99.0f, +999.0f, 0.1f);
+    lcd_tune_value(TARGET_MIN(Y_AXIS), -99.0f, TARGET_MAX(Y_AXIS), 0.1f);
 }
 
 static void lcd_limit_ymax()
 {
-    lcd_tune_value(TARGET_MAX(Y_AXIS), -99.0f, +999.0f, 0.1f);
+    lcd_tune_value(TARGET_MAX(Y_AXIS), TARGET_MIN(Y_AXIS), +999.0f, 0.1f);
 }
 
 static void lcd_limit_zmax()
@@ -3408,12 +3408,14 @@ void lcd_menu_expert_extrude()
     lcd_lib_update_screen();
 }
 
-void recover_start_print()
+void recover_start_print(const char *cmd)
 {
     // recover print from current position
     card.sdprinting = false;
     quickStop();
     clear_command_queue();
+    // keep last command in mind
+    strcpy(LCD_CACHE_FILENAME(0), cmd);
     printing_state = PRINT_STATE_START;
 
     // move to heatup position

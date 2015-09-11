@@ -116,4 +116,7 @@ extern uint8_t minProgress;
 
 #define BOTTOM_MENU_YPOS 54
 
+#define EQUALF(f1, f2) (fabs(f2-f1)<=0.01)
+#define NEQUALF(f1, f2) (fabs(f2-f1)>0.01)
+
 #endif//ULTI_LCD2_HI_LIB_H

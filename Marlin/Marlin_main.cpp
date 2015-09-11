@@ -658,7 +658,6 @@ void get_command()
   }
   if (card.pause)
   {
-
     return;
   }
 
@@ -968,6 +967,8 @@ void process_commands()
       break;
       #ifdef FWRETRACT
       case 10: // G10 retract
+      if (printing_state == PRINT_STATE_RECOVER)
+        break;
       if(!retracted)
       {
         destination[X_AXIS]=current_position[X_AXIS];
@@ -991,6 +992,8 @@ void process_commands()
 
       break;
       case 11: // G11 retract_recover
+      if (printing_state == PRINT_STATE_RECOVER)
+        break;
       if(retracted)
       {
         destination[X_AXIS]=current_position[X_AXIS];
@@ -2689,11 +2692,13 @@ void prepare_move()
 #else
   if (card.sdprinting && (printing_state == PRINT_STATE_RECOVER) && (destination[Z_AXIS] >= recover_height-0.01f))
   {
+    if (current_position[E_AXIS] != destination[E_AXIS])
+    {
       for(uint8_t i=0; i < NUM_AXIS; ++i) {
-          recover_position[i] = destination[i];
+          recover_position[i] = current_position[i];
       }
-
-      recover_start_print();
+      recover_start_print(cmdbuffer[bufindr]);
+    }
   }
   else if (printing_state != PRINT_STATE_RECOVER)
   {

@@ -46,21 +46,25 @@ void abortPrint()
     doCooldown();
 
     clear_command_queue();
-    char buffer[32] = {0};
+    enquecommand_P(PSTR("M401"));
+
     if (card.sdprinting)
     {
     	// we're not printing any more
         card.sdprinting = false;
-        recover_height = current_position[Z_AXIS];
+        if (!card.pause)
+        {
+            recover_height = current_position[Z_AXIS];
+            enquecommand_P(PSTR("G10"));
+        }
     }
     //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
     card.pause = false;
     pauseRequested = false;
 
-    enquecommand_P(PSTR("M401"));
-
     if (primed)
     {
+        char buffer[32] = {0};
         // set up the end of print retraction
         sprintf_P(buffer, PSTR("G92 E%i"), int((end_of_print_retraction / volume_to_filament_length[active_extruder])+0.5f));
         enquecommand(buffer);
@@ -72,11 +76,13 @@ void abortPrint()
         primed = false;
     }
 
-    if (current_position[Z_AXIS] > Z_MAX_POS - 30)
+    if (current_position[Z_AXIS] > max_pos[Z_AXIS] - 30)
     {
         enquecommand_P(PSTR("G28 X0 Y0"));
         enquecommand_P(PSTR("G28 Z0"));
-    }else{
+    }
+    else
+    {
         enquecommand_P(PSTR("G28"));
     }
     enquecommand_P(PSTR("M84"));
@@ -163,19 +169,21 @@ void doStartPrint()
 #endif
     }
 
+    active_extruder = current_extruder;
+
     if (printing_state == PRINT_STATE_START)
     {
         // move to the recover start position
-        current_position[E_AXIS] = recover_position[E_AXIS];
         plan_set_e_position(recover_position[E_AXIS]);
         plan_buffer_line(recover_position[X_AXIS], recover_position[Y_AXIS], recover_position[Z_AXIS], recover_position[E_AXIS], min(homing_feedrate[X_AXIS], homing_feedrate[Z_AXIS]), active_extruder);
-        for(uint8_t i=0; i < NUM_AXIS; ++i) {
+        for(int8_t i=0; i < NUM_AXIS; i++) {
             current_position[i] = recover_position[i];
         }
+        // first recovering move
+        enquecommand(LCD_CACHE_FILENAME(0));
     }
 
     printing_state = PRINT_STATE_NORMAL;
-    active_extruder = current_extruder;
 
     postMenuCheck = checkPrintFinished;
     card.startFileprint();
@@ -453,10 +461,10 @@ void lcd_menu_print_select()
                         fanSpeedPercent = 0;
                         for(uint8_t e=0; e<EXTRUDERS; e++)
                         {
-                            SERIAL_ECHOPGM("MATERIAL_");
-                            SERIAL_ECHO(e+1);
-                            SERIAL_ECHOPGM(": ");
-                            SERIAL_ECHOLN(LCD_DETAIL_CACHE_MATERIAL(e));
+//                            SERIAL_ECHOPGM("MATERIAL_");
+//                            SERIAL_ECHO(e+1);
+//                            SERIAL_ECHOPGM(": ");
+//                            SERIAL_ECHOLN(LCD_DETAIL_CACHE_MATERIAL(e));
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
                                 continue;
                             target_temperature[e] = 0;//material[e].temperature;
@@ -528,7 +536,7 @@ void lcd_menu_print_heatup()
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
             target_temperature[e] = material[e].temperature;
-            printing_state = PRINT_STATE_START;
+            // printing_state = PRINT_STATE_START;
         }
 
 #if TEMP_SENSOR_BED != 0
@@ -1076,22 +1084,23 @@ void lcd_print_pause()
         {
             card.pause = true;
             pauseRequested = false;
+            recover_height = current_position[Z_AXIS];
 
             // move z up according to the current height - but minimum to z=70mm (above the gantry height)
             uint16_t zdiff = 0;
             if (current_position[Z_AXIS] < 70)
                 zdiff = max(70 - floor(current_position[Z_AXIS]), 20);
-            else if (current_position[Z_AXIS] < Z_MAX_POS - 60)
+            else if (current_position[Z_AXIS] < max_pos[Z_AXIS] - 60)
             {
                 zdiff = 20;
             }
-            else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
+            else if (current_position[Z_AXIS] < max_pos[Z_AXIS] - 30)
             {
                 zdiff = 2;
             }
 
             char buffer[32] = {0};
-            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%f"), zdiff, end_of_print_retraction);
+            sprintf_P(buffer, PSTR("M601 X%i Y%i Z%i L%f"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5, zdiff, end_of_print_retraction);
             enquecommand(buffer);
 
             primed = false;

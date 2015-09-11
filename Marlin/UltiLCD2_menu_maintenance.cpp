@@ -572,11 +572,11 @@ static void lcd_menu_maintenance_retraction()
             int offset = 146;
             Config_Read(offset, &length);
             Config_Read(offset, &speed);
-            if ((length != retract_length) || (speed != retract_feedrate))
+            if (NEQUALF(length, retract_length) || NEQUALF(speed, retract_feedrate))
             {
                 Config_StoreSettings();
             }
-            if (end_of_print_retraction != GET_END_RETRACT())
+            if (NEQUALF(end_of_print_retraction, GET_END_RETRACT()))
             {
                 endofprint_retract_store();
             }
