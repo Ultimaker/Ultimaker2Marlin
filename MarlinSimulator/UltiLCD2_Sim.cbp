@@ -111,11 +111,6 @@
 		<Unit filename="../Marlin/thermistortables.h" />
 		<Unit filename="../Marlin/tinkergnome.cpp" />
 		<Unit filename="../Marlin/tinkergnome.h" />
-		<Unit filename="../Marlin/ultralcd.cpp" />
-		<Unit filename="../Marlin/ultralcd.h" />
-		<Unit filename="../Marlin/ultralcd_implementation_hitachi_HD44780.h" />
-		<Unit filename="../Marlin/ultralcd_implementation_ultiboard_v2.h" />
-		<Unit filename="../Marlin/ultralcd_st7920_u8glib_rrd.h" />
 		<Unit filename="../Marlin/watchdog.cpp">
 			<Option virtualFolder="Marlin/" />
 		</Unit>
