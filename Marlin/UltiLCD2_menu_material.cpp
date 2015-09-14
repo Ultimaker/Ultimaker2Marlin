@@ -5,6 +5,7 @@
 #include "Marlin.h"
 // #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
 #include "temperature.h"
+#include "machinesettings.h"
 #include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_print.h"
@@ -78,7 +79,7 @@ static void lcd_menu_material_main()
             minProgress = 0;
             char buffer[32] = {0};
             enquecommand_P(PSTR("G28 X0 Y0"));
-            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
             enquecommand(buffer);
             menu.add_menu(menu_t(lcd_menu_material_main_return));
             menu.add_menu(menu_t(lcd_menu_change_material_preheat));

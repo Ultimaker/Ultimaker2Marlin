@@ -6,6 +6,7 @@
 #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
 #include "temperature.h"
 #include "ConfigurationStore.h"
+#include "machinesettings.h"
 #include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_material.h"
@@ -60,7 +61,7 @@ static void homeAndParkHeadForCenterAdjustment2()
     add_homeing[Z_AXIS] = 0;
     enquecommand_P(PSTR("G28 Z0 X0 Y0"));
     char buffer[32] = {0};
-    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(max_pos[Y_AXIS])-10);
+    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, int(AXIS_CENTER_POS(X_AXIS)), int(max_pos[Y_AXIS])-10);
     enquecommand(buffer);
     menu.return_to_previous(false);
 }
@@ -99,7 +100,7 @@ static void homeAndParkHeadForCenterAdjustment()
 {
     enquecommand_P(PSTR("G28 X0 Y0"));
     char buffer[32] = {0};
-    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(max_pos[Y_AXIS])-10);
+    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, int(AXIS_CENTER_POS(X_AXIS)), int(max_pos[Y_AXIS])-10);
     enquecommand(buffer);
 }
 
@@ -201,7 +202,7 @@ static void parkHeadForCenterAdjustment()
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F%i Z5"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(max_pos[Y_AXIS])-10);
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), int(AXIS_CENTER_POS(X_AXIS)), int(max_pos[Y_AXIS])-10);
     enquecommand(buffer);
     sprintf_P(buffer, PSTR("G1 F%i Z0"), int(homing_feedrate[Z_AXIS]));
     enquecommand(buffer);
@@ -299,7 +300,7 @@ static void parkHeadForHeating()
 {
     lcd_material_reset_defaults();
     char buffer[32] = {0};
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
     enquecommand(buffer);
 
     enquecommand_P(PSTR("M84"));//Disable motor power.

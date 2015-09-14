@@ -13,6 +13,7 @@
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_utils.h"
 #include "tinkergnome.h"
+#include "machinesettings.h"
 
 #define PREHEAT_FLAG(n) (lcd_cache[2*LCD_CACHE_COUNT+n])
 
@@ -148,7 +149,7 @@ static void start_material_change()
     minProgress = 0;
     char buffer[32] = {0};
     enquecommand_P(PSTR("G28 X0 Y0"));
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
     enquecommand(buffer);
     menu.replace_menu(menu_t(lcd_menu_material_main_return));
     menu.add_menu(menu_t(lcd_menu_change_material_preheat));
@@ -599,7 +600,7 @@ static void init_preheat()
 #if TEMP_SENSOR_BED != 0
     target_temperature_bed = 0;
 #endif
-    for(uint8_t e=0; e<EXTRUDERS; e++)
+    for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
         PREHEAT_FLAG(e+1) = 0;
         target_temperature[e] = 0;//material[e].temperature;

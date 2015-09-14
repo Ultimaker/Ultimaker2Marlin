@@ -6,6 +6,7 @@
 #include "temperature.h"
 #include "lifetime_stats.h"
 #include "ConfigurationStore.h"
+#include "machinesettings.h"
 #include "UltiLCD2_low_lib.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2.h"
@@ -2975,7 +2976,7 @@ static void lcd_extrude_headtofront()
     lcd_lib_keyclick();
     // move to center front
     char buffer[32] = {0};
-    sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+    sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
 
     enquecommand_P(PSTR("G28 X0 Y0"));
     enquecommand(buffer);

@@ -10,6 +10,7 @@
 #include "cardreader.h"
 #include "lifetime_stats.h"
 #include "ConfigurationStore.h"
+#include "machinesettings.h"
 #include "temperature.h"
 #include "pins.h"
 #include "tinkergnome.h"
@@ -307,7 +308,7 @@ void lcd_menu_maintenance_advanced()
             char buffer[32] = {0};
             active_extruder = 0;
             enquecommand_P(PSTR("G28 X0 Y0"));
-            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
             enquecommand(buffer);
             menu.add_menu(menu_t(lcd_menu_maintenance_advanced_return));
             menu.add_menu(menu_t(lcd_menu_insert_material_preheat));
@@ -318,7 +319,7 @@ void lcd_menu_maintenance_advanced()
             char buffer[32] = {0};
             active_extruder = 1;
             enquecommand_P(PSTR("G28 X0 Y0"));
-            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2 + int(min_pos[X_AXIS]), int(min_pos[Y_AXIS])+5);
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
             enquecommand(buffer);
             menu.add_menu(menu_t(lcd_menu_maintenance_advanced_return));
             menu.add_menu(menu_t(lcd_menu_insert_material_preheat));
