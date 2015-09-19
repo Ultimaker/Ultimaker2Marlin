@@ -15,6 +15,9 @@
 #include "pins.h"
 #include "tinkergnome.h"
 
+#define RETRACT_SETTING(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
+
+
 //static void lcd_menu_maintenance_advanced();
 static void lcd_menu_maintenance_advanced_heatup();
 static void lcd_menu_maintenance_led();
@@ -567,17 +570,15 @@ static void lcd_menu_maintenance_retraction()
     {
         if (IS_SELECTED_SCROLL(0))
         {
-            // store settings
-            float length;
-            float speed;
-            int offset = 146;
-            Config_Read(offset, &length);
-            Config_Read(offset, &speed);
-            if (NEQUALF(length, retract_length) || NEQUALF(speed, retract_feedrate))
+            // store settings only if any value has changed
+            float length = retract_length - RETRACT_SETTING(0);
+            float speed  = retract_feedrate - RETRACT_SETTING(1);
+            if ((fabs(length) > 0.001f) || (fabs(speed) > 0.001f))
             {
                 Config_StoreSettings();
             }
-            if (NEQUALF(end_of_print_retraction, GET_END_RETRACT()))
+            length = end_of_print_retraction - RETRACT_SETTING(2);
+            if (fabs(length) > 0.001f)
             {
                 endofprint_retract_store();
             }
@@ -1005,6 +1006,14 @@ static void lcd_menu_heater_timeout()
     lcd_lib_update_screen();
 }
 
+static void init_retraction_settings()
+{
+    // keep old retraction settings in mind
+    RETRACT_SETTING(0) = retract_length;
+    RETRACT_SETTING(1) = retract_feedrate;
+    RETRACT_SETTING(2) = end_of_print_retraction;
+}
+
 static void lcd_menu_preferences()
 {
     lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 13, lcd_preferences_item, lcd_preferences_details);
@@ -1030,7 +1039,10 @@ static void lcd_menu_preferences()
             menu.add_menu(menu_t(lcd_menu_buildplate_pid));
 #endif
         else if (IS_SELECTED_SCROLL(index++))
+        {
+            init_retraction_settings();
             menu.add_menu(menu_t(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0)));
+        }
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
