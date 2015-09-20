@@ -2469,6 +2469,9 @@ void process_commands()
       }
       #if EXTRUDERS > 1
       if(tmp_extruder != active_extruder) {
+        // finish moves
+        st_synchronize();
+
         // Save current position to return to after applying extruder offset
         memcpy(destination, current_position, sizeof(destination));
         // Offset extruder (only by XY)

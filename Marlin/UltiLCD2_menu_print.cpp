@@ -3,6 +3,7 @@
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
 #include "Marlin.h"
+#include "language.h"
 #include "cardreader.h"
 #include "temperature.h"
 #include "lifetime_stats.h"
@@ -122,6 +123,7 @@ void doStartPrint()
 
     float priming_z = min(PRIMING_HEIGHT + recover_height, max_pos[Z_AXIS]-PRIMING_HEIGHT);
     uint8_t current_extruder = active_extruder;
+    uint8_t min_extruder = EXTRUDERS;
 
     // zero the extruder position
     current_position[E_AXIS] = 0.0;
@@ -143,6 +145,12 @@ void doStartPrint()
         }
         active_extruder = e;
 
+        // the first used extruder becomes active
+        if (active_extruder < min_extruder)
+        {
+            min_extruder = active_extruder;
+        }
+
         if (!primed)
         {
             // move to priming height
@@ -161,7 +169,7 @@ void doStartPrint()
 
 #if EXTRUDERS > 1
         // for extruders other than the first one, perform end of print retraction
-        if (e > 0)
+        if (e > min_extruder)
         {
             plan_set_e_position((volume_to_filament_length[e] + end_of_print_retraction) / volume_to_filament_length[e]);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, e);
@@ -169,7 +177,21 @@ void doStartPrint()
 #endif
     }
 
-    active_extruder = current_extruder;
+    // the first used extruder becomes active
+    if (min_extruder < EXTRUDERS)
+    {
+        active_extruder = min_extruder;
+        if (active_extruder != current_extruder)
+        {
+            SERIAL_ECHO_START;
+            SERIAL_ECHO(MSG_ACTIVE_EXTRUDER);
+            SERIAL_PROTOCOLLN((int)active_extruder);
+        }
+    }
+    else
+    {
+        active_extruder = current_extruder;
+    }
 
     if (printing_state == PRINT_STATE_START)
     {
