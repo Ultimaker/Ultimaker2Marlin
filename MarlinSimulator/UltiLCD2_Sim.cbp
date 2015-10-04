@@ -37,6 +37,7 @@
 			<Add option="-DF_CPU=16000000" />
 			<Add option="-DEXTRUDERS=1" />
 			<Add option="-DTEMP_SENSOR_1=0" />
+			<Add option="-DFILAMENT_SENSOR_PIN=30" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="../../SDL-1.2.15/include" />
@@ -93,6 +94,8 @@
 		<Unit filename="../Marlin/electronics_test.cpp" />
 		<Unit filename="../Marlin/electronics_test.h" />
 		<Unit filename="../Marlin/fastio.h" />
+		<Unit filename="../Marlin/filament_sensor.cpp" />
+		<Unit filename="../Marlin/filament_sensor.h" />
 		<Unit filename="../Marlin/language.h" />
 		<Unit filename="../Marlin/lifetime_stats.cpp" />
 		<Unit filename="../Marlin/lifetime_stats.h" />

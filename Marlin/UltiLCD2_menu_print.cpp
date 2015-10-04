@@ -7,6 +7,7 @@
 #include "cardreader.h"
 #include "temperature.h"
 #include "lifetime_stats.h"
+#include "filament_sensor.h"
 #include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_print.h"
@@ -628,6 +629,10 @@ static void lcd_menu_print_printing()
     if (card.pause)
     {
         menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
+        if (!checkFilamentSensor())
+        {
+            menu.add_menu(menu_t(lcd_menu_filament_outage, MAIN_MENU_ITEM_POS(0)));
+        }
     }
     else
     {

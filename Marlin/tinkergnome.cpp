@@ -7,6 +7,7 @@
 #include "lifetime_stats.h"
 #include "ConfigurationStore.h"
 #include "machinesettings.h"
+#include "filament_sensor.h"
 #include "UltiLCD2_low_lib.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2.h"
@@ -1288,6 +1289,10 @@ void lcd_menu_printing_tg()
     if (card.pause)
     {
         menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
+        if (!checkFilamentSensor())
+        {
+            menu.add_menu(menu_t(lcd_menu_filament_outage, MAIN_MENU_ITEM_POS(0)));
+        }
     }
     else
     {
@@ -2908,8 +2913,8 @@ void manage_led_timeout()
         {
             if (!ledDimmed)
             {
-                uint16_t version = GET_EXPERT_VERSION()+1;
-                analogWrite(LED_PIN, 255 * min(uint8_t((version>0) ? led_sleep_brightness : 0), led_brightness_level) / 100);
+                // TEST filament sensor pin
+                analogWrite(LED_PIN, 255 * min(led_sleep_brightness, led_brightness_level) / 100);
                 ledDimmed ^= 1;
             }
         }

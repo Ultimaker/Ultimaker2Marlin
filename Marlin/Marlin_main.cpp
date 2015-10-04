@@ -44,6 +44,7 @@
 #include "pins_arduino.h"
 #include "tinkergnome.h"
 #include "machinesettings.h"
+#include "filament_sensor.h"
 
 #if NUM_SERVOS > 0
 #include "Servo.h"
@@ -332,8 +333,8 @@ void enquecommand(const char *cmd)
     SERIAL_ECHOPGM("enqueing \"");
     SERIAL_ECHO(cmdbuffer[bufindw]);
     SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
+    bufindw = (bufindw + 1)%BUFSIZE;
+    ++buflen;
   }
 }
 
@@ -347,8 +348,8 @@ void enquecommand_P(const char *cmd)
     SERIAL_ECHOPGM("enqueing \"");
     SERIAL_ECHO(cmdbuffer[bufindw]);
     SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
+    bufindw = (bufindw + 1)%BUFSIZE;
+    ++buflen;
   }
 }
 
@@ -472,6 +473,7 @@ void setup()
   lifetime_stats_init();
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
+  filament_sensor_init(); // Initialize filament sensor
   watchdog_init();
   st_init();    // Initialize stepper, this enables interrupts!
   setup_photpin();
@@ -2780,6 +2782,7 @@ void controllerFan()
 
 void manage_inactivity()
 {
+  checkFilamentSensor();
   manage_led_timeout();
 
   if(printing_state == PRINT_STATE_RECOVER)
