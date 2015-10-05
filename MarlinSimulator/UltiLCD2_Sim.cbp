@@ -33,11 +33,11 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-D__AVR_ATmega2560__=1" />
-			<Add option="-DARDUINO=106" />
+			<Add option="-DARDUINO=165" />
 			<Add option="-DF_CPU=16000000" />
 			<Add option="-DEXTRUDERS=1" />
 			<Add option="-DTEMP_SENSOR_1=0" />
-			<Add option="-DFILAMENT_SENSOR_PIN=30" />
+			<Add option="-DFILAMENT_SENSOR_PIN=-1" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="../../SDL-1.2.15/include" />
