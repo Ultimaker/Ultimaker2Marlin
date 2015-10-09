@@ -679,14 +679,23 @@ static char* lcd_material_settings_callback(uint8_t nr)
 
 static void lcd_material_settings_details_callback(uint8_t nr)
 {
-    char buffer[10];
+    char buffer[20];
     buffer[0] = '\0';
     if (nr == 0)
     {
         return;
     }else if (nr == 1)
     {
-        int_to_string(material[active_extruder].temperature[0], buffer, PSTR("C "));
+        if (led_glow_dir)
+        {
+            char* c = buffer;
+            for(uint8_t n=0; n<3; n++)
+                c = int_to_string(material[active_extruder].temperature[n], c, PSTR("C "));
+        }else{
+            char* c = buffer;
+            for(uint8_t n=3; n<MATERIAL_TEMPERATURE_COUNT; n++)
+                c = int_to_string(material[active_extruder].temperature[n], c, PSTR("C "));
+        }
 #if TEMP_SENSOR_BED != 0
     }else if (nr == 2)
     {
