@@ -23,7 +23,7 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
 #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
-#define LCD_DETAIL_CACHE_NOZZLE_DIAMETER(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*EXTRUDERS+4*n])
+#define LCD_DETAIL_CACHE_NOZZLE_DIAMETER(n) (*(float*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*EXTRUDERS+4*n])
 
 void doCooldown();//TODO
 static void lcd_menu_print_heatup();
@@ -257,7 +257,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
-                        for(uint8_t n=0;n<8;n++)
+                        for(uint8_t n=0;n<16;n++)
                         {
                             card.fgets(buffer, sizeof(buffer));
                             buffer[sizeof(buffer)-1] = '\0';
@@ -271,10 +271,10 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                                 LCD_DETAIL_CACHE_MATERIAL(1) = atol(buffer + 11);
 #endif
                             else if (strncmp_P(buffer, PSTR(";NOZZLE_DIAMETER:"), 17) == 0)
-                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0) = atof(buffer + 17);
+                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0) = strtod(buffer + 17, NULL);
 #if EXTRUDERS > 1
-                            else if (strncmp_P(buffer, PSTR(";NOZZLE_DIAMETER2:"), 17) == 0)
-                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(1) = atof(buffer + 18);
+                            else if (strncmp_P(buffer, PSTR(";NOZZLE_DIAMETER2:"), 18) == 0)
+                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(1) = strtod(buffer + 18, NULL);
 #endif
                         }
                     }
@@ -291,26 +291,32 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     char* c = buffer;
                     if (led_glow_dir)
                     {
-                        strcpy_P(c, PSTR("Time: ")); c += 6;
-                        c = int_to_time_string(LCD_DETAIL_CACHE_TIME(), c);
-                    }else{
-                        strcpy_P(c, PSTR("Material: ")); c += 10;
-                        float length = float(LCD_DETAIL_CACHE_MATERIAL(0)) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
-                        if (length < 10000)
-                            c = float_to_string(length / 1000.0, c, PSTR("m"));
-                        else
-                            c = int_to_string(length / 1000.0, c, PSTR("m"));
-#if EXTRUDERS > 1
-                        if (LCD_DETAIL_CACHE_MATERIAL(1))
+                        if (led_glow < 63)
                         {
-                            *c++ = '/';
-                            float length = float(LCD_DETAIL_CACHE_MATERIAL(1)) / (M_PI * (material[1].diameter / 2.0) * (material[1].diameter / 2.0));
+                            strcpy_P(c, PSTR("Time: ")); c += 6;
+                            c = int_to_time_string(LCD_DETAIL_CACHE_TIME(), c);
+                        }else{
+                            strcpy_P(c, PSTR("Material: ")); c += 10;
+                            float length = float(LCD_DETAIL_CACHE_MATERIAL(0)) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
                             if (length < 10000)
                                 c = float_to_string(length / 1000.0, c, PSTR("m"));
                             else
                                 c = int_to_string(length / 1000.0, c, PSTR("m"));
-                        }
+#if EXTRUDERS > 1
+                            if (LCD_DETAIL_CACHE_MATERIAL(1))
+                            {
+                                *c++ = '/';
+                                float length = float(LCD_DETAIL_CACHE_MATERIAL(1)) / (M_PI * (material[1].diameter / 2.0) * (material[1].diameter / 2.0));
+                                if (length < 10000)
+                                    c = float_to_string(length / 1000.0, c, PSTR("m"));
+                                else
+                                    c = int_to_string(length / 1000.0, c, PSTR("m"));
+                            }
 #endif
+                        }
+                    }else{
+                        strcpy_P(c, PSTR("Nozzle: ")); c += 8;
+                        c = float_to_string(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0), c);
                     }
                     lcd_lib_draw_string(3, 53, buffer);
                 }else{
