@@ -23,6 +23,7 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
 #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
+#define LCD_DETAIL_CACHE_NOZZLE_DIAMETER(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*EXTRUDERS+4*n])
 
 void doCooldown();//TODO
 static void lcd_menu_print_heatup();
@@ -249,7 +250,10 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     LCD_DETAIL_CACHE_ID() = nr;
                     LCD_DETAIL_CACHE_TIME() = 0;
                     for(uint8_t e=0; e<EXTRUDERS; e++)
+                    {
                         LCD_DETAIL_CACHE_MATERIAL(e) = 0;
+                        LCD_DETAIL_CACHE_NOZZLE_DIAMETER(e) = 0.4;
+                    }
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
@@ -265,6 +269,12 @@ void lcd_sd_menu_details_callback(uint8_t nr)
 #if EXTRUDERS > 1
                             else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
                                 LCD_DETAIL_CACHE_MATERIAL(1) = atol(buffer + 11);
+#endif
+                            else if (strncmp_P(buffer, PSTR(";NOZZLE_DIAMETER:"), 17) == 0)
+                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0) = atof(buffer + 17);
+#if EXTRUDERS > 1
+                            else if (strncmp_P(buffer, PSTR(";NOZZLE_DIAMETER2:"), 17) == 0)
+                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(1) = atof(buffer + 18);
 #endif
                         }
                     }
@@ -462,7 +472,7 @@ static void lcd_menu_print_heatup()
         {
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
-            target_temperature[e] = material[e].temperature;
+            target_temperature[e] = material[e].temperature[nozzleSizeToTemperatureIndex(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(e))];
         }
 
         if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
@@ -516,7 +526,7 @@ static void lcd_menu_print_heatup()
 static void lcd_change_to_menu_change_material_return()
 {
     plan_set_e_position(current_position[E_AXIS]);
-    setTargetHotend(material[active_extruder].temperature, active_extruder);
+    setTargetHotend(material[active_extruder].temperature[nozzleSizeToTemperatureIndex(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(active_extruder))], active_extruder);
     currentMenu = lcd_menu_print_printing;
 }
 

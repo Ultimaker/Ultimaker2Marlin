@@ -188,7 +188,7 @@ static void lcd_menu_maintenance_advanced()
         {
             set_extrude_min_temp(0);
             active_extruder = 0;
-            target_temperature[active_extruder] = material[active_extruder].temperature;
+            target_temperature[active_extruder] = material[active_extruder].temperature[0];
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
 #if EXTRUDERS > 1
@@ -196,7 +196,7 @@ static void lcd_menu_maintenance_advanced()
         {
             set_extrude_min_temp(0);
             active_extruder = 1;
-            target_temperature[active_extruder] = material[active_extruder].temperature;
+            target_temperature[active_extruder] = material[active_extruder].temperature[0];
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
 #endif
