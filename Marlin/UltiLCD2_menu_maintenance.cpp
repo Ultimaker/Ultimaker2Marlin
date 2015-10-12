@@ -15,14 +15,9 @@
 #include "pins.h"
 #include "tinkergnome.h"
 
-#define RETRACT_SETTING(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-
-
-//static void lcd_menu_maintenance_advanced();
 static void lcd_menu_maintenance_advanced_heatup();
 static void lcd_menu_maintenance_led();
 static void lcd_menu_maintenance_extrude();
-static void lcd_menu_maintenance_retraction();
 static void lcd_menu_advanced_version();
 static void lcd_menu_advanced_stats();
 static void lcd_menu_maintenance_motion();
@@ -532,67 +527,6 @@ static void lcd_menu_advanced_factory_reset()
     lcd_lib_update_screen();
 }
 
-static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
-{
-    char buffer[32] = {0};
-    if (nr == 0)
-        strcpy_P(buffer, PSTR("< RETURN"));
-    else if (nr == 1)
-        strcpy_P(buffer, PSTR("Retract length"));
-    else if (nr == 2)
-        strcpy_P(buffer, PSTR("Retract speed"));
-    else if (nr == 3)
-        strcpy_P(buffer, PSTR("End of print length"));
-    else
-        strcpy_P(buffer, PSTR("???"));
-
-    lcd_draw_scroll_entry(offsetY, buffer, flags);
-}
-
-static void lcd_retraction_details(uint8_t nr)
-{
-    char buffer[16] = {0};
-    if (nr == 0)
-        return;
-    else if(nr == 1)
-        float_to_string(retract_length, buffer, PSTR("mm"));
-    else if(nr == 2)
-        int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
-    else if(nr == 3)
-        float_to_string(end_of_print_retraction, buffer, PSTR("mm"));
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
-}
-
-static void lcd_menu_maintenance_retraction()
-{
-    lcd_scroll_menu(PSTR("RETRACTION"), 4, lcd_retraction_item, lcd_retraction_details);
-    if (lcd_lib_button_pressed)
-    {
-        if (IS_SELECTED_SCROLL(0))
-        {
-            // store settings only if any value has changed
-            float length = retract_length - RETRACT_SETTING(0);
-            float speed  = retract_feedrate - RETRACT_SETTING(1);
-            if ((fabs(length) > 0.001f) || (fabs(speed) > 0.001f))
-            {
-                Config_StoreSettings();
-            }
-            length = end_of_print_retraction - RETRACT_SETTING(2);
-            if (fabs(length) > 0.001f)
-            {
-                endofprint_retract_store();
-            }
-            lcd_change_to_previous_menu();
-        }
-        else if (IS_SELECTED_SCROLL(1))
-            LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
-        else if (IS_SELECTED_SCROLL(2))
-            LCD_EDIT_SETTING_SPEED(retract_feedrate, "Retract speed", "mm/sec", 0, max_feedrate[E_AXIS] * 60);
-        else if (IS_SELECTED_SCROLL(3))
-            LCD_EDIT_SETTING_FLOAT001(end_of_print_retraction, "End of print retract", "mm", 0, 50);
-    }
-}
-
 static void lcd_motion_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
     char buffer[32] = {0};
@@ -614,8 +548,10 @@ static void lcd_motion_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("Current Z"));
     else if (nr == 8)
         strcpy_P(buffer, PSTR("Current E"));
+    else if (nr == 9)
+        strcpy_P(buffer, PSTR("Axis steps/mm"));
     else
-        strcpy_P(buffer, PSTR("???"));
+       strcpy_P(buffer, PSTR("???"));
 
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
@@ -646,7 +582,7 @@ static void lcd_motion_details(uint8_t nr)
 
 static void lcd_menu_maintenance_motion()
 {
-    lcd_scroll_menu(PSTR("MOTION"), 9, lcd_motion_item, lcd_motion_details);
+    lcd_scroll_menu(PSTR("MOTION"), 10, lcd_motion_item, lcd_motion_details);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -673,6 +609,8 @@ static void lcd_menu_maintenance_motion()
             LCD_EDIT_SETTING(motor_current_setting[1], "Current Z", "mA", 0, 1300);
         else if (IS_SELECTED_SCROLL(8))
             LCD_EDIT_SETTING(motor_current_setting[2], "Current E", "mA", 0, 1300);
+        else if (IS_SELECTED_SCROLL(9))
+            menu.add_menu(menu_t(init_steps_menu, lcd_menu_steps, NULL, MAIN_MENU_ITEM_POS(1)));
     }
 }
 
@@ -1006,14 +944,6 @@ static void lcd_menu_heater_timeout()
     lcd_lib_update_screen();
 }
 
-static void init_retraction_settings()
-{
-    // keep old retraction settings in mind
-    RETRACT_SETTING(0) = retract_length;
-    RETRACT_SETTING(1) = retract_feedrate;
-    RETRACT_SETTING(2) = end_of_print_retraction;
-}
-
 static void lcd_menu_preferences()
 {
     lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 13, lcd_preferences_item, lcd_preferences_details);
@@ -1039,10 +969,7 @@ static void lcd_menu_preferences()
             menu.add_menu(menu_t(lcd_menu_buildplate_pid));
 #endif
         else if (IS_SELECTED_SCROLL(index++))
-        {
-            init_retraction_settings();
-            menu.add_menu(menu_t(lcd_menu_maintenance_retraction, SCROLL_MENU_ITEM_POS(0)));
-        }
+            menu.add_menu(menu_t(init_retract_menu, lcd_menu_retraction, NULL, MAIN_MENU_ITEM_POS(1)));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))

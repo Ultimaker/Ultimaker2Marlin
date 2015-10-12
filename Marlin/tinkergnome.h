@@ -89,7 +89,11 @@ void recover_start_print(const char *cmd);
 void lcd_menu_recover_init();
 void lcd_menu_expert_recover();
 void lcd_menu_axeslimit();
+void lcd_menu_steps();
+void lcd_menu_retraction();
 void init_target_limits();
+void init_steps_menu();
+void init_retract_menu();
 void reset_printing_state();
 void endofprint_retract_store();
 
