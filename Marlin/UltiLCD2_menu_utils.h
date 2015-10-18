@@ -1,5 +1,5 @@
-#ifndef ULTI_LCD2_MENU_UTILS_H
-#define ULTI_LCD2_MENU_UTILS_H
+#ifndef ULTILCD2_MENU_UTILS_H
+#define ULTILCD2_MENU_UTILS_H
 
 #include "UltiLCD2_low_lib.h"
 #include "UltiLCD2_menu_print.h"
@@ -34,6 +34,8 @@
 #define IS_SELECTED_MAIN(n) ((n) == SELECTED_MAIN_MENU_ITEM())
 #define IS_SELECTED_SCROLL(n) ((n) == SELECTED_SCROLL_MENU_ITEM())
 
+#define UNIT_FLOW "mm\x1D/s"
+#define UNIT_SPEED "mm/s"
 
 // --------------------------------------------------------------------------
 // menu stack handling
@@ -151,5 +153,20 @@ FORCE_INLINE void lcd_return_to_main_menu() { menu.return_to_main(); }
 FORCE_INLINE void lcd_remove_menu() { menu.return_to_previous(false); }
 FORCE_INLINE void lcd_select_first_submenu() { menu.set_selection(0); }
 FORCE_INLINE void lcd_reset_submenu() { menu.reset_submenu(); }
+
+bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max);
+void lcd_tune_speed(float &value, float _min, float _max);
+
+void lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max);
+void lcd_tune_value(int &value, int _min, int _max);
+bool lcd_tune_value(float &value, float _min, float _max, float _step);
+void lcd_tune_value(uint16_t &value, uint16_t _min, uint16_t _max);
+
+char* float_to_string1(float f, char* temp_buffer, const char* p_postfix);
+char* int_to_time_min(unsigned long i, char* temp_buffer);
+
+void lcd_progressline(uint8_t progress);
+void lcd_lib_draw_bargraph( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, float value );
+void lcd_lib_draw_heater(uint8_t x, uint8_t y, uint8_t heaterPower);
 
 #endif

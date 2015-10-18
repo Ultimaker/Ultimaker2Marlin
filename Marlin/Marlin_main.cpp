@@ -45,6 +45,7 @@
 #include "tinkergnome.h"
 #include "machinesettings.h"
 #include "filament_sensor.h"
+#include "preferences.h"
 
 #if NUM_SERVOS > 0
 #include "Servo.h"
@@ -186,26 +187,6 @@ float extruder_offset[2][EXTRUDERS] = {
 uint8_t active_extruder = 0;
 uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
-
-//struct machinesettings {
-//  machinesettings() : has_saved_settings(0) {}
-//  int feedmultiply;
-//  int HotendTemperature[EXTRUDERS];
-//  int BedTemperature;
-//  uint8_t fanSpeed;
-//  int extrudemultiply[EXTRUDERS];
-//  long max_acceleration_units_per_sq_second[NUM_AXIS];
-//  float max_feedrate[NUM_AXIS];
-//  float acceleration;
-//  float minimumfeedrate;
-//  float mintravelfeedrate;
-//  long minsegmenttime;
-//  float max_xy_jerk;
-//  float max_z_jerk;
-//  float max_e_jerk;
-//  uint8_t has_saved_settings;
-//};
-//machinesettings machinesettings_tempsave[10];
 
 MachineSettings machinesettings;
 
@@ -2459,6 +2440,10 @@ void process_commands()
     else {
       #if EXTRUDERS > 1
       boolean make_move = false;
+      if (swapExtruders() && (tmp_extruder < 2))
+      {
+        tmp_extruder ^= 0x01;
+      }
       #endif
       if(code_seen('F')) {
         #if EXTRUDERS > 1
@@ -2950,6 +2935,12 @@ bool setTargetedHotend(int code){
   tmp_extruder = active_extruder;
   if(code_seen('T')) {
     tmp_extruder = code_value();
+    #if EXTRUDERS > 1
+    if (swapExtruders() && (tmp_extruder < 2))
+    {
+      tmp_extruder ^= 0x01;
+    }
+    #endif // EXTRUDERS
     if(tmp_extruder >= EXTRUDERS) {
       SERIAL_ECHO_START;
       switch(code){

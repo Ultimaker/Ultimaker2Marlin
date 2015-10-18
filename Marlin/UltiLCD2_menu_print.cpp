@@ -14,6 +14,8 @@
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_maintenance.h"
 #include "UltiLCD2_menu_utils.h"
+#include "UltiLCD2_menu_prefs.h"
+#include "preferences.h"
 #include "tinkergnome.h"
 
 uint8_t lcd_cache[LCD_CACHE_SIZE];
@@ -123,8 +125,6 @@ void doStartPrint()
     }
 
     float priming_z = min(PRIMING_HEIGHT + recover_height, max_pos[Z_AXIS]-PRIMING_HEIGHT);
-    uint8_t current_extruder = active_extruder;
-    uint8_t min_extruder = EXTRUDERS;
 
     // zero the extruder position
     current_position[E_AXIS] = 0.0;
@@ -137,26 +137,24 @@ void doStartPrint()
 
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
-        if (!LCD_DETAIL_CACHE_MATERIAL(e))
-        {
-        	// don't prime the extruder if it isn't used in the (Ulti)gcode
-        	// traditional gcode files typically won't have the Material lines at start, so we won't prime for those
-        	// Also, on dual/multi extrusion files, only prime the extruders that are used in the gcode-file.
-            continue;
-        }
-        active_extruder = e;
+        // don't prime the extruder if it isn't used in the (Ulti)gcode
+        // traditional gcode files typically won't have the Material lines at start, so we won't prime for those
+        // Also, on dual/multi extrusion files, only prime the extruders that are used in the gcode-file.
 
-        // the first used extruder becomes active
-        if (active_extruder < min_extruder)
-        {
-            min_extruder = active_extruder;
-        }
+#if EXTRUDERS == 2
+        uint8_t index = (swapExtruders() ? e ^ 0x01 : e);
+        if (!LCD_DETAIL_CACHE_MATERIAL(index))
+            continue;
+#else
+        if (!LCD_DETAIL_CACHE_MATERIAL(e))
+            continue;
+#endif
 
         if (!primed)
         {
             // move to priming height
             current_position[Z_AXIS] = priming_z;
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], active_extruder);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], e);
             // note that we have primed, so that we know to de-prime at the end
             primed = true;
         }
@@ -170,28 +168,12 @@ void doStartPrint()
 
 #if EXTRUDERS > 1
         // for extruders other than the first one, perform end of print retraction
-        if (e > min_extruder)
+        if (e != active_extruder)
         {
             plan_set_e_position((volume_to_filament_length[e] + end_of_print_retraction) / volume_to_filament_length[e]);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, e);
         }
 #endif
-    }
-
-    // the first used extruder becomes active
-    if (min_extruder < EXTRUDERS)
-    {
-        active_extruder = min_extruder;
-        if (active_extruder != current_extruder)
-        {
-            SERIAL_ECHO_START;
-            SERIAL_ECHO(MSG_ACTIVE_EXTRUDER);
-            SERIAL_PROTOCOLLN((int)active_extruder);
-        }
-    }
-    else
-    {
-        active_extruder = current_extruder;
     }
 
     if (printing_state == PRINT_STATE_START)
@@ -224,7 +206,11 @@ static void userStartPrint()
     else
     {
         recover_height = 0.0f;
+        #if EXTRUDERS > 1
+        active_extruder = (swapExtruders() ? 1 : 0);
+        #else
         active_extruder = 0;
+        #endif // EXTRUDERS
         menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
         doStartPrint();
     }
@@ -326,10 +312,14 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
                                 LCD_DETAIL_CACHE_TIME() = strtol(buffer + 6, 0, 0);
                             else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
+                            {
                                 LCD_DETAIL_CACHE_MATERIAL(0) = strtol(buffer + 10, 0, 10);
+                            }
 #if EXTRUDERS > 1
                             else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
+                            {
                                 LCD_DETAIL_CACHE_MATERIAL(1) = strtol(buffer + 11, 0, 10);
+                            }
 #endif
                         }
                     }
@@ -347,7 +337,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     if (led_glow_dir)
                     {
                         strcpy_P(c, PSTR("Time ")); c += 5;
-                        c = int_to_time_string_tg(LCD_DETAIL_CACHE_TIME(), c);
+                        c = int_to_time_min(LCD_DETAIL_CACHE_TIME(), c);
                         if (LCD_DETAIL_CACHE_TIME() < 60)
                         {
                                 strcat_P(c, PSTR("min"));
@@ -360,16 +350,16 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                         strcpy_P(c, PSTR("Material ")); c += 9;
                         float length = float(LCD_DETAIL_CACHE_MATERIAL(0)) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
                         if (length < 10000)
-                            c = float_to_string(length / 1000.0, c, PSTR("m"));
+                            c = float_to_string2(length / 1000.0, c, PSTR("m"));
                         else
                             c = int_to_string(length / 1000.0, c, PSTR("m"));
 #if EXTRUDERS > 1
                         if (LCD_DETAIL_CACHE_MATERIAL(1))
                         {
                             *c++ = '/';
-                            float length = float(LCD_DETAIL_CACHE_MATERIAL(1)) / (M_PI * (material[1].diameter / 2.0) * (material[1].diameter / 2.0));
+                            length = float(LCD_DETAIL_CACHE_MATERIAL(1)) / (M_PI * (material[1].diameter / 2.0) * (material[1].diameter / 2.0));
                             if (length < 10000)
-                                c = float_to_string(length / 1000.0, c, PSTR("m"));
+                                c = float_to_string2(length / 1000.0, c, PSTR("m"));
                             else
                                 c = int_to_string(length / 1000.0, c, PSTR("m"));
                         }
@@ -446,7 +436,11 @@ void lcd_menu_print_select()
             if (!card.filenameIsDir)
             {
                 //Start print
+                #if EXTRUDERS > 1
+                active_extruder = (swapExtruders() ? 1 : 0);
+                #else
                 active_extruder = 0;
+                #endif // EXTRUDERS
                 card.openFile(card.filename, true);
                 if (card.isFileOpen() && !is_command_queued())
                 {
@@ -482,14 +476,22 @@ void lcd_menu_print_select()
                         target_temperature_bed = 0;
 #endif
                         fanSpeedPercent = 0;
-                        for(uint8_t e=0; e<EXTRUDERS; e++)
+                        for(uint8_t e=0; e<EXTRUDERS; ++e)
                         {
 //                            SERIAL_ECHOPGM("MATERIAL_");
 //                            SERIAL_ECHO(e+1);
 //                            SERIAL_ECHOPGM(": ");
 //                            SERIAL_ECHOLN(LCD_DETAIL_CACHE_MATERIAL(e));
+
+#if EXTRUDERS == 2
+                            uint8_t index = (swapExtruders() ? e^0x01 : e);
+                            if (LCD_DETAIL_CACHE_MATERIAL(index) < 1)
+                                continue;
+#else
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
                                 continue;
+#endif
+
                             target_temperature[e] = 0;//material[e].temperature;
 #if TEMP_SENSOR_BED != 0
                             target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
@@ -506,7 +508,11 @@ void lcd_menu_print_select()
                         else
                         {
                             recover_height = 0.0f;
+                            #if EXTRUDERS > 1
+                            active_extruder = (swapExtruders() ? 1 : 0);
+                            #else
                             active_extruder = 0;
+                            #endif // EXTRUDERS
                             // move to heatup position
                             char buffer[32] = {0};
                             sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
@@ -554,10 +560,16 @@ void lcd_menu_print_heatup()
     if (current_temperature_bed > target_temperature_bed - TEMP_WINDOW*2)
     {
 #endif
-        for(uint8_t e=0; e<EXTRUDERS; e++)
+        for(uint8_t e=0; e<EXTRUDERS; ++e)
         {
+#if EXTRUDERS == 2
+            uint8_t index = (swapExtruders() ? e ^ 0x01 : e);
+            if (LCD_DETAIL_CACHE_MATERIAL(index) < 1 || target_temperature[e] > 0)
+                continue;
+#else
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
+#endif
             target_temperature[e] = material[e].temperature;
             // printing_state = PRINT_STATE_START;
         }
@@ -589,8 +601,14 @@ void lcd_menu_print_heatup()
     uint8_t progress = 125;
     for(uint8_t e=0; e<EXTRUDERS; e++)
     {
+#if EXTRUDERS == 2
+        uint8_t index = (swapExtruders() ? e ^ 0x01 : e);
+        if (((printing_state != PRINT_STATE_RECOVER) && (LCD_DETAIL_CACHE_MATERIAL(index) < 1)) || (target_temperature[e] < 1))
+            continue;
+#else
         if (((printing_state != PRINT_STATE_RECOVER) && (LCD_DETAIL_CACHE_MATERIAL(e) < 1)) || (target_temperature[e] < 1))
             continue;
+#endif
         if (current_temperature[e] > 20)
             progress = min(progress, (current_temperature[e] - 20) * 125 / (target_temperature[e] - 20 - TEMP_WINDOW));
         else
@@ -780,7 +798,7 @@ void lcd_menu_print_ready()
 
         char *c = buffer;
         strcpy_P(c, PSTR("Time ")); c += 5;
-        c = int_to_time_string_tg(t, c);
+        c = int_to_time_min(t, c);
         if (t < 60)
         {
                 strcat_P(c, PSTR("min"));
@@ -836,7 +854,7 @@ static void lcd_menu_print_ready_cooled_down()
 
     char *c = buffer;
     strcpy_P(c, PSTR("Time ")); c += 5;
-    c = int_to_time_string_tg(t, c);
+    c = int_to_time_min(t, c);
     if (t < 60)
     {
             strcat_P(c, PSTR("min"));
@@ -1069,11 +1087,11 @@ static void lcd_retraction_details(uint8_t nr)
 {
     char buffer[32] = {0};
     if(nr == 1)
-        float_to_string(retract_length, buffer, PSTR("mm"));
+        float_to_string2(retract_length, buffer, PSTR("mm"));
     else if(nr == 2)
         int_to_string(retract_feedrate / 60 + 0.5, buffer, PSTR("mm/sec"));
     else if(nr == 3)
-        float_to_string(end_of_print_retraction, buffer, PSTR("mm"));
+        float_to_string2(end_of_print_retraction, buffer, PSTR("mm"));
 #if EXTRUDERS > 1
     else if(nr == 4)
         int_to_string(extruder_swap_retract_length, buffer, PSTR("mm"));

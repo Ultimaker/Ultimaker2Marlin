@@ -13,6 +13,7 @@
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
+#include "preferences.h"
 #include "tinkergnome.h"
 
 #define SERIAL_CONTROL_TIMEOUT 5000
@@ -54,6 +55,10 @@ void lcd_init()
 
     glow_millis = millis() + 750;
     led_glow = led_glow_dir = 0;
+
+#if EXTRUDERS > 1
+    active_extruder = (swapExtruders() ? 1 : 0);
+#endif // EXTRUDERS
 
     // initialize menu stack and show start animation
     *lcd_status_message = 0;

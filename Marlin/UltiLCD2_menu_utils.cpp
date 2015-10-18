@@ -405,4 +405,173 @@ void LCDMenu::set_active(menuItemCallback_t getMenuItem, int8_t index)
     }
 }
 
+bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max)
+{
+    int temp_value = int((float(value)*_max/255)+0.5);
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
+    {
+        lcd_lib_tick();
+        temp_value += lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
+        temp_value = constrain(temp_value, _min, _max);
+        value = uint8_t((float(temp_value)*255/_max)+0.5);
+        lcd_lib_encoder_pos = 0;
+        return true;
+    }
+    return false;
+}
+
+void lcd_tune_speed(float &value, float _min, float _max)
+{
+    if (lcd_lib_encoder_pos != 0)
+    {
+        lcd_lib_tick();
+        value = constrain(value + (lcd_lib_encoder_pos * 60), _min, _max);
+        lcd_lib_encoder_pos = 0;
+    }
+}
+
+void lcd_tune_value(int &value, int _min, int _max)
+{
+    if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
+    {
+        lcd_lib_tick();
+        value = constrain(value + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM), _min, _max);
+        lcd_lib_encoder_pos = 0;
+    }
+}
+
+void lcd_tune_value(uint16_t &value, uint16_t _min, uint16_t _max)
+{
+    int iValue = value;
+    lcd_tune_value(iValue, _min, _max);
+    value = iValue;
+}
+
+void lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max)
+{
+    int iValue = value;
+    lcd_tune_value(iValue, _min, _max);
+    value = iValue;
+}
+
+bool lcd_tune_value(float &value, float _min, float _max, float _step)
+{
+    if (lcd_lib_encoder_pos != 0)
+    {
+        lcd_lib_tick();
+        value = constrain(round((value + (lcd_lib_encoder_pos * _step))/_step)*_step, _min, _max);
+        lcd_lib_encoder_pos = 0;
+        return true;
+    }
+    return false;
+}
+
+char* float_to_string1(float f, char* temp_buffer, const char* p_postfix)
+{
+    int32_t i = (f*10.0) + 0.5;
+    char* c = temp_buffer;
+    if (i < 0)
+    {
+        *c++ = '-';
+        i = -i;
+    }
+    if (i >= 1000)
+        *c++ = ((i/1000)%10)+'0';
+    if (i >= 100)
+        *c++ = ((i/100)%10)+'0';
+    *c++ = ((i/10)%10)+'0';
+    *c++ = '.';
+    *c++ = (i%10)+'0';
+    if (p_postfix)
+    {
+        strcpy_P(c, p_postfix);
+        c += strlen_P(p_postfix);
+    }
+    *c = '\0';
+    return c;
+}
+
+char* int_to_time_min(unsigned long i, char* temp_buffer)
+{
+    char* c = temp_buffer;
+    uint16_t hours = constrain(i / 60 / 60, 0, 999);
+    uint8_t mins = (i / 60) % 60;
+    uint8_t secs = i % 60;
+
+    if (!hours & !mins) {
+        *c++ = '0';
+        *c++ = '0';
+        *c++ = ':';
+        *c++ = '0' + secs / 10;
+        *c++ = '0' + secs % 10;
+    }else{
+        if (hours > 99)
+            *c++ = '0' + hours / 100;
+        *c++ = '0' + (hours / 10) % 10;
+        *c++ = '0' + hours % 10;
+        *c++ = ':';
+        *c++ = '0' + mins / 10;
+        *c++ = '0' + mins % 10;
+//        *c++ = 'h';
+    }
+
+    *c = '\0';
+    return c;
+}
+
+void lcd_progressline(uint8_t progress)
+{
+    progress = constrain(progress, 0, 124);
+    if (progress)
+    {
+        lcd_lib_set(LCD_GFX_WIDTH-2, min(LCD_GFX_HEIGHT-1, LCD_GFX_HEIGHT - (progress*LCD_GFX_HEIGHT/124)), LCD_GFX_WIDTH-1, LCD_GFX_HEIGHT-1);
+        lcd_lib_set(0, min(LCD_GFX_HEIGHT-1, LCD_GFX_HEIGHT - (progress*LCD_GFX_HEIGHT/124)), 1, LCD_GFX_HEIGHT-1);
+    }
+}
+
+// draws a bargraph
+void lcd_lib_draw_bargraph( uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, float value )
+{
+	lcd_lib_draw_box(x0, y0, x1, y1);
+	value = constrain(value, 0.0, 1.0);
+    // draw scale
+    float segment = float(abs(x1-x0))/10;
+	uint8_t ymin = y0+1;
+	uint8_t ymax = y0+(y1-y0)/2-1;
+    for (uint8_t i=1; i<10; ++i)
+    {
+        lcd_lib_draw_vline(x0 + i*segment, ymin, ymax);
+    }
+
+    // draw graph
+	if (value<0.01) return;
+	uint8_t xmax = value*abs(x1-x0)+x0+0.5;
+	ymin = ymax+2;
+	ymax = y1-1;
+    for (uint8_t xpos=x0+1; xpos<xmax; xpos+=3)
+    {
+        lcd_lib_set (xpos, ymin, xpos+1, ymax);
+    }
+}
+
+
+void lcd_lib_draw_heater(uint8_t x, uint8_t y, uint8_t heaterPower)
+{
+    // draw frame
+    lcd_lib_draw_gfx(x, y, thermometerGfx);
+    if (heaterPower)
+    {
+        // draw power beam
+        uint8_t beamHeight = min(LCD_CHAR_HEIGHT-2, (heaterPower*(LCD_CHAR_HEIGHT-2)/128)+1);
+        lcd_lib_draw_vline(x+2, y+LCD_CHAR_HEIGHT-beamHeight-1, y+LCD_CHAR_HEIGHT-1);
+
+        beamHeight = constrain(beamHeight, 0, 2);
+        if (beamHeight>1)
+        {
+            lcd_lib_draw_vline(x+1, y+LCD_CHAR_HEIGHT-beamHeight-1, y+LCD_CHAR_HEIGHT-1);
+            lcd_lib_draw_vline(x+3, y+LCD_CHAR_HEIGHT-beamHeight-1, y+LCD_CHAR_HEIGHT-1);
+        }
+    }
+}
+
 #endif

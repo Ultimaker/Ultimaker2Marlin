@@ -1,0 +1,77 @@
+#ifndef PREFERENCES_H
+#define PREFERENCES_H
+
+#define EEPROM_UI_MODE_OFFSET 0x401
+#define EEPROM_LED_TIMEOUT_OFFSET 0x402
+#define EEPROM_LCD_TIMEOUT_OFFSET 0x404
+#define EEPROM_LCD_CONTRAST_OFFSET 0x406
+#define EEPROM_EXPERT_VERSION_OFFSET 0x407
+#define EEPROM_SLEEP_BRIGHTNESS_OFFSET 0x409
+#define EEPROM_SLEEP_CONTRAST_OFFSET 0x40A
+#define EEPROM_SLEEP_GLOW_OFFSET 0x40B
+#define EEPROM_PID_FLAGS 0x40C
+#define EEPROM_HEATER_TIMEOUT 0x40D
+#define EEPROM_AXIS_LIMITS 0x40E  // 24 Byte
+#define EEPROM_END_RETRACT 0x426  // 4 Byte
+
+#define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
+#define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
+#define GET_LED_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LED_TIMEOUT_OFFSET))
+#define SET_LED_TIMEOUT(n) do { eeprom_write_word((uint16_t*)EEPROM_LED_TIMEOUT_OFFSET, n); } while(0)
+#define GET_LCD_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET))
+#define SET_LCD_TIMEOUT(n) do { eeprom_write_word((uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET, n); } while(0)
+#define GET_LCD_CONTRAST() (eeprom_read_byte((const uint8_t*)EEPROM_LCD_CONTRAST_OFFSET))
+#define SET_LCD_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_LCD_CONTRAST_OFFSET, n); } while(0)
+#define GET_EXPERT_VERSION() (eeprom_read_word((const uint16_t*)EEPROM_EXPERT_VERSION_OFFSET))
+#define SET_EXPERT_VERSION(n) do { eeprom_write_word((uint16_t*)EEPROM_EXPERT_VERSION_OFFSET, n); } while(0)
+#define GET_SLEEP_BRIGHTNESS() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_BRIGHTNESS_OFFSET))
+#define SET_SLEEP_BRIGHTNESS(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_BRIGHTNESS_OFFSET, n); } while(0)
+#define GET_SLEEP_CONTRAST() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_CONTRAST_OFFSET))
+#define SET_SLEEP_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_CONTRAST_OFFSET, n); } while(0)
+#define GET_SLEEP_GLOW() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_GLOW_OFFSET))
+#define SET_SLEEP_GLOW(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_GLOW_OFFSET, n); } while(0)
+#define GET_EXPERT_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
+#define SET_EXPERT_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
+#define GET_HEATER_TIMEOUT() (eeprom_read_byte((const uint8_t*)EEPROM_HEATER_TIMEOUT))
+#define SET_HEATER_TIMEOUT(n) do { eeprom_write_byte((uint8_t*)EEPROM_HEATER_TIMEOUT, n); } while(0)
+#define GET_END_RETRACT() (eeprom_read_float((const float*)EEPROM_END_RETRACT))
+#define SET_END_RETRACT(n) do { eeprom_write_float((float*)EEPROM_END_RETRACT, n); } while(0)
+
+// UI Mode
+#define UI_MODE_STANDARD  0
+#define UI_MODE_EXPERT    1
+
+#define UI_BEEP_SHORT    32
+#define UI_BEEP_OFF      64
+
+// control flags
+#define FLAG_PID_NOZZLE      1
+#define FLAG_PID_BED         2
+#define FLAG_SWAP_EXTRUDERS  4
+#define FLAG_RESERVED_3      8
+#define FLAG_RESERVED_4     16
+#define FLAG_RESERVED_5     32
+#define FLAG_RESERVED_6     64
+#define FLAG_RESERVED_7    128
+
+#define LED_DIM_TIME 0		    // 0 min -> off
+#define LED_DIM_MAXTIME 240		// 240 min
+
+extern uint8_t ui_mode;
+extern uint16_t lcd_timeout;
+extern uint8_t lcd_contrast;
+extern uint8_t led_sleep_glow;
+extern uint8_t lcd_sleep_contrast;
+extern uint8_t expert_flags;
+extern float end_of_print_retraction;
+extern uint16_t led_timeout;
+extern uint8_t led_sleep_brightness;
+
+
+FORCE_INLINE bool pidTempBed() { return (expert_flags & FLAG_PID_BED); }
+
+#if EXTRUDERS > 1
+FORCE_INLINE bool swapExtruders() { return (expert_flags & FLAG_SWAP_EXTRUDERS); }
+#endif
+
+#endif //PREFERENCES_H

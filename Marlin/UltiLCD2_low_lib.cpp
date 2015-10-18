@@ -2,6 +2,7 @@
 
 #ifdef ENABLE_ULTILCD2
 #include "pins.h"
+#include "preferences.h"
 #include "UltiLCD2_low_lib.h"
 #include "tinkergnome.h"
 
@@ -1000,7 +1001,7 @@ char* int_to_time_string(unsigned long i, char* temp_buffer)
     */
 }
 
-char* float_to_string(float f, char* temp_buffer, const char* p_postfix)
+char* float_to_string2(float f, char* temp_buffer, const char* p_postfix)
 {
     int32_t i = f * 100.0 + 0.5;
     char* c = temp_buffer;

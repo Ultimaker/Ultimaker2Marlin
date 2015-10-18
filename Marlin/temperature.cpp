@@ -36,6 +36,7 @@
 #include "temperature.h"
 #include "watchdog.h"
 #include "Sd2Card.h"
+#include "preferences.h"
 #include "tinkergnome.h"
 
 

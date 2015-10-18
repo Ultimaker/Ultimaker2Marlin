@@ -11,7 +11,7 @@
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_utils.h"
-#include "tinkergnome.h"
+#include "preferences.h"
 
 struct materialSettings material[EXTRUDERS];
 
@@ -398,7 +398,7 @@ static void lcd_menu_change_material_select_material_details_callback(uint8_t nr
 
     if (led_glow_dir)
     {
-        c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
+        c = float_to_string2(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
         while(c < buffer + 10) *c++ = ' ';
         strcpy_P(c, PSTR("Flow:"));
         c += 5;
@@ -502,7 +502,7 @@ static void lcd_menu_material_export()
 
         strcpy_P(buffer, PSTR("diameter="));
         ptr = buffer + strlen(buffer);
-        float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(n)), ptr, PSTR("\n\n"));
+        float_to_string2(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(n)), ptr, PSTR("\n\n"));
         card.write_string(buffer);
     }
     card.closefile();
@@ -635,7 +635,7 @@ static void lcd_material_select_details_callback(uint8_t nr)
 
         if (led_glow_dir)
         {
-            c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
+            c = float_to_string2(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
             while(c < buffer + 10) *c++ = ' ';
             strcpy_P(c, PSTR("Flow:"));
             c += 5;
@@ -742,7 +742,7 @@ static void lcd_material_settings_details_callback(uint8_t nr)
 #endif
     }else if (nr == 2 + BED_MENU_OFFSET)
     {
-        float_to_string(material[active_extruder].diameter, buffer, PSTR("mm"));
+        float_to_string2(material[active_extruder].diameter, buffer, PSTR("mm"));
     }else if (nr == 3 + BED_MENU_OFFSET)
     {
         int_to_string(material[active_extruder].fan_speed, buffer, PSTR("%"));
