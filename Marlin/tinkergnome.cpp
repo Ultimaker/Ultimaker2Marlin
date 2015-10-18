@@ -633,7 +633,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
     #else
                 strcpy_P(buffer, PSTR("Flow(1) "));
     #endif
-                float_to_string2(e_smoothed_speed[0], buffer+strlen(buffer), PSTR(UNIT_FLOW));
+                float_to_string1(e_smoothed_speed[0], buffer+strlen(buffer), PSTR(UNIT_FLOW));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -654,7 +654,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             if (flags & (MENU_SELECTED | MENU_ACTIVE))
             {
                 strcpy_P(buffer, PSTR("Flow(2) "));
-                float_to_string2(e_smoothed_speed[1], buffer+strlen(buffer), PSTR(UNIT_FLOW));
+                float_to_string1(e_smoothed_speed[1], buffer+strlen(buffer), PSTR(UNIT_FLOW));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -921,33 +921,48 @@ void lcd_menu_print_heatup_tg()
     lcd_lib_update_screen();
 }
 
-unsigned long predictTimeLeft()
+static unsigned long predictTimeLeft()
 {
-    float printTimeMs = (millis() - starttime);
-    float printTimeSec = printTimeMs / 1000L;
-    float totalTimeMs = float(printTimeMs) * float(card.getFileSize()) / float(card.getFilePos());
-    static float totalTimeSmoothSec;
-    totalTimeSmoothSec = (totalTimeSmoothSec * 999L + totalTimeMs / 1000L) / 1000L;
-    if (isinf(totalTimeSmoothSec))
-        totalTimeSmoothSec = totalTimeMs;
+    static float timeLeft = 0;
 
-    if (LCD_DETAIL_CACHE_TIME() == 0 && printTimeSec < 60)
+    if ((printing_state == PRINT_STATE_HEATING) || (printing_state == PRINT_STATE_HEATING_BED))
     {
-        totalTimeSmoothSec = totalTimeMs / 1000;
         return 0;
-    }else{
-        unsigned long totalTimeSec;
-        if (printTimeSec < LCD_DETAIL_CACHE_TIME() / 2)
-        {
-            float f = float(printTimeSec) / float(LCD_DETAIL_CACHE_TIME() / 2);
-            if (f > 1.0)
-                f = 1.0;
-            totalTimeSec = float(totalTimeSmoothSec) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
-        }else{
-            totalTimeSec = totalTimeSmoothSec;
-        }
+    }
+    else
+    {
+        float printTime = (millis() - starttime);
+        float totalTimeMs = float(printTime) * float(card.getFileSize()) / float(card.getFilePos());
 
-        return (printTimeSec > totalTimeSec) ? 1 : totalTimeSec - printTimeSec;
+        if (LCD_DETAIL_CACHE_TIME() == 0 && printTime < 60)
+        {
+            timeLeft = totalTimeMs / 1000L;
+            return 0;
+        }
+        else
+        {
+            // convert milliseconds to seconds
+            printTime /= 1000L;
+            // low pass filter
+            timeLeft = (timeLeft * 999L + totalTimeMs / 1000L) / 1000L;
+            if (isinf(timeLeft))
+                timeLeft = totalTimeMs;
+
+            unsigned long totalTimeSec;
+            if (printTime < LCD_DETAIL_CACHE_TIME() / 2)
+            {
+                float f = float(printTime) / float(LCD_DETAIL_CACHE_TIME() / 2);
+                if (f > 1.0)
+                    f = 1.0;
+                totalTimeSec = float(timeLeft) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
+            }
+            else
+            {
+                totalTimeSec = timeLeft;
+            }
+
+            return (printTime > totalTimeSec) ? 1 : totalTimeSec - printTime;
+        }
     }
 }
 
@@ -987,7 +1002,6 @@ void lcd_menu_printing_tg()
         if (printing_page == 0)
         {
             uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
-            unsigned long timeLeftSec;
             char buffer[32] = {0};
 
             switch(printing_state)
@@ -1002,7 +1016,7 @@ void lcd_menu_printing_tg()
                 else
                 {
                     // time left
-                    timeLeftSec = predictTimeLeft();
+                    unsigned long timeLeftSec = predictTimeLeft();
                     if (timeLeftSec > 0)
                     {
                         lcd_lib_draw_gfx(54, 15, clockInverseGfx);

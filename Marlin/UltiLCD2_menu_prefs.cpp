@@ -563,22 +563,22 @@ static const menu_t & get_steps_menuoption(uint8_t nr, menu_t &opt)
     else if (nr == index++)
     {
         // x steps
-        opt.setData(MENU_INPLACE_EDIT, lcd_steps_x, 2);
+        opt.setData(MENU_INPLACE_EDIT, lcd_steps_x, 3);
     }
     else if (nr == index++)
     {
         // y steps
-        opt.setData(MENU_INPLACE_EDIT, lcd_steps_y, 2);
+        opt.setData(MENU_INPLACE_EDIT, lcd_steps_y, 3);
     }
     else if (nr == index++)
     {
         // z steps
-        opt.setData(MENU_INPLACE_EDIT, lcd_steps_z, 2);
+        opt.setData(MENU_INPLACE_EDIT, lcd_steps_z, 3);
     }
     else if (nr == index++)
     {
         // e steps
-        opt.setData(MENU_INPLACE_EDIT, lcd_steps_e, 2);
+        opt.setData(MENU_INPLACE_EDIT, lcd_steps_e, 3);
     }
     return opt;
 }
@@ -1129,22 +1129,22 @@ static void lcd_store_maxspeed()
 
 static void lcd_preset_maxspeed_x()
 {
-    lcd_tune_value(max_feedrate[X_AXIS], 0, 999, 0.1);
+    lcd_tune_value(max_feedrate[X_AXIS], 0, 999, 1.0);
 }
 
 static void lcd_preset_maxspeed_y()
 {
-    lcd_tune_value(max_feedrate[Y_AXIS], 0, 999, 0.1);
+    lcd_tune_value(max_feedrate[Y_AXIS], 0, 999, 1.0);
 }
 
 static void lcd_preset_maxspeed_z()
 {
-    lcd_tune_value(max_feedrate[Z_AXIS], 0, 99, 0.1);
+    lcd_tune_value(max_feedrate[Z_AXIS], 0, 99, 1.0);
 }
 
 static void lcd_preset_maxspeed_e()
 {
-    lcd_tune_value(max_feedrate[E_AXIS], 0, 99, 0.1);
+    lcd_tune_value(max_feedrate[E_AXIS], 0, 99, 1.0);
 }
 
 // create menu options for "Max speed"
