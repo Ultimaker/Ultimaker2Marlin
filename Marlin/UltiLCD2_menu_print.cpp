@@ -530,6 +530,10 @@ static void lcd_menu_print_printing()
             if (IS_SELECTED_MAIN(0) && movesplanned() < 1)
             {
                 card.pause = false;
+                if (card.sdprinting)
+                {
+                    primed = true;
+                }
                 lcd_lib_beep();
             }else if (IS_SELECTED_MAIN(1) && movesplanned() < 1)
                 lcd_change_to_menu_change_material(lcd_change_to_menu_change_material_return);
@@ -940,12 +944,25 @@ static void lcd_menu_print_pause()
         {
             pauseRequested = false;
             card.pause = true;
-            if (current_position[Z_AXIS] < Z_MAX_POS - 60)
-                enquecommand_P(PSTR("M601 X10 Y20 Z20 L20"));
+
+            // move z up according to the current height - but minimum to z=70mm (above the gantry height)
+            uint16_t zdiff = 0;
+            if (current_position[Z_AXIS] < 70)
+                zdiff = max(70 - floor(current_position[Z_AXIS]), 20);
+            else if (current_position[Z_AXIS] < Z_MAX_POS - 60)
+            {
+                zdiff = 20;
+            }
             else if (current_position[Z_AXIS] < Z_MAX_POS - 30)
-                enquecommand_P(PSTR("M601 X10 Y20 Z2 L20"));
-            else
-                enquecommand_P(PSTR("M601 X10 Y20 Z0 L20"));
+            {
+                zdiff = 2;
+            }
+
+            char buffer[32];
+            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
+            enquecommand(buffer);
+
+            primed = false;
         }
         else{
             pauseRequested = true;
