@@ -795,11 +795,14 @@ static void homeaxis(int axis) {
     {
         if (axis == Z_AXIS)
         {
+            //Move the bed upwards, as most likely something is stuck under the bed when we cannot reach the endstop.
+            // We need to move up, as the Z screw is quite strong and will lodge the bed into a position where it is hard to remove by hand.
             current_position[axis] = 0;
             plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-            destination[axis] = -home_retract_mm(axis) * home_dir(axis) * 10.0;
+            destination[axis] = -5 * home_dir(axis);
             plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-            st_synchronize();
+            //Disable the motor power so the bed can be moved by hand
+            finishAndDisableSteppers();
 
             SERIAL_ERROR_START;
             SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
@@ -1313,7 +1316,7 @@ void process_commands()
         int pin_number = LED_PIN;
         if (code_seen('P') && pin_status >= 0 && pin_status <= 255)
           pin_number = code_value();
-        for(int8_t i = 0; i < (int8_t)sizeof(sensitive_pins); i++)
+        for(uint8_t i = 0; i < (sizeof(sensitive_pins)/sizeof(sensitive_pins[0])); ++i)
         {
           if (sensitive_pins[i] == pin_number)
           {
@@ -1327,8 +1330,6 @@ void process_commands()
       #endif
         if (pin_number > -1)
         {
-          pinMode(pin_number, OUTPUT);
-          digitalWrite(pin_number, pin_status);
           analogWrite(pin_number, pin_status);
         }
       }
@@ -2189,7 +2190,7 @@ void process_commands()
     case 605: // M605 store current set values
     {
       uint8_t tmp_select;
-      if (code_seen('S')) 
+      if (code_seen('S'))
       {
         tmp_select = code_value();
         if (tmp_select>9) tmp_select=9;
@@ -2223,7 +2224,7 @@ void process_commands()
     case 606: // M606 recall saved values
     {
       uint8_t tmp_select;
-      if (code_seen('S')) 
+      if (code_seen('S'))
       {
         tmp_select = code_value();
         if (tmp_select>9) tmp_select=9;
