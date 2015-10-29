@@ -2323,20 +2323,30 @@ void process_commands()
     case 10000://M10000 - Clear the whole LCD
         lcd_lib_clear();
         break;
-    case 10001://M10001 - Draw text on LCD, M10002 X0 Y0 SText
+    case 10001://M10001 - Draw text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
         {
-        uint8_t x = 0, y = 0;
-        if (code_seen('X')) x = code_value_long();
-        if (code_seen('Y')) y = code_value_long();
-        if (code_seen('S')) lcd_lib_draw_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          uint8_t x = 0, y = 0;
+          if (code_seen('X')) {
+            x = code_value_long();
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_draw_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          } else {
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_draw_string_center(y,&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          }
         }
         break;
-    case 10002://M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText
+    case 10002://M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
         {
-        uint8_t x = 0, y = 0;
-        if (code_seen('X')) x = code_value_long();
-        if (code_seen('Y')) y = code_value_long();
-        if (code_seen('S')) lcd_lib_clear_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          uint8_t x = 0, y = 0;
+          if (code_seen('X')) {
+            x = code_value_long();
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_clear_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          } else {
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_clear_string_center(y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          }
         }
         break;
     case 10003://M10003 - Draw square on LCD, M10003 X1 Y1 W10 H10
