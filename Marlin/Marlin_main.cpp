@@ -1316,7 +1316,7 @@ void process_commands()
         int pin_number = LED_PIN;
         if (code_seen('P') && pin_status >= 0 && pin_status <= 255)
           pin_number = code_value();
-        for(int8_t i = 0; i < (int8_t)sizeof(sensitive_pins); i++)
+        for(uint8_t i = 0; i < (sizeof(sensitive_pins)/sizeof(sensitive_pins[0])); ++i)
         {
           if (sensitive_pins[i] == pin_number)
           {
@@ -1330,8 +1330,6 @@ void process_commands()
       #endif
         if (pin_number > -1)
         {
-          pinMode(pin_number, OUTPUT);
-          digitalWrite(pin_number, pin_status);
           analogWrite(pin_number, pin_status);
         }
       }
@@ -2192,7 +2190,7 @@ void process_commands()
     case 605: // M605 store current set values
     {
       uint8_t tmp_select;
-      if (code_seen('S')) 
+      if (code_seen('S'))
       {
         tmp_select = code_value();
         if (tmp_select>9) tmp_select=9;
@@ -2226,7 +2224,7 @@ void process_commands()
     case 606: // M606 recall saved values
     {
       uint8_t tmp_select;
-      if (code_seen('S')) 
+      if (code_seen('S'))
       {
         tmp_select = code_value();
         if (tmp_select>9) tmp_select=9;
