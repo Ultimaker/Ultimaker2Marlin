@@ -56,6 +56,8 @@ static uint8_t printing_page = 0;
 
 static void lcd_menu_print_page_inc() { lcd_lib_keyclick(); lcd_basic_screen(); menu.set_selection(0); ++printing_page; }
 static void lcd_menu_print_page_dec() { lcd_lib_keyclick(); lcd_basic_screen(); menu.set_selection(1); --printing_page; }
+static void lcd_menu_babystepping();
+
 static void lcd_print_tune_speed();
 static void lcd_print_tune_fan();
 static void lcd_print_flow_nozzle0();
@@ -170,6 +172,11 @@ static void lcd_print_ask_pause()
     menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_pause, NULL));
 }
 
+static void lcd_start_babystepping()
+{
+    menu.add_menu(menu_t(lcd_menu_babystepping));
+}
+
 // return print menu option
 static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
 {
@@ -217,6 +224,13 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         {
             opt.setData(MENU_NORMAL, lcd_menu_print_page_inc);
         }
+#ifdef BABYSTEPPING
+        else if (nr == menu_index++)
+        {
+            // babystepping menu
+            opt.setData(MENU_NORMAL, lcd_start_babystepping);
+        }
+#endif
         else if (nr == menu_index++)
         {
             // flow nozzle 1
@@ -315,6 +329,182 @@ static void lcd_print_tune_xyjerk()
 {
     lcd_tune_value(max_xy_jerk, 0, 100, 1.0);
 }
+
+#ifdef BABYSTEPPING
+
+static void _lcd_babystep(const uint8_t axis)
+{
+    if (lcd_lib_encoder_pos)
+    {
+        babystepsTodo[axis] += lcd_lib_encoder_pos;
+        lcd_lib_encoder_pos = 0;
+    }
+}
+
+static void lcd_babystep_x() { _lcd_babystep(X_AXIS); }
+static void lcd_babystep_y() { _lcd_babystep(Y_AXIS); }
+static void lcd_babystep_z() { _lcd_babystep(Z_AXIS); }
+
+// create menu options for "move axes"
+static const menu_t & get_babystep_menuoption(uint8_t nr, menu_t &opt)
+{
+    uint8_t index(0);
+    if (nr == index++)
+    {
+        // RETURN
+        opt.setData(MENU_NORMAL, lcd_change_to_previous_menu);
+    }
+    else if (nr == index++)
+    {
+        // babystep x
+        opt.setData(MENU_INPLACE_EDIT, lcd_babystep_x, (uint8_t)0, 0);
+    }
+    else if (nr == index++)
+    {
+        // babystep y
+        opt.setData(MENU_INPLACE_EDIT, lcd_babystep_y, (uint8_t)0, 0);
+    }
+    else if (nr == index++)
+    {
+        // babystep z
+        opt.setData(MENU_INPLACE_EDIT, lcd_babystep_z, (uint8_t)0, 0);
+    }
+    return opt;
+}
+
+static void drawBabystepSubmenu(uint8_t nr, uint8_t &flags)
+{
+    uint8_t index(0);
+    // char buffer[32] = {0};
+    if (nr == index++)
+    {
+        // RETURN
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_MARGIN_LEFT
+                           , BOTTOM_MENU_YPOS
+                           , 52
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Click to return"));
+            flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        // babystep x
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Babystep X axis"));
+            flags |= MENU_STATUSLINE;
+        }
+        if (flags & MENU_ACTIVE)
+        {
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH-44, 17, dangerGfx);
+        }
+
+        if (babystepsTodo[X_AXIS] > 0)
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+6*LCD_CHAR_SPACING, 17, PSTR(">>>"));
+        }
+        else if (babystepsTodo[X_AXIS] < 0)
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+6*LCD_CHAR_SPACING, 17, PSTR("<<<"));
+        }
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+2*LCD_CHAR_SPACING
+                              , 17
+                              , 3*LCD_CHAR_SPACING
+                              , LCD_CHAR_HEIGHT
+                              , PSTR("X")
+                              , ALIGN_CENTER
+                              , flags);
+    }
+    else if (nr == index++)
+    {
+        // babystep y
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Babystep Y axis"));
+            flags |= MENU_STATUSLINE;
+        }
+        if (flags & MENU_ACTIVE)
+        {
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH-44, 17, dangerGfx);
+        }
+        if (babystepsTodo[Y_AXIS] > 0)
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+6*LCD_CHAR_SPACING, 28, PSTR(">>>"));
+        }
+        else if (babystepsTodo[Y_AXIS] < 0)
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+6*LCD_CHAR_SPACING, 28, PSTR("<<<"));
+        }
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+2*LCD_CHAR_SPACING
+                              , 28
+                              , 3*LCD_CHAR_SPACING
+                              , LCD_CHAR_HEIGHT
+                              , PSTR("Y")
+                              , ALIGN_CENTER
+                              , flags);
+    }
+    else if (nr == index++)
+    {
+        // babystep z
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Babystep Z axis"));
+            flags |= MENU_STATUSLINE;
+        }
+        if (flags & MENU_ACTIVE)
+        {
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH-44, 17, dangerGfx);
+        }
+        if (babystepsTodo[Z_AXIS] > 0)
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+6*LCD_CHAR_SPACING, 39, PSTR(">>>"));
+        }
+        else if (babystepsTodo[Z_AXIS] < 0)
+        {
+            lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+6*LCD_CHAR_SPACING, 39, PSTR("<<<"));
+        }
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+2*LCD_CHAR_SPACING
+                              , 39
+                              , 3*LCD_CHAR_SPACING
+                              , LCD_CHAR_HEIGHT
+                              , PSTR("Z")
+                              , ALIGN_CENTER
+                              , flags);
+    }
+}
+
+static void lcd_menu_babystepping()
+{
+    lcd_basic_screen();
+    lcd_lib_draw_hline(3, 124, 13);
+
+    menu.process_submenu(get_babystep_menuoption, 4);
+
+    uint8_t flags = 0;
+    for (uint8_t index=0; index<4; ++index)
+    {
+        menu.drawSubMenu(drawBabystepSubmenu, index, flags);
+    }
+    if (!(flags & MENU_STATUSLINE))
+    {
+        lcd_lib_draw_string_leftP(5, PSTR("Babystepping"));
+    }
+
+    lcd_lib_update_screen();
+}
+
+#endif // BABYSTEPPING
 
 static void drawHeatupSubmenu (uint8_t nr, uint8_t &flags)
 {
@@ -623,6 +813,30 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                 lcd_lib_draw_gfx(LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, nextGfx);
             }
         }
+#ifdef BABYSTEPPING
+        else if (nr == index++)
+        {
+            if (flags & MENU_SELECTED)
+            {
+                lcd_lib_draw_string_leftP(5, PSTR("Babystepping"));
+                flags |= MENU_STATUSLINE;
+            }
+
+            // strcpy_P(buffer, PSTR("Z "));
+            lcd_lib_draw_string_leftP(15, PSTR("Z"));
+
+            // calculate current z position
+            float_to_string2(st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS], buffer, 0);
+            // lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+12, 15, buffer);
+            LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+12
+                                    , 15
+                                    , LCD_CHAR_SPACING*strlen(buffer)
+                                    , LCD_CHAR_HEIGHT
+                                    , buffer
+                                    , ALIGN_LEFT | ALIGN_VCENTER
+                                    , flags);
+        }
+#endif
         else if (nr == index++)
         {
             // flow nozzle 1
@@ -1053,18 +1267,22 @@ void lcd_menu_printing_tg()
                 break;
             }
 
-            // all printing states
-            // z position
-            lcd_lib_draw_string_leftP(15, PSTR("Z"));
-
-            // calculate current z position
-            float_to_string2(st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS], buffer, 0);
-            lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+12, 15, buffer);
+//            // all printing states
+//            // z position
+//            lcd_lib_draw_string_leftP(15, PSTR("Z"));
+//
+//            // calculate current z position
+//            float_to_string2(st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS], buffer, 0);
+//            lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+12, 15, buffer);
 
         }
 
         uint8_t index = 0;
+#ifdef BABYSTEPPING
+        uint8_t len = (printing_page == 1) ? 5 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 5;
+#else
         uint8_t len = (printing_page == 1) ? 5 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 4;
+#endif // BABYSTEPPING
 
         menu.process_submenu(get_print_menuoption, len);
         const char *message = lcd_getstatus();

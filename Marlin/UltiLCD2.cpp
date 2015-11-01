@@ -65,7 +65,6 @@ void lcd_init()
     menu.add_menu(menu_t(lcd_menu_startup), false);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
-    enquecommand_P(PSTR("M106 S21.25000"));
 }
 
 void lcd_update()
