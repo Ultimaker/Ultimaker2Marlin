@@ -133,12 +133,12 @@ static void lcd_advanced_details(uint8_t nr)
     }
 #endif
 #if TEMP_SENSOR_BED != 0
-    else if (nr == 3 + EXTRUDERS)
+    else if (nr == 2*EXTRUDERS + 1)
     {
         int_to_string(int(target_temperature_bed), int_to_string(int(dsp_temperature_bed), buffer, PSTR("C/")), PSTR("C"));
     }
 #endif
-    else if (nr == 6 + BED_MENU_OFFSET + EXTRUDERS * 3)
+    else if (nr == 4*EXTRUDERS + 4 + BED_MENU_OFFSET)
     {
         int_to_string(int(fanSpeed) * 100 / 255, buffer, PSTR("%"));
     }

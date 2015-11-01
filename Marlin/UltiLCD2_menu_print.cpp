@@ -62,9 +62,6 @@ void abortPrint()
             enquecommand_P(PSTR("G10"));
         }
     }
-    //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
-    card.pause = false;
-    pauseRequested = false;
 
     if (primed)
     {
@@ -90,6 +87,14 @@ void abortPrint()
         enquecommand_P(PSTR("G28"));
     }
     enquecommand_P(PSTR("M84"));
+
+    // finish all moves
+    st_synchronize();
+
+    //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
+    card.pause = false;
+    pauseRequested = false;
+
 }
 
 static void userAbortPrint()
@@ -465,6 +470,8 @@ void lcd_menu_print_select()
 
                     fanSpeed = 0;
                     feedmultiply = 100;
+                    current_nominal_speed = 0.0f;
+
                     lcd_clearstatus();
                     menu.return_to_main();
 
@@ -483,6 +490,7 @@ void lcd_menu_print_select()
 //                            SERIAL_ECHOPGM(": ");
 //                            SERIAL_ECHOLN(LCD_DETAIL_CACHE_MATERIAL(e));
 
+                            e_smoothed_speed[e] = 0.0f;
 #if EXTRUDERS == 2
                             uint8_t index = (swapExtruders() ? e^0x01 : e);
                             if (LCD_DETAIL_CACHE_MATERIAL(index) < 1)
@@ -536,6 +544,7 @@ void lcd_menu_print_select()
                         {
                             volume_to_filament_length[e] = 1.0;
                             extrudemultiply[e] = 100;
+                            e_smoothed_speed[e] = 0.0f;
                         }
                         menu.add_menu(menu_t(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0)));
                     }
@@ -644,7 +653,7 @@ void lcd_change_to_menu_change_material_return()
 
 static void lcd_menu_print_printing()
 {
-    if (card.pause)
+    if (card.pause || isPauseRequested())
     {
         menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
         if (!checkFilamentSensor())
@@ -1177,9 +1186,10 @@ void lcd_print_abort()
 static void lcd_menu_print_resume_ready()
 {
     menu.return_to_previous();
-    primed = true;
     pauseRequested = false;
     card.pause = false;
+    if (LCD_DETAIL_CACHE_MATERIAL(active_extruder))
+        primed = true;
 }
 
 static void lcd_print_resume()

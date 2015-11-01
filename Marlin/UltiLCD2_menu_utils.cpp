@@ -19,7 +19,11 @@ static int16_t lastEncoderPos = 0;
 
 void LCDMenu::processEvents()
 {
-    if ((printing_state != PRINT_STATE_HEATING) && (printing_state != PRINT_STATE_START) && (!card.sdprinting || card.pause))
+    // check printing state
+    if ((printing_state != PRINT_STATE_HEATING) &&
+        (printing_state != PRINT_STATE_START) &&
+        (!card.sdprinting || card.pause) &&
+         !commands_queued())
     {
         // cool down nozzle after timeout
         check_heater_timeout();
@@ -361,11 +365,11 @@ void LCDMenu::drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr)
     drawSubMenu(drawFunc, nr, flags);
 }
 
-void LCDMenu::reset_selection()
-{
-    lastEncoderPos = lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
-    lcd_lib_button_pressed = lcd_lib_button_down = false;
-}
+//void LCDMenu::reset_selection()
+//{
+//    lastEncoderPos = lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
+//    lcd_lib_button_pressed = lcd_lib_button_down = false;
+//}
 
 void LCDMenu::set_selection(int8_t index)
 {

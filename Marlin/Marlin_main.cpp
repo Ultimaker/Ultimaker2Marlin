@@ -470,7 +470,13 @@ void setup()
 void loop()
 {
   if(buflen < (BUFSIZE-1))
+  {
     get_command();
+  }
+  else if (MYSERIAL.available() > 0)
+  {
+    lastSerialCommandTime = millis();
+  }
   #ifdef SDSUPPORT
   card.checkautostart(false);
   #endif
@@ -635,7 +641,7 @@ void get_command()
     return;
   if (serial_count!=0)
   {
-    if (millis() - lastSerialCommandTime < 5000)
+    if (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
       return;
     serial_count = 0;
   }
@@ -1543,7 +1549,7 @@ void process_commands()
     #if defined(FAN_PIN) && FAN_PIN > -1
       case 106: //M106 Fan On
         if (code_seen('S')){
-           fanSpeed=constrain(code_value() * fanSpeedPercent / 100,0,255);
+           fanSpeed=constrain((int)code_value() * fanSpeedPercent / 100, 0, 255);
         }
         else {
           fanSpeed = 255 * int(fanSpeedPercent) / 100;
@@ -1560,7 +1566,7 @@ void process_commands()
           if (printing_state == PRINT_STATE_RECOVER)
             break;
           if (code_seen('S')){
-             ValvePressure=constrain(code_value(),0,255);
+             ValvePressure=constrain((int)code_value(),0,255);
           }
           else {
             ValvePressure=255;
@@ -1579,7 +1585,7 @@ void process_commands()
           if (printing_state == PRINT_STATE_RECOVER)
             break;
           if (code_seen('S')){
-             EtoPPressure=constrain(code_value(),0,255);
+             EtoPPressure=constrain((int)code_value(),0,255);
           }
           else {
             EtoPPressure=255;
@@ -2750,13 +2756,11 @@ void controllerFan()
 
     if ((millis() - lastMotor) >= (CONTROLLERFAN_SECS*1000UL) || lastMotor == 0) //If the last time any driver was enabled, is longer since than CONTROLLERSEC...
     {
-        digitalWrite(CONTROLLERFAN_PIN, 0);
         analogWrite(CONTROLLERFAN_PIN, 0);
     }
     else
     {
         // allows digital or PWM fan output to be used (see M42 handling)
-        digitalWrite(CONTROLLERFAN_PIN, CONTROLLERFAN_SPEED);
         analogWrite(CONTROLLERFAN_PIN, CONTROLLERFAN_SPEED);
     }
   }

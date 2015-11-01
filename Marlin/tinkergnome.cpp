@@ -43,19 +43,19 @@
 
 
 float recover_height = 0.0f;
-float recover_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
+float recover_position[NUM_AXIS] = { 0.0f, 0.0f, 0.0f, 0.0f };
 int recover_temperature[EXTRUDERS] = { 0 };
 
 // these are used to maintain a simple low-pass filter on the speeds - thanks norpchen
-static float e_smoothed_speed[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0.0, 0.0, 0.0);
-static float nominal_speed = 0.0;
+float e_smoothed_speed[EXTRUDERS] = ARRAY_BY_EXTRUDERS(0.0f, 0.0f, 0.0f);
+float current_nominal_speed = 0.0f;
 // static float target_position[NUM_AXIS];
 static int8_t movingSpeed = 0;
 static bool delayMove = false;
 static uint8_t printing_page = 0;
 
-static void lcd_menu_print_page_inc() { lcd_lib_keyclick(); lcd_basic_screen(); ++printing_page; }
-static void lcd_menu_print_page_dec() { lcd_lib_keyclick(); lcd_basic_screen(); --printing_page; }
+static void lcd_menu_print_page_inc() { lcd_lib_keyclick(); lcd_basic_screen(); menu.set_selection(0); ++printing_page; }
+static void lcd_menu_print_page_dec() { lcd_lib_keyclick(); lcd_basic_screen(); menu.set_selection(1); --printing_page; }
 static void lcd_print_tune_speed();
 static void lcd_print_tune_fan();
 static void lcd_print_flow_nozzle0();
@@ -167,7 +167,7 @@ static const menu_t & get_heatup_menuoption(uint8_t nr, menu_t &opt)
 
 static void lcd_print_ask_pause()
 {
-    menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_pause, NULL, MAIN_MENU_ITEM_POS(0)));
+    menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_pause, NULL));
 }
 
 // return print menu option
@@ -178,7 +178,7 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
     {
         if (nr == menu_index++)
         {
-            opt.setData(MENU_NORMAL, LCDMenu::reset_selection, lcd_menu_print_page_dec, NULL);
+            opt.setData(MENU_NORMAL, lcd_menu_print_page_dec);
         }
         else if (nr == menu_index++)
         {
@@ -215,7 +215,7 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         }
         else if (nr == menu_index++)
         {
-            opt.setData(MENU_NORMAL, LCDMenu::reset_selection, lcd_menu_print_page_inc, NULL);
+            opt.setData(MENU_NORMAL, lcd_menu_print_page_inc);
         }
         else if (nr == menu_index++)
         {
@@ -674,7 +674,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             if (flags & (MENU_SELECTED | MENU_ACTIVE))
             {
                 strcpy_P(buffer, PSTR("Speed "));
-                int_to_string(nominal_speed+0.5, buffer+strlen(buffer), PSTR(UNIT_SPEED));
+                int_to_string(current_nominal_speed+0.5, buffer+strlen(buffer), PSTR(UNIT_SPEED));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -968,7 +968,7 @@ static unsigned long predictTimeLeft()
 
 void lcd_menu_printing_tg()
 {
-    if (card.pause)
+    if (card.pause || isPauseRequested())
     {
         menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
         if (!checkFilamentSensor())
@@ -995,7 +995,7 @@ void lcd_menu_printing_tg()
                 float volume = (volume_to_filament_length[current_block->active_extruder] < 0.99) ? speed_e / volume_to_filament_length[current_block->active_extruder] : speed_e*DEFAULT_FILAMENT_AREA;
 
                 e_smoothed_speed[current_block->active_extruder] = (e_smoothed_speed[current_block->active_extruder]*LOW_PASS_SMOOTHING) + ( volume *(1.0-LOW_PASS_SMOOTHING));
-                nominal_speed = current_block->nominal_speed;
+                current_nominal_speed = current_block->nominal_speed;
             }
         }
 
@@ -1065,19 +1065,24 @@ void lcd_menu_printing_tg()
 
         uint8_t index = 0;
         uint8_t len = (printing_page == 1) ? 5 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 4;
-        if (printing_state == PRINT_STATE_WAIT_USER)
+
+        menu.process_submenu(get_print_menuoption, len);
+        const char *message = lcd_getstatus();
+        if (!menu.isSubmenuSelected())
         {
-            // index += (printing_page == 1) ? 3 : 2;
-            index += 2;
-        }
-        else
-        {
-            menu.process_submenu(get_print_menuoption, len);
-            const char *message = lcd_getstatus();
-            if (!menu.isSubmenuSelected() && message && *message)
+            if (message && *message)
             {
                 lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, message);
-                // index += (printing_page == 1) ? 3 : 2;
+                index += 2;
+            }
+            else if (printing_state == PRINT_STATE_HEATING)
+            {
+                lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Heating nozzle"));
+                index += 2;
+            }
+            else if (printing_state == PRINT_STATE_HEATING_BED)
+            {
+                lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Heating buildplate"));
                 index += 2;
             }
         }
@@ -1088,18 +1093,7 @@ void lcd_menu_printing_tg()
         }
         if (!(flags & MENU_STATUSLINE))
         {
-            if (printing_state == PRINT_STATE_HEATING)
-            {
-                lcd_lib_draw_string_leftP(5, PSTR("Heating"));
-            }
-            else if (printing_state == PRINT_STATE_HEATING_BED)
-            {
-                lcd_lib_draw_string_leftP(5, PSTR("Heating buildplate"));
-            }
-            else
-            {
-                lcd_lib_draw_string_left(5, card.longFilename);
-            }
+            lcd_lib_draw_string_left(5, card.longFilename);
         }
         lcd_lib_update_screen();
     }

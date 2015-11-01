@@ -8,6 +8,9 @@ extern float recover_height;
 extern float recover_position[NUM_AXIS];
 extern int recover_temperature[EXTRUDERS];
 
+extern float e_smoothed_speed[EXTRUDERS];
+extern float current_nominal_speed;
+
 void tinkergnome_init();
 void lcd_menu_maintenance_expert();
 void lcd_menu_print_heatup_tg();
