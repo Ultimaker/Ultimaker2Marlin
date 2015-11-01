@@ -131,7 +131,7 @@ public:
     static void drawMenuBox(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t flags);
     static void drawMenuString(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
     static void drawMenuString_P(uint8_t left, uint8_t top, uint8_t width, uint8_t height, const char * str, uint8_t textAlign, uint8_t flags);
-    static void reset_selection();
+//    static void reset_selection();
 
 private:
     static void init_menu_switch(bool beep);

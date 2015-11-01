@@ -35,12 +35,22 @@ bool checkFilamentSensor()
             {
                 lcd_lib_beep();
 
-                // serial echo message
-                SERIAL_ECHO_START
-                SERIAL_ECHOLNPGM("Material transport issue detected.");
-
                 // pause print
                 lcd_print_pause();
+            }
+        }
+        else if (commands_queued())
+        {
+            if (!card.pause && !isPauseRequested())
+            {
+                lcd_lib_beep();
+                enquecommand_P(PSTR("M0"));
+
+                SERIAL_ERROR_START;
+                SERIAL_ERRORLNPGM("Material transport issue detected.");
+
+                SERIAL_ECHO_START
+                SERIAL_ECHOLNPGM("Print paused. Check feeder.");
             }
         }
     }

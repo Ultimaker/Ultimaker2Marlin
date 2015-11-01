@@ -16,7 +16,6 @@
 #include "preferences.h"
 #include "tinkergnome.h"
 
-#define SERIAL_CONTROL_TIMEOUT 5000
 // coefficient for the exponential moving average
 #define ALPHA 0.05f
 #define ONE_MINUS_ALPHA 0.95f
@@ -66,6 +65,7 @@ void lcd_init()
     menu.add_menu(menu_t(lcd_menu_startup), false);
     analogWrite(LED_PIN, 0);
     lastSerialCommandTime = millis() - SERIAL_CONTROL_TIMEOUT;
+    enquecommand_P(PSTR("M106 S21.25000"));
 }
 
 void lcd_update()

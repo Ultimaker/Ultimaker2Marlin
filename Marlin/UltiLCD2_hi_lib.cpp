@@ -310,18 +310,23 @@ static void lcd_menu_material_reheat()
 
 bool check_heater_timeout()
 {
-    if (heater_timeout && (millis()-last_user_interaction > heater_timeout*MILLISECONDS_PER_MINUTE))
+    if (heater_timeout && !commands_queued())
     {
-        if (target_temperature[active_extruder] > (EXTRUDE_MINTEMP - 40))
+        const unsigned long m = millis();
+        const unsigned long period = heater_timeout*MILLISECONDS_PER_MINUTE;
+        if ((m-last_user_interaction > period) && (m-lastSerialCommandTime > period))
         {
-            for(uint8_t n=0; n<EXTRUDERS; ++n)
+            if (target_temperature[active_extruder] > (EXTRUDE_MINTEMP - 40))
             {
-                // switch off nozzle heater
-                backup_temperature[n] = target_temperature[n];
-                setTargetHotend(0, n);
+                for(uint8_t n=0; n<EXTRUDERS; ++n)
+                {
+                    // switch off nozzle heater
+                    backup_temperature[n] = target_temperature[n];
+                    setTargetHotend(0, n);
+                }
             }
+            return false;
         }
-        return false;
     }
     return true;
 }
