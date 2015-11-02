@@ -13,7 +13,6 @@
 // #define FLOAT_SETTING(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
 // #define INT_SETTING(n) (*(int*)&lcd_cache[(n) * sizeof(int)])
 
-
 uint8_t ui_mode = UI_MODE_EXPERT;
 uint16_t lcd_timeout = LED_DIM_TIME;
 uint8_t lcd_contrast = 0xDF;
