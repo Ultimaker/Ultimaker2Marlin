@@ -104,6 +104,7 @@
 		<Unit filename="../Marlin/lifetime_stats.h" />
 		<Unit filename="../Marlin/machinesettings.cpp" />
 		<Unit filename="../Marlin/machinesettings.h" />
+		<Unit filename="../Marlin/macros.h" />
 		<Unit filename="../Marlin/motion_control.cpp" />
 		<Unit filename="../Marlin/motion_control.h" />
 		<Unit filename="../Marlin/pins.h" />

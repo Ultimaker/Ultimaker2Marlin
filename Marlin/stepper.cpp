@@ -943,13 +943,12 @@ void quickStop()
   ENABLE_STEPPER_DRIVER_INTERRUPT();
 }
 
-#ifdef BABYSTEPPING
+#if ENABLED(BABYSTEPPING)
 
-
+// MUST ONLY BE CALLED BY AN ISR,
+// No other ISR should ever interrupt this!
 void babystep(const uint8_t axis, const bool direction)
 {
-  //MUST ONLY BE CALLED BY A ISR, it depends on that no other ISR interrupts this
-    //store initial pin states
   switch(axis)
   {
   case X_AXIS:
@@ -968,9 +967,7 @@ void babystep(const uint8_t axis, const bool direction)
     #ifdef DUAL_X_CARRIAGE
       WRITE(X2_STEP_PIN, !INVERT_X_STEP_PIN);
     #endif
-    {
-    float x=1./float(axis+1)/float(axis+2); //wait a tiny bit
-    }
+    delayMicroseconds(2);
     WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
     #ifdef DUAL_X_CARRIAGE
       WRITE(X2_STEP_PIN, INVERT_X_STEP_PIN);
@@ -1000,9 +997,7 @@ void babystep(const uint8_t axis, const bool direction)
     #ifdef DUAL_Y_CARRIAGE
       WRITE(Y2_STEP_PIN, !INVERT_Y_STEP_PIN);
     #endif
-    {
-    float x=1./float(axis+1)/float(axis+2); //wait a tiny bit
-    }
+    delayMicroseconds(2);
     WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
     #ifdef DUAL_Y_CARRIAGE
       WRITE(Y2_STEP_PIN, INVERT_Y_STEP_PIN);
@@ -1033,9 +1028,7 @@ void babystep(const uint8_t axis, const bool direction)
       WRITE(Z2_STEP_PIN, !INVERT_Z_STEP_PIN);
     #endif
     //wait a tiny bit
-    {
-    float x=1./float(axis+1); //absolutely useless
-    }
+    delayMicroseconds(2);
     WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
     #ifdef Z_DUAL_STEPPER_DRIVERS
       WRITE(Z2_STEP_PIN, INVERT_Z_STEP_PIN);
@@ -1068,9 +1061,7 @@ void babystep(const uint8_t axis, const bool direction)
     WRITE(Z_STEP_PIN, !INVERT_Z_STEP_PIN);
 
     //wait a tiny bit
-    {
-    float x=1./float(axis+1); //absolutely useless
-    }
+    delayMicroseconds(2);
     WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
     WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
     WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);

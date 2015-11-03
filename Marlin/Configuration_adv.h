@@ -233,10 +233,9 @@
 // it can e.g. be used to change z-positions in the print startup phase in real-time
 // does not respect endstops!
 // #define BABYSTEPPING
-#ifdef BABYSTEPPING
+#if ENABLED(BABYSTEPPING)
   #define BABYSTEP_XY  //not only z, but also XY in the menu. more clutter, more functions
   #define BABYSTEP_INVERT_Z false  //true for inverse movements in Z
-  #define BABYSTEP_Z_MULTIPLICATOR 2 //faster z movements
 
   #ifdef COREXY
     #error BABYSTEPPING not implemented for COREXY yet.

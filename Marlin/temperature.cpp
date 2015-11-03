@@ -74,7 +74,7 @@ float current_temperature_bed = 0.0;
   unsigned char fanSpeedSoftPwm;
 #endif
 
-#ifdef BABYSTEPPING
+#if ENABLED(BABYSTEPPING)
   volatile int babystepsTodo[3]={0,0,0};
 #endif
 
@@ -1365,7 +1365,7 @@ ISR(TIMER0_COMPB_vect)
     }
 #endif
   }
-#ifdef BABYSTEPPING
+#if ENABLED(BABYSTEPPING)
   for(uint8_t axis=0; axis<3; ++axis)
   {
     int curTodo=babystepsTodo[axis]; //get rid of volatile for performance
