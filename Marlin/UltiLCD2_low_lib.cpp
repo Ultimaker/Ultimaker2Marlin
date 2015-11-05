@@ -1001,10 +1001,21 @@ char* int_to_time_string(unsigned long i, char* temp_buffer)
     */
 }
 
-char* float_to_string2(float f, char* temp_buffer, const char* p_postfix)
+char* float_to_string2(float f, char* temp_buffer, const char* p_postfix, const bool bForceSign)
 {
     int32_t i = f * 100.0 + 0.5;
     char* c = temp_buffer;
+    if (bForceSign)
+    {
+        if (i > 0)
+        {
+            *c++ = '+';
+        }
+        else if (i == 0)
+        {
+            *c++ = ' ';
+        }
+    }
     if (i < 0)
     {
         *c++ = '-';
