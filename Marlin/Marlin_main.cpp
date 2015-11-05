@@ -820,11 +820,14 @@ static void homeaxis(int axis) {
     {
         if (axis == Z_AXIS)
         {
+            //Move the bed upwards, as most likely something is stuck under the bed when we cannot reach the endstop.
+            // We need to move up, as the Z screw is quite strong and will lodge the bed into a position where it is hard to remove by hand.
             current_position[axis] = 0;
             plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-            destination[axis] = -home_retract_mm(axis) * home_dir(axis) * 10.0;
+            destination[axis] = -5 * home_dir(axis);
             plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
-            st_synchronize();
+            //Disable the motor power so the bed can be moved by hand
+            finishAndDisableSteppers();
 
             SERIAL_ERROR_START;
             SERIAL_ERRORLNPGM("Endstop not pressed after homing down. Endstop broken?");
@@ -2370,20 +2373,30 @@ void process_commands()
     case 10000://M10000 - Clear the whole LCD
         lcd_lib_clear();
         break;
-    case 10001://M10001 - Draw text on LCD, M10002 X0 Y0 SText
+    case 10001://M10001 - Draw text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
         {
-        uint8_t x = 0, y = 0;
-        if (code_seen('X')) x = code_value_long();
-        if (code_seen('Y')) y = code_value_long();
-        if (code_seen('S')) lcd_lib_draw_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          uint8_t x = 0, y = 0;
+          if (code_seen('X')) {
+            x = code_value_long();
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_draw_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          } else {
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_draw_string_center(y,&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          }
         }
         break;
-    case 10002://M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText
+    case 10002://M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
         {
-        uint8_t x = 0, y = 0;
-        if (code_seen('X')) x = code_value_long();
-        if (code_seen('Y')) y = code_value_long();
-        if (code_seen('S')) lcd_lib_clear_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          uint8_t x = 0, y = 0;
+          if (code_seen('X')) {
+            x = code_value_long();
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_clear_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          } else {
+            if (code_seen('Y')) y = code_value_long();
+             if (code_seen('S')) lcd_lib_clear_string_center(y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+          }
         }
         break;
     case 10003://M10003 - Draw square on LCD, M10003 X1 Y1 W10 H10
