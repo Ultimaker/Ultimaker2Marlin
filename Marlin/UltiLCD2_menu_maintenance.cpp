@@ -230,13 +230,23 @@ static void lcd_preferences_details(uint8_t nr)
     }
     else if (nr == 6)
     {
+        char *c = buffer;
         if (heater_timeout)
         {
-            int_to_string(heater_timeout, buffer, PSTR(" min"));
+            c = int_to_string(heater_timeout, buffer, PSTR("min / "));
         }
         else
         {
-            strcpy_P(buffer, PSTR("off"));
+            strcpy_P(buffer, PSTR("off / "));
+            c += 6;
+        }
+        if (heater_check_time)
+        {
+            int_to_string(heater_check_time, c, PSTR("s"));
+        }
+        else
+        {
+            strcpy_P(c, PSTR("off"));
         }
     }
 #if TEMP_SENSOR_BED != 0
@@ -860,47 +870,6 @@ static void lcd_menu_buildplate_pid()
 }
 #endif // TEMP_SENSOR_BED
 
-static void lcd_heater_timeout_store(uint8_t timeout)
-{
-    heater_timeout = timeout;
-    uint16_t version = GET_EXPERT_VERSION()+1;
-    if (version < 3)
-    {
-        SET_EXPERT_VERSION(2);
-        SET_HEATER_TIMEOUT(timeout);
-    }
-    else if (timeout != GET_HEATER_TIMEOUT())
-    {
-        SET_HEATER_TIMEOUT(timeout);
-    }
-}
-
-static void lcd_menu_heater_timeout()
-{
-    lcd_tune_value(heater_timeout, 0, 60);
-
-    if (lcd_lib_button_pressed)
-    {
-        lcd_heater_timeout_store(heater_timeout);
-        menu.return_to_previous();
-    }
-
-    lcd_lib_clear();
-    lcd_lib_draw_string_centerP(10, PSTR("Nozzle"));
-    lcd_lib_draw_string_centerP(20, PSTR("heater timeout"));
-    lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
-
-    char buffer[32] = {0};
-    if (heater_timeout)
-        int_to_string(heater_timeout, buffer, PSTR(" min"));
-    else
-        strcpy_P(buffer, PSTR("off"));
-
-    lcd_lib_draw_string_center(35, buffer);
-
-    lcd_lib_update_screen();
-}
-
 static void lcd_menu_preferences()
 {
     lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 13, lcd_preferences_item, lcd_preferences_details);
@@ -920,7 +889,7 @@ static void lcd_menu_preferences()
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_screen_contrast, 0, 4));
         else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_heater_timeout, 0, 2));
+            menu.add_menu(menu_t(lcd_menu_heatercheck, MAIN_MENU_ITEM_POS(1)));
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_buildplate_pid));

@@ -20,6 +20,8 @@ uint8_t lcd_sleep_contrast = 0;
 uint8_t led_sleep_glow = 0;
 uint8_t expert_flags = FLAG_PID_NOZZLE;
 float end_of_print_retraction = END_OF_PRINT_RETRACTION;
+uint8_t heater_check_temp = MAX_HEATING_TEMPERATURE_INCREASE;
+uint8_t heater_check_time = MAX_HEATING_CHECK_MILLIS / 1000;
 
 uint16_t led_timeout = LED_DIM_TIME;
 uint8_t led_sleep_brightness = 0;
@@ -1590,6 +1592,162 @@ void lcd_menu_swap_extruder()
 }
 
 #endif
+static void lcd_store_heatercheck()
+{
+    SET_HEATER_TIMEOUT(heater_timeout);
+    SET_HEATER_CHECK_TEMP(heater_check_temp);
+    SET_HEATER_CHECK_TIME(heater_check_time);
+    uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version < 6)
+    {
+        SET_EXPERT_VERSION(5);
+    }
+    menu.return_to_previous();
+}
+
+static void lcd_preset_heatercheck_time()
+{
+    lcd_tune_value(heater_check_time, 0, 120);
+}
+
+static void lcd_preset_heater_timeout()
+{
+    lcd_tune_value(heater_timeout, 0, 60);
+}
+
+// create menu options for "Heater check"
+static const menu_t & get_heatercheck_menuoption(uint8_t nr, menu_t &opt)
+{
+    uint8_t index(0);
+    if (nr == index++)
+    {
+        // STORE
+        opt.setData(MENU_NORMAL, lcd_store_heatercheck);
+    }
+    else if (nr == index++)
+    {
+        // RETURN
+        opt.setData(MENU_NORMAL, lcd_change_to_previous_menu);
+    }
+    else if (nr == index++)
+    {
+        // heater timeout
+        opt.setData(MENU_INPLACE_EDIT, lcd_preset_heater_timeout, 2);
+    }
+    else if (nr == index++)
+    {
+        // period of max. power
+        opt.setData(MENU_INPLACE_EDIT, lcd_preset_heatercheck_time, 2);
+    }
+    return opt;
+}
+
+static void drawHeatercheckSubmenu(uint8_t nr, uint8_t &flags)
+{
+    uint8_t index(0);
+    char buffer[32] = {0};
+    if (nr == index++)
+    {
+        // Store
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Store options"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT
+                                , BOTTOM_MENU_YPOS
+                                , 52
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("STORE")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+    else if (nr == index++)
+    {
+        // RETURN
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 + 2*LCD_CHAR_MARGIN_LEFT
+                           , BOTTOM_MENU_YPOS
+                           , 52
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Click to return"));
+            flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 + LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        // max. time
+        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Idle timeout"));
+            flags |= MENU_STATUSLINE;
+        }
+        lcd_lib_draw_string_leftP(20, PSTR("Timeout"));
+        if (heater_timeout)
+            int_to_string(heater_timeout, buffer, PSTR(" min"));
+        else
+            strcpy_P(buffer, PSTR("off"));
+
+        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING*12
+                                , 20
+                                , LCD_CHAR_SPACING*6
+                                , LCD_CHAR_HEIGHT
+                                , buffer
+                                , ALIGN_RIGHT | ALIGN_VCENTER
+                                , flags);
+    }
+    else if (nr == index++)
+    {
+        // max. time
+        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Period of max. power"));
+            flags |= MENU_STATUSLINE;
+        }
+        lcd_lib_draw_string_leftP(32, PSTR("Max. power"));
+        if (heater_check_time)
+            int_to_string(heater_check_time, buffer, PSTR(" sec"));
+        else
+            strcpy_P(buffer, PSTR("off"));
+
+        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING*11
+                                , 32
+                                , LCD_CHAR_SPACING*7
+                                , LCD_CHAR_HEIGHT
+                                , buffer
+                                , ALIGN_RIGHT | ALIGN_VCENTER
+                                , flags);
+    }
+}
+
+void lcd_menu_heatercheck()
+{
+    lcd_basic_screen();
+    lcd_lib_draw_hline(3, 124, 13);
+
+    menu.process_submenu(get_heatercheck_menuoption, 4);
+
+    uint8_t flags = 0;
+    for (uint8_t index=0; index<4; ++index) {
+        menu.drawSubMenu(drawHeatercheckSubmenu, index, flags);
+    }
+    if (!(flags & MENU_STATUSLINE))
+    {
+        lcd_lib_draw_string_leftP(5, PSTR("Heater check"));
+    }
+
+    lcd_lib_update_screen();
+}
+
 
 
 #endif//ENABLE_ULTILCD2

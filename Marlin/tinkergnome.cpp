@@ -78,6 +78,18 @@ static void lcd_position_z_axis();
 void tinkergnome_init()
 {
     uint16_t version = GET_EXPERT_VERSION()+1;
+
+    if (version > 5)
+    {
+        // read heater check variables
+        heater_check_temp = GET_HEATER_CHECK_TEMP();
+        heater_check_time = GET_HEATER_CHECK_TIME();
+    }
+    else
+    {
+        heater_check_temp = MAX_HEATING_TEMPERATURE_INCREASE;
+        heater_check_time = MAX_HEATING_CHECK_MILLIS / 1000;
+    }
     if (version > 4)
     {
         // read end of print retraction length from eeprom

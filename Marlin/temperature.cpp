@@ -535,9 +535,9 @@ void manage_heater()
         #endif
       }
     #endif
-    if (soft_pwm[e] == (PID_MAX >> 1))
+    if ((heater_check_time) && (soft_pwm[e] == (PID_MAX >> 1)))
     {
-        if (current_temperature[e] - max_heating_start_temperature[e] > MAX_HEATING_TEMPERATURE_INCREASE)
+        if (current_temperature[e] - max_heating_start_temperature[e] > heater_check_temp)
         {
             max_heating_start_millis[e] = 0;
         }
@@ -546,7 +546,7 @@ void manage_heater()
             max_heating_start_millis[e] = millis();
             max_heating_start_temperature[e] = current_temperature[e];
         }
-        if (millis() > max_heating_start_millis[e] + MAX_HEATING_CHECK_MILLIS)
+        if (millis() > max_heating_start_millis[e] + heater_check_time*1000)
         {
             //Did not heat up MAX_HEATING_TEMPERATURE_INCREASE in MAX_HEATING_CHECK_MILLIS while the PID was at the maximum.
             //Potential problems could be that the heater is not working, or the temperature sensor is not measuring what the heater is heating.
