@@ -15,6 +15,8 @@
 #define EEPROM_END_RETRACT 0x426  // 4 Byte
 #define EEPROM_HEATER_CHECK_TEMP 0x42A  // 1 Byte
 #define EEPROM_HEATER_CHECK_TIME 0x42B  // 1 Byte
+#define EEPROM_PID_2 0x42C  // 12 Byte
+#define EEPROM_RESERVED 0x438  // next position
 
 #define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
 #define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
@@ -74,6 +76,7 @@ extern uint16_t led_timeout;
 extern uint8_t led_sleep_brightness;
 extern uint8_t heater_check_temp;
 extern uint8_t heater_check_time;
+extern float pid2[3];
 
 
 FORCE_INLINE bool pidTempBed() { return (expert_flags & FLAG_PID_BED); }

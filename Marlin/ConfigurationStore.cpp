@@ -280,9 +280,9 @@ void Config_ResetDefault()
     // call updatePID (similar to when we have processed M301)
     updatePID();
 
-#ifdef PID_ADD_EXTRUSION_RATE
-    Kc = DEFAULT_Kc;
-#endif//PID_ADD_EXTRUSION_RATE
+//#ifdef PID_ADD_EXTRUSION_RATE
+//    Kc = DEFAULT_Kc;
+//#endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
     float tmp_motor_current_setting[]=DEFAULT_PWM_MOTOR_CURRENT;
     motor_current_setting[0] = tmp_motor_current_setting[0];

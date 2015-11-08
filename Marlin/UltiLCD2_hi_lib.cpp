@@ -207,8 +207,8 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, scrollDrawCallbac
     viewPos += viewDiff / 4;
 //    if (viewDiff > 0) { viewPos ++; led_glow = led_glow_dir = 0; }
 //    if (viewDiff < 0) { viewPos --; led_glow = led_glow_dir = 0; }
-    if (viewDiff > 0) { viewPos ++; }
-    if (viewDiff < 0) { viewPos --; }
+    if (viewDiff > 0) { ++viewPos; }
+    else if (viewDiff < 0) { --viewPos; }
 
     uint8_t drawOffset = 10 - (uint16_t(viewPos) % 8);
     uint8_t itemOffset = uint16_t(viewPos) / 8;
@@ -346,5 +346,32 @@ bool check_preheat()
     }
     return true;
 }
+
+#if EXTRUDERS > 1
+void lcd_select_nozzle(menuFunc_t callbackOnSelect, menuFunc_t callbackOnAbort)
+{
+    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
+
+    if (lcd_lib_button_pressed)
+    {
+        uint8_t index(SELECTED_MAIN_MENU_ITEM());
+        if (index < 2)
+        {
+            active_extruder = index;
+            if (callbackOnSelect) callbackOnSelect();
+        }
+        else
+        {
+            if (callbackOnAbort)
+                callbackOnAbort();
+            else
+                menu.return_to_previous();
+        }
+    }
+
+    lcd_lib_update_screen();
+}
+#endif
+
 
 #endif//ENABLE_ULTILCD2

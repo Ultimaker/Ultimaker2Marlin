@@ -1,9 +1,6 @@
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
-//#include "Marlin.h"
-//#include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
 #include "temperature.h"
-//#include "ConfigurationStore.h"
 #include "UltiLCD2.h"
 #include "UltiLCD2_low_lib.h"
 #include "UltiLCD2_hi_lib.h"
@@ -121,82 +118,91 @@ static void lcd_cooldown()
     // menu.return_to_previous();
 }
 
-#if EXTRUDERS > 1
-static void lcd_select_nozzle()
+FORCE_INLINE static void start_material_settings()
 {
-    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
-
-    if (lcd_lib_button_pressed)
-    {
-        uint8_t index(SELECTED_MAIN_MENU_ITEM());
-        if (index < 2)
-        {
-            active_extruder = index;
-            menu.return_to_previous();
-        }
-        else
-        {
-            menu.return_to_previous();
-            menu.return_to_previous();
-        }
-    }
-
-    lcd_lib_update_screen();
+#if EXTRUDERS > 1
+    // remove nozzle selection menu
+    menu.return_to_previous();
+#endif // EXTRUDERS
+    menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
 }
-#endif
+
+//static void start_material_move()
+//{
+//    set_extrude_min_temp(0);
+//    enquecommand_P(PSTR("G92 E0"));
+//    if (current_temperature[active_extruder] < (material[active_extruder].temperature / 2))
+//    {
+//        target_temperature[active_extruder] = material[active_extruder].temperature;
+//    }
+//    menu.replace_menu(menu_t(lcd_menu_expert_extrude, MAIN_MENU_ITEM_POS(5)));
+//    menu.set_selection(5);
+//}
 
 static void start_material_change()
 {
+#if EXTRUDERS > 1
+    // remove nozzle selection menu
+    menu.return_to_previous();
+#endif // EXTRUDERS
     minProgress = 0;
     char buffer[32] = {0};
     enquecommand_P(PSTR("G28 X0 Y0"));
     sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
     enquecommand(buffer);
-    menu.replace_menu(menu_t(lcd_menu_material_main_return));
+    menu.add_menu(menu_t(lcd_menu_material_main_return));
     menu.add_menu(menu_t(lcd_menu_change_material_preheat));
 }
 
-static void init_material_change()
-{
 #if EXTRUDERS > 1
-    menu.add_menu(menu_t(start_material_change));
-    menu.add_menu(menu_t(lcd_select_nozzle, MAIN_MENU_ITEM_POS(0)));
-#else
-    menu.add_menu(menu_t(start_material_change));
-#endif
+void lcd_dual_material_settings()
+{
+    lcd_select_nozzle(start_material_settings, NULL);
 }
 
-static void start_material_move()
+void lcd_dual_material_change()
 {
-    set_extrude_min_temp(0);
-    enquecommand_P(PSTR("G92 E0"));
-    if (current_temperature[active_extruder] < (material[active_extruder].temperature / 2))
-    {
-        target_temperature[active_extruder] = material[active_extruder].temperature;
-    }
-    menu.replace_menu(menu_t(lcd_menu_expert_extrude, MAIN_MENU_ITEM_POS(5)));
-    menu.set_selection(5);
+    lcd_select_nozzle(start_material_change, NULL);
+}
+#endif
+
+static void init_material_settings()
+{
+#if EXTRUDERS < 2
+    active_extruder = 0;
+    start_material_settings();
+#else
+    menu.add_menu(menu_t(lcd_dual_material_settings, MAIN_MENU_ITEM_POS(active_extruder ? 1 : 0)));
+#endif
 }
 
 static void init_material_move()
 {
-#if EXTRUDERS > 1
-    menu.add_menu(menu_t(start_material_move));
-    menu.add_menu(menu_t(lcd_select_nozzle, MAIN_MENU_ITEM_POS(0)));
+#if EXTRUDERS < 2
+    active_extruder = 0;
+    start_move_material();
 #else
-    menu.add_menu(menu_t(start_material_move));
+    menu.add_menu(menu_t(lcd_dual_move_material, MAIN_MENU_ITEM_POS(active_extruder ? 1 : 0)));
+#endif // EXTRUDERS
+}
+
+static void init_material_change()
+{
+#if EXTRUDERS < 2
+    active_extruder = 0;
+    start_material_change();
+#else
+    menu.add_menu(menu_t(lcd_dual_material_change, MAIN_MENU_ITEM_POS(active_extruder ? 1 : 0)));
 #endif
 }
 
-static void init_material_settings()
-{
-#if EXTRUDERS > 1
-    menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
-    menu.add_menu(menu_t(lcd_select_nozzle, MAIN_MENU_ITEM_POS(0)));
-#else
-    menu.add_menu(menu_t(lcd_menu_material_select, SCROLL_MENU_ITEM_POS(0)));
-#endif
-}
+//#if EXTRUDERS > 1
+//    menu.add_menu(menu_t(start_material_move));
+//    menu.add_menu(menu_t(lcd_select_nozzle, MAIN_MENU_ITEM_POS(0)));
+//#else
+//    menu.add_menu(menu_t(start_material_move));
+//#endif
+//}
 
 static void lcd_main_print()
 {

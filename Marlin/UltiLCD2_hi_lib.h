@@ -26,6 +26,10 @@ void lcd_menu_edit_setting();
 bool check_heater_timeout();
 bool check_preheat();
 
+#if EXTRUDERS > 1
+void lcd_select_nozzle(menuFunc_t callbackOnSelect = 0, menuFunc_t callbackOnAbort = 0);
+#endif // EXTRUDERS
+
 extern uint8_t heater_timeout;
 extern int backup_temperature[EXTRUDERS];
 

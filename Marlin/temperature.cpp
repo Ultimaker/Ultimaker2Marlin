@@ -59,9 +59,9 @@ float current_temperature_bed = 0.0;
   float Kp=DEFAULT_Kp;
   float Ki=(DEFAULT_Ki*PID_dT);
   float Kd=(DEFAULT_Kd/PID_dT);
-  #ifdef PID_ADD_EXTRUSION_RATE
-    float Kc=DEFAULT_Kc;
-  #endif
+//  #ifdef PID_ADD_EXTRUSION_RATE
+//    float Kc=DEFAULT_Kc;
+//  #endif
 #endif //PIDTEMP
 
 #ifdef PIDTEMPBED
@@ -463,19 +463,31 @@ void manage_heater()
             temp_iState[e] = 0.0;
             pid_reset[e] = false;
           }
-          pTerm[e] = Kp * pid_error[e];
+          #if EXTRUDERS > 1
+            pTerm[e] = (active_extruder ? pid2[0] : Kp) * pid_error[e];
+          #else
+            pTerm[e] = Kp * pid_error[e];
+          #endif
           temp_iState[e] += pid_error[e];
           temp_iState[e] = constrain(temp_iState[e], temp_iState_min[e], temp_iState_max[e]);
-          iTerm[e] = Ki * temp_iState[e];
+          #if EXTRUDERS > 1
+            iTerm[e] = (active_extruder ? pid2[1] : Ki) * temp_iState[e];
+          #else
+            iTerm[e] = Ki * temp_iState[e];
+          #endif
 
           //K1 defined in Configuration.h in the PID settings
           #define K2 (1.0-K1)
-          dTerm[e] = (Kd * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
+          #if EXTRUDERS > 1
+            dTerm[e] = ((active_extruder ? pid2[2] : Kd) * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
+          #else
+            dTerm[e] = (Kd * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
+          #endif
           pid_output = constrain(pTerm[e] + iTerm[e] - dTerm[e], 0, PID_MAX);
         }
         temp_dState[e] = pid_input;
     #else
-          pid_output = constrain(target_temp, 0, PID_MAX);
+        pid_output = constrain(target_temp, 0, PID_MAX);
     #endif //PID_OPENLOOP
     #ifdef PID_DEBUG
     SERIAL_ECHO_START;

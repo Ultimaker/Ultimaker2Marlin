@@ -22,6 +22,7 @@ uint8_t expert_flags = FLAG_PID_NOZZLE;
 float end_of_print_retraction = END_OF_PRINT_RETRACTION;
 uint8_t heater_check_temp = MAX_HEATING_TEMPERATURE_INCREASE;
 uint8_t heater_check_time = MAX_HEATING_CHECK_MILLIS / 1000;
+float pid2[3] = {DEFAULT_Kp, DEFAULT_Ki*PID_dT, DEFAULT_Kd/PID_dT};
 
 uint16_t led_timeout = LED_DIM_TIME;
 uint8_t led_sleep_brightness = 0;
@@ -1592,6 +1593,23 @@ void lcd_menu_swap_extruder()
 }
 
 #endif
+
+static void lcd_store_heatercheck();
+
+static void lcd_store_pid2()
+{
+    eeprom_write_block(pid2, (uint8_t *)(EEPROM_PID_2), sizeof(pid2));
+
+    uint16_t version = GET_EXPERT_VERSION()+1;
+    if (version < 6)
+    {
+        SET_EXPERT_VERSION(5);
+        lcd_store_heatercheck();
+    }
+    menu.return_to_previous();
+}
+
+
 static void lcd_store_heatercheck()
 {
     SET_HEATER_TIMEOUT(heater_timeout);
@@ -1601,6 +1619,7 @@ static void lcd_store_heatercheck()
     if (version < 6)
     {
         SET_EXPERT_VERSION(5);
+        lcd_store_pid2();
     }
     menu.return_to_previous();
 }

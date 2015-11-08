@@ -1937,13 +1937,28 @@ void process_commands()
     #ifdef PIDTEMP
     case 301: // M301
       {
-        if(code_seen('P')) Kp = code_value();
-        if(code_seen('I')) Ki = scalePID_i(code_value());
-        if(code_seen('D')) Kd = scalePID_d(code_value());
+        if(code_seen('P'))
+        {
+            Kp = code_value();
+            if (active_extruder > 0) pid2[0] = Kp;
+        }
 
-        #ifdef PID_ADD_EXTRUSION_RATE
-        if(code_seen('C')) Kc = code_value();
-        #endif
+        if(code_seen('I'))
+        {
+            Ki = scalePID_i(code_value());
+            if (active_extruder > 0) pid2[1] = Ki;
+        }
+
+        if(code_seen('D'))
+        {
+            Kd = scalePID_d(code_value());
+            if (active_extruder > 0) pid2[2] = Kd;
+        }
+
+
+//        #ifdef PID_ADD_EXTRUSION_RATE
+//        if(code_seen('C')) Kc = code_value();
+//        #endif
 
         updatePID();
         SERIAL_PROTOCOL(MSG_OK);
@@ -1953,11 +1968,11 @@ void process_commands()
         SERIAL_PROTOCOL(unscalePID_i(Ki));
         SERIAL_PROTOCOL(" d:");
         SERIAL_PROTOCOL(unscalePID_d(Kd));
-        #ifdef PID_ADD_EXTRUSION_RATE
-        SERIAL_PROTOCOL(" c:");
-        //Kc does not have scaling applied above, or in resetting defaults
-        SERIAL_PROTOCOL(Kc);
-        #endif
+//        #ifdef PID_ADD_EXTRUSION_RATE
+//        SERIAL_PROTOCOL(" c:");
+//        //Kc does not have scaling applied above, or in resetting defaults
+//        SERIAL_PROTOCOL(Kc);
+//        #endif
         SERIAL_PROTOCOLLN("");
       }
       break;

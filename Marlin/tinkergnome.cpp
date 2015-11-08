@@ -84,11 +84,15 @@ void tinkergnome_init()
         // read heater check variables
         heater_check_temp = GET_HEATER_CHECK_TEMP();
         heater_check_time = GET_HEATER_CHECK_TIME();
+        eeprom_read_block(pid2, (uint8_t*)EEPROM_PID_2, sizeof(pid2));
     }
     else
     {
         heater_check_temp = MAX_HEATING_TEMPERATURE_INCREASE;
         heater_check_time = MAX_HEATING_CHECK_MILLIS / 1000;
+        pid2[0] = Kp;
+        pid2[1] = Ki;
+        pid2[2] = Kd;
     }
     if (version > 4)
     {

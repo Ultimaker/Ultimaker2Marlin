@@ -44,7 +44,10 @@ extern float current_temperature_bed;
 #endif
 
 #ifdef PIDTEMP
-  extern float Kp,Ki,Kd,Kc;
+  extern float Kp,Ki,Kd;
+//  #ifdef PID_ADD_EXTRUSION_RATE
+//  extern float Kc;
+//  #endif // PID_ADD_EXTRUSION_RATE
   float scalePID_i(float i);
   float scalePID_d(float d);
   float unscalePID_i(float i);
