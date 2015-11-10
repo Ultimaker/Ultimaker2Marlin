@@ -376,6 +376,17 @@ static void lcd_babystep_x() { _lcd_babystep(X_AXIS); }
 static void lcd_babystep_y() { _lcd_babystep(Y_AXIS); }
 static void lcd_babystep_z() { _lcd_babystep(Z_AXIS); }
 
+static void lcd_store_babystep_z()
+{
+    lcd_lib_keyclick();
+    if (fabs(FLOAT_SETTING(Z_AXIS)) > 0.001)
+    {
+        add_homeing[Z_AXIS] += FLOAT_SETTING(Z_AXIS);
+        Config_StoreSettings();
+        FLOAT_SETTING(Z_AXIS) = 0;
+    }
+}
+
 // create menu options for "move axes"
 static const menu_t & get_babystep_menuoption(uint8_t nr, menu_t &opt)
 {
@@ -399,6 +410,11 @@ static const menu_t & get_babystep_menuoption(uint8_t nr, menu_t &opt)
     {
         // babystep z
         opt.setData(MENU_INPLACE_EDIT, lcd_babystep_z, (uint8_t)0, 0);
+    }
+    else if (nr == index++)
+    {
+        // store z offset
+        opt.setData(MENU_NORMAL, lcd_store_babystep_z);
     }
     return opt;
 }
@@ -497,6 +513,26 @@ static void drawBabystepSubmenu(uint8_t nr, uint8_t &flags)
                               , flags);
 
     }
+    else if (nr == index++)
+    {
+        // store z offset
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT - 2*LCD_CHAR_SPACING
+               , 39
+               , 2*LCD_CHAR_SPACING
+               , LCD_CHAR_HEIGHT+1
+               , flags);
+
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Store Z offset"));
+            flags |= MENU_STATUSLINE;
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT - 2*LCD_CHAR_SPACING + 1, 39, storeGfx);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT - 2*LCD_CHAR_SPACING + 1, 39, storeGfx);
+        }
+    }
 }
 
 static void lcd_menu_babystepping()
@@ -504,10 +540,17 @@ static void lcd_menu_babystepping()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    menu.process_submenu(get_babystep_menuoption, 4);
+    uint8_t iCount(4);
+    // show z store option only if no other submenu is active
+    if ((fabs(FLOAT_SETTING(Z_AXIS)) > 0.001) && (!menu.isSubmenuActive() || menu.isSelected(4)))
+    {
+        ++iCount;
+    }
+
+    menu.process_submenu(get_babystep_menuoption, iCount);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<4; ++index)
+    for (uint8_t index=0; index<iCount; ++index)
     {
         menu.drawSubMenu(drawBabystepSubmenu, index, flags);
     }

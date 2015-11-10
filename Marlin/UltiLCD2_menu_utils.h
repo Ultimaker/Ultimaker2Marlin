@@ -124,6 +124,7 @@ public:
     void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr, uint8_t &flags);
     void drawSubMenu(menuDrawCallback_t drawFunc, uint8_t nr);
     FORCE_INLINE bool isSubmenuSelected() const { return (selectedSubmenu >= 0); }
+    FORCE_INLINE bool isSubmenuActive() { return ((selectedSubmenu >= 0) && activeSubmenu.processMenuFunc); }
     FORCE_INLINE bool isSelected(uint8_t nr) { return (selectedSubmenu == nr); }
     FORCE_INLINE bool isActive(uint8_t nr) { return ((selectedSubmenu == nr) && activeSubmenu.processMenuFunc); }
 
