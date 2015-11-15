@@ -3,8 +3,6 @@
 
 #include "preferences.h"
 
-void lcd_store_expertflags();
-
 void lcd_menu_sleeptimer();
 void lcd_menu_axeslimit();
 void lcd_menu_steps();
@@ -14,9 +12,20 @@ void lcd_menu_maxspeed();
 void lcd_menu_acceleration();
 void lcd_menu_heatercheck();
 
+#if (EXTRUDERS > 1) && defined(MOTOR_CURRENT_PWM_E_PIN) && (MOTOR_CURRENT_PWM_E_PIN > -1)
+void lcd_init_motorcurrent();
+#endif
+
 #if EXTRUDERS > 1
 void init_swap_menu();
 void lcd_menu_swap_extruder();
+#endif
+
+#if (TEMP_SENSOR_BED != 0) || (EXTRUDERS > 1)
+void lcd_menu_tempcontrol();
+#else
+void init_tempcontrol_e1();
+void lcd_menu_tempcontrol_e1();
 #endif
 
 #endif //ULTILCD2_MENU_PREFS_H

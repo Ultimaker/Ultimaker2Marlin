@@ -39,8 +39,6 @@
 #define OLD_FEEDRATE  (*(float*)&lcd_cache[0])
 #define OLD_ACCEL     (*(float*)&lcd_cache[sizeof(float)])
 #define TARGET_STEPS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-#define FLOAT_SETTING(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-
 
 float recover_height = 0.0f;
 float recover_position[NUM_AXIS] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -75,24 +73,81 @@ static void lcd_print_tune_accel();
 static void lcd_print_tune_xyjerk();
 static void lcd_position_z_axis();
 
+#define EXPERT_VERSION 6
+
 void tinkergnome_init()
 {
     uint16_t version = GET_EXPERT_VERSION()+1;
 
+    if (version > 6)
+    {
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
+        // read buildplate pid coefficients
+        float pidBed[3];
+        eeprom_read_block(pidBed, (uint8_t*)EEPROM_PID_BED, sizeof(pidBed));
+        bedKp = pidBed[0];
+        bedKi = pidBed[1];
+        bedKd = pidBed[2];
+#endif
+#if EXTRUDERS > 1
+        e2_steps_per_unit = GET_STEPS_E2();
+#endif
+    }
+    else
+    {
+        // write buildplate pid coefficients
+        float pidBed[3];
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
+        pidBed[0] = bedKp;
+        pidBed[1] = bedKi;
+        pidBed[2] = bedKd;
+#else
+        pidBed[0] = DEFAULT_bedKp;
+        pidBed[1] = (DEFAULT_bedKi*PID_dT);
+        pidBed[2] = (DEFAULT_bedKd/PID_dT);
+#endif
+        eeprom_write_block(pidBed, (uint8_t*)EEPROM_PID_BED, sizeof(pidBed));
+
+        SET_STEPS_E2(axis_steps_per_unit[3]);
+    }
     if (version > 5)
     {
         // read heater check variables
         heater_check_temp = GET_HEATER_CHECK_TEMP();
         heater_check_time = GET_HEATER_CHECK_TIME();
+#if EXTRUDERS > 1
         eeprom_read_block(pid2, (uint8_t*)EEPROM_PID_2, sizeof(pid2));
+#endif
+#if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
+        motor_current_e2 = GET_MOTOR_CURRENT_E2();
+#endif
     }
     else
     {
         heater_check_temp = MAX_HEATING_TEMPERATURE_INCREASE;
         heater_check_time = MAX_HEATING_CHECK_MILLIS / 1000;
+
+        SET_HEATER_CHECK_TEMP(heater_check_temp);
+        SET_HEATER_CHECK_TIME(heater_check_time);
+#if EXTRUDERS > 1
         pid2[0] = Kp;
         pid2[1] = Ki;
         pid2[2] = Kd;
+        eeprom_write_block(pid2, (uint8_t*)EEPROM_PID_2, sizeof(pid2));
+#else
+        float pid2[3];
+        pid2[0] = Kp;
+        pid2[1] = Ki;
+        pid2[2] = Kd;
+        eeprom_write_block(pid2, (uint8_t*)EEPROM_PID_2, sizeof(pid2));
+#endif // EXTRUDERS
+
+#if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
+        motor_current_e2 = motor_current_setting[2];
+        SET_MOTOR_CURRENT_E2(motor_current_e2);
+#else
+        SET_MOTOR_CURRENT_E2(motor_current_setting[2]);
+#endif // EXTRUDERS
     }
     if (version > 4)
     {
@@ -102,12 +157,18 @@ void tinkergnome_init()
     else
     {
         end_of_print_retraction = END_OF_PRINT_RETRACTION;
+        SET_END_RETRACT(end_of_print_retraction);
     }
     if (version > 3)
     {
         // read axis limits from eeprom
         eeprom_read_block(min_pos, (uint8_t*)EEPROM_AXIS_LIMITS, sizeof(min_pos));
         eeprom_read_block(max_pos, (uint8_t*)(EEPROM_AXIS_LIMITS+sizeof(min_pos)), sizeof(max_pos));
+    }
+    else
+    {
+        eeprom_write_block(min_pos, (uint8_t *)EEPROM_AXIS_LIMITS, sizeof(min_pos));
+        eeprom_write_block(max_pos, (uint8_t *)(EEPROM_AXIS_LIMITS+sizeof(min_pos)), sizeof(max_pos));
     }
     if (version > 2)
     {
@@ -116,6 +177,7 @@ void tinkergnome_init()
     else
     {
         heater_timeout = 3;
+        SET_HEATER_TIMEOUT(heater_timeout);
     }
     if (version > 1)
     {
@@ -124,6 +186,7 @@ void tinkergnome_init()
     else
     {
         expert_flags = FLAG_PID_NOZZLE;
+        SET_EXPERT_FLAGS(expert_flags);
     }
     if (version > 0)
     {
@@ -145,6 +208,18 @@ void tinkergnome_init()
         led_timeout = 0;
         lcd_timeout = 0;
         lcd_contrast = 0xDF;
+        SET_UI_MODE(ui_mode);
+        SET_SLEEP_BRIGHTNESS(led_sleep_brightness);
+        SET_SLEEP_CONTRAST(lcd_sleep_contrast);
+        SET_SLEEP_GLOW(led_sleep_glow);
+        SET_LED_TIMEOUT(led_timeout);
+        SET_LCD_TIMEOUT(lcd_timeout);
+        SET_LCD_CONTRAST(lcd_contrast);
+    }
+
+    if (version < EXPERT_VERSION+1)
+    {
+        SET_EXPERT_VERSION(EXPERT_VERSION);
     }
 }
 
@@ -2724,7 +2799,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
             strcpy_P(buffer, PSTR("Nozzle "));
             char *c=buffer+7;
 #if EXTRUDERS > 1
-            strcpy_P(c, "(");
+            strcpy_P(c, PSTR("("));
             c=int_to_string(active_extruder+1, c+1, PSTR(") "));
 #endif
             int_to_string(target_temperature[active_extruder], int_to_string(dsp_temperature[active_extruder], c, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
@@ -2842,7 +2917,7 @@ void lcd_menu_expert_extrude()
         lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, 5, PSTR("Move material"));
 #if EXTRUDERS > 1
     char buffer[8] = {0};
-    strcpy_P(buffer, "(");
+    strcpy_P(buffer, PSTR("("));
     int_to_string(active_extruder+1, buffer+1, PSTR(")"));
     lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT+(14*LCD_CHAR_SPACING), 5, buffer);
 #endif

@@ -149,6 +149,9 @@ void manage_inactivity();
   #define disable_e2() /* nothing */
 #endif
 
+#if EXTRUDERS > 1
+extern unsigned char last_extruder;
+#endif // EXTRUDERS
 
 enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
 

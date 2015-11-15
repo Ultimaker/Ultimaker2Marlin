@@ -16,7 +16,6 @@
 struct materialSettings material[EXTRUDERS];
 
 void doCooldown();//TODO
-static void lcd_menu_material_main();
 static void lcd_menu_change_material_remove();
 static void lcd_menu_change_material_remove_wait_user();
 static void lcd_menu_change_material_remove_wait_user_ready();
@@ -34,41 +33,15 @@ static void cancelMaterialInsert()
     digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
 }
 
-void lcd_menu_material()
-{
-#if EXTRUDERS > 1
-    lcd_tripple_menu(PSTR("PRIMARY|NOZZLE"), PSTR("SECONDARY|NOZZLE"), PSTR("RETURN"));
-
-    if (lcd_lib_button_pressed)
-    {
-        if (IS_SELECTED_MAIN(0))
-        {
-            active_extruder = 0;
-            menu.add_menu(menu_t(lcd_menu_material_main));
-        }
-        else if (IS_SELECTED_MAIN(1))
-        {
-            active_extruder = 1;
-            menu.add_menu(menu_t(lcd_menu_material_main));
-        }
-        else if (IS_SELECTED_MAIN(2))
-            menu.return_to_previous();
-    }
-
-    lcd_lib_update_screen();
-#else
-    menu.replace_menu(menu_t(lcd_menu_material_main), false);
-#endif
-}
-
 void lcd_menu_material_main_return()
 {
     doCooldown();
     enquecommand_P(PSTR("G28 X0 Y0"));
-    menu.return_to_previous();
+    enquecommand_P(PSTR("M84 X Y E"));
+    menu.return_to_previous(false);
 }
 
-static void lcd_menu_material_main()
+void lcd_menu_material_main()
 {
     lcd_tripple_menu(PSTR("CHANGE"), PSTR("SETTINGS"), PSTR("RETURN"));
 
@@ -77,6 +50,7 @@ static void lcd_menu_material_main()
         if (IS_SELECTED_MAIN(0) && !is_command_queued())
         {
             minProgress = 0;
+            // move head to front
             char buffer[32] = {0};
             enquecommand_P(PSTR("G28 X0 Y0"));
             sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
@@ -164,6 +138,9 @@ static void lcd_menu_change_material_remove()
         disable_e0();
         disable_e1();
         disable_e2();
+    #if EXTRUDERS > 1
+        last_extruder = 0xFF;
+    #endif
     }
 
     long pos = -st_get_position(E_AXIS);
@@ -693,9 +670,9 @@ static void lcd_menu_material_selected()
     lcd_lib_draw_string_center(30, LCD_CACHE_FILENAME(0));
 #if EXTRUDERS > 1
     if (active_extruder == 0)
-        lcd_lib_draw_string_centerP(40, PSTR("for primary nozzle"));
+        lcd_lib_draw_string_centerP(40, PSTR("for extruder 1"));
     else if (active_extruder == 1)
-        lcd_lib_draw_string_centerP(40, PSTR("for secondary nozzle"));
+        lcd_lib_draw_string_centerP(40, PSTR("for extruder 2"));
 #endif
     lcd_lib_update_screen();
 }

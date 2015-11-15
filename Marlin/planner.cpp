@@ -478,6 +478,9 @@ void check_axes_activity()
       disable_e0();
       disable_e1();
       disable_e2();
+    #if EXTRUDERS > 1
+      last_extruder = 0xFF;
+    #endif
     }
 #if defined(FAN_PIN) && FAN_PIN > -1
   #ifdef FAN_KICKSTART_TIME
@@ -656,6 +659,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   if(block->steps_z != 0) enable_z();
 #endif
 
+#if EXTRUDERS < 2
   // Enable all
   if(block->steps_e != 0)
   {
@@ -663,6 +667,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
     enable_e1();
     enable_e2();
   }
+#endif // EXTRUDERS
 
   if (block->steps_e == 0)
   {

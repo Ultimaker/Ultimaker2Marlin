@@ -153,10 +153,12 @@ static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("Screen contrast"));
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Heater timeout"));
-#if TEMP_SENSOR_BED != 0
+//#if TEMP_SENSOR_BED != 0
+//    else if (nr == index++)
+//        strcpy_P(buffer, PSTR("Buildplate PID"));
+//#endif
     else if (nr == index++)
-        strcpy_P(buffer, PSTR("Buildplate PID"));
-#endif
+        strcpy_P(buffer, PSTR("Temperature control"));
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Retraction settings"));
     else if (nr == index++)
@@ -235,19 +237,19 @@ static void lcd_preferences_details(uint8_t nr)
             strcpy_P(c, PSTR("off"));
         }
     }
-#if TEMP_SENSOR_BED != 0
-    else if (nr == 7)
-    {
-        if (pidTempBed())
-        {
-            strcpy_P(buffer, PSTR("PID controlled"));
-        }
-        else
-        {
-            strcpy_P(buffer, PSTR("Off (bang-bang mode)"));
-        }
-    }
-#endif
+//#if TEMP_SENSOR_BED != 0
+//    else if (nr == 7)
+//    {
+//        if (pidTempBed())
+//        {
+//            strcpy_P(buffer, PSTR("PID controlled"));
+//        }
+//        else
+//        {
+//            strcpy_P(buffer, PSTR("Off (bang-bang mode)"));
+//        }
+//    }
+//#endif
     else if (nr == 10+BED_MENU_OFFSET)
     {
         strcpy_P(buffer, PSTR(STRING_CONFIG_H_AUTHOR));
@@ -268,7 +270,8 @@ static void lcd_menu_maintenance_advanced_return()
 {
     doCooldown();
     homeHead();
-    menu.return_to_previous();
+    enquecommand_P(PSTR("M84 X Y E"));
+    menu.return_to_previous(false);
 }
 
 static void move_head_to_front()
@@ -606,7 +609,11 @@ static void lcd_menu_maintenance_motion()
         else if (IS_SELECTED_SCROLL(2))
             menu.add_menu(menu_t(lcd_menu_maxspeed, MAIN_MENU_ITEM_POS(1)));
         else if (IS_SELECTED_SCROLL(3))
+#if (EXTRUDERS > 1) && defined(MOTOR_CURRENT_PWM_E_PIN) && (MOTOR_CURRENT_PWM_E_PIN > -1)
+            menu.add_menu(menu_t(lcd_init_motorcurrent, lcd_menu_motorcurrent, NULL, MAIN_MENU_ITEM_POS(1)));
+#else
             menu.add_menu(menu_t(lcd_menu_motorcurrent, MAIN_MENU_ITEM_POS(1)));
+#endif
         else if (IS_SELECTED_SCROLL(4))
             menu.add_menu(menu_t(lcd_menu_steps, MAIN_MENU_ITEM_POS(1)));
     }
@@ -758,34 +765,6 @@ static void lcd_clicksound_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
-#if TEMP_SENSOR_BED != 0
-static void lcd_buildplate_pid_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
-{
-    char buffer[20];
-    if (nr == 0)
-    {
-        strcpy_P(buffer, PSTR("< RETURN"));
-    }
-    else if (nr == 1)
-    {
-        buffer[0] = pidTempBed() ? '>' : ' ';
-        strcpy_P(buffer+1, PSTR("On"));
-    }
-    else if (nr == 2)
-    {
-        buffer[0] = pidTempBed() ? ' ' : '>';
-        strcpy_P(buffer+1, PSTR("Off"));
-    }
-    else
-    {
-        buffer[0] = ' ';
-        strcpy_P(buffer+1, PSTR("???"));
-    }
-
-    lcd_draw_scroll_entry(offsetY, buffer, flags);
-}
-#endif // TEMP_SENSOR_BED
-
 static void lcd_menu_uimode()
 {
     lcd_scroll_menu(PSTR("User interface"), 3, lcd_uimode_item, NULL);
@@ -862,33 +841,6 @@ static void lcd_menu_screen_contrast()
     lcd_lib_update_screen();
 }
 
-#if TEMP_SENSOR_BED != 0
-static void lcd_menu_buildplate_pid()
-{
-    lcd_scroll_menu(PSTR("Buildplate PID"), 3, lcd_buildplate_pid_item, NULL);
-    if (lcd_lib_button_pressed)
-    {
-        if (IS_SELECTED_SCROLL(1))
-        {
-            if (!pidTempBed())
-            {
-                expert_flags |= FLAG_PID_BED;
-                lcd_store_expertflags();
-            }
-        }
-        else if (IS_SELECTED_SCROLL(2))
-        {
-            if (pidTempBed())
-            {
-                expert_flags &= ~FLAG_PID_BED;
-                lcd_store_expertflags();
-            }
-        }
-        menu.return_to_previous();
-    }
-}
-#endif // TEMP_SENSOR_BED
-
 static void lcd_menu_preferences()
 {
     lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 13, lcd_preferences_item, lcd_preferences_details);
@@ -909,9 +861,11 @@ static void lcd_menu_preferences()
             menu.add_menu(menu_t(lcd_menu_screen_contrast, 0, 4));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_heatercheck, MAIN_MENU_ITEM_POS(1)));
-#if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_buildplate_pid));
+#if (TEMP_SENSOR_BED != 0) || (EXTRUDERS > 1)
+            menu.add_menu(menu_t(lcd_menu_tempcontrol));
+#else
+            menu.add_menu(menu_t(init_tempcontrol_e1, lcd_menu_tempcontrol_e1, NULL));
 #endif
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_retraction, MAIN_MENU_ITEM_POS(1)));

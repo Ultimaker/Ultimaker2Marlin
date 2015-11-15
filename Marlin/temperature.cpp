@@ -64,7 +64,7 @@ float current_temperature_bed = 0.0;
 //  #endif
 #endif //PIDTEMP
 
-#ifdef PIDTEMPBED
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
   float bedKp=DEFAULT_bedKp;
   float bedKi=(DEFAULT_bedKi*PID_dT);
   float bedKd=(DEFAULT_bedKd/PID_dT);
@@ -806,11 +806,11 @@ void tp_init()
     temp_iState_min[e] = 0.0;
     temp_iState_max[e] = PID_INTEGRAL_DRIVE_MAX / Ki;
 #endif //PIDTEMP
-#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
-    temp_iState_min_bed = 0.0;
-    temp_iState_max_bed = PID_INTEGRAL_DRIVE_MAX / bedKi;
-#endif //PIDTEMPBED
   }
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
+  temp_iState_min_bed = 0.0;
+  temp_iState_max_bed = PID_INTEGRAL_DRIVE_MAX / bedKi;
+#endif //PIDTEMPBED
 
   #if defined(HEATER_0_PIN) && (HEATER_0_PIN > -1)
     SET_OUTPUT(HEATER_0_PIN);

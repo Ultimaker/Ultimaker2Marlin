@@ -36,7 +36,7 @@ extern struct materialSettings material[EXTRUDERS];
 #define EEPROM_MATERIAL_FLOW_OFFSET(n)            ((uint16_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 13))
 #define EEPROM_MATERIAL_DIAMETER_OFFSET(n)        ((float*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 15))
 
-void lcd_menu_material();
+void lcd_menu_material_main();
 bool lcd_material_verify_material_settings();
 void lcd_material_reset_defaults();
 void lcd_material_set_material(uint8_t nr, uint8_t e);

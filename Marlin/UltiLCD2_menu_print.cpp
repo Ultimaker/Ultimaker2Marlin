@@ -94,7 +94,7 @@ void abortPrint()
     //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
     card.pause = false;
     pauseRequested = false;
-
+    printing_state  = PRINT_STATE_NORMAL;
 }
 
 static void userAbortPrint()
@@ -211,11 +211,11 @@ static void userStartPrint()
     else
     {
         recover_height = 0.0f;
-        #if EXTRUDERS > 1
+#if EXTRUDERS > 1
         active_extruder = (swapExtruders() ? 1 : 0);
-        #else
+#else
         active_extruder = 0;
-        #endif // EXTRUDERS
+#endif // EXTRUDERS
         menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
         doStartPrint();
     }
@@ -441,11 +441,11 @@ void lcd_menu_print_select()
             if (!card.filenameIsDir)
             {
                 //Start print
-                #if EXTRUDERS > 1
+            #if EXTRUDERS > 1
                 active_extruder = (swapExtruders() ? 1 : 0);
-                #else
+            #else
                 active_extruder = 0;
-                #endif // EXTRUDERS
+            #endif // EXTRUDERS
                 card.openFile(card.filename, true);
                 if (card.isFileOpen() && !is_command_queued())
                 {
@@ -516,11 +516,11 @@ void lcd_menu_print_select()
                         else
                         {
                             recover_height = 0.0f;
-                            #if EXTRUDERS > 1
+                        #if EXTRUDERS > 1
                             active_extruder = (swapExtruders() ? 1 : 0);
-                            #else
+                        #else
                             active_extruder = 0;
-                            #endif // EXTRUDERS
+                        #endif // EXTRUDERS
                             // move to heatup position
                             char buffer[32] = {0};
                             sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);

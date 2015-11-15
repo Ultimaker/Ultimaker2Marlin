@@ -1283,7 +1283,7 @@ void process_commands()
         break;
       starpos = (strchr(strchr_pointer + 4,'*'));
       if(starpos!=NULL)
-        *(starpos-1)='\0';
+        *(starpos)='\0';
       card.openFile(strchr_pointer + 4,true);
       break;
     case 24: //M24 - Start SD print
@@ -1513,6 +1513,11 @@ void process_commands()
             residencyStart = millis();
           }
         #endif //TEMP_RESIDENCY_TIME
+          if (printing_state != PRINT_STATE_HEATING)
+          {
+              // print aborted
+              break;
+          }
         }
         LCD_MESSAGEPGM(MSG_HEATING_COMPLETE);
         starttime=millis();
@@ -1543,6 +1548,11 @@ void process_commands()
           manage_inactivity();
           lcd_update();
           lifetime_stats_tick();
+          if (printing_state != PRINT_STATE_HEATING_BED)
+          {
+              // print aborted
+              break;
+          }
         }
         LCD_MESSAGEPGM(MSG_BED_DONE);
         previous_millis_cmd = millis();
@@ -1642,6 +1652,9 @@ void process_commands()
           disable_e0();
           disable_e1();
           disable_e2();
+        #if EXTRUDERS > 1
+          last_extruder = 0xFF;
+        #endif
           finishAndDisableSteppers();
         }
         else
@@ -1655,6 +1668,9 @@ void process_commands()
               disable_e0();
               disable_e1();
               disable_e2();
+          #if EXTRUDERS > 1
+              last_extruder = 0xFF;
+          #endif
             }
           #endif
         }
@@ -1940,19 +1956,25 @@ void process_commands()
         if(code_seen('P'))
         {
             Kp = code_value();
-            if (active_extruder > 0) pid2[0] = Kp;
+        #if EXTRUDERS > 1
+            if (active_extruder) pid2[0] = Kp;
+        #endif // EXTRUDERS
         }
 
         if(code_seen('I'))
         {
             Ki = scalePID_i(code_value());
-            if (active_extruder > 0) pid2[1] = Ki;
+        #if EXTRUDERS > 1
+            if (active_extruder) pid2[1] = Ki;
+        #endif // EXTRUDERS
         }
 
         if(code_seen('D'))
         {
             Kd = scalePID_d(code_value());
-            if (active_extruder > 0) pid2[2] = Kd;
+        #if EXTRUDERS > 1
+            if (active_extruder) pid2[2] = Kd;
+        #endif // EXTRUDERS
         }
 
 
@@ -1977,7 +1999,7 @@ void process_commands()
       }
       break;
     #endif //PIDTEMP
-    #ifdef PIDTEMPBED
+    #if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
     case 304: // M304
       {
         if (pidTempBed())
@@ -2162,6 +2184,9 @@ void process_commands()
         disable_e0();
         disable_e1();
         disable_e2();
+    #if EXTRUDERS > 1
+        last_extruder = 0xFF;
+    #endif
         delay(100);
         LCD_ALERTMESSAGEPGM(MSG_FILAMENTCHANGE);
         uint8_t cnt=0;
@@ -2261,6 +2286,9 @@ void process_commands()
         disable_e0();
         disable_e1();
         disable_e2();
+    #if EXTRUDERS > 1
+        last_extruder = 0xFF;
+    #endif
         while(card.pause){
           manage_heater();
           manage_inactivity();
@@ -2503,6 +2531,7 @@ void process_commands()
         // Set the new active extruder and position
         active_extruder = tmp_extruder;
         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+
         // Move to the old position if 'F' was in the parameters
         if(make_move && Stopped == false) {
            prepare_move();
@@ -2817,6 +2846,9 @@ void manage_inactivity()
             disable_e0();
             disable_e1();
             disable_e2();
+        #if EXTRUDERS > 1
+            last_extruder = 0xFF;
+        #endif
         }
       }
     }
@@ -2865,6 +2897,9 @@ void kill()
   disable_e0();
   disable_e1();
   disable_e2();
+#if EXTRUDERS > 1
+  last_extruder = 0xFF;
+#endif
 
 #if defined(PS_ON_PIN) && PS_ON_PIN > -1
   pinMode(PS_ON_PIN,INPUT);

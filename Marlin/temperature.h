@@ -54,7 +54,7 @@ extern float current_temperature_bed;
   float unscalePID_d(float d);
 
 #endif
-#ifdef PIDTEMPBED
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
   extern float bedKp,bedKi,bedKd;
 #endif
 
