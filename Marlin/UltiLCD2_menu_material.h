@@ -29,6 +29,8 @@ struct materialSettings
     float diameter; //Filament diameter in mm
 };
 
+extern int16_t change_material_temperature;
+extern int16_t change_material_preheat_wait_time;
 extern struct materialSettings material[EXTRUDERS];
 
 #define FILAMENT_REVERSAL_LENGTH      (FILAMANT_BOWDEN_LENGTH + 50)
