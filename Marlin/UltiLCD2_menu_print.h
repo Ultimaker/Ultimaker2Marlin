@@ -13,6 +13,8 @@
 #define LCD_CACHE_ID(n) lcd_cache[(n)]
 extern uint8_t lcd_cache[LCD_CACHE_SIZE];
 
+extern float remainingTime;
+
 void lcd_menu_print_select();
 void lcd_clear_cache();
 

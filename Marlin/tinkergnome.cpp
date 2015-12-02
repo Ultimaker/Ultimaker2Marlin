@@ -20,11 +20,6 @@
 
 #include "tinkergnome.h"
 
-// low pass filter constant, from 0.0 to 1.0 -- Higher numbers mean more smoothing, less responsiveness.
-// 0.0 would be completely disabled, 1.0 would ignore any changes
-#define LOW_PASS_SMOOTHING 0.90
-#define DEFAULT_FILAMENT_AREA 6.3793966
-
 // #define LED_FLASH() lcd_lib_led_color(8 + (led_glow<<3), 8 + min(255-8,(led_glow<<3)), 32 + min(255-32,led_glow<<3))
 // #define LED_HEAT() lcd_lib_led_color(192 + led_glow/4, 8 + led_glow/4, 0)
 // #define LED_DONE() lcd_lib_led_color(0, 8+led_glow, 8)
@@ -274,6 +269,20 @@ static void lcd_start_babystepping()
 }
 #endif // ENABLED
 
+static void lcd_print_sleepmode()
+{
+    int value = analogRead(LED_PIN);
+    analogWrite(LED_PIN, (value > 0) ? 0 : 255);
+    if (value)
+    {
+        lcd_lib_led_color(0,0,0);
+    }
+    else
+    {
+        LED_NORMAL();
+    }
+}
+
 // return print menu option
 static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
 {
@@ -287,6 +296,10 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         else if (nr == menu_index++)
         {
             opt.setData(MENU_NORMAL, lcd_print_ask_pause);
+        }
+        else if (nr == menu_index++)
+        {
+            opt.setData(MENU_NORMAL, NULL, lcd_print_sleepmode, lcd_print_sleepmode);
         }
         else if (nr == menu_index++)
         {
@@ -314,6 +327,10 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
     else
     {
         if (nr == menu_index++)
+        {
+            opt.setData(MENU_NORMAL, NULL, lcd_print_sleepmode, lcd_print_sleepmode);
+        }
+        else if (nr == menu_index++)
         {
             opt.setData(MENU_NORMAL, lcd_print_ask_pause);
         }
@@ -786,8 +803,8 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
         {
             if (flags & MENU_SELECTED)
             {
-                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, pauseGfx);
-                lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 5, PSTR("Pause print"));
+                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, toolGfx);
+                lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 4, PSTR("Control options"));
                 flags |= MENU_STATUSLINE;
             }
             LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 - LCD_CHAR_SPACING
@@ -797,11 +814,32 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                                , flags);
             if (flags & MENU_SELECTED)
             {
-                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, toolGfx);
             }
             else
             {
-                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, toolGfx);
+            }
+        }
+        else if (nr == index++)
+        {
+            if (flags & MENU_SELECTED)
+            {
+                lcd_lib_draw_string_leftP(5, PSTR("Toggle LED"));
+                flags |= MENU_STATUSLINE;
+            }
+            LCDMenu::drawMenuBox(LCD_GFX_WIDTH - 2*LCD_CHAR_SPACING - LCD_CHAR_MARGIN_RIGHT
+                               , BOTTOM_MENU_YPOS
+                               , 2*LCD_CHAR_SPACING
+                               , LCD_CHAR_HEIGHT
+                               , flags);
+            if (flags & MENU_SELECTED)
+            {
+                lcd_lib_clear_gfx(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT - LCD_CHAR_SPACING - 5, BOTTOM_MENU_YPOS-1, ledswitchGfx);
+            }
+            else
+            {
+                lcd_lib_draw_gfx(LCD_GFX_WIDTH - LCD_CHAR_MARGIN_RIGHT - LCD_CHAR_SPACING - 5, BOTTOM_MENU_YPOS-1, ledswitchGfx);
             }
         }
         else if (nr == index++)
@@ -903,12 +941,33 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
     }
     else // first page
     {
-       if (nr == index++)
-       {
+        if (nr == index++)
+        {
             if (flags & MENU_SELECTED)
             {
-                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, pauseGfx);
-                lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 5, PSTR("Pause print"));
+                lcd_lib_draw_string_leftP(5, PSTR("Toggle LED"));
+                flags |= MENU_STATUSLINE;
+            }
+            LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT+2
+                               , BOTTOM_MENU_YPOS
+                               , 2*LCD_CHAR_SPACING
+                               , LCD_CHAR_HEIGHT
+                               , flags);
+            if (flags & MENU_SELECTED)
+            {
+                lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT + 4, BOTTOM_MENU_YPOS-1, ledswitchGfx);
+            }
+            else
+            {
+                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT + 4, BOTTOM_MENU_YPOS-1, ledswitchGfx);
+            }
+        }
+        else if (nr == index++)
+        {
+            if (flags & MENU_SELECTED)
+            {
+                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 5, toolGfx);
+                lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 4, PSTR("Control options"));
                 flags |= MENU_STATUSLINE;
             }
             LCDMenu::drawMenuBox(LCD_GFX_WIDTH/2 - LCD_CHAR_SPACING
@@ -918,11 +977,11 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                                , flags);
             if (flags & MENU_SELECTED)
             {
-                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_clear_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, toolGfx);
             }
             else
             {
-                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 3, BOTTOM_MENU_YPOS, pauseGfx);
+                lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 4, BOTTOM_MENU_YPOS, toolGfx);
             }
         }
         else if (nr == index++)
@@ -1190,7 +1249,7 @@ void lcd_menu_print_heatup_tg()
                 // printing_state = PRINT_STATE_NORMAL;
                 doStartPrint();
                 printing_page = 0;
-                menu.replace_menu(menu_t(lcd_menu_printing_tg), false);
+                menu.replace_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)), false);
             }
 #if TEMP_SENSOR_BED != 0
         }
@@ -1268,47 +1327,55 @@ void lcd_menu_print_heatup_tg()
 
 static unsigned long predictTimeLeft()
 {
-    static float timeLeft = 0;
-
     if ((printing_state == PRINT_STATE_HEATING) || (printing_state == PRINT_STATE_HEATING_BED))
     {
         return 0;
     }
+
+    float printTime = (millis() - starttime);
+    float progress = float(card.getFilePos()) / float(card.getFileSize());
+
+    if ((printTime < 60000L) || (progress < 0.001))
+    {
+        // timeLeft = totalTimeMs / 1000L;
+        return LCD_DETAIL_CACHE_TIME();
+    }
+    else if ((LCD_DETAIL_CACHE_TIME() == 0) && (progress < 0.01))
+    {
+        return 0;
+    }
+
+    float totalTimeMs = float(printTime) / progress;
+
+    // convert milliseconds to seconds
+    printTime /= 1000L;
+
+    if (remainingTime > 0.0)
+    {
+        // low pass filter
+        remainingTime = (remainingTime * 999L + totalTimeMs / 1000L) / 1000L;
+        if (isinf(remainingTime))
+            remainingTime = totalTimeMs;
+    }
     else
     {
-        float printTime = (millis() - starttime);
-        float totalTimeMs = float(printTime) * float(card.getFileSize()) / float(card.getFilePos());
-
-        if (LCD_DETAIL_CACHE_TIME() == 0 && printTime < 60)
-        {
-            timeLeft = totalTimeMs / 1000L;
-            return 0;
-        }
-        else
-        {
-            // convert milliseconds to seconds
-            printTime /= 1000L;
-            // low pass filter
-            timeLeft = (timeLeft * 999L + totalTimeMs / 1000L) / 1000L;
-            if (isinf(timeLeft))
-                timeLeft = totalTimeMs;
-
-            unsigned long totalTimeSec;
-            if (printTime < LCD_DETAIL_CACHE_TIME() / 2)
-            {
-                float f = float(printTime) / float(LCD_DETAIL_CACHE_TIME() / 2);
-                if (f > 1.0)
-                    f = 1.0;
-                totalTimeSec = float(timeLeft) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
-            }
-            else
-            {
-                totalTimeSec = timeLeft;
-            }
-
-            return (printTime > totalTimeSec) ? 1 : totalTimeSec - printTime;
-        }
+        remainingTime = totalTimeMs;
     }
+
+    unsigned long totalTimeSec;
+    if (LCD_DETAIL_CACHE_TIME() && (printTime < LCD_DETAIL_CACHE_TIME() / 2))
+    {
+        float f = float(printTime) / float(LCD_DETAIL_CACHE_TIME() / 2);
+        if (f > 1.0)
+            f = 1.0;
+        totalTimeSec = float(remainingTime) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
+    }
+    else
+    {
+        totalTimeSec = remainingTime;
+    }
+
+    return (printTime > totalTimeSec) ? 0 : totalTimeSec - printTime;
 }
 
 void lcd_menu_printing_tg()
@@ -1360,19 +1427,21 @@ void lcd_menu_printing_tg()
                 }
                 else
                 {
-                    // time left
-                    unsigned long timeLeftSec = predictTimeLeft();
-                    if (timeLeftSec > 0)
+                    if (progress)
                     {
-                        lcd_lib_draw_gfx(54, 15, clockInverseGfx);
-                        int_to_time_min(timeLeftSec, buffer);
-                        lcd_lib_draw_string(64, 15, buffer);
-
-                        // draw progress string right aligned
-                        int_to_string(progress*100/124, buffer, PSTR("%"));
-                        lcd_lib_draw_string_right(15, buffer);
-                        lcd_progressline(progress);
+                        // time left
+                        unsigned long timeLeftSec = predictTimeLeft();
+                        if (timeLeftSec > 0)
+                        {
+                            lcd_lib_draw_gfx(54, 15, clockInverseGfx);
+                            int_to_time_min(timeLeftSec, buffer);
+                            lcd_lib_draw_string(64, 15, buffer);
+                        }
                     }
+                    // draw progress string right aligned
+                    int_to_string(progress*100/124, buffer, PSTR("%"));
+                    lcd_lib_draw_string_right(15, buffer);
+                    lcd_progressline(progress);
                 }
 
                 break;
@@ -1410,9 +1479,9 @@ void lcd_menu_printing_tg()
 
         uint8_t index = 0;
 #if ENABLED(BABYSTEPPING)
-        uint8_t len = (printing_page == 1) ? 5 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 5;
+        uint8_t len = (printing_page == 1) ? 6 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 6;
 #else
-        uint8_t len = (printing_page == 1) ? 5 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 4;
+        uint8_t len = (printing_page == 1) ? 6 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 5;
 #endif // BABYSTEPPING
 
         menu.process_submenu(get_print_menuoption, len);
@@ -1422,17 +1491,17 @@ void lcd_menu_printing_tg()
             if (message && *message)
             {
                 lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, message);
-                index += 2;
+                index += 3;
             }
             else if (printing_state == PRINT_STATE_HEATING)
             {
                 lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Heating nozzle"));
-                index += 2;
+                index += 3;
             }
             else if (printing_state == PRINT_STATE_HEATING_BED)
             {
                 lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Heating buildplate"));
-                index += 2;
+                index += 3;
             }
         }
 
@@ -1772,6 +1841,7 @@ void reset_printing_state()
 {
     printing_state = PRINT_STATE_NORMAL;
     card.sdprinting = false;
+    card.reset();
 }
 
 static const menu_t & get_recover_menuoption(uint8_t nr, menu_t &opt)
@@ -2421,11 +2491,11 @@ void manage_led_timeout()
     if (led_timeout > 0)
     {
         static uint8_t ledDimmed = 0;
-        if ((millis() - last_user_interaction) > (led_timeout*MILLISECONDS_PER_MINUTE))
+        if (((millis() - last_user_interaction) > (led_timeout*MILLISECONDS_PER_MINUTE)))
         {
             if (!ledDimmed)
             {
-                // TEST filament sensor pin
+                // dim LED
                 analogWrite(LED_PIN, 255 * min(led_sleep_brightness, led_brightness_level) / 100);
                 ledDimmed ^= 1;
             }

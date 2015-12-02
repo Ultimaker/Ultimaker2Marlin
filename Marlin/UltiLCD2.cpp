@@ -22,7 +22,7 @@
 #define LCD_CHARS_PER_LINE 20
 
 unsigned long lastSerialCommandTime;
-bool serialScreenShown;
+// bool serialScreenShown;
 uint8_t led_brightness_level = 100;
 uint8_t led_mode = LED_MODE_ALWAYS_ON;
 float dsp_temperature[EXTRUDERS] = { 20.0 };
@@ -127,17 +127,18 @@ void lcd_update()
         lcd_lib_update_screen();
     }else if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
     {
-        if (!serialScreenShown)
-        {
-            lcd_lib_clear();
-            lcd_lib_draw_string_centerP(20, PSTR("Printing with USB..."));
-            serialScreenShown = true;
-        }
-        if (printing_state == PRINT_STATE_HEATING || printing_state == PRINT_STATE_HEATING_BED || printing_state == PRINT_STATE_HOMING)
-            lastSerialCommandTime = m;
-        lcd_lib_update_screen();
+        lcd_usbprinting();
+//        if (!serialScreenShown)
+//        {
+//            lcd_lib_clear();
+//            lcd_lib_draw_string_centerP(20, PSTR("Printing with USB..."));
+//            serialScreenShown = true;
+//        }
+//        if (printing_state == PRINT_STATE_HEATING || printing_state == PRINT_STATE_HEATING_BED || printing_state == PRINT_STATE_HOMING)
+//            lastSerialCommandTime = m;
+//        lcd_lib_update_screen();
     }else{
-        serialScreenShown = false;
+        // serialScreenShown = false;
         // refresh the displayed temperatures
         for(uint8_t e=0;e<EXTRUDERS;e++)
         {

@@ -43,6 +43,7 @@
 			<Add option="-DHEATER_0_MAXTEMP=325" />
 			<Add option="-DHEATER_1_MAXTEMP=325" />
 			<Add option="-DHEATER_2_MAXTEMP=325" />
+			<Add option="-DSD_RESET" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="../../SDL-1.2.15/include" />
@@ -56,24 +57,24 @@
 		<Unit filename="../Marlin/ConfigurationStore.cpp" />
 		<Unit filename="../Marlin/ConfigurationStore.h" />
 		<Unit filename="../Marlin/Configuration_adv.h" />
+		<Unit filename="../Marlin/FatStructs.h" />
 		<Unit filename="../Marlin/Marlin.h" />
 		<Unit filename="../Marlin/MarlinSerial.cpp" />
 		<Unit filename="../Marlin/MarlinSerial.h" />
 		<Unit filename="../Marlin/Marlin_main.cpp" />
+		<Unit filename="../Marlin/SPI.cpp" />
+		<Unit filename="../Marlin/SPI.h" />
 		<Unit filename="../Marlin/Sd2Card.cpp" />
 		<Unit filename="../Marlin/Sd2Card.h" />
+		<Unit filename="../Marlin/Sd2CardExt.cpp" />
+		<Unit filename="../Marlin/Sd2CardExt.h" />
 		<Unit filename="../Marlin/Sd2PinMap.h" />
-		<Unit filename="../Marlin/SdBaseFile.cpp" />
-		<Unit filename="../Marlin/SdBaseFile.h" />
-		<Unit filename="../Marlin/SdFatConfig.h" />
-		<Unit filename="../Marlin/SdFatStructs.h" />
-		<Unit filename="../Marlin/SdFatUtil.cpp" />
-		<Unit filename="../Marlin/SdFatUtil.h" />
+		<Unit filename="../Marlin/SdFat.h" />
 		<Unit filename="../Marlin/SdFile.cpp" />
-		<Unit filename="../Marlin/SdFile.h" />
+		<Unit filename="../Marlin/SdFileExt.cpp" />
+		<Unit filename="../Marlin/SdFileExt.h" />
 		<Unit filename="../Marlin/SdInfo.h" />
 		<Unit filename="../Marlin/SdVolume.cpp" />
-		<Unit filename="../Marlin/SdVolume.h" />
 		<Unit filename="../Marlin/UltiLCD2.cpp" />
 		<Unit filename="../Marlin/UltiLCD2.h" />
 		<Unit filename="../Marlin/UltiLCD2_gfx.cpp" />
@@ -123,9 +124,7 @@
 		<Unit filename="../Marlin/thermistortables.h" />
 		<Unit filename="../Marlin/tinkergnome.cpp" />
 		<Unit filename="../Marlin/tinkergnome.h" />
-		<Unit filename="../Marlin/watchdog.cpp">
-			<Option virtualFolder="Marlin/" />
-		</Unit>
+		<Unit filename="../Marlin/watchdog.cpp" />
 		<Unit filename="../Marlin/watchdog.h" />
 		<Unit filename="arduino_sim/Arduino.h" />
 		<Unit filename="arduino_sim/HardwareSerial.cpp" />

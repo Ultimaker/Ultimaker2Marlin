@@ -23,6 +23,8 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 
+float remainingTime = 0.0;
+
 void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error_sd();
@@ -199,6 +201,7 @@ void doStartPrint()
     card.startFileprint();
     lifetime_stats_print_start();
     starttime = millis();
+    remainingTime = 0.0;
 }
 
 static void userStartPrint()
@@ -216,7 +219,7 @@ static void userStartPrint()
 #else
         active_extruder = 0;
 #endif // EXTRUDERS
-        menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing));
+        menu.add_menu(menu_t((ui_mode & UI_MODE_EXPERT) ? lcd_menu_printing_tg : lcd_menu_print_printing, MAIN_MENU_ITEM_POS(1)));
         doStartPrint();
     }
 }
@@ -459,12 +462,10 @@ void lcd_menu_print_select()
                     char buffer[64];
                     card.fgets(buffer, sizeof(buffer));
                     buffer[sizeof(buffer)-1] = '\0';
-                    // while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
                     if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 17) != 0)
                     {
                         card.fgets(buffer, sizeof(buffer));
                         buffer[sizeof(buffer)-1] = '\0';
-                        // while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
                     }
                     card.setIndex(0);
 
@@ -523,7 +524,7 @@ void lcd_menu_print_select()
                         #endif // EXTRUDERS
                             // move to heatup position
                             char buffer[32] = {0};
-                            sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
+                            sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), max(int(min_pos[X_AXIS]), 0)+5, max(int(min_pos[Y_AXIS]), 0)+5);
                             enquecommand_P(PSTR("G28"));
                             enquecommand(buffer);
                             printing_state = PRINT_STATE_NORMAL;
@@ -597,7 +598,7 @@ void lcd_menu_print_heatup()
                 doStartPrint();
                 if (ui_mode & UI_MODE_EXPERT)
                 {
-                    menu.replace_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(2)), false);
+                    menu.replace_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)), false);
                 }else{
                     menu.replace_menu(menu_t(lcd_menu_print_printing), false);
                 }

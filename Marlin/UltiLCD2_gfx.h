@@ -36,5 +36,7 @@ extern const uint8_t contrastGfx[] PROGMEM;
 extern const uint8_t brightnessGfx[] PROGMEM;
 extern const uint8_t dangerGfx [] PROGMEM;
 extern const uint8_t storeGfx[] PROGMEM;
+extern const uint8_t toolGfx[] PROGMEM;
+extern const uint8_t ledswitchGfx[] PROGMEM;
 
 #endif//ULTILCD2_GFX_H

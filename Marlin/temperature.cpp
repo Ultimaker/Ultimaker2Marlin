@@ -35,7 +35,7 @@
 #include "UltiLCD2.h"
 #include "temperature.h"
 #include "watchdog.h"
-#include "Sd2Card.h"
+// #include "Sd2CardExt.h"
 #include "preferences.h"
 #include "tinkergnome.h"
 
@@ -263,7 +263,7 @@ void PID_autotune(float temp, int extruder, int ncycles)
               Kp = 0.6*Ku;
               Ki = 2*Kp/Tu;
               Kd = Kp*Tu/8;
-              SERIAL_PROTOCOLLNPGM(" Clasic PID ");
+              SERIAL_PROTOCOLLNPGM(" Classic PID ");
               SERIAL_PROTOCOLPGM(" Kp: "); SERIAL_PROTOCOLLN(Kp);
               SERIAL_PROTOCOLPGM(" Ki: "); SERIAL_PROTOCOLLN(Ki);
               SERIAL_PROTOCOLPGM(" Kd: "); SERIAL_PROTOCOLLN(Kd);

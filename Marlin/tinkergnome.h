@@ -4,6 +4,11 @@
 #include "temperature.h"
 #include "UltiLCD2_menu_utils.h"
 
+// low pass filter constant, from 0.0 to 1.0 -- Higher numbers mean more smoothing, less responsiveness.
+// 0.0 would be completely disabled, 1.0 would ignore any changes
+#define LOW_PASS_SMOOTHING 0.90
+#define DEFAULT_FILAMENT_AREA 6.3793966
+
 extern float recover_height;
 extern float recover_position[NUM_AXIS];
 extern int recover_temperature[EXTRUDERS];

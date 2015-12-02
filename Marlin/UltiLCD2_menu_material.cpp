@@ -483,7 +483,6 @@ static void lcd_menu_material_export()
         card.write_string(buffer);
     }
     card.closefile();
-
     menu.replace_menu(menu_t(lcd_menu_material_export_done));
 }
 

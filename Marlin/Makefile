@@ -212,8 +212,8 @@ SRC = wiring.c \
 	wiring_pulse.c \
 	wiring_shift.c WInterrupts.c
 CXXSRC = WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
-	MarlinSerial.cpp Sd2Card.cpp SdBaseFile.cpp SdFatUtil.cpp	\
-	SdFile.cpp SdVolume.cpp motion_control.cpp planner.cpp		\
+	MarlinSerial.cpp Sd2Card.cpp Sd2CardExt.cpp SdFile.cpp \
+	SdFileExt.cpp SdVolume.cpp motion_control.cpp planner.cpp SPI.cpp \
 	stepper.cpp temperature.cpp cardreader.cpp ConfigurationStore.cpp \
 	watchdog.cpp electronics_test.cpp
 #CXXSRC += LiquidCrystal.cpp ultralcd.cpp SPI.cpp Servo.cpp Tone.cpp

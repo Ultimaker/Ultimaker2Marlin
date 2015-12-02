@@ -36,7 +36,7 @@ void LCDMenu::processEvents()
 
 void LCDMenu::init_menu_switch(bool beep)
 {
-    last_user_interaction = millis();
+    if (last_user_interaction) last_user_interaction = millis();
     minProgress = 0;
     LED_NORMAL();
     if (beep)

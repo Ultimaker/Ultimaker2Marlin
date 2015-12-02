@@ -49,7 +49,7 @@ char *createFilename(char *buffer, const dir_t &p) //buffer>12characters
 }
 
 
-void  CardReader::lsDive(SdFile &parent, SdFile** parents, uint8_t dirDepth)
+void  CardReader::lsDive(SdFileExt &parent, SdFileExt** parents, uint8_t dirDepth)
 {
   dir_t p;
   uint8_t cnt=0;
@@ -62,7 +62,7 @@ void  CardReader::lsDive(SdFile &parent, SdFile** parents, uint8_t dirDepth)
       char lfilename[13];
       createFilename(lfilename, p);
 
-      SdFile dir;
+      SdFileExt dir;
 
       if(!dir.open(parent, lfilename, O_READ))
       {
@@ -135,7 +135,7 @@ void CardReader::ls()
 {
   lsAction=LS_SerialPrint;
   root.rewind();
-  SdFile* lsParents[MAX_DIR_DEPTH];
+  SdFileExt* lsParents[MAX_DIR_DEPTH];
   memset(lsParents, 0, sizeof(lsParents));
   lsDive(root, lsParents, 0);
 }
@@ -199,6 +199,7 @@ void CardReader::release()
   sdprinting = false;
   pause = false;
   cardOK = false;
+  card.reset();
 }
 
 void CardReader::startFileprint()
@@ -232,7 +233,7 @@ void CardReader::openFile(const char* name,bool read)
   sdprinting = false;
   pause = false;
 
-  SdFile myDir;
+  SdFileExt myDir;
   curDir=&root;
   const char *fname=name;
 
@@ -330,7 +331,7 @@ void CardReader::removeFile(const char* name)
   sdprinting = false;
   pause = false;
 
-  SdFile myDir;
+  SdFileExt myDir;
   curDir=&root;
   const char *fname=name;
 
@@ -415,7 +416,7 @@ void CardReader::write_command(char *buf)
   char* npos = 0;
   char* end = buf + strlen(buf) - 1;
 
-  file.writeError = false;
+  file.clearWriteError();
   if((npos = strchr(buf, 'N')) != NULL)
   {
     begin = strchr(npos, ' ') + 1;
@@ -425,7 +426,7 @@ void CardReader::write_command(char *buf)
   end[2] = '\n';
   end[3] = '\0';
   file.write(begin);
-  if (file.writeError)
+  if (file.getWriteError())
   {
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM(MSG_SD_ERR_WRITE_TO_FILE);
@@ -435,7 +436,7 @@ void CardReader::write_command(char *buf)
 bool CardReader::write_string(char* buffer)
 {
     file.write(buffer);
-    return file.writeError;
+    return file.getWriteError();
 }
 
 void CardReader::checkautostart(bool force)
@@ -480,9 +481,14 @@ void CardReader::checkautostart(bool force)
     }
   }
   if(!found)
+  {
     lastnr=-1;
+    card.reset();
+  }
   else
+  {
     lastnr++;
+  }
   clearError();
 }
 
@@ -516,8 +522,8 @@ uint16_t CardReader::getnrfilenames()
 
 void CardReader::chdir(const char * relpath)
 {
-  SdFile newfile;
-  SdFile *parent=&root;
+  SdFileExt newfile;
+  SdFileExt *parent=&root;
 
   if(workDir.isOpen())
     parent=&workDir;
@@ -563,5 +569,6 @@ void CardReader::printingHasFinished()
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
     autotempShutdown();
+    card.reset();
 }
 #endif //SDSUPPORT
