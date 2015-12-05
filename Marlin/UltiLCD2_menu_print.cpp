@@ -23,14 +23,13 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
 #define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 
-float remainingTime = 0.0;
+unsigned long predictedTime = 0;
 
 void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error_sd();
 static void lcd_menu_print_error_position();
 static void lcd_menu_print_classic_warning();
-static void lcd_menu_print_ready_cooled_down();
 static void lcd_menu_print_tune_retraction();
 
 static bool primed = false;
@@ -97,11 +96,15 @@ void abortPrint()
     card.pause = false;
     pauseRequested = false;
     printing_state  = PRINT_STATE_NORMAL;
+//    ui_mode &= ~UI_LED_DIMMED;
+    if (led_mode == LED_MODE_WHILE_PRINTING)
+        analogWrite(LED_PIN, 0);
 }
 
 static void userAbortPrint()
 {
     abortPrint();
+    lcd_cache[0] = 1;
     menu.return_to_main();
 }
 
@@ -111,15 +114,18 @@ static void checkPrintFinished()
     {
         abortPrint();
         recover_height = 0.0f;
+        lcd_cache[0] = 1;
         menu.replace_menu(menu_t(lcd_menu_print_ready, MAIN_MENU_ITEM_POS(0)));
     }else if (position_error)
     {
         quickStop();
         abortPrint();
+        ui_mode &= ~UI_LED_DIMMED;
         menu.replace_menu(menu_t(lcd_menu_print_error_position, MAIN_MENU_ITEM_POS(0)));
     }else if (card.errorCode())
     {
         abortPrint();
+        ui_mode &= ~UI_LED_DIMMED;
         menu.replace_menu(menu_t(lcd_menu_print_error_sd, MAIN_MENU_ITEM_POS(0)));
     }
 }
@@ -201,7 +207,9 @@ void doStartPrint()
     card.startFileprint();
     lifetime_stats_print_start();
     starttime = millis();
-    remainingTime = 0.0;
+    stoptime = starttime;
+    predictedTime = 0;
+    ui_mode &= ~UI_LED_DIMMED;
 }
 
 static void userStartPrint()
@@ -386,7 +394,7 @@ void lcd_menu_print_select()
 {
     if (!card.sdInserted)
     {
-        LED_GLOW();
+        LED_GLOW
         lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
         lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
@@ -444,6 +452,7 @@ void lcd_menu_print_select()
             if (!card.filenameIsDir)
             {
                 //Start print
+                ui_mode &= ~UI_LED_DIMMED;
             #if EXTRUDERS > 1
                 active_extruder = (swapExtruders() ? 1 : 0);
             #else
@@ -726,7 +735,7 @@ static void lcd_menu_print_printing()
 
 static void lcd_menu_print_error_sd()
 {
-    LED_GLOW_ERROR();
+    LED_GLOW_ERROR
     lcd_info_screen(NULL, lcd_return_to_main_menu, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
@@ -742,7 +751,7 @@ static void lcd_menu_print_error_sd()
 
 static void lcd_menu_print_error_position()
 {
-    LED_GLOW_ERROR();
+    LED_GLOW_ERROR
     lcd_info_screen(NULL, lcd_return_to_main_menu, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(15, PSTR("ERROR:"));
@@ -770,7 +779,7 @@ void lcd_menu_print_abort()
     {
         lcd_print_pause();
     }
-    LED_GLOW();
+    LED_GLOW
     lcd_question_screen(lcd_menu_print_ready, userAbortPrint, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
 
     lcd_lib_draw_string_centerP(20, PSTR("Abort the print?"));
@@ -781,80 +790,18 @@ void lcd_menu_print_abort()
 
 static void postPrintReady()
 {
-    menu.return_to_previous();
+    ui_mode &= ~UI_LED_DIMMED;
     if (led_mode == LED_MODE_BLINK_ON_DONE)
         analogWrite(LED_PIN, 0);
+    menu.return_to_previous();
 }
 
 void lcd_menu_print_ready()
 {
-    if (led_mode == LED_MODE_WHILE_PRINTING)
-        analogWrite(LED_PIN, 0);
-    else if (led_mode == LED_MODE_BLINK_ON_DONE)
+    if (led_mode == LED_MODE_BLINK_ON_DONE)
         analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
+
     lcd_info_screen(NULL, postPrintReady, PSTR("BACK TO MENU"));
-
-#if TEMP_SENSOR_BED != 0
-    if (current_temperature[0] > 60 || current_temperature_bed > 40)
-#else
-    if (current_temperature[0] > 60)
-#endif // TEMP_SENSOR_BED
-    {
-        lcd_lib_draw_hline(3, 124, 13);
-        // lcd_lib_draw_string_left(5, card.longFilename);
-
-        char buffer[32] = {0};
-        unsigned long t=(stoptime-starttime)/1000;
-
-        char *c = buffer;
-        strcpy_P(c, PSTR("Time ")); c += 5;
-        c = int_to_time_min(t, c);
-        if (t < 60)
-        {
-                strcat_P(c, PSTR("min"));
-        }
-        else
-        {
-                strcat_P(c, PSTR("h"));
-        }
-        lcd_lib_draw_string_center(5, buffer);
-
-        lcd_lib_draw_string_centerP(16, PSTR("Printer cooling down"));
-
-        int16_t progress = 124 - (current_temperature[0] - 60);
-        if (progress < 0) progress = 0;
-        if (progress > 124) progress = 124;
-
-        if (progress < minProgress)
-            progress = minProgress;
-        else
-            minProgress = progress;
-
-        lcd_progressbar(progress);
-        c = buffer;
-        for(uint8_t e=0; e<EXTRUDERS; e++)
-            c = int_to_string(dsp_temperature[e], c, PSTR("C "));
-#if TEMP_SENSOR_BED != 0
-        int_to_string(dsp_temperature_bed, c, PSTR("C"));
-#endif
-        lcd_lib_draw_string_center(26, buffer);
-    }
-    else
-    {
-        menu.replace_menu(menu_t(lcd_menu_print_ready_cooled_down, MAIN_MENU_ITEM_POS(0)), false);
-    }
-    lcd_lib_update_screen();
-}
-
-static void lcd_menu_print_ready_cooled_down()
-{
-    if (led_mode == LED_MODE_WHILE_PRINTING)
-        analogWrite(LED_PIN, 0);
-    else if (led_mode == LED_MODE_BLINK_ON_DONE)
-        analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
-    lcd_info_screen(NULL, postPrintReady, PSTR("BACK TO MENU"));
-
-    LED_GLOW();
 
     lcd_lib_draw_hline(3, 124, 13);
     // lcd_lib_draw_string_left(5, card.longFilename);
@@ -875,10 +822,42 @@ static void lcd_menu_print_ready_cooled_down()
     }
     lcd_lib_draw_string_center(5, buffer);
 
-    lcd_lib_draw_string_centerP(17, PSTR("Print finished"));
-    lcd_lib_draw_string_centerP(30, PSTR("You can remove"));
-    lcd_lib_draw_string_centerP(40, PSTR("the print."));
+    c = buffer;
+    for(uint8_t e=0; e<EXTRUDERS; e++)
+        c = int_to_string(dsp_temperature[e], c, PSTR("C "));
+#if TEMP_SENSOR_BED != 0
+    int_to_string(dsp_temperature_bed, c, PSTR("C"));
+#endif
+    lcd_lib_draw_string_center(26, buffer);
 
+
+#if TEMP_SENSOR_BED != 0
+    if (lcd_cache[0] && (current_temperature[0] > 60 || current_temperature_bed > 40))
+#else
+    if (lcd_cache[0] && (current_temperature[0] > 60))
+#endif // TEMP_SENSOR_BED
+    {
+        lcd_lib_draw_string_centerP(16, PSTR("Printer cooling down"));
+
+        int16_t progress = 124 - (current_temperature[0] - 60);
+        if (progress < 0) progress = 0;
+        if (progress > 124) progress = 124;
+
+        if (progress < minProgress)
+            progress = minProgress;
+        else
+            minProgress = progress;
+
+        lcd_progressbar(progress);
+    }
+    else
+    {
+        lcd_cache[0] = 0;
+        LED_GLOW
+        lcd_lib_draw_string_center(16, card.longFilename);
+//        lcd_lib_draw_string_centerP(16, PSTR("Print finished"));
+        lcd_lib_draw_string_centerP(40, PSTR("Print finished"));
+    }
     lcd_lib_update_screen();
 }
 
@@ -956,8 +935,8 @@ static void tune_item_details_callback(uint8_t nr)
     else if (nr == 5 + BED_MENU_OFFSET + EXTRUDERS)
     {
         int_to_string(led_brightness_level, buffer, PSTR("%"));
-        if (led_mode == LED_MODE_ALWAYS_ON ||  led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
-            analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
+//        if (led_mode == LED_MODE_ALWAYS_ON || led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
+//            analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
     }
     else
         return;
@@ -1031,7 +1010,7 @@ void lcd_menu_print_tune()
         }
     }
 
-    lcd_scroll_menu(PSTR("TUNE"), len , tune_item_callback, tune_item_details_callback);
+    lcd_scroll_menu(PSTR("TUNE"), len, tune_item_callback, tune_item_details_callback);
     if (lcd_lib_button_pressed)
     {
         uint8_t index(0);

@@ -36,6 +36,7 @@ void lcd_lib_keyclick();
 void lcd_lib_buttons_update();
 void lcd_lib_buttons_update_interrupt();
 void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b);
+uint8_t lcd_lib_led_brightness();
 void lcd_lib_contrast(uint8_t data);
 
 extern int16_t lcd_lib_encoder_pos;

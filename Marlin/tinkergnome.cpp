@@ -269,18 +269,13 @@ static void lcd_start_babystepping()
 }
 #endif // ENABLED
 
-static void lcd_print_sleepmode()
+static void lcd_toggle_led()
 {
-    int value = analogRead(LED_PIN);
-    analogWrite(LED_PIN, (value > 0) ? 0 : 255);
-    if (value)
-    {
-        lcd_lib_led_color(0,0,0);
-    }
-    else
-    {
-        LED_NORMAL();
-    }
+    // toggle dim status
+    ui_mode ^= UI_LED_DIMMED;
+
+    analogWrite(LED_PIN, (ui_mode & UI_LED_DIMMED) ? 0 : 255 * int(led_brightness_level) / 100);
+    LED_NORMAL
 }
 
 // return print menu option
@@ -299,7 +294,7 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         }
         else if (nr == menu_index++)
         {
-            opt.setData(MENU_NORMAL, NULL, lcd_print_sleepmode, lcd_print_sleepmode);
+            opt.setData(MENU_NORMAL, lcd_toggle_led);
         }
         else if (nr == menu_index++)
         {
@@ -328,7 +323,7 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
     {
         if (nr == menu_index++)
         {
-            opt.setData(MENU_NORMAL, NULL, lcd_print_sleepmode, lcd_print_sleepmode);
+            opt.setData(MENU_NORMAL, lcd_toggle_led);
         }
         else if (nr == menu_index++)
         {
@@ -1327,55 +1322,47 @@ void lcd_menu_print_heatup_tg()
 
 static unsigned long predictTimeLeft()
 {
-    if ((printing_state == PRINT_STATE_HEATING) || (printing_state == PRINT_STATE_HEATING_BED))
+    if ((printing_state == PRINT_STATE_HEATING) || (printing_state == PRINT_STATE_HEATING_BED) || (!card.getFilePos()))
     {
         return 0;
     }
 
-    float printTime = (millis() - starttime);
+    unsigned long printTime = (millis() - starttime) / 1000L;
     float progress = float(card.getFilePos()) / float(card.getFileSize());
 
-    if ((printTime < 60000L) || (progress < 0.001))
+    if ((printTime < 60) || (progress < 0.001f))
     {
-        // timeLeft = totalTimeMs / 1000L;
         return LCD_DETAIL_CACHE_TIME();
     }
-    else if ((LCD_DETAIL_CACHE_TIME() == 0) && (progress < 0.01))
+    else if ((LCD_DETAIL_CACHE_TIME() == 0) && (progress < 0.01f))
     {
         return 0;
     }
 
-    float totalTimeMs = float(printTime) / progress;
-
-    // convert milliseconds to seconds
-    printTime /= 1000L;
-
-    if (remainingTime > 0.0)
+    unsigned long totalTime = constrain(float(printTime) / progress, 0, 1000L * 60L * 60L);
+    if (predictedTime > 0)
     {
         // low pass filter
-        remainingTime = (remainingTime * 999L + totalTimeMs / 1000L) / 1000L;
-        if (isinf(remainingTime))
-            remainingTime = totalTimeMs;
+        predictedTime = (predictedTime * 999L + totalTime) / 1000L;
     }
     else
     {
-        remainingTime = totalTimeMs;
+        predictedTime = totalTime;
     }
 
-    unsigned long totalTimeSec;
     if (LCD_DETAIL_CACHE_TIME() && (printTime < LCD_DETAIL_CACHE_TIME() / 2))
     {
         float f = float(printTime) / float(LCD_DETAIL_CACHE_TIME() / 2);
         if (f > 1.0)
             f = 1.0;
-        totalTimeSec = float(remainingTime) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
+        totalTime = float(predictedTime) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
     }
     else
     {
-        totalTimeSec = remainingTime;
+        totalTime = predictedTime;
     }
 
-    return (printTime > totalTimeSec) ? 0 : totalTimeSec - printTime;
+    return (printTime >= totalTime) ? 1 : totalTime - printTime;
 }
 
 void lcd_menu_printing_tg()
@@ -1413,7 +1400,7 @@ void lcd_menu_printing_tg()
 
         if (printing_page == 0)
         {
-            uint8_t progress = card.getFilePos() / ((card.getFileSize() + 123) / 124);
+            uint8_t progress = IS_SD_PRINTING ? card.getFilePos() / ((card.getFileSize() + 123) / 124) : 0;
             char buffer[32] = {0};
 
             switch(printing_state)
@@ -1672,7 +1659,7 @@ void lcd_prepare_buildplate_adjust()
     add_homeing[Z_AXIS] = 0;
     enquecommand_P(PSTR("G28 Z0 X0 Y0"));
     char buffer[32] = {0};
-    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, int(max_pos[X_AXIS]-min_pos[X_AXIS])/2 + int(min_pos[X_AXIS]), int(max_pos[Y_AXIS]-min_pos[Y_AXIS])/2 + int(min_pos[Y_AXIS]));
+    sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, AXIS_CENTER_POS(X_AXIS), AXIS_CENTER_POS(Y_AXIS));
     enquecommand(buffer);
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
@@ -1791,7 +1778,7 @@ static const menu_t & get_recoverfile_menuoption(uint8_t nr, menu_t &opt)
 static void lcd_menu_recover_file()
 {
     char buffer[32] = {0};
-    LED_GLOW();
+    LED_GLOW
     // analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
 
     lcd_basic_screen();
@@ -2488,7 +2475,7 @@ void lcd_menu_move_axes()
 
 void manage_led_timeout()
 {
-    if (led_timeout > 0)
+    if ((led_timeout > 0) && !(ui_mode & UI_LED_DIMMED))
     {
         static uint8_t ledDimmed = 0;
         if (((millis() - last_user_interaction) > (led_timeout*MILLISECONDS_PER_MINUTE)))

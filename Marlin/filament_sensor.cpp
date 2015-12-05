@@ -71,7 +71,7 @@ void lcd_menu_filament_outage()
     lcd_lib_draw_string_centerP(30, PSTR("Print paused."));
     lcd_lib_draw_string_centerP(40, PSTR("Check feeder."));
 
-    LED_GLOW_ERROR();
+    LED_GLOW_ERROR
     lcd_lib_update_screen();
 #else
     lcd_change_to_previous_menu();

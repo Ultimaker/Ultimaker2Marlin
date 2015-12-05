@@ -170,7 +170,7 @@ static void lcd_change_to_material_main()
 
 static void lcd_menu_change_material_remove_wait_user()
 {
-    LED_GLOW();
+    LED_GLOW
     lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), lcd_change_to_material_main, cancelMaterialInsert, PSTR("CANCEL"));
 #if EXTRUDERS > 1
     lcd_lib_draw_stringP(3, 10, PSTR("Extruder"));
@@ -228,7 +228,7 @@ void lcd_menu_insert_material_preheat()
 
 static void lcd_menu_change_material_insert_wait_user()
 {
-    LED_GLOW();
+    LED_GLOW
 
     if (target_temperature[active_extruder] && (printing_state == PRINT_STATE_NORMAL) && (movesplanned() < 2))
     {
@@ -330,7 +330,7 @@ static void lcd_menu_change_material_insert()
 {
     if (target_temperature[active_extruder])
     {
-        LED_GLOW();
+        LED_GLOW
 
         lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
 #if EXTRUDERS > 1
@@ -421,7 +421,7 @@ static void lcd_menu_material_export()
 {
     if (!card.sdInserted)
     {
-        LED_GLOW();
+        LED_GLOW
         lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
         lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));
@@ -499,7 +499,7 @@ static void lcd_menu_material_import()
 {
     if (!card.sdInserted)
     {
-        LED_GLOW();
+        LED_GLOW
         lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
         lcd_info_screen(NULL, lcd_change_to_previous_menu);
         lcd_lib_draw_string_centerP(15, PSTR("No SD-CARD!"));

@@ -133,7 +133,7 @@ static void parkHeadForLeftAdjustment()
 
 static void lcd_menu_first_run_bed_level_center_adjust()
 {
-    LED_GLOW();
+    LED_GLOW
 
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
@@ -170,7 +170,7 @@ static void parkHeadForRightAdjustment()
 
 static void lcd_menu_first_run_bed_level_left_adjust()
 {
-    LED_GLOW();
+    LED_GLOW
     SELECT_MAIN_MENU_ITEM(0);
 
     lcd_info_screen(lcd_menu_first_run_bed_level_right_adjust, parkHeadForRightAdjustment, PSTR("CONTINUE"));
@@ -185,7 +185,7 @@ static void lcd_menu_first_run_bed_level_left_adjust()
 
 static void lcd_menu_first_run_bed_level_right_adjust()
 {
-    LED_GLOW();
+    LED_GLOW
     SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_paper, NULL, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR_IF_NOT_DONE(6);
@@ -222,7 +222,7 @@ static void lcd_menu_first_run_bed_level_paper()
 
 static void lcd_menu_first_run_bed_level_paper_center()
 {
-    LED_GLOW();
+    LED_GLOW
 
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
@@ -248,7 +248,7 @@ static void lcd_menu_first_run_bed_level_paper_center()
 
 static void lcd_menu_first_run_bed_level_paper_left()
 {
-    LED_GLOW();
+    LED_GLOW
 
     SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_bed_level_paper_right, parkHeadForRightAdjustment, PSTR("CONTINUE"));
@@ -283,7 +283,7 @@ static void lcd_menu_first_run_bed_level_done()
 
 static void lcd_menu_first_run_bed_level_paper_right()
 {
-    LED_GLOW();
+    LED_GLOW
 
     SELECT_MAIN_MENU_ITEM(0);
     if (IS_FIRST_RUN_DONE())
@@ -370,7 +370,7 @@ static void runMaterialForward()
 
 static void lcd_menu_first_run_material_load_insert()
 {
-    LED_GLOW();
+    LED_GLOW
 
     if (movesplanned() < 2)
     {
@@ -413,7 +413,7 @@ static void lcd_menu_first_run_material_load_forward()
 
 static void lcd_menu_first_run_material_load_wait()
 {
-    LED_GLOW();
+    LED_GLOW
 
     lcd_info_screen(lcd_menu_first_run_material_select_1, doCooldown, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(15);
@@ -467,7 +467,7 @@ static void lcd_material_select_details_callback(uint8_t nr)
 
 static void lcd_menu_first_run_material_select_material()
 {
-    LED_GLOW();
+    LED_GLOW
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_material_select_callback, lcd_material_select_details_callback);
     CLEAR_PROGRESS_NR(17);
@@ -487,7 +487,7 @@ static void lcd_menu_first_run_material_select_material()
 
 static void lcd_menu_first_run_material_select_confirm_material()
 {
-    LED_GLOW();
+    LED_GLOW
     lcd_question_screen(lcd_menu_first_run_material_select_2, lcd_remove_menu, PSTR("YES"), lcd_menu_first_run_material_select_material, lcd_remove_menu, PSTR("NO"));
     DRAW_PROGRESS_NR(18);
     lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));

@@ -123,7 +123,7 @@ void lcd_update()
         }
         lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
         lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/support"));
-        LED_GLOW_ERROR();
+        LED_GLOW_ERROR
         lcd_lib_update_screen();
     }else if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
     {
@@ -159,7 +159,7 @@ void lcd_menu_startup()
     if (!lcd_lib_update_ready())
         led_glow = 0;
 
-    LED_GLOW();
+    LED_GLOW
     lcd_lib_clear();
 
     lcd_lib_draw_gfx(0, 22, ultimakerTextGfx);
@@ -186,7 +186,7 @@ void lcd_menu_startup()
         if (led_mode == LED_MODE_ALWAYS_ON)
             analogWrite(LED_PIN, 255 * led_brightness_level / 100);
         led_glow = led_glow_dir = 0;
-        LED_NORMAL();
+        LED_NORMAL
 
 #ifdef SPECIAL_STARTUP
         menu.replace_menu(menu_t(lcd_menu_special_startup), lcd_lib_button_pressed);
@@ -206,7 +206,7 @@ void lcd_menu_startup()
 #ifdef SPECIAL_STARTUP
 static void lcd_menu_special_startup()
 {
-    LED_GLOW();
+    LED_GLOW
 
     lcd_lib_clear();
     lcd_lib_draw_gfx(7, 12, specialStartupGfx);

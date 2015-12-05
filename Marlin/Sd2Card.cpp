@@ -157,7 +157,9 @@ uint32_t Sd2Card::cardSize(void) {
   }
 }
 //------------------------------------------------------------------------------
+#ifdef USE_SPI_LIB
 static uint8_t chip_select_asserted = 0;
+#endif
 
 void Sd2Card::chipSelectHigh(void) {
   digitalWrite(chipSelectPin_, HIGH);
@@ -408,19 +410,20 @@ uint8_t Sd2Card::readData(uint32_t block,
       ;
     SPDR = 0XFF;
   }
-  // transfer data
-  uint16_t n = count - 1;
-  for (uint16_t i = 0; i < n; i++) {
+  {
+    // transfer data
+    uint16_t n = count - 1;
+    for (uint16_t i = 0; i < n; i++) {
+      while (!(SPSR & (1 << SPIF)))
+        ;
+      dst[i] = SPDR;
+      SPDR = 0XFF;
+    }
+    // wait for last byte
     while (!(SPSR & (1 << SPIF)))
       ;
-    dst[i] = SPDR;
-    SPDR = 0XFF;
+    dst[n] = SPDR;
   }
-  // wait for last byte
-  while (!(SPSR & (1 << SPIF)))
-    ;
-  dst[n] = SPDR;
-
 #else  // OPTIMIZE_HARDWARE_SPI
 
   // skip data before offset

@@ -1291,6 +1291,7 @@ void process_commands()
         break;
       card.startFileprint();
       starttime=millis();
+      stoptime=starttime;
       break;
     case 25: //M25 - Pause SD print
       if (printing_state == PRINT_STATE_RECOVER)
@@ -1340,6 +1341,7 @@ void process_commands()
       card.openFile(strchr_pointer + 4,true);
       card.startFileprint();
       starttime=millis();
+      stoptime=starttime;
       break;
     case 928: //M928 - Start SD write
       starpos = (strchr(strchr_pointer + 5,'*'));
@@ -1501,6 +1503,8 @@ void process_commands()
           }
           manage_heater();
           manage_inactivity();
+          starttime=millis();
+          stoptime=starttime;
           lcd_update();
           lifetime_stats_tick();
         #ifdef TEMP_RESIDENCY_TIME
@@ -1520,7 +1524,6 @@ void process_commands()
           }
         }
         LCD_MESSAGEPGM(MSG_HEATING_COMPLETE);
-        starttime=millis();
         previous_millis_cmd = millis();
       }
       break;
@@ -1546,6 +1549,8 @@ void process_commands()
           }
           manage_heater();
           manage_inactivity();
+          starttime=millis();
+          stoptime=starttime;
           lcd_update();
           lifetime_stats_tick();
           if (printing_state != PRINT_STATE_HEATING_BED)

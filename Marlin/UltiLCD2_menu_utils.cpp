@@ -1,13 +1,15 @@
 
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
+#include "preferences.h"
 #include "UltiLCD2_menu_utils.h"
 #include "UltiLCD2_hi_lib.h"
+#include "UltiLCD2.h"
 
 #define LCD_TIMEOUT_TO_STATUS (MILLISECONDS_PER_SECOND*30UL)		// 30 Sec.
 
 // colors for the encoder led ring
-#define LED_INPUT() lcd_lib_led_color(192, 8, 0)
+#define LED_INPUT lcd_lib_led_color(192, 8, 0);
 
 LCDMenu menu;
 
@@ -38,11 +40,13 @@ void LCDMenu::init_menu_switch(bool beep)
 {
     if (last_user_interaction) last_user_interaction = millis();
     minProgress = 0;
-    LED_NORMAL();
+    LED_NORMAL
     if (beep)
     {
         lcd_lib_keyclick();
     }
+    if (!(ui_mode & UI_LED_DIMMED) && (led_mode == LED_MODE_ALWAYS_ON))
+        analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
 }
 
 void LCDMenu::init_menu(menu_t mainMenu, bool beep)
@@ -147,7 +151,7 @@ void LCDMenu::reset_submenu()
     }
     if (activeSubmenu.processMenuFunc)
     {
-        LED_NORMAL();
+        LED_NORMAL
     }
     lastEncoderPos = lcd_lib_encoder_pos = menuStack[currentIndex].encoderPos;
     activeSubmenu = menu_t();
@@ -293,7 +297,7 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
                     {
                         // "instant tuning"
                         lcd_lib_encoder_pos = 0;
-                        LED_INPUT();
+                        LED_INPUT
                         lcd_lib_keyclick();
 
                         selectedSubmenu = index;
@@ -392,7 +396,7 @@ void LCDMenu::set_active(menuItemCallback_t getMenuItem, int8_t index)
     {
         // "instant tuning"
         lcd_lib_encoder_pos = 0;
-        LED_INPUT();
+        LED_INPUT
         selectedSubmenu = index;
         activeSubmenu = menuItem;
     }

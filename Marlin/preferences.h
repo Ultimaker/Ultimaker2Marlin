@@ -22,7 +22,7 @@
 #define EEPROM_RESERVED 0x44A  // next position
 
 #define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
-#define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
+#define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n & ~UI_LED_DIMMED); } while(0)
 #define GET_LED_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LED_TIMEOUT_OFFSET))
 #define SET_LED_TIMEOUT(n) do { eeprom_write_word((uint16_t*)EEPROM_LED_TIMEOUT_OFFSET, n); } while(0)
 #define GET_LCD_TIMEOUT() (eeprom_read_word((const uint16_t*)EEPROM_LCD_TIMEOUT_OFFSET))
@@ -58,6 +58,9 @@
 
 #define UI_BEEP_SHORT    32
 #define UI_BEEP_OFF      64
+
+#define UI_LED_DIMMED   128
+
 
 // control flags
 #define FLAG_PID_NOZZLE      1
@@ -101,6 +104,5 @@ FORCE_INLINE bool swapExtruders() { return (expert_flags & FLAG_SWAP_EXTRUDERS);
 
 #define WORD_SETTING(n) (*(uint16_t*)&lcd_cache[(n) * sizeof(uint16_t)])
 #define FLOAT_SETTING(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-
 
 #endif //PREFERENCES_H

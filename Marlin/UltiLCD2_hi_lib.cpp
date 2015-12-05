@@ -269,10 +269,11 @@ void lcd_menu_edit_setting()
     else
         int_to_string(lcd_lib_encoder_pos, buffer, lcd_setting_postfix);
     lcd_lib_draw_string_center(30, buffer);
-    lcd_lib_update_screen();
 
     if (lcd_lib_button_pressed)
-        lcd_change_to_previous_menu();
+        menu.return_to_previous();
+
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_material_reheat()

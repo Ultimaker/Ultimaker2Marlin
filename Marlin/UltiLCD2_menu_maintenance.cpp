@@ -18,7 +18,7 @@
 #include "tinkergnome.h"
 
 static void lcd_menu_maintenance_advanced_heatup();
-static void lcd_menu_maintenance_led();
+//static void lcd_menu_maintenance_led();
 static void lcd_menu_maintenance_extrude();
 static void lcd_menu_advanced_version();
 static void lcd_menu_advanced_stats();
@@ -654,6 +654,12 @@ static void lcd_led_details(uint8_t nr)
     }
 }
 
+static void init_maintenance_led()
+{
+    lcd_cache[0] = led_mode;
+    lcd_cache[1] = led_brightness_level;
+}
+
 static void lcd_menu_maintenance_led()
 {
     analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
@@ -664,11 +670,13 @@ static void lcd_menu_maintenance_led()
         {
             if (led_mode != LED_MODE_ALWAYS_ON)
                 analogWrite(LED_PIN, 0);
-            Config_StoreSettings();
-            lcd_change_to_previous_menu();
+            if ((led_mode != lcd_cache[0]) || (led_brightness_level != lcd_cache[1]))
+                Config_StoreSettings();
+            menu.return_to_previous();
         }
         else if (IS_SELECTED_SCROLL(1))
         {
+            menu.currentMenu().initMenuFunc = NULL;
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
         }
         else if (IS_SELECTED_SCROLL(2))
@@ -852,7 +860,7 @@ static void lcd_menu_preferences()
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_uimode));
         else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_maintenance_led));
+            menu.add_menu(menu_t(init_maintenance_led, lcd_menu_maintenance_led, NULL));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_clicksound));
         else if (IS_SELECTED_SCROLL(index++))
