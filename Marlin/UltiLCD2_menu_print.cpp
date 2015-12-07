@@ -96,7 +96,6 @@ void abortPrint()
     card.pause = false;
     pauseRequested = false;
     printing_state  = PRINT_STATE_NORMAL;
-//    ui_mode &= ~UI_LED_DIMMED;
     if (led_mode == LED_MODE_WHILE_PRINTING)
         analogWrite(LED_PIN, 0);
 }
@@ -104,7 +103,7 @@ void abortPrint()
 static void userAbortPrint()
 {
     abortPrint();
-    lcd_cache[0] = 1;
+    sleep_state = 0x0;
     menu.return_to_main();
 }
 
@@ -114,18 +113,18 @@ static void checkPrintFinished()
     {
         abortPrint();
         recover_height = 0.0f;
-        lcd_cache[0] = 1;
+        sleep_state |= SLEEP_COOLING;
         menu.replace_menu(menu_t(lcd_menu_print_ready, MAIN_MENU_ITEM_POS(0)));
     }else if (position_error)
     {
         quickStop();
         abortPrint();
-        ui_mode &= ~UI_LED_DIMMED;
+        sleep_state = 0x0;
         menu.replace_menu(menu_t(lcd_menu_print_error_position, MAIN_MENU_ITEM_POS(0)));
     }else if (card.errorCode())
     {
         abortPrint();
-        ui_mode &= ~UI_LED_DIMMED;
+        sleep_state = 0x0;
         menu.replace_menu(menu_t(lcd_menu_print_error_sd, MAIN_MENU_ITEM_POS(0)));
     }
 }
@@ -209,7 +208,7 @@ void doStartPrint()
     starttime = millis();
     stoptime = starttime;
     predictedTime = 0;
-    ui_mode &= ~UI_LED_DIMMED;
+    sleep_state = 0x0;
 }
 
 static void userStartPrint()
@@ -452,7 +451,7 @@ void lcd_menu_print_select()
             if (!card.filenameIsDir)
             {
                 //Start print
-                ui_mode &= ~UI_LED_DIMMED;
+                sleep_state = 0x0;
             #if EXTRUDERS > 1
                 active_extruder = (swapExtruders() ? 1 : 0);
             #else
@@ -485,6 +484,15 @@ void lcd_menu_print_select()
                     lcd_clearstatus();
                     menu.return_to_main();
 
+                    //reset all printing parameters to defaults
+                    fanSpeedPercent = 100;
+                    for(uint8_t e=0; e<EXTRUDERS; e++)
+                    {
+                        volume_to_filament_length[e] = 1.0;
+                        extrudemultiply[e] = 100;
+                        e_smoothed_speed[e] = 0.0f;
+                    }
+
                     if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 17) == 0)
                     {
                         //New style GCode flavor without start/end code.
@@ -500,7 +508,6 @@ void lcd_menu_print_select()
 //                            SERIAL_ECHOPGM(": ");
 //                            SERIAL_ECHOLN(LCD_DETAIL_CACHE_MATERIAL(e));
 
-                            e_smoothed_speed[e] = 0.0f;
 #if EXTRUDERS == 2
                             uint8_t index = (swapExtruders() ? e^0x01 : e);
                             if (LCD_DETAIL_CACHE_MATERIAL(index) < 1)
@@ -547,15 +554,6 @@ void lcd_menu_print_select()
                     else
                     {
                         //Classic gcode file
-
-                        //Set the settings to defaults so the classic GCode has full control
-                        fanSpeedPercent = 100;
-                        for(uint8_t e=0; e<EXTRUDERS; e++)
-                        {
-                            volume_to_filament_length[e] = 1.0;
-                            extrudemultiply[e] = 100;
-                            e_smoothed_speed[e] = 0.0f;
-                        }
                         menu.add_menu(menu_t(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0)));
                     }
                 }
@@ -790,7 +788,7 @@ void lcd_menu_print_abort()
 
 static void postPrintReady()
 {
-    ui_mode &= ~UI_LED_DIMMED;
+    sleep_state = 0x0;
     if (led_mode == LED_MODE_BLINK_ON_DONE)
         analogWrite(LED_PIN, 0);
     menu.return_to_previous();
@@ -832,9 +830,9 @@ void lcd_menu_print_ready()
 
 
 #if TEMP_SENSOR_BED != 0
-    if (lcd_cache[0] && (current_temperature[0] > 60 || current_temperature_bed > 40))
+    if ((sleep_state & SLEEP_COOLING) && (current_temperature[0] > 60 || current_temperature_bed > 40))
 #else
-    if (lcd_cache[0] && (current_temperature[0] > 60))
+    if ((sleep_state & SLEEP_COOLING) && (current_temperature[0] > 60))
 #endif // TEMP_SENSOR_BED
     {
         lcd_lib_draw_string_centerP(16, PSTR("Printer cooling down"));
@@ -852,7 +850,7 @@ void lcd_menu_print_ready()
     }
     else
     {
-        lcd_cache[0] = 0;
+        sleep_state &= ~SLEEP_COOLING;
         LED_GLOW
         lcd_lib_draw_string_center(16, card.longFilename);
 //        lcd_lib_draw_string_centerP(16, PSTR("Print finished"));

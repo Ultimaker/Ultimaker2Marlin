@@ -35,6 +35,8 @@
 #define OLD_ACCEL     (*(float*)&lcd_cache[sizeof(float)])
 #define TARGET_STEPS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
 
+uint8_t sleep_state = 0x0;
+
 float recover_height = 0.0f;
 float recover_position[NUM_AXIS] = { 0.0f, 0.0f, 0.0f, 0.0f };
 int recover_temperature[EXTRUDERS] = { 0 };
@@ -72,6 +74,8 @@ static void lcd_position_z_axis();
 
 void tinkergnome_init()
 {
+    sleep_state = 0x0;
+
     uint16_t version = GET_EXPERT_VERSION()+1;
 
     if (version > 6)
@@ -271,10 +275,10 @@ static void lcd_start_babystepping()
 
 static void lcd_toggle_led()
 {
-    // toggle dim status
-    ui_mode ^= UI_LED_DIMMED;
+    // toggle led status
+    sleep_state ^= SLEEP_LED_OFF;
 
-    analogWrite(LED_PIN, (ui_mode & UI_LED_DIMMED) ? 0 : 255 * int(led_brightness_level) / 100);
+    analogWrite(LED_PIN, (sleep_state & SLEEP_LED_OFF) ? 0 : 255 * int(led_brightness_level) / 100);
     LED_NORMAL
 }
 
@@ -2475,22 +2479,21 @@ void lcd_menu_move_axes()
 
 void manage_led_timeout()
 {
-    if ((led_timeout > 0) && !(ui_mode & UI_LED_DIMMED))
+    if ((led_timeout > 0) && !(sleep_state & SLEEP_LED_OFF))
     {
-        static uint8_t ledDimmed = 0;
         if (((millis() - last_user_interaction) > (led_timeout*MILLISECONDS_PER_MINUTE)))
         {
-            if (!ledDimmed)
+            if (!(sleep_state & SLEEP_LED_DIMMED))
             {
                 // dim LED
                 analogWrite(LED_PIN, 255 * min(led_sleep_brightness, led_brightness_level) / 100);
-                ledDimmed ^= 1;
+                sleep_state ^= SLEEP_LED_DIMMED;
             }
         }
-        else if (ledDimmed)
+        else if (sleep_state & SLEEP_LED_DIMMED)
         {
             analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
-            ledDimmed ^= 1;
+            sleep_state ^= SLEEP_LED_DIMMED;
         }
     }
 }

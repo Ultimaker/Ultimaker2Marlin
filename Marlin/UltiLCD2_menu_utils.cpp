@@ -9,7 +9,7 @@
 #define LCD_TIMEOUT_TO_STATUS (MILLISECONDS_PER_SECOND*30UL)		// 30 Sec.
 
 // colors for the encoder led ring
-#define LED_INPUT lcd_lib_led_color(192, 8, 0);
+#define LED_INPUT lcd_lib_led_color(192, 8, 0); led_update();
 
 LCDMenu menu;
 
@@ -45,7 +45,7 @@ void LCDMenu::init_menu_switch(bool beep)
     {
         lcd_lib_keyclick();
     }
-    if (!(ui_mode & UI_LED_DIMMED) && (led_mode == LED_MODE_ALWAYS_ON))
+    if (!(sleep_state & SLEEP_LED_OFF) && (led_mode == LED_MODE_ALWAYS_ON))
         analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
 }
 
@@ -92,6 +92,7 @@ void LCDMenu::replace_menu(menu_t nextMenu, bool beep)
 
 bool LCDMenu::return_to_previous(bool beep)
 {
+    LED_NORMAL
     if (currentIndex>0)
     {
         // post processing
@@ -137,6 +138,7 @@ void LCDMenu::return_to_main(bool beep)
             menuStack[currentIndex].initMenuFunc();
         }
     }
+    LED_NORMAL
 }
 
 // --------------------------------------------------------------------------

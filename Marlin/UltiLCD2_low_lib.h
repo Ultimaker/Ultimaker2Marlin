@@ -7,6 +7,7 @@
 void lcd_lib_init();
 void lcd_lib_update_screen();   /* Start sending out the display buffer to the screen. Wait till lcd_lib_update_ready before issuing any draw functions */
 bool lcd_lib_update_ready();
+void led_update();
 
 void lcd_lib_draw_string(uint8_t x, uint8_t y, const char* str);
 void lcd_lib_clear_string(uint8_t x, uint8_t y, const char* str);
