@@ -233,8 +233,6 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, scrollDrawCallbac
     {
         entryDetailsCallback(selIndex);
     }
-
-    lcd_lib_update_screen();
 }
 
 void lcd_menu_edit_setting()

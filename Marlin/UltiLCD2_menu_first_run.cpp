@@ -483,6 +483,7 @@ static void lcd_menu_first_run_material_select_material()
         menu.replace_menu(menu_t(lcd_menu_first_run_material_select_confirm_material, MAIN_MENU_ITEM_POS(0)));
         strcat_P(LCD_CACHE_FILENAME(0), PSTR(" as material,"));
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_first_run_material_select_confirm_material()

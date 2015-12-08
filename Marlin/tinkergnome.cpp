@@ -1971,6 +1971,7 @@ void lcd_menu_maintenance_expert()
             menu.return_to_previous();
         }
     }
+    lcd_lib_update_screen();
 }
 
 static bool endstop_reached(AxisEnum axis, int8_t direction)

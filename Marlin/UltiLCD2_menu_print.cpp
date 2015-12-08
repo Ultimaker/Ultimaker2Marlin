@@ -103,7 +103,7 @@ void abortPrint()
 static void userAbortPrint()
 {
     abortPrint();
-    sleep_state = 0x0;
+    sleep_state &= ~SLEEP_LED_OFF;
     menu.return_to_main();
 }
 
@@ -119,12 +119,12 @@ static void checkPrintFinished()
     {
         quickStop();
         abortPrint();
-        sleep_state = 0x0;
+        sleep_state &= ~SLEEP_LED_OFF;
         menu.replace_menu(menu_t(lcd_menu_print_error_position, MAIN_MENU_ITEM_POS(0)));
     }else if (card.errorCode())
     {
         abortPrint();
-        sleep_state = 0x0;
+        sleep_state &= ~SLEEP_LED_OFF;
         menu.replace_menu(menu_t(lcd_menu_print_error_sd, MAIN_MENU_ITEM_POS(0)));
     }
 }
@@ -788,7 +788,7 @@ void lcd_menu_print_abort()
 
 static void postPrintReady()
 {
-    sleep_state = 0x0;
+    sleep_state &= ~SLEEP_LED_OFF;
     if (led_mode == LED_MODE_BLINK_ON_DONE)
         analogWrite(LED_PIN, 0);
     menu.return_to_previous();
@@ -1047,6 +1047,7 @@ void lcd_menu_print_tune()
         else if ((ui_mode & UI_MODE_EXPERT) && IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_sleeptimer));
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_retraction_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
@@ -1106,6 +1107,7 @@ static void lcd_menu_print_tune_retraction()
             LCD_EDIT_SETTING_FLOAT001(extruder_swap_retract_length, "Extruder change", "mm", 0, 50);
 #endif
     }
+    lcd_lib_update_screen();
 }
 
 void lcd_print_pause()

@@ -420,6 +420,7 @@ void lcd_menu_maintenance_advanced()
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_maintenance_expert, SCROLL_MENU_ITEM_POS(0)));
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_maintenance_advanced_heatup()
@@ -617,6 +618,7 @@ static void lcd_menu_maintenance_motion()
         else if (IS_SELECTED_SCROLL(4))
             menu.add_menu(menu_t(lcd_menu_steps, MAIN_MENU_ITEM_POS(1)));
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_led_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
@@ -700,6 +702,7 @@ static void lcd_menu_maintenance_led()
             lcd_lib_keyclick();
         }
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_uimode_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
@@ -792,6 +795,7 @@ static void lcd_menu_uimode()
         }
         menu.return_to_previous();
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_clicksound()
@@ -820,6 +824,7 @@ static void lcd_menu_clicksound()
         }
         menu.return_to_previous();
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_screen_contrast()
@@ -888,6 +893,7 @@ static void lcd_menu_preferences()
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_advanced_factory_reset, MAIN_MENU_ITEM_POS(1)));
     }
+    lcd_lib_update_screen();
 }
 
 #endif//ENABLE_ULTILCD2

@@ -405,6 +405,7 @@ static void lcd_menu_change_material_select_material()
 
         menu.replace_menu(menu_t(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0)));
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_material_export_done()
@@ -660,6 +661,7 @@ void lcd_menu_material_select()
             menu.replace_menu(menu_t(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0)));
         }
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_material_selected()
@@ -753,6 +755,7 @@ static void lcd_menu_material_settings()
         else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET))
             menu.add_menu(menu_t(lcd_menu_material_settings_store));
     }
+    lcd_lib_update_screen();
 }
 
 static void lcd_menu_material_settings_store_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
@@ -797,6 +800,7 @@ static void lcd_menu_material_settings_store()
         }
         lcd_change_to_previous_menu();
     }
+    lcd_lib_update_screen();
 }
 
 void lcd_material_reset_defaults()
