@@ -39,7 +39,7 @@ class Sd2CardExt : public Sd2Card {
   uint8_t writeExtMemory(uint8_t mio, uint8_t func, uint32_t addr, uint16_t count, const uint8_t* src);
   uint8_t writeExtMask(uint8_t mio, uint8_t func, uint32_t addr, uint8_t mask, const uint8_t* src);
 
-  uint8_t reset();
+  // uint8_t reset();
 protected:
   uint8_t readExt(uint32_t arg, uint8_t* src, uint16_t count);
   uint8_t writeExt(uint32_t arg, const uint8_t* src, uint16_t count);

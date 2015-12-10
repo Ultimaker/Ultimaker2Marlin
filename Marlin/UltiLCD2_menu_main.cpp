@@ -211,6 +211,7 @@ static void lcd_main_print()
 {
     lcd_clear_cache();
     card.release();
+    card.setroot();
     menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
 }
 
@@ -223,23 +224,27 @@ static void lcd_toggle_preheat_nozzle0()
     }
 }
 
-static void lcd_preheat_tune_nozzle0() { lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15); PREHEAT_FLAG(1) = (target_temperature[0]>0); }
+static void lcd_preheat_tune_nozzle0()
+{
+    lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15);
+    PREHEAT_FLAG(1) = (target_temperature[0]>0);
+}
 
 #if EXTRUDERS > 1
 static void lcd_toggle_preheat_nozzle1()
 {
     PREHEAT_FLAG(2) = !PREHEAT_FLAG(2);
-    if (PREHEAT_FLAG(2))
-    {
-
-    }
-    else
+    if (!PREHEAT_FLAG(2))
     {
         setTargetHotend(0, 1);
     }
 }
 
-static void lcd_preheat_tune_nozzle1() { lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15); PREHEAT_FLAG(2) = (target_temperature[0]>0); }
+static void lcd_preheat_tune_nozzle1()
+{
+    lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15);
+    PREHEAT_FLAG(2) = (target_temperature[0]>0);
+}
 #endif
 
 #if TEMP_SENSOR_BED != 0
@@ -248,11 +253,11 @@ static void lcd_toggle_preheat_bed()
     PREHEAT_FLAG(0) = !PREHEAT_FLAG(0);
     if (PREHEAT_FLAG(0))
     {
-        target_temperature_bed = 0;
-        for(uint8_t e=0; e<EXTRUDERS; e++)
-        {
-            target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
-        }
+  #if EXTRUDERS == 2
+        setTargetBed(material[swapExtruders() ? 1 : 0].bed_temperature);
+  #else
+        setTargetBed(target_temperature_bed = material[0].bed_temperature);
+  #endif
     }
     else
     {
@@ -260,7 +265,11 @@ static void lcd_toggle_preheat_bed()
     }
 }
 
-static void lcd_preheat_tune_bed() { lcd_tune_value(target_temperature_bed, 0, BED_MAXTEMP - 15); PREHEAT_FLAG(0) = (target_temperature_bed>0); }
+static void lcd_preheat_tune_bed()
+{
+    lcd_tune_value(target_temperature_bed, 0, BED_MAXTEMP - 15);
+    PREHEAT_FLAG(0) = (target_temperature_bed>0);
+}
 #endif
 
 static void init_preheat()

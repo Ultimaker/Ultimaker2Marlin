@@ -8,21 +8,25 @@
 
 #ifdef SDSUPPORT
 
-CardReader::CardReader()
+CardReader::CardReader() :
+   saving(false)
+ , logging(false)
+ , sdprinting(false)
+ , pause(false)
+ , sdInserted(false)
+ , filenameIsDir(false)
+ , lastnr(0)
+ , cardOK(false)
+ , workDirDepth(0)
+ , insertChangeDelay(1000 / 25)
+ , filesize(0)
+ , autostart_atmillis(0)
+ , sdpos(0)
+ , autostart_stilltocheck(true) //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
 {
-   filesize = 0;
-   sdpos = 0;
-   sdprinting = false;
-   pause = false;
-   cardOK = false;
-   saving = false;
-   logging = false;
-   autostart_atmillis=0;
-   workDirDepth = 0;
-   memset(workDirParents, 0, sizeof(workDirParents));
 
-   autostart_stilltocheck=true; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
-   lastnr=0;
+   // memset(workDirParents, 0, sizeof(workDirParents));
+
   //power to SD reader
   #if SDPOWER > -1
     SET_OUTPUT(SDPOWER);
@@ -190,8 +194,8 @@ void CardReader::setroot()
     SERIAL_ECHOLNPGM(MSG_SD_WORKDIR_FAIL);
   }*/
   workDir=root;
-
   curDir=&workDir;
+  workDirDepth = 0;
 }
 
 void CardReader::release()
@@ -199,7 +203,7 @@ void CardReader::release()
   sdprinting = false;
   pause = false;
   cardOK = false;
-  card.reset();
+  // card.reset();
 }
 
 void CardReader::startFileprint()
@@ -483,7 +487,7 @@ void CardReader::checkautostart(bool force)
   if(!found)
   {
     lastnr=-1;
-    card.reset();
+    // card.reset();
   }
   else
   {
@@ -569,6 +573,6 @@ void CardReader::printingHasFinished()
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
     autotempShutdown();
-    card.reset();
+    // card.reset();
 }
 #endif //SDSUPPORT

@@ -1805,26 +1805,26 @@ void lcd_menu_heatercheck()
     lcd_lib_update_screen();
 }
 
-
-static void lcd_menu_autotune_params()
-{
-    lcd_basic_screen();
-    lcd_lib_draw_hline(3, 124, 13);
-
-//    menu.process_submenu(get_autotune_menuoption, 5);
+// TODO: autotune
+//static void lcd_menu_autotune_params()
+//{
+//    lcd_basic_screen();
+//    lcd_lib_draw_hline(3, 124, 13);
 //
-    uint8_t flags = 0;
-//    for (uint8_t index=0; index<5; ++index) {
-//        menu.drawSubMenu(drawAutotuneSubmenu, index, flags);
+////    menu.process_submenu(get_autotune_menuoption, 5);
+////
+//    uint8_t flags = 0;
+////    for (uint8_t index=0; index<5; ++index) {
+////        menu.drawSubMenu(drawAutotuneSubmenu, index, flags);
+////    }
+//
+//    if (!(flags & MENU_STATUSLINE))
+//    {
+//        lcd_lib_draw_string_leftP(5, PSTR("PID autotune"));
 //    }
-
-    if (!(flags & MENU_STATUSLINE))
-    {
-        lcd_lib_draw_string_leftP(5, PSTR("PID autotune"));
-    }
-
-    lcd_lib_update_screen();
-}
+//
+//    lcd_lib_update_screen();
+//}
 
 
 #if (TEMP_SENSOR_BED != 0) || (EXTRUDERS > 1)
@@ -1845,10 +1845,11 @@ static void lcd_store_pid()
     menu.return_to_previous();
 }
 
-static void lcd_pid_autotune_e1()
-{
-
-}
+// TODO: autotune
+//static void lcd_pid_autotune_e1()
+//{
+//
+//}
 
 static void lcd_preset_e1_kd()
 {
@@ -2064,10 +2065,11 @@ static void init_tempcontrol_e2()
     menu.set_selection(1);
 }
 
-static void lcd_pid_autotune_e2()
-{
-
-}
+// TODO: autotune
+//static void lcd_pid_autotune_e2()
+//{
+//
+//}
 
 static void lcd_preset_e2_kd()
 {
@@ -2290,10 +2292,11 @@ static void lcd_store_pidbed()
     menu.return_to_previous();
 }
 
-static void lcd_pid_autotune_bed()
-{
-
-}
+// TODO: autotune
+//static void lcd_pid_autotune_bed()
+//{
+//
+//}
 
 static void lcd_toggle_pid_bed()
 {

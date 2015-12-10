@@ -224,29 +224,29 @@ uint8_t Sd2CardExt::writeExtMask(uint8_t mio, uint8_t func,
   return writeExt(arg, src, 1);
 }
 
-/**
- * Enable an SD flash memory card.
- *
- * \return The value one, true, is returned for success and
- * the value zero, false, is returned for failure.  The reason for failure
- * can be determined by calling errorCode() and errorData().
- */
-uint8_t Sd2CardExt::reset() {
-#ifdef SD_RESET
-  // 16-bit init start time allows over a minute
-  uint16_t t0 = (uint16_t)millis();
-
-  chipSelectLow();
-
-  // command to go idle in SPI mode
-  while ((status_ = cardCommand(CMD0, 0)) != R1_IDLE_STATE) {
-    if (((uint16_t)(millis() - t0)) > SD_INIT_TIMEOUT) {
-      error(SD_CARD_ERROR_CMD0);
-      return false;
-    }
-  }
-
-  chipSelectHigh();
-#endif
-  return true;
-}
+///**
+// * Enable an SD flash memory card.
+// *
+// * \return The value one, true, is returned for success and
+// * the value zero, false, is returned for failure.  The reason for failure
+// * can be determined by calling errorCode() and errorData().
+// */
+//uint8_t Sd2CardExt::reset() {
+//#ifdef SD_RESET
+//  // 16-bit init start time allows over a minute
+//  uint16_t t0 = (uint16_t)millis();
+//
+//  chipSelectLow();
+//
+//  // command to go idle in SPI mode
+//  while ((status_ = cardCommand(CMD0, 0)) != R1_IDLE_STATE) {
+//    if (((uint16_t)(millis() - t0)) > SD_INIT_TIMEOUT) {
+//      error(SD_CARD_ERROR_CMD0);
+//      return false;
+//    }
+//  }
+//
+//  chipSelectHigh();
+//#endif
+//  return true;
+//}

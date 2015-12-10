@@ -567,6 +567,7 @@ void lcd_menu_print_select()
         }
     }
     lcd_scroll_menu(PSTR("SD CARD"), nrOfFiles+1, lcd_sd_menu_filename_callback, lcd_sd_menu_details_callback);
+    lcd_lib_update_screen();
 }
 
 void lcd_menu_print_heatup()

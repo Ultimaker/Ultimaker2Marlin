@@ -1832,7 +1832,7 @@ void reset_printing_state()
 {
     printing_state = PRINT_STATE_NORMAL;
     card.sdprinting = false;
-    card.reset();
+//    card.reset();
 }
 
 static const menu_t & get_recover_menuoption(uint8_t nr, menu_t &opt)
@@ -1958,6 +1958,7 @@ void lcd_menu_maintenance_expert()
             // select file
             lcd_clear_cache();
             card.release();
+            card.setroot();
             menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
         }
         else if (IS_SELECTED_SCROLL(4))
