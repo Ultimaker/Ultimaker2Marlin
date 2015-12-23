@@ -1338,7 +1338,7 @@ static unsigned long predictTimeLeft()
     {
         return LCD_DETAIL_CACHE_TIME();
     }
-    else if ((LCD_DETAIL_CACHE_TIME() == 0) && (progress < 0.01f))
+    else if ((LCD_DETAIL_CACHE_TIME() == 0) && (printTime < 600) && (progress < 0.5f))
     {
         return 0;
     }
@@ -1402,11 +1402,15 @@ void lcd_menu_printing_tg()
             }
         }
 
+#if EXTRUDERS > 1
+        char buffer[32] = {0};
+#endif // EXTRUDERS
         if (printing_page == 0)
         {
             uint8_t progress = IS_SD_PRINTING ? card.getFilePos() / ((card.getFileSize() + 123) / 124) : 0;
+#if EXTRUDERS < 2
             char buffer[32] = {0};
-
+#endif // EXTRUDERS
             switch(printing_state)
             {
             default:
@@ -1487,6 +1491,10 @@ void lcd_menu_printing_tg()
             else if (printing_state == PRINT_STATE_HEATING)
             {
                 lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Heating nozzle"));
+#if EXTRUDERS > 1
+                int_to_string(active_extruder+1, buffer, NULL);
+                lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT + 15*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, buffer);
+#endif // EXTRUDERS
                 index += 3;
             }
             else if (printing_state == PRINT_STATE_HEATING_BED)
@@ -2736,7 +2744,11 @@ static void lcd_extrude_init_pull()
     plan_set_e_position(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS] / volume_to_filament_length[active_extruder]);
     TARGET_POS(E_AXIS) = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
     //Set E motor power lower so the motor will skip instead of grind.
+#if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
+    digipot_current(2, active_extruder ? (motor_current_e2*2/3) : (motor_current_setting[2]*2/3));
+#else
     digipot_current(2, motor_current_setting[2]*2/3);
+#endif
     //increase max. feedrate and reduce acceleration
     OLD_FEEDRATE = max_feedrate[E_AXIS];
     OLD_ACCEL = retract_acceleration;
@@ -2750,7 +2762,11 @@ static void lcd_extrude_quit_pull()
     max_feedrate[E_AXIS] = OLD_FEEDRATE;
     retract_acceleration = OLD_ACCEL;
     //Set E motor power to default.
+#if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
+    digipot_current(2, active_extruder ? motor_current_e2 : motor_current_setting[2]);
+#else
     digipot_current(2, motor_current_setting[2]);
+#endif
     // disable E-steppers
     enquecommand_P(PSTR("M84 E0"));
 }

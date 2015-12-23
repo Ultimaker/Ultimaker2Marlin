@@ -12,10 +12,6 @@ void lcd_menu_maxspeed();
 void lcd_menu_acceleration();
 void lcd_menu_heatercheck();
 
-#if (EXTRUDERS > 1) && defined(MOTOR_CURRENT_PWM_E_PIN) && (MOTOR_CURRENT_PWM_E_PIN > -1)
-void lcd_init_motorcurrent();
-#endif
-
 #if EXTRUDERS > 1
 void init_swap_menu();
 void lcd_menu_swap_extruder();

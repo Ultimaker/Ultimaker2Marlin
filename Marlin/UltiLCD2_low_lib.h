@@ -80,4 +80,8 @@ FORCE_INLINE void lcd_lib_draw_string_rightP(uint8_t x, uint8_t y, const char* p
 #define MILLISECONDS_PER_SECOND 1000UL
 #define MILLISECONDS_PER_MINUTE (MILLISECONDS_PER_SECOND*60UL)
 
+#define LED_NORMAL if (sleep_state & SLEEP_LED_OFF) { lcd_lib_led_color(0,0,0); } else { lcd_lib_led_color(40,40,54); } led_update();
+#define LED_GLOW   lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow); led_update();
+#define LED_GLOW_ERROR lcd_lib_led_color(led_glow,128-led_glow,led_glow); led_update();
+
 #endif//ULTI_LCD2_LOW_LIB_H

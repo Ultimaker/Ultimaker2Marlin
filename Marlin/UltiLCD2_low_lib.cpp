@@ -230,7 +230,7 @@ void lcd_lib_update_screen()
                     lcd_lib_contrast(min(lcd_sleep_contrast, lcd_contrast));
                 } else
                 {
-                    // LCD off
+                    // switch LCD off
                     i2c_start();
                     i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
                     i2c_send_raw(I2C_LCD_SEND_COMMAND);
@@ -255,13 +255,16 @@ void lcd_lib_update_screen()
         else if (sleep_state & SLEEP_LCD_DIMMED)
         {
             sleep_state ^= SLEEP_LCD_DIMMED;
+            // reactivate led ring
+            LED_NORMAL
+
             if (lcd_sleep_contrast > 0)
             {
                 // increase contrast back to normal
                 lcd_lib_contrast(lcd_contrast);
             } else
             {
-                // LCD on
+                // switch LCD on
                 i2c_start();
                 i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
                 i2c_send_raw(I2C_LCD_SEND_COMMAND);

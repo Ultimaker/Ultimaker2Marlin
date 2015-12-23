@@ -46,26 +46,15 @@ void lcd_clear_cache()
 void abortPrint()
 {
     postMenuCheck = NULL;
-    stoptime=millis();
-    lifetime_stats_print_end();
-    doCooldown();
-
     clear_command_queue();
-    enquecommand_P(PSTR("M401"));
+    // enquecommand_P(PSTR("M401"));
+    quickStop();
 
-    if (card.sdprinting)
+    if (primed || card.sdprinting)
     {
-    	// we're not printing any more
-        card.sdprinting = false;
-        if (!card.pause)
-        {
-            recover_height = current_position[Z_AXIS];
-            enquecommand_P(PSTR("G10"));
-        }
-    }
+        // retract
+        enquecommand_P(PSTR("G10"));
 
-    if (primed)
-    {
         char buffer[32] = {0};
         // set up the end of print retraction
         sprintf_P(buffer, PSTR("G92 E%i"), int((end_of_print_retraction / volume_to_filament_length[active_extruder])+0.5f));
@@ -76,6 +65,16 @@ void abortPrint()
 
         // no longer primed
         primed = false;
+    }
+
+    if (card.sdprinting)
+    {
+    	// we're not printing any more
+        card.sdprinting = false;
+        if (!card.pause)
+        {
+            recover_height = current_position[Z_AXIS];
+        }
     }
 
     if (current_position[Z_AXIS] > max_pos[Z_AXIS] - 30)
@@ -92,7 +91,11 @@ void abortPrint()
     // finish all moves
     st_synchronize();
 
+    doCooldown();
+
     //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
+    stoptime=millis();
+    lifetime_stats_print_end();
     card.pause = false;
     pauseRequested = false;
     printing_state  = PRINT_STATE_NORMAL;
@@ -797,7 +800,7 @@ static void postPrintReady()
 
 void lcd_menu_print_ready()
 {
-    if (led_mode == LED_MODE_BLINK_ON_DONE)
+    if ((led_mode == LED_MODE_BLINK_ON_DONE) && !(sleep_state & SLEEP_LED_OFF))
         analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
 
     lcd_info_screen(NULL, postPrintReady, PSTR("BACK TO MENU"));
@@ -828,7 +831,6 @@ void lcd_menu_print_ready()
     int_to_string(dsp_temperature_bed, c, PSTR("C"));
 #endif
     lcd_lib_draw_string_center(26, buffer);
-
 
 #if TEMP_SENSOR_BED != 0
     if ((sleep_state & SLEEP_COOLING) && (current_temperature[0] > 60 || current_temperature_bed > 40))
@@ -871,7 +873,11 @@ static void tune_item_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
     else if (index++ == nr)
         strcpy_P(buffer, PSTR("Speed"));
     else if (index++ == nr)
+#if EXTRUDERS > 1
+        strcpy_P(buffer, PSTR("Temperature 1"));
+#else
         strcpy_P(buffer, PSTR("Temperature"));
+#endif
 #if EXTRUDERS > 1
     else if (index++ == nr)
         strcpy_P(buffer, PSTR("Temperature 2"));
@@ -883,7 +889,11 @@ static void tune_item_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
     else if (index++ == nr)
         strcpy_P(buffer, PSTR("Fan speed"));
     else if (index++ == nr)
+#if EXTRUDERS > 1
+        strcpy_P(buffer, PSTR("Material flow 1"));
+#else
         strcpy_P(buffer, PSTR("Material flow"));
+#endif
 #if EXTRUDERS > 1
     else if (index++ == nr)
         strcpy_P(buffer, PSTR("Material flow 2"));
@@ -931,7 +941,7 @@ static void tune_item_details_callback(uint8_t nr)
     else if (nr == 4 + BED_MENU_OFFSET + EXTRUDERS)
         int_to_string(extrudemultiply[1], buffer, PSTR("%"));
 #endif
-    else if (nr == 5 + BED_MENU_OFFSET + EXTRUDERS)
+    else if (nr == 4 + BED_MENU_OFFSET + 2*EXTRUDERS)
     {
         int_to_string(led_brightness_level, buffer, PSTR("%"));
 //        if (led_mode == LED_MODE_ALWAYS_ON || led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)

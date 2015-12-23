@@ -610,11 +610,7 @@ static void lcd_menu_maintenance_motion()
         else if (IS_SELECTED_SCROLL(2))
             menu.add_menu(menu_t(lcd_menu_maxspeed, MAIN_MENU_ITEM_POS(1)));
         else if (IS_SELECTED_SCROLL(3))
-#if (EXTRUDERS > 1) && defined(MOTOR_CURRENT_PWM_E_PIN) && (MOTOR_CURRENT_PWM_E_PIN > -1)
-            menu.add_menu(menu_t(lcd_init_motorcurrent, lcd_menu_motorcurrent, NULL, MAIN_MENU_ITEM_POS(1)));
-#else
             menu.add_menu(menu_t(lcd_menu_motorcurrent, MAIN_MENU_ITEM_POS(1)));
-#endif
         else if (IS_SELECTED_SCROLL(4))
             menu.add_menu(menu_t(lcd_menu_steps, MAIN_MENU_ITEM_POS(1)));
     }

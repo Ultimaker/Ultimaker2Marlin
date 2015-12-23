@@ -108,10 +108,6 @@ extern uint8_t minProgress;
             lcd_setting_max = (_max) / 60 + 0.5; \
         } while(0)
 
-#define LED_NORMAL if (sleep_state & SLEEP_LED_OFF) { lcd_lib_led_color(0,0,0); } else { lcd_lib_led_color(40,40,54); } led_update();
-#define LED_GLOW   lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow); led_update();
-#define LED_GLOW_ERROR lcd_lib_led_color(led_glow,128-led_glow,led_glow); led_update();
-
 //If we have a heated bed, then the heated bed menu entries have a size of 1, else they have a size of 0.
 #if TEMP_SENSOR_BED != 0
 #define BED_MENU_OFFSET 1

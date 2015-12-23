@@ -637,6 +637,10 @@ void get_command()
     }
   }
   #ifdef SDSUPPORT
+  if (card.eof())
+  {
+    card.sdprinting = false;
+  }
   if(!card.sdprinting)
     return;
   if (serial_count!=0)
@@ -1503,8 +1507,6 @@ void process_commands()
           }
           manage_heater();
           manage_inactivity();
-          starttime=millis();
-          stoptime=starttime;
           lcd_update();
           lifetime_stats_tick();
         #ifdef TEMP_RESIDENCY_TIME
@@ -1549,8 +1551,6 @@ void process_commands()
           }
           manage_heater();
           manage_inactivity();
-          starttime=millis();
-          stoptime=starttime;
           lcd_update();
           lifetime_stats_tick();
           if (printing_state != PRINT_STATE_HEATING_BED)
