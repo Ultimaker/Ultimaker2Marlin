@@ -195,16 +195,18 @@ void lcd_lib_init()
 }
 
 #if USE_TWI_INTERRUPT
-uint16_t lcd_update_pos = 0;
+volatile uint16_t lcd_update_pos = 0;
 ISR(TWI_vect)
 {
-    if (lcd_update_pos == LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8)
+    if (lcd_update_pos >= LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8)
     {
         i2c_end();
-    }else{
-        i2c_send_raw(lcd_buffer[lcd_update_pos]);
+    }
+    else
+    {
+        i2c_send_raw(lcd_buffer[lcd_update_pos++]);
         TWCR |= _BV(TWIE);
-        lcd_update_pos++;
+        // lcd_update_pos++;
     }
 }
 #endif

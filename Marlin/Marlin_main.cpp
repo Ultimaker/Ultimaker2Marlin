@@ -1005,7 +1005,7 @@ void process_commands()
       break;
       #endif //FWRETRACT
     case 28: //G28 Home all Axis one at a time
-      if (printing_state == PRINT_STATE_RECOVER)
+      if ((printing_state == PRINT_STATE_RECOVER) || (printing_state == PRINT_STATE_HOMING))
         break;
       if (printing_state != PRINT_STATE_START)
         printing_state = PRINT_STATE_HOMING;
@@ -1531,9 +1531,14 @@ void process_commands()
       break;
     case 190: // M190 - Wait for bed heater to reach target.
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1 && TEMP_SENSOR_BED != 0
+        if (code_seen('S')) setTargetBed(code_value());
+
+        if (printing_state == PRINT_STATE_RECOVER)
+            break;
+
         printing_state = PRINT_STATE_HEATING_BED;
         LCD_MESSAGEPGM(MSG_BED_HEATING);
-        if (code_seen('S')) setTargetBed(code_value());
+
         codenum = millis();
         while(current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
         {
@@ -1636,10 +1641,10 @@ void process_commands()
         break;
 
     case 82:
-      axis_relative_modes[3] = false;
+      axis_relative_modes[E_AXIS] = false;
       break;
     case 83:
-      axis_relative_modes[3] = true;
+      axis_relative_modes[E_AXIS] = true;
       break;
     case 18: //compatibility
     case 84: // M84
@@ -1730,6 +1735,8 @@ void process_commands()
       SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
       SERIAL_PROTOCOLPGM("Z:");
       SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
+      SERIAL_PROTOCOLPGM("E:");
+      SERIAL_PROTOCOL(float(st_get_position(E_AXIS))/axis_steps_per_unit[E_AXIS]);
 
       SERIAL_PROTOCOLLN("");
       break;
@@ -2412,6 +2419,8 @@ void process_commands()
     }
     break;
     case 999: // M999: Restart after being stopped
+      if (printing_state == PRINT_STATE_RECOVER)
+        break;
       Stopped = false;
       lcd_reset_alert_level();
       gcode_LastN = Stopped_gcode_LastN;
@@ -2419,10 +2428,14 @@ void process_commands()
     break;
 #ifdef ENABLE_ULTILCD2
     case 10000://M10000 - Clear the whole LCD
+        if (printing_state == PRINT_STATE_RECOVER)
+          break;
         lcd_lib_clear();
         break;
     case 10001://M10001 - Draw text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
         {
+          if (printing_state == PRINT_STATE_RECOVER)
+            break;
           uint8_t x = 0, y = 0;
           if (code_seen('X')) {
             x = code_value_long();
@@ -2436,6 +2449,8 @@ void process_commands()
         break;
     case 10002://M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
         {
+          if (printing_state == PRINT_STATE_RECOVER)
+            break;
           uint8_t x = 0, y = 0;
           if (code_seen('X')) {
             x = code_value_long();
@@ -2449,6 +2464,8 @@ void process_commands()
         break;
     case 10003://M10003 - Draw square on LCD, M10003 X1 Y1 W10 H10
         {
+        if (printing_state == PRINT_STATE_RECOVER)
+          break;
         uint8_t x = 0, y = 0, w = 1, h = 1;
         if (code_seen('X')) x = code_value_long();
         if (code_seen('Y')) y = code_value_long();
@@ -2459,6 +2476,8 @@ void process_commands()
         break;
     case 10004://M10004 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
         {
+        if (printing_state == PRINT_STATE_RECOVER)
+          break;
         uint8_t x = 0, y = 0, w = 1, h = 1;
         if (code_seen('X')) x = code_value_long();
         if (code_seen('Y')) y = code_value_long();
@@ -2469,6 +2488,8 @@ void process_commands()
         break;
     case 10005://M10005 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
         {
+        if (printing_state == PRINT_STATE_RECOVER)
+          break;
         uint8_t x = 0, y = 0, w = 1, h = 1;
         if (code_seen('X')) x = code_value_long();
         if (code_seen('Y')) y = code_value_long();

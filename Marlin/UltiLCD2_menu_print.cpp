@@ -832,31 +832,39 @@ void lcd_menu_print_ready()
 #endif
     lcd_lib_draw_string_center(26, buffer);
 
-#if TEMP_SENSOR_BED != 0
-    if ((sleep_state & SLEEP_COOLING) && (current_temperature[0] > 60 || current_temperature_bed > 40))
-#else
-    if ((sleep_state & SLEEP_COOLING) && (current_temperature[0] > 60))
-#endif // TEMP_SENSOR_BED
+    if (sleep_state & SLEEP_COOLING)
     {
-        lcd_lib_draw_string_centerP(16, PSTR("Printer cooling down"));
+#if TEMP_SENSOR_BED != 0
+        if ((current_temperature[0] > 60) || (current_temperature_bed > 40))
+#else
+        if (current_temperature[0] > 60)
+#endif // TEMP_SENSOR_BED
+        {
+            lcd_lib_draw_string_centerP(16, PSTR("Printer cooling down"));
 
-        int16_t progress = 124 - (current_temperature[0] - 60);
-        if (progress < 0) progress = 0;
-        if (progress > 124) progress = 124;
+            int16_t progress = 124 - (current_temperature[0] - 60);
+            if (progress < 0) progress = 0;
+            if (progress > 124) progress = 124;
 
-        if (progress < minProgress)
-            progress = minProgress;
+            if (progress < minProgress)
+                progress = minProgress;
+            else
+                minProgress = progress;
+
+            lcd_progressbar(progress);
+        }
         else
-            minProgress = progress;
-
-        lcd_progressbar(progress);
+        {
+            sleep_state &= ~SLEEP_COOLING;
+        }
     }
     else
     {
-        sleep_state &= ~SLEEP_COOLING;
-        LED_GLOW
+        if (sleep_state ^ SLEEP_LED_OFF)
+        {
+            LED_GLOW
+        }
         lcd_lib_draw_string_center(16, card.longFilename);
-//        lcd_lib_draw_string_centerP(16, PSTR("Print finished"));
         lcd_lib_draw_string_centerP(40, PSTR("Print finished"));
     }
     lcd_lib_update_screen();
