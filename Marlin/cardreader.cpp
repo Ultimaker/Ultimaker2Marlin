@@ -73,7 +73,7 @@ void  CardReader::lsDive(SdFileExt &parent, SdFileExt** parents, uint8_t dirDept
         if(lsAction==LS_SerialPrint)
         {
           SERIAL_ECHO_START;
-          SERIAL_ECHOLN(MSG_SD_CANT_OPEN_SUBDIR);
+          SERIAL_ECHOLNPGM(MSG_SD_CANT_OPEN_SUBDIR);
           SERIAL_ECHOLN(lfilename);
         }
       }
@@ -248,8 +248,6 @@ void CardReader::openFile(const char* name,bool read)
     while(dirname_start>(char*)1)
     {
       dirname_end=strchr(dirname_start,'/');
-      //SERIAL_ECHO("start:");SERIAL_ECHOLN((int)(dirname_start-name));
-      //SERIAL_ECHO("end  :");SERIAL_ECHOLN((int)(dirname_end-name));
       if(dirname_end>0 && dirname_end>dirname_start)
       {
         char subdirname[13];
@@ -263,10 +261,6 @@ void CardReader::openFile(const char* name,bool read)
           SERIAL_PROTOCOLLNPGM(".");
           return;
         }
-        else
-        {
-          //SERIAL_ECHOLN("dive ok");
-        }
 
         curDir=&myDir;
         dirname_start=dirname_end+1;
@@ -274,8 +268,6 @@ void CardReader::openFile(const char* name,bool read)
       else // the reminder after all /fsa/fdsa/ is the filename
       {
         fname=dirname_start;
-        //SERIAL_ECHOLN("remaider");
-        //SERIAL_ECHOLN(fname);
         break;
       }
     }
@@ -346,8 +338,6 @@ void CardReader::removeFile(const char* name)
     while(dirname_start>0)
     {
       dirname_end=strchr(dirname_start,'/');
-      //SERIAL_ECHO("start:");SERIAL_ECHOLN((int)(dirname_start-name));
-      //SERIAL_ECHO("end  :");SERIAL_ECHOLN((int)(dirname_end-name));
       if(dirname_end>0 && dirname_end>dirname_start)
       {
         char subdirname[13];
@@ -361,10 +351,6 @@ void CardReader::removeFile(const char* name)
           SERIAL_PROTOCOLLNPGM(".");
           return;
         }
-        else
-        {
-          //SERIAL_ECHOLN("dive ok");
-        }
 
         curDir=&myDir;
         dirname_start=dirname_end+1;
@@ -372,8 +358,6 @@ void CardReader::removeFile(const char* name)
       else // the reminder after all /fsa/fdsa/ is the filename
       {
         fname=dirname_start;
-        //SERIAL_ECHOLN("remaider");
-        //SERIAL_ECHOLN(fname);
         break;
       }
     }

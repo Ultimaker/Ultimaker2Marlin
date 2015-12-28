@@ -352,7 +352,7 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                 if (LCD_DETAIL_CACHE_TIME() > 0)
                 {
                     char* c = buffer;
-                    if (led_glow_dir)
+                    if (led_glow_dir || !(LCD_DETAIL_CACHE_MATERIAL(0) || LCD_DETAIL_CACHE_MATERIAL(1)))
                     {
                         strcpy_P(c, PSTR("Time ")); c += 5;
                         c = int_to_time_min(LCD_DETAIL_CACHE_TIME(), c);
@@ -860,7 +860,7 @@ void lcd_menu_print_ready()
     }
     else
     {
-        if (sleep_state ^ SLEEP_LED_OFF)
+        if (!(sleep_state & SLEEP_LED_OFF))
         {
             LED_GLOW
         }

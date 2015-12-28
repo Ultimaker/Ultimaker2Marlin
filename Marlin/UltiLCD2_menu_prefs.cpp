@@ -6,6 +6,7 @@
 #include "stepper.h"
 #include "preferences.h"
 #include "temperature.h"
+#include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_utils.h"
 #include "UltiLCD2_menu_prefs.h"
@@ -36,6 +37,12 @@ float e2_steps_per_unit = 282.0f;
 
 uint16_t led_timeout = LED_DIM_TIME;
 uint8_t led_sleep_brightness = 0;
+
+// forward declarations
+static bool autotune_callback(uint8_t state, uint8_t cycle, float kp, float ki, float kd);
+
+
+/////
 
 static void lcd_store_sleeptimer()
 {
@@ -1802,27 +1809,379 @@ void lcd_menu_heatercheck()
     lcd_lib_update_screen();
 }
 
-// TODO: autotune
-//static void lcd_menu_autotune_params()
-//{
-//    lcd_basic_screen();
-//    lcd_lib_draw_hline(3, 124, 13);
-//
-////    menu.process_submenu(get_autotune_menuoption, 5);
-////
-//    uint8_t flags = 0;
-////    for (uint8_t index=0; index<5; ++index) {
-////        menu.drawSubMenu(drawAutotuneSubmenu, index, flags);
-////    }
-//
-//    if (!(flags & MENU_STATUSLINE))
-//    {
-//        lcd_lib_draw_string_leftP(5, PSTR("PID autotune"));
-//    }
-//
-//    lcd_lib_update_screen();
-//}
+static void lcd_preset_autotune_temp()
+{
+    lcd_tune_value(WORD_SETTING(2), WORD_SETTING(3), WORD_SETTING(4));
+}
 
+static void lcd_preset_autotune_cycles()
+{
+    lcd_tune_value(lcd_cache[2], 2, 20);
+}
+
+static void lcd_cancel_autotune()
+{
+    lcd_cache[0] |= AUTOTUNE_ABORT;
+}
+
+static const menu_t & get_pidinfo_menuoption(uint8_t nr, menu_t &opt)
+{
+    if (nr == 0)
+    {
+        // CANCEL
+        opt.setData(MENU_NORMAL, lcd_cancel_autotune);
+    }
+    return opt;
+}
+
+static void drawPIDInfoSubmenu(uint8_t nr, uint8_t &flags)
+{
+    // uint8_t index(0);
+    // char buffer[32] = {0};
+    // if (nr == index++)
+    if (nr == 0)
+    {
+        // Cancel
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 4*LCD_CHAR_SPACING
+                                , BOTTOM_MENU_YPOS
+                                , 8*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("CANCEL")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+}
+
+static void autotune_finished()
+{
+    menu.return_to_previous();
+    menu.set_selection(0);
+}
+
+static void lcd_menu_autotune_info()
+{
+    if (lcd_cache[0] == 0)
+    {
+        lcd_basic_screen();
+        lcd_lib_draw_hline(3, 124, 13);
+
+        char buffer[32] = {0};
+
+        lcd_lib_draw_string_leftP(5, PSTR("PID tuning"));
+
+        // progress indicator
+        if (!led_glow_dir)
+        {
+            for (uint8_t i=0; i < (led_glow >> 5); ++i)
+            {
+                lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT + (10+i)*LCD_CHAR_SPACING, 5, PSTR("."));
+            }
+        }
+        int_to_string(lcd_cache[2], int_to_string(lcd_cache[3], buffer, PSTR("/")), NULL);
+        lcd_lib_draw_string_right(5, buffer);
+
+        menu.process_submenu(get_pidinfo_menuoption, 1);
+        uint8_t flags = 0;
+        menu.drawSubMenu(drawPIDInfoSubmenu, 0, flags);
+
+        // draw current temperature
+        if ((lcd_cache[1] > 0) && (lcd_cache[1] <= EXTRUDERS))
+        {
+            lcd_lib_draw_heater(LCD_CHAR_MARGIN_LEFT, 29, getHeaterPower(lcd_cache[1]-1));
+
+            int_to_string(WORD_SETTING(2), int_to_string(dsp_temperature[lcd_cache[1]-1], buffer, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
+            lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, 29, buffer);
+
+            lcd_lib_draw_string_leftP(17, PSTR("Extruder"));
+#if (EXTRUDERS > 1)
+            int_to_string(lcd_cache[1], buffer, NULL);
+            lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT + 9*LCD_CHAR_SPACING, 17, buffer);
+#endif
+        }
+#if (TEMP_SENSOR_BED != 0)
+        else if (lcd_cache[1] == 0)
+        {
+            lcd_lib_draw_string_leftP(17, PSTR("Buildplate"));
+
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT, 29, bedTempGfx);
+            int_to_string(WORD_SETTING(2), int_to_string(dsp_temperature_bed, buffer, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
+            lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT + 2*LCD_CHAR_SPACING, 29, buffer);
+        }
+#endif
+        lcd_progressbar((124*lcd_cache[3])/lcd_cache[2]);
+    }
+    else if (lcd_cache[0] & AUTOTUNE_ABORT)
+    {
+        menu.return_to_previous();
+    }
+    else
+    {
+        // PID tuning finished
+        lcd_info_screen(NULL, autotune_finished, PSTR("CONTINUE"));
+        if (lcd_cache[0] & AUTOTUNE_OK)
+        {
+            lcd_lib_draw_string_centerP(10, PSTR("PID Autotune"));
+            lcd_lib_draw_string_centerP(20, PSTR("finished!"));
+            lcd_lib_draw_string_centerP(30, PSTR("You can store"));
+            lcd_lib_draw_string_centerP(40, PSTR("the settings."));
+        }
+        else if (lcd_cache[0] & AUTOTUNE_TEMP_HIGH)
+        {
+            lcd_lib_draw_string_centerP(10, PSTR("PID Autotune"));
+            lcd_lib_draw_string_centerP(20, PSTR("failed!"));
+            lcd_lib_draw_string_centerP(30, PSTR("Temperature too high"));
+        }
+        else if (lcd_cache[0] & AUTOTUNE_TIMEOUT)
+        {
+            lcd_lib_draw_string_centerP(10, PSTR("PID Autotune"));
+            lcd_lib_draw_string_centerP(20, PSTR("failed!"));
+            lcd_lib_draw_string_centerP(30, PSTR("Timeout"));
+        }
+    }
+
+    lcd_lib_update_screen();
+}
+
+
+static void lcd_start_autotune()
+{
+    lcd_cache[0] = 0; // status flag
+    menu.replace_menu(menu_t(lcd_menu_autotune_info));
+    PID_autotune(float(WORD_SETTING(2)), lcd_cache[1]-1, lcd_cache[2], autotune_callback);
+}
+
+static const menu_t & get_autotune_menuoption(uint8_t nr, menu_t &opt)
+{
+    uint8_t index(0);
+    if (nr == index++)
+    {
+        // START
+        opt.setData(MENU_NORMAL, lcd_start_autotune);
+    }
+    else if (nr == index++)
+    {
+        // CANCEL
+        opt.setData(MENU_NORMAL, lcd_change_to_previous_menu);
+    }
+    else if (nr == index++)
+    {
+        // PID autotune temperature
+        opt.setData(MENU_INPLACE_EDIT, lcd_preset_autotune_temp, 4);
+
+    }
+    else if (nr == index++)
+    {
+        // PID autotune cycles
+        opt.setData(MENU_INPLACE_EDIT, lcd_preset_autotune_cycles);
+
+    }
+    return opt;
+}
+
+static void drawAutotuneSubmenu(uint8_t nr, uint8_t &flags)
+{
+    uint8_t index(0);
+    char buffer[32] = {0};
+    if (nr == index++)
+    {
+        // Start
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Start PID autotune"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT
+                                , BOTTOM_MENU_YPOS
+                                , 6*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("START")
+                                , ALIGN_CENTER
+                                , flags);
+    }
+    else if (nr == index++)
+    {
+        // Cancel
+        LCDMenu::drawMenuBox(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT - 7*LCD_CHAR_SPACING
+                           , BOTTOM_MENU_YPOS
+                           , 7*LCD_CHAR_SPACING
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Click to return"));
+            flags |= MENU_STATUSLINE;
+            lcd_lib_clear_stringP(LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_clear_gfx(LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - 6*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+        else
+        {
+            lcd_lib_draw_stringP(LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - 4*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, PSTR("BACK"));
+            lcd_lib_draw_gfx(LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - 6*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, backGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        // tuning temperature
+        if (flags & (MENU_ACTIVE | MENU_SELECTED))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("tuning temperature"));
+            flags |= MENU_STATUSLINE;
+        }
+        lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT, 30, PSTR("Temperature"));
+        int_to_string(WORD_SETTING(2), buffer, PSTR(DEGREE_SYMBOL));
+
+        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT + 12*LCD_CHAR_SPACING
+                                , 30
+                                , 4*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , buffer
+                                , ALIGN_RIGHT | ALIGN_VCENTER
+                                , flags);
+    }
+    else if (nr == index++)
+    {
+        // tuning cycles
+        if (flags & (MENU_ACTIVE | MENU_SELECTED))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("tuning cycles"));
+            flags |= MENU_STATUSLINE;
+        }
+        lcd_lib_draw_stringP(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING, 40, PSTR("Cycles"));
+        int_to_string(lcd_cache[2], buffer, NULL);
+
+        LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT + 13*LCD_CHAR_SPACING
+                                , 40
+                                , 2*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , buffer
+                                , ALIGN_RIGHT | ALIGN_VCENTER
+                                , flags);
+    }
+}
+
+static void lcd_menu_autotune_params()
+{
+    lcd_basic_screen();
+    lcd_lib_draw_hline(3, 124, 13);
+
+    menu.process_submenu(get_autotune_menuoption, 4);
+
+    uint8_t flags = 0;
+    for (uint8_t index=0; index<4; ++index) {
+        menu.drawSubMenu(drawAutotuneSubmenu, index, flags);
+    }
+#if (TEMP_SENSOR_BED != 0)
+    if (lcd_cache[1] == 0)
+    {
+        lcd_lib_draw_string_leftP(17, PSTR("Buildplate"));
+    }
+    else
+#endif
+    {
+        lcd_lib_draw_string_leftP(17, PSTR("Extruder"));
+#if (EXTRUDERS > 1)
+        char buffer[3] = {0};
+        int_to_string(lcd_cache[1], buffer, NULL);
+        lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT + 9*LCD_CHAR_SPACING, 17, buffer);
+#endif
+    }
+
+    if (!(flags & MENU_STATUSLINE))
+    {
+        lcd_lib_draw_string_leftP(5, PSTR("PID tune options"));
+    }
+
+    lcd_lib_update_screen();
+}
+
+static bool autotune_callback(uint8_t state, uint8_t cycle, float kp, float ki, float kd)
+{
+    lcd_cache[3] = cycle;
+    if (lcd_cache[0] & AUTOTUNE_ABORT)
+    {
+        return false;
+    }
+    else
+    {
+        lcd_cache[0] = state;
+        if (state & AUTOTUNE_OK)
+        {
+            // PID tuning successful
+            if (lcd_cache[1] == 1)
+            {
+                Kp = kp;
+                Ki = scalePID_i(ki);
+                Kd = scalePID_d(kd);
+            }
+#if (EXTRUDERS > 1)
+            else if (lcd_cache[1] == 2)
+            {
+                pid2[0] = kp;
+                pid2[1] = scalePID_i(ki);
+                pid2[2] = scalePID_d(kd);
+            }
+#endif
+#if (TEMP_SENSOR_BED != 0)
+            else if (lcd_cache[1] == 0)
+            {
+                bedKp = kp;
+                bedKi = scalePID_i(ki);
+                bedKd = scalePID_d(kd);
+            }
+#endif
+            menu.set_selection(0);
+        }
+        return (state == 0);
+    }
+}
+
+static void init_autotune_params()
+{
+    menu.set_selection(2);
+}
+
+static void autotune_params_e1()
+{
+    lcd_clear_cache();
+    lcd_cache[0] = 0; // status flag
+    lcd_cache[1] = 1; // extruder 1
+    lcd_cache[2] = 5; // cycles
+    lcd_cache[3] = 0; // current cycle
+    WORD_SETTING(2) = 150; // tuning temperature
+    WORD_SETTING(3) = 40; // min temperature
+    WORD_SETTING(4) = get_maxtemp(0)-15; // max temperature
+    menu.add_menu(menu_t(init_autotune_params, lcd_menu_autotune_params, NULL));
+}
+
+#if (TEMP_SENSOR_BED != 0)
+static void autotune_params_bed()
+{
+    lcd_clear_cache();
+    lcd_cache[0] = 0; // status flag
+    lcd_cache[1] = 0; // buildplate
+    lcd_cache[2] = 5; // cycles
+    lcd_cache[3] = 0; // current cycle
+    WORD_SETTING(2) = 70; // tuning temperature
+    WORD_SETTING(3) = 40; // min temperature
+    WORD_SETTING(4) = BED_MAXTEMP-15; // max temperature
+    menu.add_menu(menu_t(init_autotune_params, lcd_menu_autotune_params, NULL));
+}
+#endif
+
+#if (EXTRUDERS > 1)
+static void autotune_params_e2()
+{
+    lcd_clear_cache();
+    lcd_cache[0] = 0; // status flag
+    lcd_cache[1] = 2; // extruder 2
+    lcd_cache[2] = 5; // cycles
+    lcd_cache[3] = 0; // current cycle
+    WORD_SETTING(2) = 150; // tuning temperature
+    WORD_SETTING(3) = 40; // min temperature
+    WORD_SETTING(4) = get_maxtemp(1)-15; // max temperature
+    menu.add_menu(menu_t(init_autotune_params, lcd_menu_autotune_params, NULL));
+}
+#endif
 
 #if (TEMP_SENSOR_BED != 0) || (EXTRUDERS > 1)
 static void init_tempcontrol_e1()
@@ -1830,10 +2189,9 @@ static void init_tempcontrol_e1()
 void init_tempcontrol_e1()
 #endif
 {
-    FLOAT_SETTING(0) = Kp;
     FLOAT_SETTING(1) = unscalePID_i(Ki);
     FLOAT_SETTING(2) = unscalePID_d(Kd);
-    menu.set_selection(1);
+    // menu.set_selection(1);
 }
 
 static void lcd_store_pid()
@@ -1841,12 +2199,6 @@ static void lcd_store_pid()
     Config_StoreSettings();
     menu.return_to_previous();
 }
-
-// TODO: autotune
-//static void lcd_pid_autotune_e1()
-//{
-//
-//}
 
 static void lcd_preset_e1_kd()
 {
@@ -1877,11 +2229,11 @@ static const menu_t & get_temp_e1_menuoption(uint8_t nr, menu_t &opt)
         // STORE
         opt.setData(MENU_NORMAL, lcd_store_pid);
     }
-//    else if (nr == index++)
-//    {
-//        // AUTOTUNE
-//        opt.setData(MENU_NORMAL, lcd_pid_autotune_e1);
-//    }
+    else if (nr == index++)
+    {
+        // AUTOTUNE
+        opt.setData(MENU_NORMAL, autotune_params_e1);
+    }
     else if (nr == index++)
     {
         // RETURN
@@ -1928,22 +2280,22 @@ static void drawTempExtr1Submenu(uint8_t nr, uint8_t &flags)
                                 , ALIGN_CENTER
                                 , flags);
     }
-//    else if (nr == index++)
-//    {
-//        // autotune
-//        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
-//        {
-//            lcd_lib_draw_string_leftP(5, PSTR("Start PID autotune"));
-//            flags |= MENU_STATUSLINE;
-//        }
-//        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 3*LCD_CHAR_SPACING
-//                                , BOTTOM_MENU_YPOS
-//                                , 5*LCD_CHAR_SPACING
-//                                , LCD_CHAR_HEIGHT
-//                                , PSTR("AUTO")
-//                                , ALIGN_CENTER
-//                                , flags);
-//    }
+    else if (nr == index++)
+    {
+        // autotune
+        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Start PID autotune"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 3*LCD_CHAR_SPACING
+                                , BOTTOM_MENU_YPOS
+                                , 5*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("AUTO")
+                                , ALIGN_CENTER
+                                , flags);
+    }
     else if (nr == index++)
     {
         // RETURN
@@ -2033,10 +2385,10 @@ void lcd_menu_tempcontrol_e1()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    menu.process_submenu(get_temp_e1_menuoption, 5);
+    menu.process_submenu(get_temp_e1_menuoption, 6);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<5; ++index) {
+    for (uint8_t index=0; index<6; ++index) {
         menu.drawSubMenu(drawTempExtr1Submenu, index, flags);
     }
 
@@ -2056,17 +2408,11 @@ void lcd_menu_tempcontrol_e1()
 #if EXTRUDERS > 1
 static void init_tempcontrol_e2()
 {
-    FLOAT_SETTING(0) = pid2[0];
     FLOAT_SETTING(1) = unscalePID_i(pid2[1]);
     FLOAT_SETTING(2) = unscalePID_d(pid2[2]);
-    menu.set_selection(1);
+    // menu.set_selection(1);
 }
 
-// TODO: autotune
-//static void lcd_pid_autotune_e2()
-//{
-//
-//}
 
 static void lcd_preset_e2_kd()
 {
@@ -2097,11 +2443,11 @@ static const menu_t & get_temp_e2_menuoption(uint8_t nr, menu_t &opt)
         // STORE
         opt.setData(MENU_NORMAL, lcd_store_pid2);
     }
-//    else if (nr == index++)
-//    {
-//        // AUTOTUNE
-//        opt.setData(MENU_NORMAL, lcd_pid_autotune_e1);
-//    }
+    else if (nr == index++)
+    {
+        // AUTOTUNE
+        opt.setData(MENU_NORMAL, autotune_params_e2);
+    }
     else if (nr == index++)
     {
         // RETURN
@@ -2148,22 +2494,22 @@ static void drawTempExtr2Submenu(uint8_t nr, uint8_t &flags)
                                 , ALIGN_CENTER
                                 , flags);
     }
-//    else if (nr == index++)
-//    {
-//        // autotune
-//        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
-//        {
-//            lcd_lib_draw_string_leftP(5, PSTR("Start PID autotune"));
-//            flags |= MENU_STATUSLINE;
-//        }
-//        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 3*LCD_CHAR_SPACING
-//                                , BOTTOM_MENU_YPOS
-//                                , 5*LCD_CHAR_SPACING
-//                                , LCD_CHAR_HEIGHT
-//                                , PSTR("AUTO")
-//                                , ALIGN_CENTER
-//                                , flags);
-//    }
+    else if (nr == index++)
+    {
+        // autotune
+        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Start PID autotune"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 3*LCD_CHAR_SPACING
+                                , BOTTOM_MENU_YPOS
+                                , 5*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("AUTO")
+                                , ALIGN_CENTER
+                                , flags);
+    }
     else if (nr == index++)
     {
         // RETURN
@@ -2249,10 +2595,10 @@ static void lcd_menu_tempcontrol_e2()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    menu.process_submenu(get_temp_e2_menuoption, 5);
+    menu.process_submenu(get_temp_e2_menuoption, 6);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<5; ++index) {
+    for (uint8_t index=0; index<6; ++index) {
         menu.drawSubMenu(drawTempExtr2Submenu, index, flags);
     }
 
@@ -2271,10 +2617,9 @@ static void lcd_menu_tempcontrol_e2()
 #if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
 static void init_tempcontrol_bed()
 {
-    FLOAT_SETTING(0) = bedKp;
     FLOAT_SETTING(1) = unscalePID_i(bedKi);
     FLOAT_SETTING(2) = unscalePID_d(bedKd);
-    menu.set_selection(1);
+    menu.set_selection(3);
 }
 
 static void lcd_store_pidbed()
@@ -2289,21 +2634,17 @@ static void lcd_store_pidbed()
     menu.return_to_previous();
 }
 
-// TODO: autotune
-//static void lcd_pid_autotune_bed()
-//{
-//
-//}
-
 static void lcd_toggle_pid_bed()
 {
     if (pidTempBed())
     {
         expert_flags &= ~FLAG_PID_BED;
+        menu.set_selection(2);
     }
     else
     {
         expert_flags |= FLAG_PID_BED;
+        menu.set_selection(3);
     }
 }
 
@@ -2331,16 +2672,20 @@ static void lcd_preset_bed_kp()
 static const menu_t & get_temp_bed_menuoption(uint8_t nr, menu_t &opt)
 {
     uint8_t index(0);
+    if ((nr > 0) && !pidTempBed())
+    {
+        ++nr;
+    }
     if (nr == index++)
     {
         // STORE
         opt.setData(MENU_NORMAL, lcd_store_pidbed);
     }
-//    else if (nr == index++)
-//    {
-//        // AUTOTUNE
-//        opt.setData(MENU_NORMAL, lcd_pid_autotune_e1);
-//    }
+    else if (nr == index++)
+    {
+        // AUTOTUNE
+        opt.setData(MENU_NORMAL, autotune_params_bed);
+    }
     else if (nr == index++)
     {
         // RETURN
@@ -2375,6 +2720,10 @@ static const menu_t & get_temp_bed_menuoption(uint8_t nr, menu_t &opt)
 static void drawTempBedSubmenu(uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
+    if ((nr > 0) && !pidTempBed())
+    {
+        ++nr;
+    }
     char buffer[32] = {0};
     if (nr == index++)
     {
@@ -2392,22 +2741,22 @@ static void drawTempBedSubmenu(uint8_t nr, uint8_t &flags)
                                 , ALIGN_CENTER
                                 , flags);
     }
-//    else if (nr == index++)
-//    {
-//        // autotune
-//        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
-//        {
-//            lcd_lib_draw_string_leftP(5, PSTR("Start PID autotune"));
-//            flags |= MENU_STATUSLINE;
-//        }
-//        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 3*LCD_CHAR_SPACING
-//                                , BOTTOM_MENU_YPOS
-//                                , 5*LCD_CHAR_SPACING
-//                                , LCD_CHAR_HEIGHT
-//                                , PSTR("AUTO")
-//                                , ALIGN_CENTER
-//                                , flags);
-//    }
+    else if (nr == index++)
+    {
+        // autotune
+        if ((flags & MENU_ACTIVE) | (flags & MENU_SELECTED))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Start PID autotune"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuString_P(LCD_GFX_WIDTH/2 - 3*LCD_CHAR_SPACING
+                                , BOTTOM_MENU_YPOS
+                                , 5*LCD_CHAR_SPACING
+                                , LCD_CHAR_HEIGHT
+                                , PSTR("AUTO")
+                                , ALIGN_CENTER
+                                , flags);
+    }
     else if (nr == index++)
     {
         // RETURN
@@ -2512,7 +2861,7 @@ static void lcd_menu_tempcontrol_bed()
 
     uint8_t nCount = 3;
     if (pidTempBed()) {
-        nCount += 3;
+        nCount += 4;
     }
     else
     {
@@ -2522,12 +2871,10 @@ static void lcd_menu_tempcontrol_bed()
     menu.process_submenu(get_temp_bed_menuoption, nCount);
 
     uint8_t flags = 0;
-    for (uint8_t index=0; index<nCount; ++index) {
+    for (uint8_t index=0; index<nCount; ++index)
+    {
         menu.drawSubMenu(drawTempBedSubmenu, index, flags);
     }
-
-//    lcd_lib_draw_string_leftP(20, PSTR("Build-"));
-//    lcd_lib_draw_string_leftP(30, PSTR("plate"));
 
     if (!(flags & MENU_STATUSLINE))
     {

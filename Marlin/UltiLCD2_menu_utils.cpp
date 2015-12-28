@@ -508,13 +508,16 @@ char* int_to_time_min(unsigned long i, char* temp_buffer)
     uint8_t mins = (i / 60) % 60;
     uint8_t secs = i % 60;
 
-    if (!hours & !mins) {
+    if (!hours & !mins)
+    {
         *c++ = '0';
         *c++ = '0';
         *c++ = ':';
         *c++ = '0' + secs / 10;
         *c++ = '0' + secs % 10;
-    }else{
+    }
+    else
+    {
         if (hours > 99)
             *c++ = '0' + hours / 100;
         *c++ = '0' + (hours / 10) % 10;

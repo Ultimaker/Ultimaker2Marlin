@@ -1440,7 +1440,7 @@ void process_commands()
         SERIAL_PROTOCOLPGM(" B@:");
         SERIAL_PROTOCOL(getHeaterPower(-1));
 
-        SERIAL_PROTOCOLLN("");
+        SERIAL_PROTOCOL_NEWLINE;
       return;
       break;
     case 109:
@@ -1498,10 +1498,10 @@ void process_commands()
               }
               else
               {
-                 SERIAL_PROTOCOLLN( "?" );
+                 SERIAL_PROTOCOLLNPGM( "?" );
               }
             #else
-              SERIAL_PROTOCOLLN("");
+              SERIAL_PROTOCOL_NEWLINE;
             #endif
             codenum = millis();
           }
@@ -1551,7 +1551,7 @@ void process_commands()
             SERIAL_PROTOCOL((int)active_extruder);
             SERIAL_PROTOCOLPGM(" B:");
             SERIAL_PROTOCOL_F(degBed(),1);
-            SERIAL_PROTOCOLLN("");
+            SERIAL_PROTOCOL_NEWLINE;
             codenum = millis();
           }
           manage_heater();
@@ -1738,7 +1738,7 @@ void process_commands()
       SERIAL_PROTOCOLPGM("E:");
       SERIAL_PROTOCOL(float(st_get_position(E_AXIS))/axis_steps_per_unit[E_AXIS]);
 
-      SERIAL_PROTOCOLLN("");
+      SERIAL_PROTOCOL_NEWLINE;
       break;
     case 120: // M120
       enable_endstops(false) ;
@@ -1747,30 +1747,72 @@ void process_commands()
       enable_endstops(true) ;
       break;
     case 119: // M119
-    SERIAL_PROTOCOLLN(MSG_M119_REPORT);
+    SERIAL_PROTOCOLLNPGM(MSG_M119_REPORT);
       #if defined(X_MIN_PIN) && X_MIN_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_X_MIN);
-        SERIAL_PROTOCOLLN(((READ(X_MIN_PIN)^X_ENDSTOPS_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        if (READ(X_MIN_PIN)^X_ENDSTOPS_INVERTING)
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_HIT);
+        }
+        else
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_OPEN);
+        }
       #endif
       #if defined(X_MAX_PIN) && X_MAX_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_X_MAX);
-        SERIAL_PROTOCOLLN(((READ(X_MAX_PIN)^X_ENDSTOPS_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        if (READ(X_MAX_PIN)^X_ENDSTOPS_INVERTING)
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_HIT);
+        }
+        else
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_OPEN);
+        }
       #endif
       #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_Y_MIN);
-        SERIAL_PROTOCOLLN(((READ(Y_MIN_PIN)^Y_ENDSTOPS_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        if (READ(Y_MIN_PIN)^Y_ENDSTOPS_INVERTING)
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_HIT);
+        }
+        else
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_OPEN);
+        }
       #endif
       #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_Y_MAX);
-        SERIAL_PROTOCOLLN(((READ(Y_MAX_PIN)^Y_ENDSTOPS_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        if (READ(Y_MAX_PIN)^Y_ENDSTOPS_INVERTING)
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_HIT);
+        }
+        else
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_OPEN);
+        }
       #endif
       #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_Z_MIN);
-        SERIAL_PROTOCOLLN(((READ(Z_MIN_PIN)^Z_ENDSTOPS_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        if (READ(Z_MIN_PIN)^Z_ENDSTOPS_INVERTING)
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_HIT);
+        }
+        else
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_OPEN);
+        }
       #endif
       #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_Z_MAX);
-        SERIAL_PROTOCOLLN(((READ(Z_MAX_PIN)^Z_ENDSTOPS_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        if (READ(Z_MAX_PIN)^Z_ENDSTOPS_INVERTING)
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_HIT);
+        }
+        else
+        {
+            SERIAL_PROTOCOLLNPGM(MSG_ENDSTOP_OPEN);
+        }
       #endif
       break;
       //TODO: update for all axis, use for loop
@@ -1883,12 +1925,12 @@ void process_commands()
       SERIAL_ECHOPGM(MSG_HOTEND_OFFSET);
       for(tmp_extruder = 0; tmp_extruder < EXTRUDERS; tmp_extruder++)
       {
-         SERIAL_ECHO(" ");
+         SERIAL_ECHOPGM(" ");
          SERIAL_ECHO(extruder_offset[X_AXIS][tmp_extruder]);
-         SERIAL_ECHO(",");
+         SERIAL_ECHOPGM(",");
          SERIAL_ECHO(extruder_offset[Y_AXIS][tmp_extruder]);
       }
-      SERIAL_ECHOLN("");
+      SERIAL_ECHO_NEWLINE;
     }break;
     #endif
     case 220: // M220 S<factor in percent>- set speed factor override percentage
@@ -1922,18 +1964,18 @@ void process_commands()
           }
           else {
             SERIAL_ECHO_START;
-            SERIAL_ECHO("Servo ");
+            SERIAL_ECHOPGM("Servo ");
             SERIAL_ECHO(servo_index);
-            SERIAL_ECHOLN(" out of range");
+            SERIAL_ECHOLNPGM(" out of range");
           }
         }
         else if (servo_index >= 0) {
-          SERIAL_PROTOCOL(MSG_OK);
-          SERIAL_PROTOCOL(" Servo ");
+          SERIAL_PROTOCOLPGM(MSG_OK);
+          SERIAL_PROTOCOLPGM(" Servo ");
           SERIAL_PROTOCOL(servo_index);
-          SERIAL_PROTOCOL(": ");
+          SERIAL_PROTOCOLPGM(": ");
           SERIAL_PROTOCOL(servos[servo_index].read());
-          SERIAL_PROTOCOLLN("");
+          SERIAL_PROTOCOL_NEWLINE;
         }
       }
       break;
@@ -1995,19 +2037,19 @@ void process_commands()
 //        #endif
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
-        SERIAL_PROTOCOL(" p:");
+        SERIAL_PROTOCOLPGM(MSG_OK);
+        SERIAL_PROTOCOLPGM(" p:");
         SERIAL_PROTOCOL(Kp);
-        SERIAL_PROTOCOL(" i:");
+        SERIAL_PROTOCOLPGM(" i:");
         SERIAL_PROTOCOL(unscalePID_i(Ki));
-        SERIAL_PROTOCOL(" d:");
+        SERIAL_PROTOCOLPGM(" d:");
         SERIAL_PROTOCOL(unscalePID_d(Kd));
 //        #ifdef PID_ADD_EXTRUSION_RATE
-//        SERIAL_PROTOCOL(" c:");
+//        SERIAL_PROTOCOLPGM(" c:");
 //        //Kc does not have scaling applied above, or in resetting defaults
 //        SERIAL_PROTOCOL(Kc);
 //        #endif
-        SERIAL_PROTOCOLLN("");
+        SERIAL_PROTOCOL_NEWLINE;
       }
       break;
     #endif //PIDTEMP
@@ -2021,14 +2063,14 @@ void process_commands()
             if(code_seen('D')) bedKd = scalePID_d(code_value());
 
             updatePID();
-            SERIAL_PROTOCOL(MSG_OK);
-            SERIAL_PROTOCOL(" p:");
+            SERIAL_PROTOCOLPGM(MSG_OK);
+            SERIAL_PROTOCOLPGM(" p:");
             SERIAL_PROTOCOL(bedKp);
-            SERIAL_PROTOCOL(" i:");
+            SERIAL_PROTOCOLPGM(" i:");
             SERIAL_PROTOCOL(unscalePID_i(bedKi));
-            SERIAL_PROTOCOL(" d:");
+            SERIAL_PROTOCOLPGM(" d:");
             SERIAL_PROTOCOL(unscalePID_d(bedKd));
-            SERIAL_PROTOCOLLN("");
+            SERIAL_PROTOCOL_NEWLINE;
         }
       }
       break;
@@ -2519,9 +2561,9 @@ void process_commands()
     tmp_extruder = code_value();
     if(tmp_extruder >= EXTRUDERS) {
       SERIAL_ECHO_START;
-      SERIAL_ECHO("T");
+      SERIAL_ECHOPGM("T");
       SERIAL_ECHO(tmp_extruder);
-      SERIAL_ECHOLN(MSG_INVALID_EXTRUDER);
+      SERIAL_ECHOLNPGM(MSG_INVALID_EXTRUDER);
     }
     else {
       #if EXTRUDERS > 1
@@ -2565,7 +2607,7 @@ void process_commands()
       }
       #endif
       SERIAL_ECHO_START;
-      SERIAL_ECHO(MSG_ACTIVE_EXTRUDER);
+      SERIAL_ECHOPGM(MSG_ACTIVE_EXTRUDER);
       SERIAL_PROTOCOLLN((int)active_extruder);
     }
   }
@@ -3036,16 +3078,16 @@ bool setTargetedHotend(int code){
       SERIAL_ECHO_START;
       switch(code){
         case 104:
-          SERIAL_ECHO(MSG_M104_INVALID_EXTRUDER);
+          SERIAL_ECHOPGM(MSG_M104_INVALID_EXTRUDER);
           break;
         case 105:
-          SERIAL_ECHO(MSG_M105_INVALID_EXTRUDER);
+          SERIAL_ECHOPGM(MSG_M105_INVALID_EXTRUDER);
           break;
         case 109:
-          SERIAL_ECHO(MSG_M109_INVALID_EXTRUDER);
+          SERIAL_ECHOPGM(MSG_M109_INVALID_EXTRUDER);
           break;
         case 218:
-          SERIAL_ECHO(MSG_M218_INVALID_EXTRUDER);
+          SERIAL_ECHOPGM(MSG_M218_INVALID_EXTRUDER);
           break;
       }
       SERIAL_ECHOLN(tmp_extruder);

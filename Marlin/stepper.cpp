@@ -210,7 +210,7 @@ void checkHitEndstops()
      SERIAL_ECHOPAIR(" Z:",(float)endstops_trigsteps[Z_AXIS]/axis_steps_per_unit[Z_AXIS]);
      LCD_MESSAGEPGM(MSG_ENDSTOPS_HIT "Z");
    }
-   SERIAL_ECHOLN("");
+   SERIAL_ECHO_NEWLINE;
    endstop_x_hit=false;
    endstop_y_hit=false;
    endstop_z_hit=false;

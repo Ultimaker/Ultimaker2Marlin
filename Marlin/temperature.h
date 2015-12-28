@@ -136,7 +136,13 @@ FORCE_INLINE bool isCoolingHotend(uint8_t extruder) {
 #error Invalid number of extruders
 #endif
 
+#define AUTOTUNE_OK            0x01
+#define AUTOTUNE_BAD_EXTRUDER  0x02
+#define AUTOTUNE_TEMP_HIGH     0x04
+#define AUTOTUNE_TIMEOUT       0x08
+#define AUTOTUNE_ABORT         0x10
 
+typedef bool (*autotuneFunc_t) (uint8_t state, uint8_t cycle, float kp, float ki, float kd);
 
 int getHeaterPower(int heater);
 void disable_heater();
@@ -154,7 +160,7 @@ FORCE_INLINE void autotempShutdown(){
  #endif
 }
 
-void PID_autotune(float temp, int extruder, int ncycles);
+void PID_autotune(float temp, int extruder, int ncycles, autotuneFunc_t pCallback = NULL);
 
 void set_maxtemp(uint8_t e, int maxTemp);
 int get_maxtemp(uint8_t e);

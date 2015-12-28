@@ -172,7 +172,7 @@ static int read_max6675();
 //=============================   functions      ============================
 //===========================================================================
 
-void PID_autotune(float temp, int extruder, int ncycles)
+void PID_autotune(float temp, int extruder, int ncycles, autotuneFunc_t pCallback)
 {
   float input = 0.0;
   int cycles=0;
@@ -194,11 +194,15 @@ void PID_autotune(float temp, int extruder, int ncycles)
        ||(extruder < 0)
   #endif
        ){
-          SERIAL_ECHOLN("PID Autotune failed. Bad extruder number.");
+          SERIAL_PROTOCOLLNPGM("PID Autotune failed. Bad extruder number.");
+          if (pCallback)
+          {
+              pCallback(AUTOTUNE_BAD_EXTRUDER, cycles, Kp, Ki, Kd);
+          }
           return;
         }
 
-  SERIAL_ECHOLN("PID Autotune start");
+  SERIAL_PROTOCOLLNPGM("PID Autotune start");
 
   disable_heater(); // switch off all heaters.
 
@@ -296,6 +300,10 @@ void PID_autotune(float temp, int extruder, int ncycles)
     }
     if(input > (temp + 20)) {
       SERIAL_PROTOCOLLNPGM("PID Autotune failed! Temperature too high");
+      if (pCallback)
+      {
+          pCallback(AUTOTUNE_TEMP_HIGH, cycles, Kp, Ki, Kd);
+      }
       return;
     }
     if(millis() - temp_millis > 2000) {
@@ -316,14 +324,31 @@ void PID_autotune(float temp, int extruder, int ncycles)
     }
     if(((millis() - t1) + (millis() - t2)) > (10L*60L*1000L*2L)) {
       SERIAL_PROTOCOLLNPGM("PID Autotune failed! timeout");
+      if (pCallback)
+      {
+          pCallback(AUTOTUNE_TIMEOUT, cycles, Kp, Ki, Kd);
+      }
       return;
     }
     if(cycles > ncycles) {
       SERIAL_PROTOCOLLNPGM("PID Autotune finished! Put the Kp, Ki and Kd constants into Configuration.h");
+      if (pCallback)
+      {
+          pCallback(AUTOTUNE_OK, cycles, Kp, Ki, Kd);
+      }
       return;
     }
     lcd_update();
     lifetime_stats_tick();
+    if (pCallback)
+    {
+        if (!pCallback(0, cycles, Kp, Ki, Kd))
+        {
+            // aborted by user
+            SERIAL_PROTOCOLLNPGM("PID Autotune aborted.");
+            break;
+        }
+    }
   }
 }
 
@@ -435,7 +460,7 @@ void manage_heater()
   {
 	  max_temp_error(0);
   }
-  if (current_temperature[0] == 0  || current_temperature[0] < HEATER_0_MINTEMP)
+  if (current_temperature[0] == 0  || current_temperature[0] < minttemp[0])
   {
 	  min_temp_error(0);
   }

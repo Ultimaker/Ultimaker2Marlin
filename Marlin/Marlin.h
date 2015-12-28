@@ -56,6 +56,7 @@
 #define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x));
 #define SERIAL_PROTOCOLLN(x) do {MYSERIAL.print(x);MYSERIAL.write('\n');} while(0)
 #define SERIAL_PROTOCOLLNPGM(x) do{serialprintPGM(PSTR(x));MYSERIAL.write('\n');} while(0)
+#define SERIAL_PROTOCOL_NEWLINE MYSERIAL.write('\n');
 
 
 const char errormagic[] PROGMEM ="Error:";
@@ -65,12 +66,14 @@ const char echomagic[] PROGMEM ="echo:";
 #define SERIAL_ERRORPGM(x) SERIAL_PROTOCOLPGM(x)
 #define SERIAL_ERRORLN(x) SERIAL_PROTOCOLLN(x)
 #define SERIAL_ERRORLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
+#define SERIAL_ERROR_NEWLINE SERIAL_PROTOCOL_NEWLINE
 
 #define SERIAL_ECHO_START serialprintPGM(echomagic);
 #define SERIAL_ECHO(x) SERIAL_PROTOCOL(x)
 #define SERIAL_ECHOPGM(x) SERIAL_PROTOCOLPGM(x)
 #define SERIAL_ECHOLN(x) SERIAL_PROTOCOLLN(x)
 #define SERIAL_ECHOLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
+#define SERIAL_ECHO_NEWLINE SERIAL_PROTOCOL_NEWLINE
 
 #define SERIAL_ECHOPAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
 

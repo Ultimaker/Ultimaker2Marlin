@@ -79,7 +79,9 @@ void lcd_update()
         {
             led_glow-=2;
             if (led_glow == 0) led_glow_dir = 0;
-        }else{
+        }
+        else
+        {
             led_glow+=2;
             if (led_glow >= 126) led_glow_dir = 1;
         }
@@ -125,7 +127,8 @@ void lcd_update()
         lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/support"));
         LED_GLOW_ERROR
         lcd_lib_update_screen();
-    }else if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
+    }
+    else if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
     {
         lcd_usbprinting();
 //        if (!serialScreenShown)
@@ -137,7 +140,9 @@ void lcd_update()
 //        if (printing_state == PRINT_STATE_HEATING || printing_state == PRINT_STATE_HEATING_BED || printing_state == PRINT_STATE_HOMING)
 //            lastSerialCommandTime = m;
 //        lcd_lib_update_screen();
-    }else{
+    }
+    else
+    {
         // serialScreenShown = false;
         // refresh the displayed temperatures
         for(uint8_t e=0;e<EXTRUDERS;e++)

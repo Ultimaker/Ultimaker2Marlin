@@ -41,10 +41,7 @@ extern uint8_t lcd_setting_type;
 extern int16_t lcd_setting_min;
 extern int16_t lcd_setting_max;
 
-//extern menuFunc_t currentMenu;
-//extern menuFunc_t previousMenu;
 extern menuFunc_t postMenuCheck;
-//extern int16_t previousEncoderPos;
 extern uint8_t minProgress;
 
 #define LCD_EDIT_SETTING(_setting, _name, _postfix, _min, _max) do { \

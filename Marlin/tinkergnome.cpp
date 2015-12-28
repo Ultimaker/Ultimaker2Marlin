@@ -280,6 +280,7 @@ static void lcd_toggle_led()
 
     analogWrite(LED_PIN, (sleep_state & SLEEP_LED_OFF) ? 0 : 255 * int(led_brightness_level) / 100);
     LED_NORMAL
+    menu.reset_submenu();
 }
 
 // return print menu option
