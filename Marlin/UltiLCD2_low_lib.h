@@ -38,6 +38,7 @@ void lcd_lib_led_color(uint8_t r, uint8_t g, uint8_t b);
 extern int16_t lcd_lib_encoder_pos;
 extern bool lcd_lib_button_pressed;
 extern bool lcd_lib_button_down;
+extern unsigned long last_user_interaction;
 
 char* int_to_string(int i, char* temp_buffer, const char* p_postfix = NULL);
 char* int_to_time_string(unsigned long i, char* temp_buffer);
