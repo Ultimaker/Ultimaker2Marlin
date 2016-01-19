@@ -19,6 +19,7 @@ void* lcd_setting_ptr;
 uint8_t lcd_setting_type;
 int16_t lcd_setting_min;
 int16_t lcd_setting_max;
+int16_t lcd_setting_start_value;
 
 void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 {
@@ -248,7 +249,7 @@ void lcd_menu_edit_setting()
     else if (lcd_setting_type == 8)
         *(float*)lcd_setting_ptr = float(lcd_lib_encoder_pos);
 
-    lcd_lib_clear();
+    lcd_basic_screen();
     lcd_lib_draw_string_centerP(20, lcd_setting_name);
     char buffer[16];
     if (lcd_setting_type == 3)
@@ -256,6 +257,14 @@ void lcd_menu_edit_setting()
     else
         int_to_string(lcd_lib_encoder_pos, buffer, lcd_setting_postfix);
     lcd_lib_draw_string_center(30, buffer);
+
+    strcpy_P(buffer, PSTR("Prev: "));
+    if (lcd_setting_type == 3)
+        float_to_string(float(lcd_setting_start_value) / 100.0, buffer + 6, lcd_setting_postfix);
+    else
+        int_to_string(lcd_setting_start_value, buffer + 6, lcd_setting_postfix);
+    lcd_lib_draw_string_center(53, buffer);
+
     lcd_lib_update_screen();
 
     if (lcd_lib_button_pressed)
