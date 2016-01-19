@@ -183,11 +183,11 @@ void PID_autotune(float temp, int extruder, int ncycles)
        ||(extruder < 0)
   #endif
        ){
-          SERIAL_ECHOLN("PID Autotune failed. Bad extruder number.");
+          SERIAL_ECHOLNPGM("PID Autotune failed. Bad extruder number.");
           return;
         }
 
-  SERIAL_ECHOLN("PID Autotune start");
+  SERIAL_ECHOLNPGM("PID Autotune start");
 
   disable_heater(); // switch off all heaters.
 
@@ -497,7 +497,7 @@ void manage_heater()
             setTargetHotend(0, e);
             LCD_MESSAGEPGM("Heating failed");
             SERIAL_ECHO_START;
-            SERIAL_ECHOLN("Heating failed");
+            SERIAL_ECHOLNPGM("Heating failed");
         }else{
             watchmillis[e] = 0;
         }
