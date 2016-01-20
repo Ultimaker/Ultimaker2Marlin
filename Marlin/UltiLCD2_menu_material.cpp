@@ -710,6 +710,12 @@ static void lcd_material_settings_details_callback(uint8_t nr)
     }else if (nr == 4 + BED_MENU_OFFSET)
     {
         int_to_string(material[active_extruder].flow, buffer, PSTR("%"));
+    }else if (nr == 5 + BED_MENU_OFFSET)
+    {
+        int_to_string(material[active_extruder].change_temperature, buffer, PSTR("C"));
+    }else if (nr == 6 + BED_MENU_OFFSET)
+    {
+        int_to_string(material[active_extruder].change_preheat_wait_time, buffer, PSTR("Sec"));
     }
     lcd_lib_draw_string(5, 53, buffer);
 }
