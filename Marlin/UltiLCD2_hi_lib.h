@@ -37,6 +37,16 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
  */
 void lcd_progressbar(uint8_t progress);
 
+/**
+ * Updates the current progress bar with the specified 16-bit progress ratio
+ *
+ * The progress bar is written with a "finer" progress bar style.  This style
+ * shows a ratio 
+ *
+ * @param progress The progress amount, a value in the range of [0, 120)
+ */
+void lcd_progressbar_fine(uint16_t progress);
+
 void lcd_menu_edit_setting();
 
 extern const char* lcd_setting_name;
