@@ -28,6 +28,13 @@ void lcd_info_screen(menuFunc_t cancelMenu, menuFunc_t callbackOnCancel = NULL, 
 void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const char* AButtonText, menuFunc_t optionBMenu, menuFunc_t callbackOnB, const char* BButtonText);
 void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback_t entryNameCallback, entryDetailsCallback_t entryDetailsCallback);
 
+/**
+ * Updates the current progress bar with the specified progress ratio
+ *
+ * A value of 120 is considered 100%.  Larger values are truncated to 100%.
+ *
+ * @param progress The progress amount, a value in the range of [0, 120)
+ */
 void lcd_progressbar(uint8_t progress);
 
 void lcd_menu_edit_setting();
