@@ -952,22 +952,8 @@ bool lcd_material_verify_material_settings()
         if (eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt)) > HEATER_0_MAXTEMP || eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt)) < 10)
         {
             //Invalid temperature for change temperature.
-            if (strcmp_P(card.longFilename, PSTR("PLA")) == 0)
-            {
-                eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), 70);
-                eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 30);
-            }else if (strcmp_P(card.longFilename, PSTR("ABS")) == 0)
-            {
-                eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), 90);
-                eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 30);
-            }else if (strcmp_P(card.longFilename, PSTR("CPE")) == 0)
-            {
-                eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), 85);
-                eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 15);
-            }else{
-                eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(cnt)));
-                eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 5);
-            }
+            eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(cnt)));
+            eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 0);
         }
     }
     cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
