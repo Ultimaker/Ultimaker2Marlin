@@ -48,6 +48,7 @@ static void lcd_menu_material_settings_store();
 
 static void cancelMaterialInsert()
 {
+    set_extrude_min_temp(EXTRUDE_MINTEMP);
     digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
 }
 
@@ -126,6 +127,8 @@ static void lcd_menu_change_material_preheat()
     {
         if ((signed long)(millis() - preheat_end_time) > 0)
         {
+            set_extrude_min_temp(0);
+            
             plan_set_e_position(0);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 20.0 / volume_to_filament_length[active_extruder], retract_feedrate/60.0, active_extruder);
 
