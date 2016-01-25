@@ -21,6 +21,32 @@ int16_t lcd_setting_min;
 int16_t lcd_setting_max;
 int16_t lcd_setting_start_value;
 
+uint16_t lineEntryPos  = 0;
+int8_t   lineEntryWait = 0;
+void line_entry_pos_update (uint16_t n)
+{
+	if (lineEntryPos > n) lineEntryPos = 0;
+	// 
+	lineEntryWait++;
+	if (lineEntryWait >= LINE_ENTRY_WAIT_END)
+	{
+		lineEntryWait = LINE_ENTRY_WAIT_END;
+		lineEntryPos += LINE_ENTRY_STEP;
+		if (lineEntryPos > n)
+		{
+			lineEntryPos  = n;
+			lineEntryWait = -lineEntryWait;
+		}
+	}
+	else if (lineEntryWait == 0 && lineEntryPos > 0)
+	{
+		lineEntryPos -= LINE_ENTRY_STEP;
+		lineEntryWait--;
+	}
+}
+
+inline void line_entry_pos_reset () { lineEntryPos = lineEntryWait = 0; }
+
 void lcd_change_to_menu(menuFunc_t nextMenu, int16_t newEncoderPos)
 {
     minProgress = 0;
@@ -189,8 +215,8 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
 
     int16_t viewDiff = targetViewPos - viewPos;
     viewPos += viewDiff / 4;
-    if (viewDiff > 0) { viewPos ++; led_glow = led_glow_dir = 0; }
-    if (viewDiff < 0) { viewPos --; led_glow = led_glow_dir = 0; }
+    if (viewDiff > 0) { viewPos ++; led_glow = led_glow_dir = 0; line_entry_pos_reset(); }
+    if (viewDiff < 0) { viewPos --; led_glow = led_glow_dir = 0; line_entry_pos_reset(); }
 
     uint8_t drawOffset = 10 - (uint16_t(viewPos) % 8);
     uint8_t itemOffset = uint16_t(viewPos) / 8;
@@ -201,14 +227,20 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
             continue;
 
         char* ptr = entryNameCallback(itemIdx);
-		//ptr[10] = '\0';
-		ptr[20] = '\0';
         if (itemIdx == selIndex)
         {
-            //lcd_lib_set(3, drawOffset+8*n-1, 62, drawOffset+8*n+7);
-            lcd_lib_set(3, drawOffset+8*n-1, 124, drawOffset+8*n+7);
-            lcd_lib_clear_string(4, drawOffset+8*n, ptr);
+            uint8_t ptr_len = (uint8_t) strlen(ptr);
+            if (ptr_len > ENTRY_NAME_MAX_LENGHT)
+            {
+                line_entry_pos_update((ptr_len - ENTRY_NAME_MAX_LENGHT) * LINE_ENTRY_TEXT_STEP);
+                ptr += LINE_ENTRY_TEXT_BEGIN();
+                ptr[ENTRY_NAME_MAX_LENGHT+LINE_ENTRY_TEXT_END()] = '\0';
+            }
+            ptr[ENTRY_NAME_MAX_LENGHT] = '\0';
+            lcd_lib_set(3, drawOffset+8*n-1, ENTRY_NAME_MAX_LENGHT*6+4, drawOffset+8*n+7);
+            lcd_lib_clear_string(4+LINE_ENTRY_GFX_BEGIN(), drawOffset+8*n, ptr);
         }else{
+            ptr[ENTRY_NAME_MAX_LENGHT] = '\0';
             lcd_lib_draw_string(4, drawOffset+8*n, ptr);
         }
     }
