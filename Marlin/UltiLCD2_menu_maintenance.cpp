@@ -328,11 +328,11 @@ void lcd_menu_advanced_stats()
 static void doFactoryReset()
 {
     //Clear the EEPROM settings so they get read from default.
-    eeprom_write_byte((uint8_t*)100, 0);
-    eeprom_write_byte((uint8_t*)101, 0);
-    eeprom_write_byte((uint8_t*)102, 0);
-    eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
-    eeprom_write_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
+    eeprom_update_byte((uint8_t*)100, 0);
+    eeprom_update_byte((uint8_t*)101, 0);
+    eeprom_update_byte((uint8_t*)102, 0);
+    eeprom_update_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 0);
+    eeprom_update_byte(EEPROM_MATERIAL_COUNT_OFFSET(), 0);
 
     cli();
     //NOTE: Jumping to address 0 is not a fully proper way to reset.
