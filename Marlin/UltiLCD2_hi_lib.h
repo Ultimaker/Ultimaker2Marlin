@@ -113,6 +113,19 @@ extern uint8_t led_glow_dir;
 #define LED_GLOW() lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow)
 #define LED_GLOW_ERROR() lcd_lib_led_color(led_glow,128-led_glow,led_glow);
 
+extern uint16_t lineEntryPos;
+extern int8_t   lineEntryWait;
+//#define ENTRY_NAME_MAX_LENGHT 10
+#define ENTRY_NAME_MAX_LENGHT 20
+#define LINE_ENTRY_TEXT_STEP 6
+#define LINE_ENTRY_WAIT_END 24
+#define LINE_ENTRY_STEP      2
+#define LINE_ENTRY_TEXT_END()   ((lineEntryPos%LINE_ENTRY_TEXT_STEP == 0) ? 0 : -1)
+#define LINE_ENTRY_TEXT_BEGIN() ((lineEntryPos + LINE_ENTRY_TEXT_STEP-1) / LINE_ENTRY_TEXT_STEP)
+#define LINE_ENTRY_GFX_BEGIN()  (LINE_ENTRY_TEXT_STEP-1 - (lineEntryPos + LINE_ENTRY_TEXT_STEP-1) % LINE_ENTRY_TEXT_STEP)
+void line_entry_pos_update (uint16_t n);
+inline void line_entry_pos_reset ();
+
 //If we have a heated bed, then the heated bed menu entries have a size of 1, else they have a size of 0.
 #if TEMP_SENSOR_BED != 0
 #define BED_MENU_OFFSET 1
