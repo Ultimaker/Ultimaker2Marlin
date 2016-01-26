@@ -241,7 +241,7 @@ static void cardUpdir()
 
 static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[32] = {0};
+    char buffer[LONG_FILENAME_LENGTH] = {0};
     memset(buffer, '\0', sizeof(buffer));
     if (nr == 0)
     {
@@ -287,7 +287,6 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
                 card.longFilename[0] = '\0';
             }
         }
-        buffer[20] = '\0';
     }
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
