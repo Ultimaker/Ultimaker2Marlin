@@ -135,7 +135,7 @@ extern int8_t   lineEntryWait;
 #define LINE_ENTRY_TEXT_BEGIN()  ((lineEntryPos + LCD_CHAR_SPACING-1) / LCD_CHAR_SPACING)
 #define LINE_ENTRY_GFX_BEGIN()   (LCD_CHAR_SPACING-1 - (lineEntryPos + LCD_CHAR_SPACING-1) % LCD_CHAR_SPACING)
 #define LINE_ENTRY_MAX_STEP(text_length) ((text_length) * LCD_CHAR_SPACING)
-void line_entry_pos_update (uint16_t n);
+void line_entry_pos_update (uint16_t maxStep);
 inline void line_entry_pos_reset ();
 
 //If we have a heated bed, then the heated bed menu entries have a size of 1, else they have a size of 0.
