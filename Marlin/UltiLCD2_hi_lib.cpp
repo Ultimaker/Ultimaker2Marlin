@@ -230,18 +230,17 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
         if (itemIdx == selIndex)
         {
             uint8_t ptr_len = (uint8_t) strlen(ptr);
-            if (ptr_len > ENTRY_NAME_MAX_LENGHT)
+            if (ptr_len > LINE_ENTRY_TEXT_LENGHT)
             {
-                line_entry_pos_update((ptr_len - ENTRY_NAME_MAX_LENGHT) * LINE_ENTRY_TEXT_STEP);
+                line_entry_pos_update(LINE_ENTRY_MAX_STEP(ptr_len - LINE_ENTRY_TEXT_LENGHT));
                 ptr += LINE_ENTRY_TEXT_BEGIN();
-                ptr[ENTRY_NAME_MAX_LENGHT+LINE_ENTRY_TEXT_END()] = '\0';
+                ptr[LINE_ENTRY_TEXT_LENGHT+LINE_ENTRY_TEXT_OFFSET()] = '\0';
             }
-            ptr[ENTRY_NAME_MAX_LENGHT] = '\0';
-            lcd_lib_set(3, drawOffset+8*n-1, ENTRY_NAME_MAX_LENGHT*6+4, drawOffset+8*n+7);
-            lcd_lib_clear_string(4+LINE_ENTRY_GFX_BEGIN(), drawOffset+8*n, ptr);
+            lcd_lib_set(LCD_CHAR_MARGIN_LEFT-1, drawOffset+8*n-1, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT, drawOffset+8*n+7);
+            lcd_lib_clear_string(LCD_CHAR_MARGIN_LEFT+LINE_ENTRY_GFX_BEGIN(), drawOffset+8*n, ptr);
         }else{
-            ptr[ENTRY_NAME_MAX_LENGHT] = '\0';
-            lcd_lib_draw_string(4, drawOffset+8*n, ptr);
+            ptr[LINE_ENTRY_TEXT_LENGHT] = '\0';
+            lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT, drawOffset+8*n, ptr);
         }
     }
     lcd_lib_set(3, 0, 124, 8);
