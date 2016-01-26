@@ -210,7 +210,6 @@ void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags)
             buffer += LINE_ENTRY_TEXT_BEGIN();
             buffer[LINE_ENTRY_TEXT_LENGHT+LINE_ENTRY_TEXT_OFFSET()] = '\0';
         }
-        buffer[LINE_ENTRY_TEXT_LENGHT] = '\0';
         //lcd_lib_set(3, drawOffset+8*n-1, 62, drawOffset+8*n+7);
         lcd_lib_set(LCD_CHAR_MARGIN_LEFT-1, offsetY-1, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT, offsetY+7);
         lcd_lib_clear_string(LCD_CHAR_MARGIN_LEFT+LINE_ENTRY_GFX_BEGIN(), offsetY, buffer);
