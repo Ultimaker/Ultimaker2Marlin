@@ -201,9 +201,9 @@ void lcd_progressbar(uint8_t progress)
 
 void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags)
 {
+    uint8_t buffer_len = (uint8_t) strlen(buffer);
     if (flags & MENU_SELECTED)
     {
-        uint8_t buffer_len = (uint8_t) strlen(buffer);
         if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
         {
             line_entry_pos_update(LINE_ENTRY_MAX_STEP(buffer_len - LINE_ENTRY_TEXT_LENGHT));
@@ -214,8 +214,9 @@ void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags)
         lcd_lib_set(LCD_CHAR_MARGIN_LEFT-1, offsetY-1, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT, offsetY+7);
         lcd_lib_clear_string(LCD_CHAR_MARGIN_LEFT+LINE_ENTRY_GFX_BEGIN(), offsetY, buffer);
     }else{
-        buffer[LINE_ENTRY_TEXT_LENGHT] = '\0';
-		lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT, offsetY, buffer);
+        if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
+            buffer[LINE_ENTRY_TEXT_LENGHT] = '\0';
+        lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT, offsetY, buffer);
     }
 }
 
