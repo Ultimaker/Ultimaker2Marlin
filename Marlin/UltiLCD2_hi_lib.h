@@ -113,16 +113,28 @@ extern uint8_t led_glow_dir;
 #define LED_GLOW() lcd_lib_led_color(8 + led_glow, 8 + led_glow, 32 + led_glow)
 #define LED_GLOW_ERROR() lcd_lib_led_color(led_glow,128-led_glow,led_glow);
 
+// text position constants
+#define LCD_CHAR_MARGIN_LEFT 4
+#define LCD_CHAR_MARGIN_RIGHT 4
+#define LCD_CHAR_SPACING 6
+#ifndef LCD_GFX_WIDTH
+#define LCD_GFX_WIDTH 128
+#endif
+#ifndef LCD_GFX_WIDTH
+#define LCD_GFX_HEIGHT 64
+#endif
+
 extern uint16_t lineEntryPos;
 extern int8_t   lineEntryWait;
-//#define ENTRY_NAME_MAX_LENGHT 10
-#define ENTRY_NAME_MAX_LENGHT 20
-#define LINE_ENTRY_TEXT_STEP 6
-#define LINE_ENTRY_WAIT_END 24
+// scrolling entry settings
 #define LINE_ENTRY_STEP      2
-#define LINE_ENTRY_TEXT_END()   ((lineEntryPos%LINE_ENTRY_TEXT_STEP == 0) ? 0 : -1)
-#define LINE_ENTRY_TEXT_BEGIN() ((lineEntryPos + LINE_ENTRY_TEXT_STEP-1) / LINE_ENTRY_TEXT_STEP)
-#define LINE_ENTRY_GFX_BEGIN()  (LINE_ENTRY_TEXT_STEP-1 - (lineEntryPos + LINE_ENTRY_TEXT_STEP-1) % LINE_ENTRY_TEXT_STEP)
+#define LINE_ENTRY_WAIT_END 24
+#define LINE_ENTRY_GFX_LENGHT  (LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-LCD_CHAR_MARGIN_LEFT)
+#define LINE_ENTRY_TEXT_LENGHT (LINE_ENTRY_GFX_LENGHT / LCD_CHAR_SPACING)
+#define LINE_ENTRY_TEXT_OFFSET() ((lineEntryPos%LCD_CHAR_SPACING == 0) ? 0 : -1)
+#define LINE_ENTRY_TEXT_BEGIN()  ((lineEntryPos + LCD_CHAR_SPACING-1) / LCD_CHAR_SPACING)
+#define LINE_ENTRY_GFX_BEGIN()   (LCD_CHAR_SPACING-1 - (lineEntryPos + LCD_CHAR_SPACING-1) % LCD_CHAR_SPACING)
+#define LINE_ENTRY_MAX_STEP(text_length) ((text_length) * LCD_CHAR_SPACING)
 void line_entry_pos_update (uint16_t n);
 inline void line_entry_pos_reset ();
 
