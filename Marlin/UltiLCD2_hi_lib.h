@@ -105,6 +105,19 @@ extern uint8_t minProgress;
             lcd_setting_max = (_max) / 60 + 0.5; \
         } while(0)
 
+extern uint16_t lineEntryPos;
+extern int8_t   lineEntryWait;
+#define LINE_ENTRY_STEP      2
+#define LINE_ENTRY_WAIT_END 24
+#define LINE_ENTRY_GFX_LENGHT  (LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-LCD_CHAR_MARGIN_LEFT)
+#define LINE_ENTRY_TEXT_LENGHT (LINE_ENTRY_GFX_LENGHT / LCD_CHAR_SPACING)
+#define LINE_ENTRY_TEXT_OFFSET() ((lineEntryPos%LCD_CHAR_SPACING == 0) ? 0 : -1)
+#define LINE_ENTRY_TEXT_BEGIN()  ((lineEntryPos + LCD_CHAR_SPACING-1) / LCD_CHAR_SPACING)
+#define LINE_ENTRY_GFX_BEGIN()   (LCD_CHAR_SPACING-1 - (lineEntryPos + LCD_CHAR_SPACING-1) % LCD_CHAR_SPACING)
+#define LINE_ENTRY_MAX_STEP(text_length) ((text_length) * LCD_CHAR_SPACING)
+void line_entry_pos_update (uint16_t maxStep);
+inline void line_entry_pos_reset ();
+
 //If we have a heated bed, then the heated bed menu entries have a size of 1, else they have a size of 0.
 #if TEMP_SENSOR_BED != 0
 #define BED_MENU_OFFSET 1
