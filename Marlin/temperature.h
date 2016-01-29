@@ -75,10 +75,14 @@ FORCE_INLINE float degTargetBed() {
 
 FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
   target_temperature[extruder] = celsius;
+  if (target_temperature[extruder] >= HEATER_0_MAXTEMP - 15)
+    target_temperature[extruder] = HEATER_0_MAXTEMP - 15;
 };
 
 FORCE_INLINE void setTargetBed(const float &celsius) {
   target_temperature_bed = celsius;
+  if (target_temperature_bed >= BED_MAXTEMP - 15)
+    target_temperature_bed = BED_MAXTEMP - 15;
 };
 
 FORCE_INLINE bool isHeatingHotend(uint8_t extruder){
