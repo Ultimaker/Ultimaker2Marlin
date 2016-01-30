@@ -10,6 +10,8 @@ struct materialSettings
     uint8_t fan_speed; //0-100% of requested speed by GCode
     int16_t flow;      //Flow modification in %
     float diameter; //Filament diameter in mm
+    int16_t change_temperature;      //Temperature for the hotend during the change material procedure.
+    int8_t change_preheat_wait_time; //when reaching the change material temperature, wait for this amount of seconds for the temperature to stabalize and the material to heatup.
 };
 
 extern struct materialSettings material[EXTRUDERS];
@@ -24,6 +26,9 @@ extern struct materialSettings material[EXTRUDERS];
 #define FILAMENT_INSERT_EXTRUDE_SPEED 2     //Final speed when extruding
 
 #define EEPROM_MATERIAL_SETTINGS_OFFSET 0x800
+#define EEPROM_MATERIAL_EXTRA_TEMPERATURES_OFFSET 0xa00
+#define EEPROM_MATERIAL_CHANGE_TEMPERATURE_OFFSET 0xD00
+#define EEPROM_MATERIAL_CHANGE_WAIT_TIME_OFFSET 0xD30
 #define EEPROM_MATERIAL_SETTINGS_MAX_COUNT 16
 #define EEPROM_MATERIAL_SETTINGS_SIZE   (8 + 16)
 #define EEPROM_MATERIAL_COUNT_OFFSET()            ((uint8_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 0))
@@ -33,6 +38,8 @@ extern struct materialSettings material[EXTRUDERS];
 #define EEPROM_MATERIAL_FAN_SPEED_OFFSET(n)       ((uint8_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 12))
 #define EEPROM_MATERIAL_FLOW_OFFSET(n)            ((uint16_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 13))
 #define EEPROM_MATERIAL_DIAMETER_OFFSET(n)        ((float*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 15))
+#define EEPROM_MATERIAL_CHANGE_TEMPERATURE(n)     ((uint16_t*)(EEPROM_MATERIAL_CHANGE_TEMPERATURE_OFFSET + uint16_t(n) * 2))
+#define EEPROM_MATERIAL_CHANGE_WAIT_TIME(n)       ((uint8_t*)(EEPROM_MATERIAL_CHANGE_WAIT_TIME_OFFSET + uint16_t(n)))
 
 void lcd_menu_material();
 void lcd_change_to_menu_change_material(menuFunc_t return_menu);

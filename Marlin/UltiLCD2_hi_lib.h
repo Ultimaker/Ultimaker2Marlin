@@ -43,6 +43,7 @@ extern void* lcd_setting_ptr;
 extern uint8_t lcd_setting_type;
 extern int16_t lcd_setting_min;
 extern int16_t lcd_setting_max;
+extern int16_t lcd_setting_start_value;
 
 extern menuFunc_t currentMenu;
 extern menuFunc_t previousMenu;
@@ -56,7 +57,7 @@ extern uint8_t minProgress;
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &_setting; \
             lcd_setting_type = sizeof(_setting); \
-            lcd_lib_encoder_pos = _setting; \
+            lcd_setting_start_value = lcd_lib_encoder_pos = _setting; \
             lcd_setting_min = _min; \
             lcd_setting_max = _max; \
         } while(0)
@@ -66,7 +67,7 @@ extern uint8_t minProgress;
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &_setting; \
             lcd_setting_type = 5; \
-            lcd_lib_encoder_pos = int(_setting) * 100 / 255; \
+            lcd_setting_start_value = lcd_lib_encoder_pos = int(_setting) * 100 / 255; \
             lcd_setting_min = _min; \
             lcd_setting_max = _max; \
         } while(0)
@@ -76,7 +77,7 @@ extern uint8_t minProgress;
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &_setting; \
             lcd_setting_type = 3; \
-            lcd_lib_encoder_pos = (_setting) * 100.0 + 0.5; \
+            lcd_setting_start_value = lcd_lib_encoder_pos = (_setting) * 100.0 + 0.5; \
             lcd_setting_min = (_min) * 100; \
             lcd_setting_max = (_max) * 100; \
         } while(0)
@@ -86,7 +87,7 @@ extern uint8_t minProgress;
             lcd_setting_postfix = PSTR("00" _postfix); \
             lcd_setting_ptr = &(_setting); \
             lcd_setting_type = 7; \
-            lcd_lib_encoder_pos = (_setting) / 100 + 0.5; \
+            lcd_setting_start_value = lcd_lib_encoder_pos = (_setting) / 100 + 0.5; \
             lcd_setting_min = (_min) / 100 + 0.5; \
             lcd_setting_max = (_max) / 100 + 0.5; \
         } while(0)
@@ -96,7 +97,7 @@ extern uint8_t minProgress;
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &(_setting); \
             lcd_setting_type = 8; \
-            lcd_lib_encoder_pos = (_setting) + 0.5; \
+            lcd_setting_start_value = lcd_lib_encoder_pos = (_setting) + 0.5; \
             lcd_setting_min = (_min) + 0.5; \
             lcd_setting_max = (_max) + 0.5; \
         } while(0)
@@ -106,7 +107,7 @@ extern uint8_t minProgress;
             lcd_setting_postfix = PSTR(_postfix); \
             lcd_setting_ptr = &(_setting); \
             lcd_setting_type = 6; \
-            lcd_lib_encoder_pos = (_setting) / 60 + 0.5; \
+            lcd_setting_start_value = lcd_lib_encoder_pos = (_setting) / 60 + 0.5; \
             lcd_setting_min = (_min) / 60 + 0.5; \
             lcd_setting_max = (_max) / 60 + 0.5; \
         } while(0)

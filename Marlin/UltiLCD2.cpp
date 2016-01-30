@@ -72,31 +72,45 @@ void lcd_update()
         case STOP_REASON_MAXTEMP:
         case STOP_REASON_MINTEMP:
             lcd_lib_draw_string_centerP(20, PSTR("Temp sensor"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER01"));
             break;
         case STOP_REASON_MAXTEMP_BED:
             lcd_lib_draw_string_centerP(20, PSTR("Temp sensor BED"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER02"));
             break;
         case STOP_REASON_HEATER_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("Heater error"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER03"));
             break;
         case STOP_REASON_SAFETY_TRIGGER:
             lcd_lib_draw_string_centerP(20, PSTR("Safety circuit"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER04"));
             break;
         case STOP_REASON_Z_ENDSTOP_BROKEN_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("Z switch broken"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER05"));
             break;
         case STOP_REASON_Z_ENDSTOP_STUCK_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("Z switch stuck"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER06"));
             break;
         case STOP_REASON_XY_ENDSTOP_BROKEN_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("X or Y switch broken"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER07"));
             break;
         case STOP_REASON_XY_ENDSTOP_STUCK_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("X or Y switch stuck"));
+            lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
+            lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER07"));
             break;
         }
-        lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
-        lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/support"));
         LED_GLOW_ERROR();
         lcd_lib_update_screen();
     }else if (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
