@@ -277,8 +277,9 @@ static void homeBed()
 
 static void lcd_menu_first_run_bed_level_done()
 {
-    menu.return_to_previous();
+    // menu.return_to_previous();
     homeBed();
+    lcd_material_reset_defaults();
 }
 
 static void lcd_menu_first_run_bed_level_paper_right()
@@ -287,7 +288,7 @@ static void lcd_menu_first_run_bed_level_paper_right()
 
     SELECT_MAIN_MENU_ITEM(0);
     if (IS_FIRST_RUN_DONE())
-        lcd_info_screen(NULL, lcd_menu_first_run_bed_level_done, PSTR("DONE"));
+        lcd_info_screen(lcd_menu_first_run_material_select_1, lcd_menu_first_run_bed_level_done, PSTR("CONTINUE"));
     else
         lcd_info_screen(lcd_menu_first_run_material_load, homeBed, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR_IF_NOT_DONE(10);

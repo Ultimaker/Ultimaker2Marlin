@@ -8,7 +8,7 @@
 #############################
 
 ##Which version name are we appending to the final archive
-export BUILD_NAME=16.01
+export BUILD_NAME=16.02
 
 #############################
 # Support functions
