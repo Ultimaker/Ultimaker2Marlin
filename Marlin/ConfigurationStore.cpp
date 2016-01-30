@@ -38,7 +38,9 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
-#define EEPROM_VERSION "V11"
+#ifndef EEPROM_VERSION
+  #define EEPROM_VERSION "V11"
+#endif
 
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings()

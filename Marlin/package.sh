@@ -114,6 +114,7 @@ fi
 #Build the Ultimaker2 firmwares.
 # gitClone https://github.com/TinkerGnome/Ultimaker2Marlin.git _Ultimaker2Marlin
 # cd _Ultimaker2Marlin/Marlin
+
 $MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2 clean
 sleep 1
 mkdir _Ultimaker2
@@ -125,6 +126,12 @@ mkdir _Ultimaker2Dual
 $MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2Dual DEFINES="'STRING_CONFIG_H_AUTHOR=\"Tinker_${BUILD_NAME}\"' TEMP_SENSOR_1=20 EXTRUDERS=2 FILAMENT_SENSOR_PIN=30 BABYSTEPPING HEATER_0_MAXTEMP=315 HEATER_1_MAXTEMP=315 HEATER_2_MAXTEMP=315"
 #cd -
 
-cp _Ultimaker2/Marlin.hex resources/firmware/TinkerGnome-MarlinUltimaker2-${BUILD_NAME}.hex
-cp _Ultimaker2Dual/Marlin.hex resources/firmware/TinkerGnome-MarlinUltimaker2-dual-${BUILD_NAME}.hex
+cp _Ultimaker2/Marlin.hex resources/firmware/Tinker-MarlinUltimaker2-${BUILD_NAME}.hex
+cp _Ultimaker2Dual/Marlin.hex resources/firmware/Tinker-MarlinUltimaker2-dual-${BUILD_NAME}.hex
 
+$MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2plus clean
+sleep 1
+mkdir _Ultimaker2plus
+$MAKE -j 3 HARDWARE_MOTHERBOARD=72 ARDUINO_INSTALL_DIR=${ARDUINO_PATH} ARDUINO_VERSION=${ARDUINO_VERSION} BUILD_DIR=_Ultimaker2plus DEFINES="'STRING_CONFIG_H_AUTHOR=\"Tinker_${BUILD_NAME}+\"' TEMP_SENSOR_1=0 EXTRUDERS=1 FILAMENT_SENSOR_PIN=30 BABYSTEPPING HEATER_0_MAXTEMP=315 HEATER_1_MAXTEMP=315 HEATER_2_MAXTEMP=315 INVERT_E0_DIR=true INVERT_E1_DIR=false INVERT_E2_DIR=true 'EEPROM_VERSION=\"V12\"'"
+
+cp _Ultimaker2plus/Marlin.hex resources/firmware/Tinker-MarlinUltimaker2plus-${BUILD_NAME}.hex
