@@ -2031,11 +2031,6 @@ void process_commands()
         #endif // EXTRUDERS
         }
 
-
-//        #ifdef PID_ADD_EXTRUSION_RATE
-//        if(code_seen('C')) Kc = code_value();
-//        #endif
-
         updatePID();
         SERIAL_PROTOCOLPGM(MSG_OK);
         SERIAL_PROTOCOLPGM(" p:");
@@ -2044,11 +2039,6 @@ void process_commands()
         SERIAL_PROTOCOL(unscalePID_i(Ki));
         SERIAL_PROTOCOLPGM(" d:");
         SERIAL_PROTOCOL(unscalePID_d(Kd));
-//        #ifdef PID_ADD_EXTRUSION_RATE
-//        SERIAL_PROTOCOLPGM(" c:");
-//        //Kc does not have scaling applied above, or in resetting defaults
-//        SERIAL_PROTOCOL(Kc);
-//        #endif
         SERIAL_PROTOCOL_NEWLINE;
       }
       break;

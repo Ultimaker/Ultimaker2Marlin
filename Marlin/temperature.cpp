@@ -553,7 +553,7 @@ void manage_heater()
             setTargetHotend(0, e);
             LCD_MESSAGEPGM("Heating failed");
             SERIAL_ECHO_START;
-            SERIAL_ECHOLN("Heating failed");
+            SERIAL_ECHOLNPGM("Heating failed");
         }else{
             watchmillis[e] = 0;
         }

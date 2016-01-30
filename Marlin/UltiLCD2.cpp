@@ -93,6 +93,8 @@ void lcd_update()
 
     if (IsStopped())
     {
+		char buffer[24] = {0};
+		strcpy_P(buffer, PSTR("ultimaker.com/"));
         lcd_lib_clear();
         lcd_lib_draw_string_centerP(10, PSTR("ERROR - STOPPED"));
         switch(StoppedReason())
@@ -100,31 +102,41 @@ void lcd_update()
         case STOP_REASON_MAXTEMP:
         case STOP_REASON_MINTEMP:
             lcd_lib_draw_string_centerP(20, PSTR("Temp sensor"));
+			strcat_P(buffer, PSTR("ER01"));
             break;
         case STOP_REASON_MAXTEMP_BED:
             lcd_lib_draw_string_centerP(20, PSTR("Temp sensor BED"));
+			strcat_P(buffer, PSTR("ER02"));
             break;
         case STOP_REASON_HEATER_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("Heater error"));
+			strcat_P(buffer, PSTR("ER03"));
             break;
         case STOP_REASON_SAFETY_TRIGGER:
             lcd_lib_draw_string_centerP(20, PSTR("Safety circuit"));
+			strcat_P(buffer, PSTR("ER04"));
             break;
         case STOP_REASON_Z_ENDSTOP_BROKEN_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("Z switch broken"));
+			strcat_P(buffer, PSTR("ER05"));
             break;
         case STOP_REASON_Z_ENDSTOP_STUCK_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("Z switch stuck"));
+			strcat_P(buffer, PSTR("ER06"));
             break;
         case STOP_REASON_XY_ENDSTOP_BROKEN_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("X or Y switch broken"));
+			strcat_P(buffer, PSTR("ER07"));
             break;
         case STOP_REASON_XY_ENDSTOP_STUCK_ERROR:
             lcd_lib_draw_string_centerP(20, PSTR("X or Y switch stuck"));
+			strcat_P(buffer, PSTR("ER07"));
             break;
+		default:
+			strcat_P(buffer, PSTR("support"));
         }
         lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
-        lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/support"));
+        lcd_lib_draw_string(1, 50, buffer);
         LED_GLOW_ERROR
         lcd_lib_update_screen();
     }
