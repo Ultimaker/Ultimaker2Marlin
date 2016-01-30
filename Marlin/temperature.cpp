@@ -189,6 +189,9 @@ void PID_autotune(float temp, int extruder, int ncycles, autotuneFunc_t pCallbac
   float Kp, Ki, Kd;
   float max = 0, min = 10000;
 
+  // initialize pid coefficients to make the compiler happy...
+  Kp = Ki = Kd = 0.0f;
+
   if ((extruder > EXTRUDERS)
   #if (TEMP_BED_PIN <= -1)
        ||(extruder < 0)
@@ -216,9 +219,6 @@ void PID_autotune(float temp, int extruder, int ncycles, autotuneFunc_t pCallbac
      soft_pwm[extruder] = (PID_MAX)/2;
      bias = d = (PID_MAX)/2;
   }
-
-
-
 
  for(;;) {
 

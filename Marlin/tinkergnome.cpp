@@ -28,12 +28,12 @@
 #define MOVE_DELAY 500  // 500ms
 
 // Use the lcd_cache memory to store manual moving positions
-#define TARGET_POS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-#define TARGET_MIN(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-#define TARGET_MAX(n) (*(float*)&lcd_cache[sizeof(min_pos) + (n) * sizeof(float)])
-#define OLD_FEEDRATE  (*(float*)&lcd_cache[0])
-#define OLD_ACCEL     (*(float*)&lcd_cache[sizeof(float)])
-#define TARGET_STEPS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
+#define TARGET_POS(n)   (*(float*)&lcd_cache[(n) * sizeof(float)])
+#define TARGET_MIN(n)   (*(float*)&lcd_cache[(n) * sizeof(float)])
+#define TARGET_MAX(n)   (*(float*)&lcd_cache[sizeof(min_pos) + (n) * sizeof(float)])
+#define OLD_FEEDRATE    (*(float*)&lcd_cache[NUM_AXIS * sizeof(float)])
+#define OLD_ACCEL       (*(float*)&lcd_cache[(NUM_AXIS+1) * sizeof(float)])
+#define OLD_JERK        (*(float*)&lcd_cache[(NUM_AXIS+2) * sizeof(float)])
 
 uint8_t sleep_state = 0x0;
 
@@ -2753,8 +2753,10 @@ static void lcd_extrude_init_pull()
     //increase max. feedrate and reduce acceleration
     OLD_FEEDRATE = max_feedrate[E_AXIS];
     OLD_ACCEL = retract_acceleration;
-    max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
-    retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
+    OLD_JERK = max_e_jerk;
+    max_feedrate[E_AXIS] = float(FILAMENT_FAST_STEPS) / axis_steps_per_unit[E_AXIS];
+    retract_acceleration = float(FILAMENT_LONG_ACCELERATION_STEPS) / axis_steps_per_unit[E_AXIS];
+    max_e_jerk = FILAMENT_LONG_MOVE_JERK;
 }
 
 static void lcd_extrude_quit_pull()
@@ -2762,6 +2764,7 @@ static void lcd_extrude_quit_pull()
     // reset feeedrate and acceleration to default
     max_feedrate[E_AXIS] = OLD_FEEDRATE;
     retract_acceleration = OLD_ACCEL;
+    max_e_jerk = OLD_JERK;
     //Set E motor power to default.
 #if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
     digipot_current(2, active_extruder ? motor_current_e2 : motor_current_setting[2]);
@@ -2779,7 +2782,7 @@ static void lcd_extrude_pull()
         if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 1)
         {
             TARGET_POS(E_AXIS) -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS), FILAMENT_REVERSAL_SPEED*2/3, active_extruder);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS), max_feedrate[E_AXIS]*0.7f, active_extruder);
         }
     } else {
         quickStop();
