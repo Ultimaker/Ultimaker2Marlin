@@ -211,13 +211,13 @@ void PID_autotune(float temp, int extruder, int ncycles, autotuneFunc_t pCallbac
 
   if (extruder<0)
   {
-     soft_pwm_bed = (MAX_BED_POWER)/2;
-     bias = d = (MAX_BED_POWER)/2;
+     soft_pwm_bed = (MAX_BED_POWER>>1);
+     bias = d = (MAX_BED_POWER>>1);
    }
    else
    {
-     soft_pwm[extruder] = (PID_MAX)/2;
-     bias = d = (PID_MAX)/2;
+     soft_pwm[extruder] = (PID_MAX>>1);
+     bias = d = (PID_MAX>>1);
   }
 
  for(;;) {
@@ -1201,7 +1201,9 @@ ISR(TIMER0_COMPB_vect)
     #endif
     #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
     soft_pwm_b = soft_pwm_bed;
-    if(soft_pwm_b > 0) WRITE(HEATER_BED_PIN,1);
+      #if EXTRUDERS < 2
+      if(soft_pwm_b > 0) WRITE(HEATER_BED_PIN,1);
+      #endif
     #endif
     #ifdef FAN_SOFT_PWM
     soft_pwm_fan = fanSpeedSoftPwm / 2;
@@ -1216,7 +1218,29 @@ ISR(TIMER0_COMPB_vect)
   if(soft_pwm_2 <= pwm_count) WRITE(HEATER_2_PIN,0);
   #endif
   #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-  if(soft_pwm_b <= pwm_count) WRITE(HEATER_BED_PIN,0);
+    if(soft_pwm_b <= pwm_count)
+    {
+        WRITE(HEATER_BED_PIN,0);
+    }
+    #if EXTRUDERS > 1
+    else
+    {
+      uint8_t heat_count = 0;
+      if (READ(HEATER_0_PIN))  ++heat_count;
+      if (READ(HEATER_1_PIN))  ++heat_count;
+      #if EXTRUDERS > 2
+      if (READ(HEATER_2_PIN))  ++heat_count;
+      #endif
+      if (heat_count < 2)
+      {
+          WRITE(HEATER_BED_PIN, 1);
+      }
+      else
+      {
+          WRITE(HEATER_BED_PIN, 0);
+      }
+    }
+    #endif // EXTRUDERS
   #endif
   #ifdef FAN_SOFT_PWM
   if(soft_pwm_fan <= pwm_count) WRITE(FAN_PIN,0);
