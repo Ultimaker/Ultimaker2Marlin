@@ -946,7 +946,7 @@ static void lcd_menu_material_settings_store()
 void lcd_material_reset_defaults()
 {
     //Fill in the defaults
-    char buffer[8] = {0};
+    char buffer[MATERIAL_NAME_SIZE+1] = {0};
 
     strcpy_P(buffer, PSTR("PLA"));
     eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(0), 4);
@@ -1030,8 +1030,9 @@ void lcd_material_set_material(uint8_t nr, uint8_t e)
     for(uint8_t n=0; n<MAX_MATERIAL_TEMPERATURES; ++n)
     {
         material[e].temperature[n] = eeprom_read_word(EEPROM_MATERIAL_EXTRA_TEMPERATURE_OFFSET(nr, n));
-        if (material[e].temperature[n] > get_maxtemp(e) - 15)
-            material[e].temperature[n] = get_maxtemp(e) - 15;
+        set_maxtemp(e, constrain(material[e].temperature[n] + 15, HEATER_0_MAXTEMP, min(max(get_maxtemp(e), HEATER_0_MAXTEMP + 15), material[e].temperature[n] + 15)));
+//        if (material[e].temperature[n] > get_maxtemp(e) - 15)
+//            material[e].temperature[n] = get_maxtemp(e) - 15;
     }
 
 #if TEMP_SENSOR_BED != 0
@@ -1067,7 +1068,8 @@ void lcd_material_read_current_material()
 {
     for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
-        //material[e].temperature[0] = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
+        material[e].temperature[0] = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
+        set_maxtemp(e, constrain(material[e].temperature[0] + 15, HEATER_0_MAXTEMP, min(max(get_maxtemp(e), HEATER_0_MAXTEMP + 15), material[e].temperature[0] + 15)));
 #if TEMP_SENSOR_BED != 0
         material[e].bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
 #endif
@@ -1076,12 +1078,13 @@ void lcd_material_read_current_material()
         material[e].fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
         material[e].diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
         for(uint8_t n=0; n<MAX_MATERIAL_TEMPERATURES; n++)
-            material[active_extruder].temperature[n] = eeprom_read_word(EEPROM_MATERIAL_EXTRA_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e, n));
+        {
+            material[e].temperature[n] = eeprom_read_word(EEPROM_MATERIAL_EXTRA_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e, n));
+            set_maxtemp(e, constrain(material[e].temperature[n] + 15, HEATER_0_MAXTEMP, min(HEATER_0_MAXTEMP + 15, material[e].temperature[n] + 15)));
+        }
 
         eeprom_read_block(material[e].name, EEPROM_MATERIAL_NAME_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), MATERIAL_NAME_SIZE);
         material[e].name[MATERIAL_NAME_SIZE] = '\0';
-
-        set_maxtemp(e, constrain(material[e].temperature[0] + 15, HEATER_0_MAXTEMP, min(HEATER_0_MAXTEMP + 15, material[e].temperature[0] + 15)));
 
         material[e].change_temperature = eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
         material[e].change_preheat_wait_time = eeprom_read_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
@@ -1095,6 +1098,7 @@ void lcd_material_store_current_material()
     for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
         eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].temperature[0]);
+        set_maxtemp(e, constrain(material[e].temperature[0] + 15, HEATER_0_MAXTEMP, min(HEATER_0_MAXTEMP + 15, material[e].temperature[0] + 15)));
 #if TEMP_SENSOR_BED != 0
         eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].bed_temperature);
 #endif
@@ -1103,11 +1107,13 @@ void lcd_material_store_current_material()
         eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].diameter);
 
         for(uint8_t n=0; n<MAX_MATERIAL_TEMPERATURES; ++n)
-            eeprom_write_word(EEPROM_MATERIAL_EXTRA_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e, n), material[active_extruder].temperature[n]);
+        {
+            eeprom_write_word(EEPROM_MATERIAL_EXTRA_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e, n), material[e].temperature[n]);
+            set_maxtemp(e, constrain(material[e].temperature[n] + 15, HEATER_0_MAXTEMP, min(max(get_maxtemp(e), HEATER_0_MAXTEMP + 15), material[e].temperature[n] + 15)));
+        }
 
         eeprom_write_block(material[e].name, EEPROM_MATERIAL_NAME_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), MATERIAL_NAME_SIZE);
 
-        set_maxtemp(e, constrain(material[e].temperature[0] + 15, HEATER_0_MAXTEMP, min(HEATER_0_MAXTEMP + 15, material[e].temperature[0] + 15)));
 
         eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].change_temperature);
         eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e), material[e].change_preheat_wait_time);
@@ -1117,7 +1123,7 @@ void lcd_material_store_current_material()
 bool lcd_material_verify_material_settings()
 {
     bool hasCPE = false;
-    char buffer[32] = {0};
+    char buffer[MATERIAL_NAME_SIZE+1] = {0};
 
     uint8_t cnt = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     if (cnt < 2 || cnt > EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
@@ -1163,17 +1169,17 @@ bool lcd_material_verify_material_settings()
         if (eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt)) > HEATER_0_MAXTEMP || eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt)) < 10)
         {
             //Invalid temperature for change temperature.
-            if (strcmp_P(card.longFilename, PSTR("PLA")) == 0)
+            if (strcmp_P(buffer, PSTR("PLA")) == 0)
             {
                 eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), 70);
                 eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 30);
             }
-            else if (strcmp_P(card.longFilename, PSTR("ABS")) == 0)
+            else if (strcmp_P(buffer, PSTR("ABS")) == 0)
             {
                 eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), 90);
                 eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 30);
             }
-            else if (strcmp_P(card.longFilename, PSTR("CPE")) == 0)
+            else if (strcmp_P(buffer, PSTR("CPE")) == 0)
             {
                 eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(cnt), 85);
                 eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(cnt), 15);
@@ -1189,7 +1195,7 @@ bool lcd_material_verify_material_settings()
     if (!hasCPE && cnt < EEPROM_MATERIAL_SETTINGS_MAX_COUNT)
     {
         strcpy_P(buffer, PSTR("CPE"));
-        eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(cnt), 5);
+        eeprom_write_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(cnt), 4);
         eeprom_write_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(cnt), 250);
         eeprom_write_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(cnt), 60);
         eeprom_write_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(cnt), 50);

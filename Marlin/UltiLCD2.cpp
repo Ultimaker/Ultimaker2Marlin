@@ -47,7 +47,7 @@ void lcd_init()
     if (!lcd_material_verify_material_settings())
     {
         lcd_material_reset_defaults();
-        for(uint8_t e=0; e<EXTRUDERS; e++)
+        for(uint8_t e=0; e<EXTRUDERS; ++e)
             lcd_material_set_material(0, e);
     }
     lcd_material_read_current_material();
