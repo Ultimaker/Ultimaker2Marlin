@@ -136,13 +136,7 @@ static void start_material_change()
     // remove nozzle selection menu
     menu.return_to_previous();
 #endif // EXTRUDERS
-    minProgress = 0;
-    // move head to front
-    char buffer[32] = {0};
-    enquecommand_P(PSTR("G28 X0 Y0"));
-    sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
-    enquecommand(buffer);
-    menu.add_menu(menu_t(lcd_menu_material_main_return));
+    lcd_material_change_init(false);
     menu.add_menu(menu_t(lcd_menu_change_material_preheat));
 }
 

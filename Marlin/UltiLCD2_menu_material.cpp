@@ -10,6 +10,7 @@
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_material.h"
+#include "UltiLCD2_menu_maintenance.h"
 #include "UltiLCD2_menu_utils.h"
 #include "preferences.h"
 
@@ -32,6 +33,7 @@ static void lcd_menu_material_settings_store();
 
 static void cancelMaterialInsert()
 {
+    quickStop();
     //Set E motor power to default.
 #if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
     digipot_current(2, active_extruder ? motor_current_e2 : motor_current_setting[2]);
@@ -41,10 +43,25 @@ static void cancelMaterialInsert()
     set_extrude_min_temp(EXTRUDE_MINTEMP);
 }
 
+void lcd_material_change_init(bool printing)
+{
+    if (!printing)
+    {
+        minProgress = 0;
+        // move head to front
+        char buffer[32] = {0};
+        homeHead();
+        sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
+        enquecommand(buffer);
+        menu.add_menu(menu_t(lcd_menu_material_main_return));
+    }
+    preheat_end_time = millis() + (unsigned long)material[active_extruder].change_preheat_wait_time * 1000L;
+}
+
 void lcd_menu_material_main_return()
 {
     doCooldown();
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     enquecommand_P(PSTR("M84 X Y E"));
     menu.return_to_previous(false);
 }
@@ -57,13 +74,7 @@ void lcd_menu_material_main()
     {
         if (IS_SELECTED_MAIN(0) && !is_command_queued())
         {
-            minProgress = 0;
-            // move head to front
-            char buffer[32] = {0};
-            enquecommand_P(PSTR("G28 X0 Y0"));
-            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
-            enquecommand(buffer);
-            menu.add_menu(menu_t(lcd_menu_material_main_return));
+            lcd_material_change_init(false);
             menu.add_menu(menu_t(lcd_menu_change_material_preheat));
         }
         else if (IS_SELECTED_MAIN(1))
@@ -82,14 +93,36 @@ void lcd_menu_change_material_preheat()
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20;
     if (temp < 0) temp = 0;
+
+    // draw menu
+    char buffer[8] = {0};
+    uint8_t progress = uint8_t(temp * 125 / target);
+    if (progress < minProgress)
+        progress = minProgress;
+    else
+        minProgress = progress;
+
+    lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
+    lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle"));
+#if EXTRUDERS > 1
+    strcpy_P(buffer, PSTR("("));
+    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
+    lcd_lib_draw_string(3+(15*LCD_CHAR_SPACING), 10, buffer);
+#endif
+    lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
+
+    lcd_progressbar(progress);
+
+
+    // check target temp and waiting time
     if (temp > target - 5 && temp < target + 5)
     {
-        if ((signed long)(millis() - preheat_end_time) > 0)
+        if (preheat_end_time < last_user_interaction)
         {
             set_extrude_min_temp(0);
 
-            plan_set_e_position(0);
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 20.0 / volume_to_filament_length[active_extruder], retract_feedrate/60.0, active_extruder);
+            // plan_set_e_position(0);
+            // plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], end_of_print_retraction / volume_to_filament_length[active_extruder], retract_feedrate/60.0, active_extruder);
 
             float old_max_feedrate_e = max_feedrate[E_AXIS];
             float old_retract_acceleration = retract_acceleration;
@@ -108,31 +141,21 @@ void lcd_menu_change_material_preheat()
             max_e_jerk = old_max_e_jerk;
 
             menu.replace_menu(menu_t(lcd_menu_change_material_remove), false);
-            temp = target;
+            // temp = target;
+            return;
+        }
+        else
+        {
+            // show countdown
+            strcpy_P(buffer, PSTR("<"));
+            int_to_string((preheat_end_time-last_user_interaction)/1000UL, buffer+1, PSTR(">"));
+            lcd_lib_draw_string_center(30, buffer);
         }
     }
     else
     {
-        preheat_end_time = millis() + (unsigned long)material[active_extruder].change_preheat_wait_time * 1000L;
+        preheat_end_time = last_user_interaction + (unsigned long)material[active_extruder].change_preheat_wait_time * 1000UL;
     }
-
-    uint8_t progress = uint8_t(temp * 125 / target);
-    if (progress < minProgress)
-        progress = minProgress;
-    else
-        minProgress = progress;
-
-    lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
-    lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle"));
-#if EXTRUDERS > 1
-    char buffer[8] = {0};
-    strcpy_P(buffer, "(");
-    int_to_string(active_extruder+1, buffer+1, PSTR(")"));
-    lcd_lib_draw_string(3+(15*LCD_CHAR_SPACING), 10, buffer);
-#endif
-    lcd_lib_draw_stringP(3, 20, PSTR("for material removal"));
-
-    lcd_progressbar(progress);
 
     lcd_lib_update_screen();
 }
@@ -144,7 +167,7 @@ static void lcd_menu_change_material_remove()
 #if EXTRUDERS > 1
     lcd_lib_draw_stringP(3, 10, PSTR("Extruder"));
     char buffer[8] = {0};
-    strcpy_P(buffer, "(");
+    strcpy_P(buffer, PSTR("("));
     int_to_string(active_extruder+1, buffer+1, PSTR(")"));
     lcd_lib_draw_string(3+(9*LCD_CHAR_SPACING), 10, buffer);
 #endif
@@ -152,9 +175,7 @@ static void lcd_menu_change_material_remove()
 
     if (!blocks_queued())
     {
-        lcd_lib_keyclick();
-        menu.replace_menu(menu_t(lcd_menu_change_material_remove_wait_user));
-        SELECT_MAIN_MENU_ITEM(0);
+        menu.replace_menu(menu_t(lcd_menu_change_material_remove_wait_user, MAIN_MENU_ITEM_POS(0)));
         //Disable the extruder motor so you can pull out the remaining filament.
         disable_e0();
         disable_e1();
@@ -197,7 +218,7 @@ static void lcd_menu_change_material_remove_wait_user()
 #if EXTRUDERS > 1
     lcd_lib_draw_stringP(3, 10, PSTR("Extruder"));
     char buffer[8] = {0};
-    strcpy_P(buffer, "(");
+    strcpy_P(buffer, PSTR("("));
     int_to_string(active_extruder+1, buffer+1, PSTR(")"));
     lcd_lib_draw_string(3+(9*LCD_CHAR_SPACING), 10, buffer);
     lcd_lib_draw_stringP(3, 20, PSTR("Remove material"));
@@ -234,7 +255,7 @@ void lcd_menu_insert_material_preheat()
 #if EXTRUDERS > 1
     lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle"));
     char buffer[8] = {0};
-    strcpy_P(buffer, "(");
+    strcpy_P(buffer, PSTR("("));
     int_to_string(active_extruder+1, buffer+1, PSTR(")"));
     lcd_lib_draw_string(3+(15*LCD_CHAR_SPACING), 10, buffer);
     lcd_lib_draw_stringP(3, 20, PSTR("for insertion"));
@@ -263,7 +284,7 @@ static void lcd_menu_change_material_insert_wait_user()
     lcd_lib_draw_stringP(3, 10, PSTR("Insert new material"));
     lcd_lib_draw_stringP(3, 20, PSTR("for extruder"));
     char buffer[8] = {0};
-    strcpy_P(buffer, "(");
+    strcpy_P(buffer, PSTR("("));
     int_to_string(active_extruder+1, buffer+1, PSTR(")"));
     lcd_lib_draw_string(3+(13*LCD_CHAR_SPACING), 20, buffer);
     lcd_lib_draw_stringP(3, 30, PSTR("from the backside of"));
@@ -313,7 +334,7 @@ static void lcd_menu_change_material_insert_forward()
 #if EXTRUDERS > 1
     lcd_lib_draw_stringP(3, 10, PSTR("Extruder"));
     char buffer[8] = {0};
-    strcpy_P(buffer, "(");
+    strcpy_P(buffer, PSTR("("));
     int_to_string(active_extruder+1, buffer+1, PSTR(")"));
     lcd_lib_draw_string(3+(9*LCD_CHAR_SPACING), 10, buffer);
 #endif
@@ -373,7 +394,7 @@ static void lcd_menu_change_material_insert()
         lcd_lib_draw_stringP(3, 20, PSTR("Wait till material"));
         lcd_lib_draw_stringP(3, 30, PSTR("comes out nozzle"));
         char buffer[8] = {0};
-        strcpy_P(buffer, "(");
+        strcpy_P(buffer, PSTR("("));
         int_to_string(active_extruder+1, buffer+1, PSTR(")"));
         lcd_lib_draw_string(3+(17*LCD_CHAR_SPACING), 30, buffer);
 #else

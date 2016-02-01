@@ -1577,9 +1577,9 @@ void lcd_simple_buildplate_store()
 void lcd_simple_buildplate_quit()
 {
     // home z-axis
-    enquecommand_P(PSTR("G28 Z0"));
+    homeBed();
     // home head
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
@@ -2157,8 +2157,6 @@ static void lcd_position_z_axis()
 
 FORCE_INLINE void lcd_home_x_axis() { enquecommand_P(PSTR("G28 X0")); }
 FORCE_INLINE void lcd_home_y_axis() { enquecommand_P(PSTR("G28 Y0")); }
-FORCE_INLINE void lcd_home_z_axis() { enquecommand_P(PSTR("G28 Z0")); }
-FORCE_INLINE void lcd_home_all()    { enquecommand_P(PSTR("G28")); }
 
 static void drawMoveDetails()
 {
@@ -2182,7 +2180,7 @@ static const menu_t & get_move_menuoption(uint8_t nr, menu_t &opt)
     if (nr == index++)
     {
         // Home all axis
-        opt.setData(MENU_NORMAL, lcd_home_all);
+        opt.setData(MENU_NORMAL, homeAll);
     }
     else if (nr == index++)
     {
@@ -2232,7 +2230,7 @@ static const menu_t & get_move_menuoption(uint8_t nr, menu_t &opt)
     else if (nr == index++)
     {
         // z home
-        opt.setData(MENU_NORMAL, lcd_home_z_axis);
+        opt.setData(MENU_NORMAL, homeBed);
     }
     return opt;
 }
@@ -2554,7 +2552,7 @@ void manage_encoder_position(int8_t encoder_pos_interrupt)
 static void lcd_extrude_homehead()
 {
     lcd_lib_keyclick();
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
@@ -2565,7 +2563,7 @@ static void lcd_extrude_headtofront()
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
 
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     enquecommand(buffer);
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
@@ -3018,7 +3016,7 @@ void recover_start_print(const char *cmd)
     printing_state = PRINT_STATE_START;
 
     // move to heatup position
-    enquecommand_P(PSTR("G28"));
+    homeAll();
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
     enquecommand(buffer);

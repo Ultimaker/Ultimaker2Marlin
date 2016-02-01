@@ -80,12 +80,12 @@ void abortPrint()
 
     if (current_position[Z_AXIS] > max_pos[Z_AXIS] - 30)
     {
-        enquecommand_P(PSTR("G28 X0 Y0"));
-        enquecommand_P(PSTR("G28 Z0"));
+        homeHead();
+        homeBed();
     }
     else
     {
-        enquecommand_P(PSTR("G28"));
+        homeAll();
     }
     enquecommand_P(PSTR("M84"));
 
@@ -573,7 +573,7 @@ void lcd_menu_print_select()
                             // move to heatup position
                             char buffer[32] = {0};
                             sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), max(int(min_pos[X_AXIS]), 0)+5, max(int(min_pos[Y_AXIS]), 0)+5);
-                            enquecommand_P(PSTR("G28"));
+                            homeAll();
                             enquecommand(buffer);
                             printing_state = PRINT_STATE_NORMAL;
 
@@ -1271,6 +1271,7 @@ static void lcd_print_change_material()
 {
     if (!movesplanned())
     {
+        lcd_material_change_init(false);
         menu.add_menu(menu_t(lcd_change_to_menu_change_material_return), false);
         menu.add_menu(menu_t(lcd_menu_change_material_preheat));
     }

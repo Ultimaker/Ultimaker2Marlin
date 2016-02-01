@@ -10,6 +10,7 @@
 #include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2_menu_material.h"
+#include "UltiLCD2_menu_maintenance.h"
 #include "UltiLCD2_menu_first_run.h"
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_utils.h"
@@ -78,7 +79,7 @@ void lcd_menu_first_run_start_bed_leveling()
 
 static void homeAndRaiseBed()
 {
-    enquecommand_P(PSTR("G28 Z0"));
+    homeBed();
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F%i Z%i"), int(homing_feedrate[0]), 35);
     enquecommand(buffer);
@@ -98,7 +99,7 @@ static void lcd_menu_first_run_init_2()
 
 static void homeAndParkHeadForCenterAdjustment()
 {
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, int(AXIS_CENTER_POS(X_AXIS)), int(max_pos[Y_AXIS])-10);
     enquecommand(buffer);
@@ -258,7 +259,7 @@ static void lcd_menu_first_run_bed_level_paper_left()
     lcd_lib_update_screen();
 }
 
-static void homeBed()
+static void storeBedLeveling()
 {
     add_homeing[Z_AXIS] += LEVELING_OFFSET;  //Adjust the Z homing position to account for the thickness of the paper.
     // now that we are finished, save the settings to EEPROM
@@ -266,19 +267,19 @@ static void homeBed()
     if (IS_FIRST_RUN_DONE())
     {
         // home all
-        enquecommand_P(PSTR("G28"));
+        homeAll();
     }
     else
     {
         // home z-axis
-        enquecommand_P(PSTR("G28 Z0"));
+        homeBed();
     }
 }
 
 static void lcd_menu_first_run_bed_level_done()
 {
     // menu.return_to_previous();
-    homeBed();
+    storeBedLeveling();
     lcd_material_reset_defaults();
 }
 
@@ -290,7 +291,7 @@ static void lcd_menu_first_run_bed_level_paper_right()
     if (IS_FIRST_RUN_DONE())
         lcd_info_screen(lcd_menu_first_run_material_select_1, lcd_menu_first_run_bed_level_done, PSTR("CONTINUE"));
     else
-        lcd_info_screen(lcd_menu_first_run_material_load, homeBed, PSTR("CONTINUE"));
+        lcd_info_screen(lcd_menu_first_run_material_load, storeBedLeveling, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR_IF_NOT_DONE(10);
     lcd_lib_draw_string_centerP(20, PSTR("Repeat this for"));
     lcd_lib_draw_string_centerP(30, PSTR("the right corner..."));
