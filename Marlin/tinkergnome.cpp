@@ -1492,7 +1492,7 @@ void lcd_menu_printing_tg()
             {
                 lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Heating nozzle"));
 #if EXTRUDERS > 1
-                int_to_string(active_extruder+1, buffer, NULL);
+                int_to_string(tmp_extruder+1, buffer, NULL);
                 lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT + 15*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, buffer);
 #endif // EXTRUDERS
                 index += 3;
