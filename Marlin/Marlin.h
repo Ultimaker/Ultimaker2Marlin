@@ -51,12 +51,15 @@
   #define MYSERIAL MSerial
 #endif
 
-#define SERIAL_PROTOCOL(x) MYSERIAL.print(x);
-#define SERIAL_PROTOCOL_F(x,y) MYSERIAL.print(x,y);
-#define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x));
-#define SERIAL_PROTOCOLLN(x) do {MYSERIAL.print(x);MYSERIAL.write('\n');} while(0)
-#define SERIAL_PROTOCOLLNPGM(x) do{serialprintPGM(PSTR(x));MYSERIAL.write('\n');} while(0)
-#define SERIAL_PROTOCOL_NEWLINE MYSERIAL.write('\n');
+#define SERIAL_CHAR(x) MYSERIAL.write(x)
+#define SERIAL_PROTOCOLCHAR(x) SERIAL_CHAR(x)
+#define SERIAL_EOL SERIAL_CHAR('\n')
+
+#define SERIAL_PROTOCOL(x) MYSERIAL.print(x)
+#define SERIAL_PROTOCOL_F(x,y) MYSERIAL.print(x,y)
+#define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x))
+#define SERIAL_PROTOCOLLN(x) do {MYSERIAL.print(x);SERIAL_EOL;} while(0)
+#define SERIAL_PROTOCOLLNPGM(x) do{serialprintPGM(PSTR(x));SERIAL_EOL;} while(0)
 
 
 const char errormagic[] PROGMEM ="Error:";
@@ -66,14 +69,12 @@ const char echomagic[] PROGMEM ="echo:";
 #define SERIAL_ERRORPGM(x) SERIAL_PROTOCOLPGM(x)
 #define SERIAL_ERRORLN(x) SERIAL_PROTOCOLLN(x)
 #define SERIAL_ERRORLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
-#define SERIAL_ERROR_NEWLINE SERIAL_PROTOCOL_NEWLINE
 
 #define SERIAL_ECHO_START serialprintPGM(echomagic);
 #define SERIAL_ECHO(x) SERIAL_PROTOCOL(x)
 #define SERIAL_ECHOPGM(x) SERIAL_PROTOCOLPGM(x)
 #define SERIAL_ECHOLN(x) SERIAL_PROTOCOLLN(x)
 #define SERIAL_ECHOLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
-#define SERIAL_ECHO_NEWLINE SERIAL_PROTOCOL_NEWLINE
 
 #define SERIAL_ECHOPAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
 
@@ -245,11 +246,10 @@ extern uint8_t printing_state;
 
 // Handling multiple extruders pins
 extern uint8_t active_extruder;
+extern uint8_t tmp_extruder;
 
-#if EXTRUDERS > 3
+#if EXTRUDERS > 2
   # error Unsupported number of extruders
-#elif EXTRUDERS > 2
-  # define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1, v2, v3 }
 #elif EXTRUDERS > 1
   # define ARRAY_BY_EXTRUDERS(v1, v2, v3) { v1, v2 }
 #else
