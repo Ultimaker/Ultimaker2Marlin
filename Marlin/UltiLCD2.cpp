@@ -156,17 +156,17 @@ void lcd_update()
     else
     {
         // serialScreenShown = false;
-        // refresh the displayed temperatures
-        for(uint8_t e=0;e<EXTRUDERS;e++)
-        {
-            dsp_temperature[e] = (ALPHA * current_temperature[e]) + (ONE_MINUS_ALPHA * dsp_temperature[e]);
-        }
-#if TEMP_SENSOR_BED != 0
-        dsp_temperature_bed = (ALPHA * current_temperature_bed) + (ONE_MINUS_ALPHA * dsp_temperature_bed);
-#endif
         menu.processEvents();
         if (postMenuCheck) postMenuCheck();
     }
+    // refresh the displayed temperatures
+    for(uint8_t e=0;e<EXTRUDERS;e++)
+    {
+        dsp_temperature[e] = (ALPHA * current_temperature[e]) + (ONE_MINUS_ALPHA * dsp_temperature[e]);
+    }
+#if TEMP_SENSOR_BED != 0
+    dsp_temperature_bed = (ALPHA * current_temperature_bed) + (ONE_MINUS_ALPHA * dsp_temperature_bed);
+#endif
 }
 
 void lcd_menu_startup()

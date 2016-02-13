@@ -516,11 +516,8 @@ void loop()
     }
   }
   //check heater every n milliseconds
-  manage_heater();
-  manage_inactivity();
+  idle();
   checkHitEndstops();
-  lcd_update();
-  lifetime_stats_tick();
 }
 
 void get_command()
@@ -1011,12 +1008,17 @@ void process_commands()
       codenum += millis();  // keep track of when we started waiting
       previous_millis_cmd = millis();
       printing_state = PRINT_STATE_DWELL;
-      while(millis()  < codenum ){
-        manage_heater();
-        manage_inactivity();
-        lcd_update();
-        lifetime_stats_tick();
+      unsigned long m;
+      do {
+        m = millis();
+        idle();
+        if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
+        {
+          lastSerialCommandTime = m;
+        }
       }
+      while(m < codenum );
+
       break;
       #ifdef FWRETRACT
       case 10: // G10 retract
@@ -1272,17 +1274,11 @@ void process_commands()
       if (codenum > 0){
         codenum += millis();  // keep track of when we started waiting
         while(millis()  < codenum && !lcd_clicked()){
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
+          idle();
         }
       }else{
         while(!lcd_clicked()){
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
+          idle();
         }
       }
       LCD_MESSAGEPGM(MSG_RESUMING);
@@ -1299,10 +1295,7 @@ void process_commands()
         card.pause = true;
         while(card.pause)
         {
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
+          idle();
         }
     }
     break;
@@ -1504,6 +1497,7 @@ void process_commands()
 
       /* See if we are heating up or cooling down */
       bool target_direction = isHeatingHotend(tmp_extruder); // true if heating, false if cooling
+      unsigned long m;
 
       #ifdef TEMP_RESIDENCY_TIME
         long residencyStart;
@@ -1511,11 +1505,14 @@ void process_commands()
         /* continue to loop until we have reached the target temp
           _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
         while((residencyStart == -1) ||
-              (residencyStart >= 0 && (((unsigned int) (millis() - residencyStart)) < (TEMP_RESIDENCY_TIME * 1000UL))) ) {
+              (residencyStart >= 0 && (((unsigned int) (millis() - residencyStart)) < (TEMP_RESIDENCY_TIME * 1000UL))) )
+        {
       #else
-        while ( target_direction ? (isHeatingHotend(tmp_extruder)) : (isCoolingHotend(tmp_extruder)&&(CooldownNoWait==false)) ) {
+        while ( target_direction ? (isHeatingHotend(tmp_extruder)) : (isCoolingHotend(tmp_extruder)&&(CooldownNoWait==false)) )
+        {
       #endif //TEMP_RESIDENCY_TIME
-          if( (millis() - codenum) > 1000UL )
+          m = millis();
+          if( (m - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
             #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
               print_heaterstates();
@@ -1534,12 +1531,13 @@ void process_commands()
             #else
               SERIAL_EOL;
             #endif
-            codenum = millis();
+            codenum = m;
           }
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
+          if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
+          {
+            lastSerialCommandTime = m;
+          }
+          idle();
         #ifdef TEMP_RESIDENCY_TIME
             /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
               or when current temp falls outside the hysteresis after target temp was reached */
@@ -1571,25 +1569,28 @@ void process_commands()
         LCD_MESSAGEPGM(MSG_BED_HEATING);
 
         codenum = millis();
+        unsigned long m;
         while(current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
         {
-          if(( millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
+          m = millis();
+          if((m - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
           {
-            codenum = millis();
+            codenum = m;
             // float tt=degHotend(active_extruder);
           #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
             print_heaterstates();
             SERIAL_EOL;
           #endif
           }
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
+          idle();
           if (printing_state != PRINT_STATE_HEATING_BED)
           {
               // print aborted
               break;
+          }
+          else if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
+          {
+            lastSerialCommandTime = m;
           }
         }
         LCD_MESSAGEPGM(MSG_BED_DONE);
@@ -2264,10 +2265,7 @@ void process_commands()
         uint8_t cnt=0;
         while(!lcd_clicked()){
           cnt++;
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
+          idle();
           if(cnt==0)
           {
           #if BEEPER > 0
@@ -2362,10 +2360,7 @@ void process_commands()
         last_extruder = 0xFF;
     #endif
         while(card.pause){
-          manage_heater();
-          manage_inactivity();
-          lcd_update();
-          lifetime_stats_tick();
+          idle();
         }
 
         plan_set_e_position(current_position[E_AXIS]);
@@ -2909,6 +2904,17 @@ void controllerFan()
   }
 }
 #endif
+
+/**
+ * Standard idle routine keeps the machine alive
+ */
+void idle()
+{
+    manage_heater();
+    manage_inactivity();
+    lcd_update();
+    lifetime_stats_tick();
+}
 
 void manage_inactivity()
 {
