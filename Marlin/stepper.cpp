@@ -932,9 +932,10 @@ void st_init()
 // Block until all buffered steps are executed
 void st_synchronize()
 {
-    while( blocks_queued()) {
-    idle();
-  }
+    while( blocks_queued())
+    {
+        idle();
+    }
 }
 
 void st_set_position(const long &x, const long &y, const long &z, const long &e)

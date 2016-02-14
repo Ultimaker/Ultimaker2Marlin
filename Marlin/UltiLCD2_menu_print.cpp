@@ -1038,7 +1038,11 @@ void lcd_menu_print_tune_heatup_nozzle0()
         menu.return_to_previous();
 
     lcd_lib_clear();
-    lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
+#if EXTRUDERS > 1
+    lcd_lib_draw_string_centerP(20, PSTR("Nozzle 1 temperature"));
+#else
+    lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature"));
+#endif
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
     char buffer[16] = {0};
     int_to_string(int(dsp_temperature[0]), buffer, PSTR("C/"));
@@ -1063,7 +1067,7 @@ void lcd_menu_print_tune_heatup_nozzle1()
         lcd_change_to_previous_menu();
 
     lcd_lib_clear();
-    lcd_lib_draw_string_centerP(20, PSTR("Nozzle2 temperature:"));
+    lcd_lib_draw_string_centerP(20, PSTR("Nozzle 2 temperature"));
     lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Click to return"));
     char buffer[16] = {0};
     int_to_string(int(dsp_temperature[1]), buffer, PSTR("C/"));
@@ -1095,12 +1099,8 @@ void lcd_menu_print_tune()
     {
         uint8_t index(0);
         if (IS_SELECTED_SCROLL(index++))
-        {
             menu.return_to_previous();
-//        }else if (IS_SELECTED_SCROLL(index++))
-//        {
-//            menu.add_menu(menu_t(lcd_menu_print_abort));
-        }else if (IS_SELECTED_SCROLL(index++))
+        else if (IS_SELECTED_SCROLL(index++))
             LCD_EDIT_SETTING(feedmultiply, "Print speed", "%", 10, 1000);
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_print_tune_heatup_nozzle0, 0));
@@ -1114,11 +1114,14 @@ void lcd_menu_print_tune()
 #endif
         else if (IS_SELECTED_SCROLL(index++))
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
-        else if (IS_SELECTED_SCROLL(index++))
-            LCD_EDIT_SETTING(extrudemultiply[0], "Material flow", "%", 10, 1000);
 #if EXTRUDERS > 1
         else if (IS_SELECTED_SCROLL(index++))
+            LCD_EDIT_SETTING(extrudemultiply[0], "Material flow 1", "%", 10, 1000);
+        else if (IS_SELECTED_SCROLL(index++))
             LCD_EDIT_SETTING(extrudemultiply[1], "Material flow 2", "%", 10, 1000);
+#else
+        else if (IS_SELECTED_SCROLL(index++))
+            LCD_EDIT_SETTING(extrudemultiply[0], "Material flow", "%", 10, 1000);
 #endif
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_print_tune_retraction, 0));

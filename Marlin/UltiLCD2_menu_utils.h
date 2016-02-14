@@ -108,6 +108,7 @@ public:
     void replace_menu(menu_t nextMenu, bool beep = true);
     bool return_to_previous(bool beep = true);
     void return_to_main(bool beep = true);
+    void removeMenu(menuFunc_t func);
 
     const menu_t & currentMenu() const { return menuStack[currentIndex]; }
     menu_t & currentMenu() { return menuStack[currentIndex]; }

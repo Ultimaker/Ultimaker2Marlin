@@ -471,10 +471,6 @@ void loop()
   {
     get_command();
   }
-  else if (MYSERIAL.available() > 0)
-  {
-    lastSerialCommandTime = millis();
-  }
 
   #ifdef SDSUPPORT
   card.checkautostart(false);
@@ -515,9 +511,24 @@ void loop()
       bufindr = (bufindr + 1)%BUFSIZE;
     }
   }
-  //check heater every n milliseconds
-  idle();
+  idle(false);
   checkHitEndstops();
+}
+
+FORCE_INLINE float code_value()
+{
+  return (strtod(strchr_pointer + 1, NULL));
+}
+
+FORCE_INLINE long code_value_long()
+{
+  return (strtol(strchr_pointer + 1, NULL, 10));
+}
+
+static bool code_seen(char code)
+{
+  strchr_pointer = strchr(cmdbuffer[bufindr], code);
+  return (strchr_pointer != NULL);  //Return True if a character was found
 }
 
 void get_command()
@@ -535,12 +546,10 @@ void get_command()
       }
       cmdbuffer[bufindw][serial_count] = 0; //terminate string
       if(!comment_mode){
-        comment_mode = false; //for new command
-        fromsd[bufindw] = false;
-        if(strchr(cmdbuffer[bufindw], 'N') != NULL)
+        fromsd[bufindw] = false; //for new command
+        if(code_seen('N'))
         {
-          strchr_pointer = strchr(cmdbuffer[bufindw], 'N');
-          gcode_N = (strtol(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL, 10));
+          gcode_N = code_value_long();
           if(gcode_N != gcode_LastN+1 && (strstr_P(cmdbuffer[bufindw], PSTR("M110")) == NULL) ) {
             SERIAL_ERROR_START;
             SERIAL_ERRORPGM(MSG_ERR_LINE_NO);
@@ -551,14 +560,13 @@ void get_command()
             return;
           }
 
-          if(strchr(cmdbuffer[bufindw], '*') != NULL)
+          if(code_seen('*'))
           {
             byte checksum = 0;
             byte count = 0;
             while(cmdbuffer[bufindw][count] != '*') checksum = checksum^cmdbuffer[bufindw][count++];
-            strchr_pointer = strchr(cmdbuffer[bufindw], '*');
 
-            if( (int)(strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)) != checksum) {
+            if( (int)(code_value()) != checksum) {
               SERIAL_ERROR_START;
               SERIAL_ERRORPGM(MSG_ERR_CHECKSUM_MISMATCH);
               SERIAL_ERRORLN(gcode_LastN);
@@ -583,7 +591,7 @@ void get_command()
         }
         else  // if we don't receive 'N' but still see '*'
         {
-          if((strchr(cmdbuffer[bufindw], '*') != NULL))
+          if(code_seen('*'))
           {
             SERIAL_ERROR_START;
             SERIAL_ERRORPGM(MSG_ERR_NO_LINENUMBER_WITH_CHECKSUM);
@@ -592,9 +600,8 @@ void get_command()
             return;
           }
         }
-        if((strchr(cmdbuffer[bufindw], 'G') != NULL)){
-          strchr_pointer = strchr(cmdbuffer[bufindw], 'G');
-          switch((int)((strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)))){
+        if(code_seen('G')){
+          switch((int)(code_value())){
           case 0:
           case 1:
           case 2:
@@ -617,9 +624,10 @@ void get_command()
 
         }
 #ifdef ENABLE_ULTILCD2
-        strchr_pointer = strchr(cmdbuffer[bufindw], 'M');
-        if (strtol(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL, 10) != 105)
+        if (code_seen('M') && (code_value_long() != 105))
+        {
             lastSerialCommandTime = millis();
+        }
 #endif
         bufindw = (bufindw + 1)%BUFSIZE;
         buflen += 1;
@@ -718,22 +726,6 @@ void get_command()
 
   #endif //SDSUPPORT
 
-}
-
-float code_value()
-{
-  return (strtod(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL));
-}
-
-long code_value_long()
-{
-  return (strtol(&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1], NULL, 10));
-}
-
-bool code_seen(char code)
-{
-  strchr_pointer = strchr(cmdbuffer[bufindr], code);
-  return (strchr_pointer != NULL);  //Return True if a character was found
 }
 
 #define DEFINE_PGM_READ_ANY(type, reader)       \
@@ -905,12 +897,21 @@ static void homeaxis(int axis) {
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
 
 #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
-  void print_heaterstates() {
+  void print_heaterstates()
+  {
     #if (TEMP_SENSOR_0 != 0) || ENABLED(HEATER_0_USES_MAX6675)
-      SERIAL_PROTOCOLPGM(" T:");
-      SERIAL_PROTOCOL_F(degHotend(tmp_extruder), 1);
-      SERIAL_PROTOCOLPGM(" /");
-      SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder), 1);
+      #if EXTRUDERS > 1
+        int8_t index = (swapExtruders() ? tmp_extruder^0x01 : tmp_extruder);
+        SERIAL_PROTOCOLPGM(" T:");
+        SERIAL_PROTOCOL_F(degHotend(index), 1);
+        SERIAL_PROTOCOLPGM(" /");
+        SERIAL_PROTOCOL_F(degTargetHotend(index), 1);
+      #else
+        SERIAL_PROTOCOLPGM(" T:");
+        SERIAL_PROTOCOL_F(degHotend(tmp_extruder), 1);
+        SERIAL_PROTOCOLPGM(" /");
+        SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder), 1);
+      #endif
     #endif
     #if (TEMP_SENSOR_BED != 0)
       SERIAL_PROTOCOLPGM(" B:");
@@ -920,12 +921,13 @@ static void homeaxis(int axis) {
     #endif
     #if EXTRUDERS > 1
       for (int8_t e = 0; e < EXTRUDERS; ++e) {
+        index = (swapExtruders() ? e^0x01 : e);
         SERIAL_PROTOCOLPGM(" T");
-        SERIAL_PROTOCOL(e);
+        SERIAL_PROTOCOL(index);
         SERIAL_PROTOCOLCHAR(':');
-        SERIAL_PROTOCOL_F(degHotend(e), 1);
+        SERIAL_PROTOCOL_F(degHotend(index), 1);
         SERIAL_PROTOCOLPGM(" /");
-        SERIAL_PROTOCOL_F(degTargetHotend(e), 1);
+        SERIAL_PROTOCOL_F(degTargetHotend(index), 1);
       }
     #endif
     #if (TEMP_SENSOR_BED != 0)
@@ -1008,16 +1010,10 @@ void process_commands()
       codenum += millis();  // keep track of when we started waiting
       previous_millis_cmd = millis();
       printing_state = PRINT_STATE_DWELL;
-      unsigned long m;
-      do {
-        m = millis();
-        idle();
-        if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
-        {
-          lastSerialCommandTime = m;
-        }
+      while(millis() < codenum )
+      {
+          idle();
       }
-      while(m < codenum );
 
       break;
       #ifdef FWRETRACT
@@ -1497,7 +1493,6 @@ void process_commands()
 
       /* See if we are heating up or cooling down */
       bool target_direction = isHeatingHotend(tmp_extruder); // true if heating, false if cooling
-      unsigned long m;
 
       #ifdef TEMP_RESIDENCY_TIME
         long residencyStart;
@@ -1511,8 +1506,7 @@ void process_commands()
         while ( target_direction ? (isHeatingHotend(tmp_extruder)) : (isCoolingHotend(tmp_extruder)&&(CooldownNoWait==false)) )
         {
       #endif //TEMP_RESIDENCY_TIME
-          m = millis();
-          if( (m - codenum) > 1000UL )
+          if( (millis() - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
             #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
               print_heaterstates();
@@ -1531,11 +1525,7 @@ void process_commands()
             #else
               SERIAL_EOL;
             #endif
-            codenum = m;
-          }
-          if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
-          {
-            lastSerialCommandTime = m;
+            codenum = millis();
           }
           idle();
         #ifdef TEMP_RESIDENCY_TIME
@@ -1587,10 +1577,6 @@ void process_commands()
           {
               // print aborted
               break;
-          }
-          else if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
-          {
-            lastSerialCommandTime = m;
           }
         }
         LCD_MESSAGEPGM(MSG_BED_DONE);
@@ -2359,7 +2345,8 @@ void process_commands()
     #if EXTRUDERS > 1
         last_extruder = 0xFF;
     #endif
-        while(card.pause){
+        while(card.pause)
+        {
           idle();
         }
 
@@ -2495,10 +2482,10 @@ void process_commands()
           if (code_seen('X')) {
             x = code_value_long();
             if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_draw_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+            if (code_seen('S')) lcd_lib_draw_string(x, y, strchr_pointer + 1);
           } else {
             if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_draw_string_center(y,&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+            if (code_seen('S')) lcd_lib_draw_string_center(y, strchr_pointer + 1);
           }
         }
         break;
@@ -2510,10 +2497,10 @@ void process_commands()
           if (code_seen('X')) {
             x = code_value_long();
             if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_clear_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+            if (code_seen('S')) lcd_lib_clear_string(x, y, strchr_pointer + 1);
           } else {
             if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_clear_string_center(y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+            if (code_seen('S')) lcd_lib_clear_string_center(y, strchr_pointer + 1);
           }
         }
         break;
@@ -2908,12 +2895,16 @@ void controllerFan()
 /**
  * Standard idle routine keeps the machine alive
  */
-void idle()
+void idle(bool bCheckSerial)
 {
     manage_heater();
     manage_inactivity();
     lcd_update();
     lifetime_stats_tick();
+    if (bCheckSerial && (MYSERIAL.available() > 0))
+    {
+        lastSerialCommandTime = millis();
+    }
 }
 
 void manage_inactivity()

@@ -142,7 +142,13 @@ void lcd_update()
     }
     else if (m - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT)
     {
-        lcd_usbprinting();
+        if (!(sleep_state & SLEEP_SERIAL_SCREEN))
+        {
+            // show printing screen during incoming serial communication
+            menu.add_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)), false);
+            sleep_state |= SLEEP_SERIAL_SCREEN;
+        }
+        menu.processEvents();
 //        if (!serialScreenShown)
 //        {
 //            lcd_lib_clear();
@@ -155,6 +161,12 @@ void lcd_update()
     }
     else
     {
+        if (sleep_state & SLEEP_SERIAL_SCREEN)
+        {
+            // end of serial communication
+            sleep_state &= ~SLEEP_SERIAL_SCREEN;
+            menu.removeMenu(lcd_menu_printing_tg);
+        }
         // serialScreenShown = false;
         menu.processEvents();
         if (postMenuCheck) postMenuCheck();

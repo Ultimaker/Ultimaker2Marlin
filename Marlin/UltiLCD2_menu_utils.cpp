@@ -141,6 +141,36 @@ void LCDMenu::return_to_main(bool beep)
     LED_NORMAL
 }
 
+void LCDMenu::removeMenu(menuFunc_t func)
+{
+    if (currentIndex>0)
+    {
+        reset_submenu();
+        while (currentIndex>0)
+        {
+            // post processing
+            if (menuStack[currentIndex].postMenuFunc)
+            {
+                menuStack[currentIndex].postMenuFunc();
+            }
+            // switch back to previous menu
+            --currentIndex;
+            // abort loop if the requested menu is removed
+            if (menuStack[currentIndex+1].processMenuFunc == func)
+            {
+                break;
+            }
+        }
+        lastEncoderPos = lcd_lib_encoder_pos = menuStack[currentIndex].encoderPos;
+        lcd_lib_button_pressed = false;
+//        if (menuStack[currentIndex].initMenuFunc)
+//        {
+//            menuStack[currentIndex].initMenuFunc();
+//        }
+    }
+    LED_NORMAL
+}
+
 // --------------------------------------------------------------------------
 // submenu processing
 // --------------------------------------------------------------------------

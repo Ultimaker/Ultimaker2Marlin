@@ -60,12 +60,13 @@
 #define UI_BEEP_OFF      64
 
 // SLEEP STATE
-#define SLEEP_LED_DIMMED  1
-#define SLEEP_LED_OFF     2
-#define SLEEP_LCD_DIMMED  4
-#define SLEEP_COOLING     8
+#define SLEEP_LED_DIMMED     1
+#define SLEEP_LED_OFF        2
+#define SLEEP_LCD_DIMMED     4
+#define SLEEP_COOLING        8
+#define SLEEP_SERIAL_SCREEN 16
 
-#define SLEEP_UPDATE_LED  128
+#define SLEEP_UPDATE_LED   128
 
 // control flags
 #define FLAG_PID_NOZZLE      1
