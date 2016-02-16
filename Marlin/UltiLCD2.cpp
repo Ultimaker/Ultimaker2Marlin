@@ -135,8 +135,8 @@ void lcd_update()
 		default:
 			strcat_P(buffer, PSTR("support"));
         }
-        lcd_lib_draw_stringP(1, 40, PSTR("Go to:"));
-        lcd_lib_draw_string(1, 50, buffer);
+        lcd_lib_draw_string_centerP(40, PSTR("Go to:"));
+        lcd_lib_draw_string_center(50, buffer);
         LED_GLOW_ERROR
         lcd_lib_update_screen();
     }
