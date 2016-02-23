@@ -613,16 +613,15 @@ static void lcd_menu_print_error_sd()
     lcd_info_screen(lcd_menu_main, NULL, PSTR("RETURN TO MAIN"));
 
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
-    lcd_lib_draw_string_centerP(20, PSTR("reading"));
-    lcd_lib_draw_string_centerP(30, PSTR("SD-card!"));
+    lcd_lib_draw_string_centerP(20, PSTR("reading SD-card!"));
+    lcd_lib_draw_string_centerP(30, PSTR("Go to:"));
+    lcd_lib_draw_string_centerP(40, PSTR("ultimaker.com/ER08"));
     /*
     char buffer[12];
     strcpy_P(buffer, PSTR("Code:"));
     int_to_string(card.errorCode(), buffer+5);
     lcd_lib_draw_string_center(40, buffer);
     */
-    lcd_lib_draw_stringP(1, 40, PSTR("See:"));
-    lcd_lib_draw_stringP(1, 50, PSTR("ultimaker.com/ER08"));
 
     lcd_lib_update_screen();
 }
