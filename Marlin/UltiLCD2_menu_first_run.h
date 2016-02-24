@@ -3,7 +3,7 @@
 
 #define EEPROM_FIRST_RUN_DONE_OFFSET 0x400
 #define IS_FIRST_RUN_DONE() ((eeprom_read_byte((const uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET) == 'U') && add_homeing[2] != 0.0)
-#define SET_FIRST_RUN_DONE() do { eeprom_write_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 'U'); } while(0)
+#define SET_FIRST_RUN_DONE() do { eeprom_update_byte((uint8_t*)EEPROM_FIRST_RUN_DONE_OFFSET, 'U'); } while(0)
 
 void lcd_menu_first_run_init();
 void lcd_menu_first_run_start_bed_leveling();

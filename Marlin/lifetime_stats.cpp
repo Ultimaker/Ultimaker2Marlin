@@ -118,11 +118,11 @@ static void load_lifetime_stats()
 
 static void save_lifetime_stats()
 {
-    eeprom_write_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 0), LIFETIME_MAGIC);
-    eeprom_write_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 4), lifetime_minutes);
-    eeprom_write_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 8), lifetime_print_minutes);
-    eeprom_write_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 12), lifetime_print_centimeters);
-    eeprom_write_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 16), triptime_minutes);
-    eeprom_write_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 20), triptime_print_minutes);
-    eeprom_write_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 24), triptime_print_centimeters);
+    eeprom_update_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 0), LIFETIME_MAGIC);
+    eeprom_update_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 4), lifetime_minutes);
+    eeprom_update_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 8), lifetime_print_minutes);
+    eeprom_update_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 12), lifetime_print_centimeters);
+    eeprom_update_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 16), triptime_minutes);
+    eeprom_update_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 20), triptime_print_minutes);
+    eeprom_update_dword((uint32_t*)(LIFETIME_EEPROM_OFFSET + 24), triptime_print_centimeters);
 }
