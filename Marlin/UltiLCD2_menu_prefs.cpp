@@ -958,23 +958,41 @@ static void lcd_store_motorcurrent()
 
 static void lcd_preset_current_xy()
 {
-    lcd_tune_value(motor_current_setting[0], 0, 1500);
+    if (lcd_tune_value(motor_current_setting[0], 0, 1500))
+    {
+        digipot_current(0, motor_current_setting[0]);
+    }
 }
 
 static void lcd_preset_current_z()
 {
-    lcd_tune_value(motor_current_setting[1], 0, 1500);
+    if (lcd_tune_value(motor_current_setting[1], 0, 1500))
+    {
+        digipot_current(1, motor_current_setting[1]);
+    }
 }
 
 static void lcd_preset_current_e()
 {
-    lcd_tune_value(motor_current_setting[2], 0, 1500);
+    if (lcd_tune_value(motor_current_setting[2], 0, 1500))
+    {
+        if (!active_extruder)
+        {
+            digipot_current(2, motor_current_setting[2]);
+        }
+    }
 }
 
 #if (EXTRUDERS > 1) && defined(MOTOR_CURRENT_PWM_E_PIN) && (MOTOR_CURRENT_PWM_E_PIN > -1)
 static void lcd_preset_current_e2()
 {
-    lcd_tune_value(motor_current_e2, 0, 1500);
+    if (lcd_tune_value(motor_current_e2, 0, 1500))
+    {
+        if (active_extruder)
+        {
+            digipot_current(2, motor_current_e2);
+        }
+    }
 }
 #endif // EXTRUDERS
 

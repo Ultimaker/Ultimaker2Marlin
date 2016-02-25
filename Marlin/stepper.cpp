@@ -1143,16 +1143,15 @@ void digipot_init() //Initialize Digipot Motor Current
     SPI.begin();
     pinMode(DIGIPOTSS_PIN, OUTPUT);
     for(int i=0;i<=4;i++)
-      //digitalPotWrite(digipot_ch[i], digipot_motor_current[i]);
       digipot_current(i,digipot_motor_current[i]);
   #endif
   #if MOTOR_CURRENT_PWM_XY_PIN > -1
     pinMode(MOTOR_CURRENT_PWM_XY_PIN, OUTPUT);
     pinMode(MOTOR_CURRENT_PWM_Z_PIN, OUTPUT);
     pinMode(MOTOR_CURRENT_PWM_E_PIN, OUTPUT);
-    digipot_current(0, motor_current_setting[0]);
-    digipot_current(1, motor_current_setting[1]);
-    digipot_current(2, motor_current_setting[2]);
+    for (uint8_t i=0; i<3; ++i)
+        digipot_current(i, motor_current_setting[i]);
+
     //Set timer5 to 31khz so the PWM of the motor power is as constant as possible.
     TCCR5B = (TCCR5B & ~(_BV(CS50) | _BV(CS51) | _BV(CS52))) | _BV(CS50);
   #endif

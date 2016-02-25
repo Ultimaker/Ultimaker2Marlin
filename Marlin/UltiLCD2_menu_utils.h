@@ -157,12 +157,12 @@ FORCE_INLINE void lcd_select_first_submenu() { menu.set_selection(0); }
 FORCE_INLINE void lcd_reset_submenu() { menu.reset_submenu(); }
 
 bool lcd_tune_byte(uint8_t &value, uint8_t _min, uint8_t _max);
-void lcd_tune_speed(float &value, float _min, float _max);
+bool lcd_tune_speed(float &value, float _min, float _max);
 
-void lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max);
-void lcd_tune_value(int &value, int _min, int _max);
+bool lcd_tune_value(uint8_t &value, uint8_t _min, uint8_t _max);
+bool lcd_tune_value(int &value, int _min, int _max);
 bool lcd_tune_value(float &value, float _min, float _max, float _step);
-void lcd_tune_value(uint16_t &value, uint16_t _min, uint16_t _max);
+bool lcd_tune_value(uint16_t &value, uint16_t _min, uint16_t _max);
 
 char* float_to_string1(float f, char* temp_buffer, const char* p_postfix);
 char* int_to_time_min(unsigned long i, char* temp_buffer);
