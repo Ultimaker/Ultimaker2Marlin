@@ -355,7 +355,7 @@ void PID_autotune(float temp, int extruder, int ncycles, autotuneFunc_t pCallbac
 void updatePID()
 {
 #ifdef PIDTEMP
-  for(int e = 0; e < EXTRUDERS; e++) {
+  for(int e = 0; e < EXTRUDERS; ++e) {
      temp_iState_max[e] = PID_INTEGRAL_DRIVE_MAX / Ki;
   }
 #endif
@@ -367,7 +367,8 @@ void updatePID()
 #endif
 }
 
-int getHeaterPower(int heater) {
+int getHeaterPower(int heater)
+{
 	if (heater<0)
 		return soft_pwm_bed;
   return soft_pwm[heater];
@@ -797,7 +798,7 @@ static void updateTemperaturesFromRawValues()
 	current_temperature_raw[0] = read_max6675();
 #endif
 
-    for(uint8_t e=0;e<EXTRUDERS;e++)
+    for(uint8_t e=0;e<EXTRUDERS;++e)
     {
         current_temperature[e] = analog2temp(current_temperature_raw[e], e);
     }

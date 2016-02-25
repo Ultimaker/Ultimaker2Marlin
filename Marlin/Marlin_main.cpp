@@ -900,18 +900,10 @@ static void homeaxis(int axis) {
   void print_heaterstates()
   {
     #if (TEMP_SENSOR_0 != 0) || ENABLED(HEATER_0_USES_MAX6675)
-      #if EXTRUDERS > 1
-        int8_t index = (swapExtruders() ? tmp_extruder^0x01 : tmp_extruder);
-        SERIAL_PROTOCOLPGM(" T:");
-        SERIAL_PROTOCOL_F(degHotend(index), 1);
-        SERIAL_PROTOCOLPGM(" /");
-        SERIAL_PROTOCOL_F(degTargetHotend(index), 1);
-      #else
-        SERIAL_PROTOCOLPGM(" T:");
-        SERIAL_PROTOCOL_F(degHotend(tmp_extruder), 1);
-        SERIAL_PROTOCOLPGM(" /");
-        SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder), 1);
-      #endif
+      SERIAL_PROTOCOLPGM(" T:");
+      SERIAL_PROTOCOL_F(degHotend(tmp_extruder), 1);
+      SERIAL_PROTOCOLPGM(" /");
+      SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder), 1);
     #endif
     #if (TEMP_SENSOR_BED != 0)
       SERIAL_PROTOCOLPGM(" B:");
@@ -920,10 +912,11 @@ static void homeaxis(int axis) {
       SERIAL_PROTOCOL_F(degTargetBed(), 1);
     #endif
     #if EXTRUDERS > 1
+      int8_t index;
       for (int8_t e = 0; e < EXTRUDERS; ++e) {
         index = (swapExtruders() ? e^0x01 : e);
         SERIAL_PROTOCOLPGM(" T");
-        SERIAL_PROTOCOL(index);
+        SERIAL_PROTOCOL(e);
         SERIAL_PROTOCOLCHAR(':');
         SERIAL_PROTOCOL_F(degHotend(index), 1);
         SERIAL_PROTOCOLPGM(" /");
@@ -938,10 +931,11 @@ static void homeaxis(int axis) {
     SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
     #if EXTRUDERS > 1
       for (int8_t e = 0; e < EXTRUDERS; ++e) {
+        index = (swapExtruders() ? e^0x01 : e);
         SERIAL_PROTOCOLPGM(" @");
         SERIAL_PROTOCOL(e);
         SERIAL_PROTOCOLCHAR(':');
-        SERIAL_PROTOCOL(getHeaterPower(e));
+        SERIAL_PROTOCOL(getHeaterPower(index));
       }
     #endif
   }
@@ -950,7 +944,8 @@ static void homeaxis(int axis) {
 /**
  * M105: Read hot end and bed temperature
  */
-inline void gcode_M105() {
+inline void gcode_M105()
+{
   if (setTargetedHotend(105)) return;
 
   #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
@@ -1560,6 +1555,16 @@ void process_commands()
 
         codenum = millis();
         unsigned long m;
+
+        #if EXTRUDERS > 1
+        // set targeted hotend for serial output
+        tmp_extruder = active_extruder;
+        if (swapExtruders() && (tmp_extruder < 2))
+        {
+          tmp_extruder ^= 0x01;
+        }
+        #endif // EXTRUDERS
+
         while(current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
         {
           m = millis();
@@ -3079,9 +3084,10 @@ void setPwmFrequency(uint8_t pin, int val)
 }
 #endif //FAST_PWM_FAN
 
-bool setTargetedHotend(int code){
-  tmp_extruder = active_extruder;
-  if(code_seen('T')) {
+bool setTargetedHotend(int code)
+{
+  if(code_seen('T'))
+  {
     tmp_extruder = code_value();
     #if EXTRUDERS > 1
     if (swapExtruders() && (tmp_extruder < 2))
@@ -3108,6 +3114,10 @@ bool setTargetedHotend(int code){
       SERIAL_ECHOLN(tmp_extruder);
       return true;
     }
+  }
+  else
+  {
+    tmp_extruder = active_extruder;
   }
   return false;
 }

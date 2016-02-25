@@ -144,7 +144,7 @@ void lcd_menu_change_material_preheat()
             // temp = target;
             return;
         }
-        else
+        else if (temp > target - 3 && temp < target + 3)
         {
             // show countdown
             strcpy_P(buffer, PSTR("<"));

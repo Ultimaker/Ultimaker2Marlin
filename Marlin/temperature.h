@@ -92,7 +92,6 @@ FORCE_INLINE float degTargetHotend(uint8_t extruder) {
   return target_temperature[extruder];
 }
 
-
 FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
   target_temperature[extruder] = celsius;
   if (target_temperature[extruder] >= HEATER_0_MAXTEMP - 15)
