@@ -271,6 +271,8 @@ void serial_echopair_P(const char *s_P, double v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
 void serial_echopair_P(const char *s_P, unsigned long v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
+void serial_action_P(const char *s_P)
+    { serialprintPGM(PSTR("//action:")); serialprintPGM(s_P); SERIAL_EOL; }
 
 extern "C"{
   extern unsigned int __bss_end;
@@ -996,6 +998,7 @@ void process_commands()
       if (printing_state == PRINT_STATE_RECOVER)
         break;
 
+      serial_action_P(PSTR("pause"));
       LCD_MESSAGEPGM(MSG_DWELL);
       codenum = 0;
       if(code_seen('P')) codenum = code_value(); // milliseconds to wait
@@ -1009,6 +1012,7 @@ void process_commands()
       {
           idle();
       }
+      serial_action_P(PSTR("resume"));
 
       break;
       #ifdef FWRETRACT
@@ -1256,6 +1260,9 @@ void process_commands()
 
       printing_state = PRINT_STATE_WAIT_USER;
       LCD_MESSAGEPGM(MSG_USERWAIT);
+
+      serial_action_P(PSTR("pause"));
+
       codenum = 0;
       if(code_seen('P')) codenum = code_value(); // milliseconds to wait
       if(code_seen('S')) codenum = code_value() * 1000; // seconds to wait
@@ -1272,6 +1279,7 @@ void process_commands()
           idle();
         }
       }
+      serial_action_P(PSTR("resume"));
       LCD_MESSAGEPGM(MSG_RESUMING);
     }
     break;
@@ -1283,11 +1291,13 @@ void process_commands()
         if (printing_state == PRINT_STATE_RECOVER)
           break;
 
+        serial_action_P(PSTR("pause"));
         card.pause = true;
         while(card.pause)
         {
           idle();
         }
+        serial_action_P(PSTR("resume"));
     }
     break;
 #endif
@@ -2298,6 +2308,8 @@ void process_commands()
         if (printing_state == PRINT_STATE_RECOVER)
           break;
 
+        serial_action_P(PSTR("pause"));
+
         st_synchronize();
         float target[4];
         float lastpos[4];
@@ -2372,6 +2384,7 @@ void process_commands()
             current_position[Z_AXIS] = lastpos[Z_AXIS];
             current_position[E_AXIS] = lastpos[E_AXIS];
         }
+        serial_action_P(PSTR("resume"));
     }
     break;
 
