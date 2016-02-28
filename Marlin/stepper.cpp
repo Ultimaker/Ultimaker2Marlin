@@ -1143,6 +1143,7 @@ void digipot_init() //Initialize Digipot Motor Current
     SPI.begin();
     pinMode(DIGIPOTSS_PIN, OUTPUT);
     for(int i=0;i<=4;i++)
+      //digitalPotWrite(digipot_ch[i], digipot_motor_current[i]);
       digipot_current(i,digipot_motor_current[i]);
   #endif
   #if MOTOR_CURRENT_PWM_XY_PIN > -1

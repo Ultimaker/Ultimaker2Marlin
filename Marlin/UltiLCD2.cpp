@@ -159,6 +159,10 @@ void lcd_update()
 //            lastSerialCommandTime = m;
 //        lcd_lib_update_screen();
     }
+    else if ((sleep_state & SLEEP_SERIAL_SCREEN) && printing_state != PRINT_STATE_NORMAL)
+    {
+        menu.processEvents();
+    }
     else
     {
         if (sleep_state & SLEEP_SERIAL_SCREEN)
@@ -172,7 +176,7 @@ void lcd_update()
         if (postMenuCheck) postMenuCheck();
     }
     // refresh the displayed temperatures
-    for(uint8_t e=0;e<EXTRUDERS;e++)
+    for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
         dsp_temperature[e] = (ALPHA * current_temperature[e]) + (ONE_MINUS_ALPHA * dsp_temperature[e]);
     }

@@ -798,12 +798,17 @@ static void lcd_material_settings_callback(uint8_t nr, uint8_t offsetY, uint8_t 
         strcpy_P(buffer, PSTR("Fan"));
     else if (nr == 4 + BED_MENU_OFFSET)
         strcpy_P(buffer, PSTR("Flow %"));
+#ifdef USE_CHANGE_TEMPERATURE
     else if (nr == 5 + BED_MENU_OFFSET)
         strcpy_P(buffer, PSTR("Change temperature"));
     else if (nr == 6 + BED_MENU_OFFSET)
         strcpy_P(buffer, PSTR("Change wait time"));
     else if (nr == 7 + BED_MENU_OFFSET)
         strcpy_P(buffer, PSTR("Store as preset"));
+#else
+    else if (nr == 5 + BED_MENU_OFFSET)
+        strcpy_P(buffer, PSTR("Store as preset"));
+#endif
     else
         strcpy_P(buffer, PSTR("???"));
 

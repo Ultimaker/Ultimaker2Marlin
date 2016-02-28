@@ -97,8 +97,10 @@ FORCE_INLINE void serialprintPGM(const char *str)
 }
 
 
-void get_command();
-void process_commands();
+// void get_command();
+void process_command(const char *strCmd);
+void process_command_P(const char *strCmd);
+
 void manage_inactivity();
 void idle(bool bCheckSerial = true); // the standard idle routine calls manage_inactivity()
 
@@ -157,6 +159,7 @@ void idle(bool bCheckSerial = true); // the standard idle routine calls manage_i
 
 #if EXTRUDERS > 1
 extern unsigned char last_extruder;
+extern float extruder_offset[2][EXTRUDERS];
 #endif // EXTRUDERS
 
 enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
@@ -165,11 +168,9 @@ enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
 void FlushSerialRequestResend();
 void ClearToSend();
 
-void get_coordinates();
 #ifdef DELTA
 void calculate_delta(float cartesian[3]);
 #endif
-void prepare_move();
 void kill();
 #define STOP_REASON_MAXTEMP              1
 #define STOP_REASON_MINTEMP              2
@@ -190,7 +191,6 @@ void enquecommand(const char *cmd); //put an ascii command at the end of the cur
 void enquecommand_P(const char *cmd); //put an ascii command at the end of the current buffer, read from flash
 bool is_command_queued();
 uint8_t commands_queued();
-void prepare_arc_move(char isclockwise);
 void clamp_to_software_endstops(float target[3]);
 
 #ifdef FAST_PWM_FAN
@@ -203,7 +203,7 @@ void setPwmFrequency(uint8_t pin, int val);
 #endif //CRITICAL_SECTION_START
 
 extern float homing_feedrate[];
-extern bool axis_relative_modes[];
+extern uint8_t axis_relative_state;
 extern int feedmultiply;
 extern int extrudemultiply[EXTRUDERS]; // Sets extrude multiply factor (in percent)
 extern float current_position[NUM_AXIS] ;

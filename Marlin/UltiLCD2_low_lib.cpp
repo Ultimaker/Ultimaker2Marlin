@@ -198,7 +198,7 @@ void lcd_lib_init()
 uint16_t lcd_update_pos = 0;
 ISR(TWI_vect)
 {
-    if (lcd_update_pos >= LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8)
+    if (lcd_update_pos == LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8)
     {
         i2c_end();
     }
