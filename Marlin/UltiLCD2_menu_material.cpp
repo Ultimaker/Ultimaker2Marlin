@@ -690,12 +690,17 @@ static char* lcd_material_settings_callback(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Fan"));
     else if (nr == 4 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Flow %"));
+#ifdef USE_CHANGE_TEMPERATURE
     else if (nr == 5 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Change temperature"));
     else if (nr == 6 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Change wait time"));
     else if (nr == 7 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Store as preset"));
+#else
+    else if (nr == 5 + BED_MENU_OFFSET)
+        strcpy_P(card.longFilename, PSTR("Store as preset"));
+#endif
     else
         strcpy_P(card.longFilename, PSTR("???"));
     return card.longFilename;
