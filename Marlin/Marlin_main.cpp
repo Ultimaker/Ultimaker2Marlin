@@ -2430,6 +2430,16 @@ void process_commands()
             return;
         }
         break;
+    case 10011://M10011 - Show dialog on LCD screen with choices A and B
+        {
+        ///uint8_t a = 0, b = 0;
+        //if (code_seen('A')) a = code_value_long();
+        //if (code_seen('B')) b = code_value_long();
+        lcd_question_screen(NULL, NULL, PSTR("EMPTY"), NULL, NULL, NULL);
+//void lcd_question_screen(menuFunc_t optionAMenu, menuFunc_t callbackOnA, const char* AButtonText, menuFunc_t optionBMenu, menuFunc_t callbackOnB, const char* BButtonText)
+        }
+        break;
+
 #endif//ENABLE_ULTILCD2
     }
   }
