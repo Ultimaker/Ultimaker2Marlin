@@ -43,6 +43,10 @@
 #include "language.h"
 #include "pins_arduino.h"
 
+#ifdef ENABLE_ULTILCD2
+#include "UltiLCD2_hi_lib.h"
+#endif
+
 #if NUM_SERVOS > 0
 #include "Servo.h"
 #endif
@@ -149,6 +153,15 @@
 // M923 - Select file and start printing directly (can be used from other SD file)
 // M928 - Start SD logging (M928 filename.g) - ended by M29
 // M999 - Restart after being stopped by error
+// M10001 - Draw text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
+// M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
+// M10003 - Draw rectangle on LCD, M10003 X1 Y1 W10 H10
+// M10004 - Draw filled rectangle on LCD, M10004 X1 Y1 W10 H10
+// M10005 - Draw shaded rectangle on LCD, M10005 X1 Y1 W10 H10
+// M10006 - Draw vertical line on LCD at X10,Y10 with height 40, M10006 X10 Y10 H40
+// M10007 - Draw horizontal line on LCD at X10,Y10 with width 80, M10007 X10 Y10 W80
+// M10009 - Draw progress bar, e.g. 90% is M10009 P90
+// M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
 
 //Stepper Movement Variables
 
@@ -2350,7 +2363,17 @@ void process_commands()
           }
         }
         break;
-    case 10003://M10003 - Draw square on LCD, M10003 X1 Y1 W10 H10
+    case 10003://M10003 - Draw rectangle on LCD, M10003 X1 Y1 W10 H10
+        {
+        uint8_t x = 0, y = 0, w = 1, h = 1;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('W')) w = code_value_long();
+        if (code_seen('H')) h = code_value_long();
+        lcd_lib_draw_box(x, y, x + w, y + h);
+        }
+        break;
+    case 10004://M10004 - Draw filled rectangle on LCD, M10004 X1 Y1 W10 H10
         {
         uint8_t x = 0, y = 0, w = 1, h = 1;
         if (code_seen('X')) x = code_value_long();
@@ -2360,7 +2383,7 @@ void process_commands()
         lcd_lib_set(x, y, x + w, y + h);
         }
         break;
-    case 10004://M10004 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
+    case 10005://M10005 - Draw shaded rectangle on LCD, M10005 X1 Y1 W10 H10
         {
         uint8_t x = 0, y = 0, w = 1, h = 1;
         if (code_seen('X')) x = code_value_long();
@@ -2370,14 +2393,29 @@ void process_commands()
         lcd_lib_draw_shade(x, y, x + w, y + h);
         }
         break;
-    case 10005://M10005 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
+    case 10006://M10006 - Draw vertical line on LCD at X10,Y10 with height 40, M10006 X10 Y10 H40
         {
-        uint8_t x = 0, y = 0, w = 1, h = 1;
+        uint8_t x = 0, y = 0, h = 0;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('H')) h = code_value_long();
+        lcd_lib_draw_vline(x, y, y + h);
+        }
+        break;
+    case 10007://M10007 - Draw horizontal line on LCD at X10,Y10 with width 80, M10007 X10 Y10 W80
+        {
+        uint8_t x = 0, y = 0, w = 0;
         if (code_seen('X')) x = code_value_long();
         if (code_seen('Y')) y = code_value_long();
         if (code_seen('W')) w = code_value_long();
-        if (code_seen('H')) h = code_value_long();
-        lcd_lib_draw_shade(x, y, x + w, y + h);
+        lcd_lib_draw_hline(x, x + w, y);//lcd_lib_draw_hline(x, x+w, y)
+        }
+        break;
+    case 10009://M10009 - Draw progress bar, e.g. 90% is M10009 P90
+        {
+        uint8_t progress = 0;
+        if (code_seen('P')) progress = code_value_long();
+        lcd_progressbar(progress * 1.2);
         }
         break;
     case 10010://M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
