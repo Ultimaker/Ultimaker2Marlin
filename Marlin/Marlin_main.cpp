@@ -2417,9 +2417,9 @@ void process_commands()
         break;
     case 10009://M10009 - Draw progress bar, e.g. 90% is M10009 P90
         {
-        uint8_t progress = 0;
+        uint16_t progress = 0;
         if (code_seen('P')) progress = code_value_long();
-        lcd_progressbar(progress * 1.2);
+        lcd_progressbar(progress * 125 / 100);
         }
         break;
     case 10010://M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
