@@ -2405,6 +2405,7 @@ void process_commands()
           if (code_seen('Y')) y = code_value_long();
           if (code_seen('S')) hex_data = strchr_pointer + 1;
           if (code_seen('I')) hex_data = strchr_pointer + 1;
+          if(strlen(hex_data)>44) break;
           if(hex2bin(bin_string,hex_data,strlen(hex_data))) {
             bin_string[strlen(hex_data)/2] = '\0';
             if (code_seen('S')) lcd_lib_draw_string(x,y, bin_string);
