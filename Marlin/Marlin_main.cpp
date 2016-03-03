@@ -158,8 +158,6 @@
 // M10003 - Draw rectangle on LCD, M10003 X1 Y1 W10 H10
 // M10004 - Draw filled rectangle on LCD, M10004 X1 Y1 W10 H10
 // M10005 - Draw shaded rectangle on LCD, M10005 X1 Y1 W10 H10
-// M10006 - Draw vertical line on LCD at X10,Y10 with height 40, M10006 X10 Y10 H40
-// M10007 - Draw horizontal line on LCD at X10,Y10 with width 80, M10007 X10 Y10 W80
 // M10009 - Draw progress bar, e.g. 90% is M10009 P90
 // M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
 
@@ -2393,22 +2391,7 @@ void process_commands()
         lcd_lib_draw_shade(x, y, x + w, y + h);
         }
         break;
-    case 10006://M10006 - Draw vertical line on LCD at X10,Y10 with height 40, M10006 X10 Y10 H40
         {
-        uint8_t x = 0, y = 0, h = 0;
-        if (code_seen('X')) x = code_value_long();
-        if (code_seen('Y')) y = code_value_long();
-        if (code_seen('H')) h = code_value_long();
-        lcd_lib_draw_vline(x, y, y + h);
-        }
-        break;
-    case 10007://M10007 - Draw horizontal line on LCD at X10,Y10 with width 80, M10007 X10 Y10 W80
-        {
-        uint8_t x = 0, y = 0, w = 0;
-        if (code_seen('X')) x = code_value_long();
-        if (code_seen('Y')) y = code_value_long();
-        if (code_seen('W')) w = code_value_long();
-        lcd_lib_draw_hline(x, x + w, y);//lcd_lib_draw_hline(x, x+w, y)
         }
         break;
     case 10009://M10009 - Draw progress bar, e.g. 90% is M10009 P90
