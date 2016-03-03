@@ -2398,15 +2398,17 @@ void process_commands()
         {
           uint8_t x = 0, y = 0;
           char* hex_data = NULL;
-          char bin_string[24];//FIXME: 24 chars on display?
+          char bin_string[22];//21 chars plus null char
+          char* ptr = strrchr(cmdbuffer[bufindr], '*');
+          if (ptr) *ptr = '\0';
           if (code_seen('X')) x = code_value_long();
           if (code_seen('Y')) y = code_value_long();
-          if (code_seen('S')) hex_data = &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1];
-          if (code_seen('I')) hex_data = &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1];
+          if (code_seen('S')) hex_data = strchr_pointer + 1;
+          if (code_seen('I')) hex_data = strchr_pointer + 1;
           if(hex2bin(bin_string,hex_data,strlen(hex_data))) {
             bin_string[strlen(hex_data)/2] = '\0';
             if (code_seen('S')) lcd_lib_draw_string(x,y, bin_string);
-            if (code_seen('I')) lcd_lib_clear_string(x,y, bin_string);
+            else lcd_lib_clear_string(x,y, bin_string);
           }
         }
         break;
