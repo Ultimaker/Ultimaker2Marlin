@@ -158,6 +158,8 @@
 // M10003 - Draw rectangle on LCD, M10003 X1 Y1 W10 H10
 // M10004 - Draw filled rectangle on LCD, M10004 X1 Y1 W10 H10
 // M10005 - Draw shaded rectangle on LCD, M10005 X1 Y1 W10 H10
+// M10008 - Display string at X,Y based on hex encoded chars (S), use I instead of S for inverted text, 
+//          e.g. M10008 X10 Y10 S48656c6c6f2c20776f726c6421 displays "Hello, world!"
 // M10009 - Draw progress bar, e.g. 90% is M10009 P90
 // M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
 
@@ -298,6 +300,15 @@ void serial_echopair_P(const char *s_P, double v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
 void serial_echopair_P(const char *s_P, unsigned long v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
+
+/**
+ * @brief Fills binary array from hex string.
+ * @param[out] bin pointer to buffer to write resulting binary data to.
+ * @param[in] hex pointer to string to be converted.
+ * @param[in] count Number of bytes the bin array is going to have.
+ * @returns Nr of bytes converted, resulting string length is twice as large.
+ */
+int hex2bin(char* bin, const char* hex, int count);
 
 extern "C"{
   extern unsigned int __bss_end;
@@ -2391,7 +2402,26 @@ void process_commands()
         lcd_lib_draw_shade(x, y, x + w, y + h);
         }
         break;
+    case 10008://M10008 - Display string at X,Y based on hex encoded chars (S), use I instead of S for inverted text, 
+               //         e.g. M10008 X10 Y10 S48656c6c6f2c20776f726c6421 displays "Hello, world!"
         {
+          uint8_t x = 0, y = 0;
+          char* hex_data = NULL;
+          char bin_string[24];//FIXME: 24 chars on display?
+          if (code_seen('X')) x = code_value_long();
+          if (code_seen('Y')) y = code_value_long();
+          if (code_seen('S')) {
+            hex_data = &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1];
+            if(hex2bin(bin_string,hex_data,strlen(hex_data))) {
+              lcd_lib_draw_string(x,y, bin_string);
+            }
+          }
+          if (code_seen('I')) {
+            hex_data = &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1];
+            if(hex2bin(bin_string,hex_data,strlen(hex_data))) {
+              lcd_lib_clear_string(x,y, bin_string);
+            }
+          }
         }
         break;
     case 10009://M10009 - Draw progress bar, e.g. 90% is M10009 P90
@@ -2918,3 +2948,23 @@ bool setTargetedHotend(int code){
   return false;
 }
 
+int8_t hexNibble2Bin(const char nibble)
+{
+    if (nibble >= 'a' && nibble <= 'f')
+        return nibble - ('a' - 10);
+    if (nibble >= 'A' && nibble <= 'F')
+        return nibble - ('A' - 10);
+    if (nibble >= '0' && nibble <= '9')
+        return nibble - '0';
+    return 0;
+}
+
+int hex2bin(char* bin, const char* hex, int count)
+{
+    for (int i = 0; i < count; i++)
+    {
+        *bin = hexNibble2Bin(*hex++) << 4;
+        *bin++ |= hexNibble2Bin(*hex++);
+    }
+    return count;
+}
