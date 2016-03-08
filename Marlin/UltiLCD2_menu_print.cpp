@@ -34,7 +34,7 @@ static void lcd_menu_print_material_warning();
 static void lcd_menu_print_tune_retraction();
 
 static bool primed = false;
-static bool pauseRequested = false;
+//static bool pauseRequested = false;
 
 void lcd_clear_cache()
 {
@@ -98,7 +98,7 @@ void abortPrint()
     stoptime=millis();
     lifetime_stats_print_end();
     card.pause = false;
-    pauseRequested = false;
+//    pauseRequested = false;
     printing_state  = PRINT_STATE_NORMAL;
     if (led_mode == LED_MODE_WHILE_PRINTING)
         analogWrite(LED_PIN, 0);
@@ -704,7 +704,7 @@ void lcd_change_to_menu_change_material_return()
 
 static void lcd_menu_print_printing()
 {
-    if (card.pause || isPauseRequested())
+    if (card.pause)
     {
         menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
         if (!checkFilamentSensor())
@@ -720,7 +720,7 @@ static void lcd_menu_print_printing()
         switch(printing_state)
         {
         default:
-            lcd_lib_draw_string_centerP(20, pauseRequested ? PSTR("Pausing:") : PSTR("Printing:"));
+            lcd_lib_draw_string_centerP(20, PSTR("Printing:"));
             lcd_lib_draw_string_center(30, card.longFilename);
             break;
         case PRINT_STATE_HEATING:
@@ -839,10 +839,10 @@ static void lcd_menu_print_material_warning()
 
 void lcd_menu_print_abort()
 {
-    if (pauseRequested)
-    {
-        lcd_print_pause();
-    }
+//    if (pauseRequested)
+//    {
+//        lcd_print_pause();
+//    }
     LED_GLOW
     lcd_question_screen(lcd_menu_print_ready, userAbortPrint, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
 
@@ -1079,10 +1079,10 @@ void lcd_menu_print_tune_heatup_nozzle1()
 
 void lcd_menu_print_tune()
 {
-    if (pauseRequested)
-    {
-        lcd_print_pause();
-    }
+//    if (pauseRequested)
+//    {
+//        lcd_print_pause();
+//    }
     uint8_t len = 5 + BED_MENU_OFFSET + EXTRUDERS * 2;
     if (ui_mode & UI_MODE_EXPERT)
     {
@@ -1201,7 +1201,7 @@ void lcd_print_pause()
 //        if (movesplanned() > 0 && commands_queued() < BUFSIZE)
 //        {
         card.pause = true;
-        pauseRequested = false;
+//        pauseRequested = false;
         recover_height = current_position[Z_AXIS];
 
         // move z up according to the current height - but minimum to z=70mm (above the gantry height)
@@ -1237,10 +1237,10 @@ void lcd_print_pause()
     }
 }
 
-bool isPauseRequested()
-{
-    return pauseRequested;
-}
+//bool isPauseRequested()
+//{
+//    return pauseRequested;
+//}
 
 void lcd_print_tune()
 {
@@ -1257,7 +1257,7 @@ void lcd_print_abort()
 static void lcd_menu_print_resume_ready()
 {
     menu.return_to_previous();
-    pauseRequested = false;
+//    pauseRequested = false;
     card.pause = false;
     if (LCD_DETAIL_CACHE_MATERIAL(active_extruder))
         primed = true;
@@ -1529,10 +1529,10 @@ static void drawResumeSubmenu(uint8_t nr, uint8_t &flags)
 
 void lcd_menu_print_resume()
 {
-    if (pauseRequested)
-    {
-        lcd_print_pause();
-    }
+//    if (pauseRequested)
+//    {
+//        lcd_print_pause();
+//    }
 //    if (movesplanned())
 //    {
 //        last_user_interaction = millis();

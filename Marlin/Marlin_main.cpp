@@ -230,7 +230,11 @@ static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
 uint8_t axis_relative_state = 0;
 
 static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
-static bool fromsd[BUFSIZE];
+#if BUFSIZE > 8
+static uint16_t serialCmd = 0;
+#else
+static uint8_t serialCmd = 0;
+#endif // BUFSIZE
 static int bufindr = 0;
 static int bufindw = 0;
 static int buflen = 0;
@@ -269,6 +273,8 @@ static bool setTargetedHotend(const char *cmd, int code);
 static void prepare_arc_move(char isclockwise);
 static void prepare_move(const char *cmd);
 static void get_command();
+static void FlushSerialRequestResend();
+static void ClearToSend();
 
 
 void serial_echopair_P(const char *s_P, float v)
@@ -316,11 +322,14 @@ void enquecommand(const char *cmd)
   {
     //this is dangerous if a mixing of serial and this happsens
     strcpy(&(cmdbuffer[bufindw][0]),cmd);
+    // clear serial flag
+    serialCmd &= ~(1 << bufindw);
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("enqueing \"");
     SERIAL_ECHO(cmdbuffer[bufindw]);
     SERIAL_ECHOLNPGM("\"");
-    bufindw = (bufindw + 1)%BUFSIZE;
+    ++bufindw;
+    bufindw %= BUFSIZE;
     ++buflen;
   }
 }
@@ -331,11 +340,14 @@ void enquecommand_P(const char *cmd)
   {
     //this is dangerous if a mixing of serial and this happsens
     strcpy_P(&(cmdbuffer[bufindw][0]),cmd);
+    // clear serial flag
+    serialCmd &= ~(1 << bufindw);
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("enqueing \"");
     SERIAL_ECHO(cmdbuffer[bufindw]);
     SERIAL_ECHOLNPGM("\"");
-    bufindw = (bufindw + 1)%BUFSIZE;
+    ++bufindw;
+    bufindw %= BUFSIZE;
     ++buflen;
   }
 }
@@ -450,10 +462,7 @@ void setup()
   SERIAL_ECHO(freeMemory());
   SERIAL_ECHOPGM(MSG_PLANNER_BUFFER_BYTES);
   SERIAL_ECHOLN((int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
-  for(int8_t i = 0; i < BUFSIZE; i++)
-  {
-    fromsd[i] = false;
-  }
+  serialCmd = 0;
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
@@ -555,7 +564,7 @@ static void get_command()
       }
       cmdbuffer[bufindw][serial_count] = 0; //terminate string
       if(!comment_mode){
-        fromsd[bufindw] = false; //for new command
+        serialCmd |= (1 << bufindw); //set serial flag for new command
         if(code_seen(cmdbuffer[bufindw], 'N'))
         {
           gcode_N = code_value_long();
@@ -719,9 +728,11 @@ static void get_command()
       }
       cmdbuffer[bufindw][serial_count] = 0; //terminate string
 //      if(!comment_mode){
-        fromsd[bufindw] = true;
-        buflen += 1;
-        bufindw = (bufindw + 1)%BUFSIZE;
+        // clear serial flag
+        serialCmd &= ~(1 << bufindw);
+        ++bufindw;
+        bufindw %= BUFSIZE;
+        ++buflen;
 //      }
       comment_mode = false; //for new command
       serial_count = 0; //clear buffer
@@ -2654,7 +2665,11 @@ void process_command(const char *strCmd)
   if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START))
     printing_state = PRINT_STATE_NORMAL;
 
-  ClearToSend();
+  // send acknowledge for serial commands
+  if ((strCmd == cmdbuffer[bufindr]) && (serialCmd & (1 << bufindr)))
+  {
+      ClearToSend();
+  }
 }
 
 void process_command_P(const char *strCmd)
@@ -2664,22 +2679,18 @@ void process_command_P(const char *strCmd)
     process_command(cmd);
 }
 
-void FlushSerialRequestResend()
+static void FlushSerialRequestResend()
 {
   //char cmdbuffer[bufindr][100]="Resend:";
   MYSERIAL.flush();
   SERIAL_PROTOCOLPGM(MSG_RESEND);
   SERIAL_PROTOCOLLN(gcode_LastN + 1);
+  previous_millis_cmd = millis();
   ClearToSend();
 }
 
-void ClearToSend()
+static void ClearToSend()
 {
-  previous_millis_cmd = millis();
-  #ifdef SDSUPPORT
-  if(fromsd[bufindr])
-    return;
-  #endif //SDSUPPORT
   SERIAL_PROTOCOLLNPGM(MSG_OK);
 }
 
@@ -2942,7 +2953,7 @@ void idle(bool bCheckSerial)
     manage_inactivity();
     lcd_update();
     lifetime_stats_tick();
-    if (bCheckSerial && (MYSERIAL.available() > 0))
+    if (buflen && serialCmd)
     {
         lastSerialCommandTime = millis();
     }
@@ -2956,8 +2967,7 @@ void manage_inactivity()
   if(printing_state == PRINT_STATE_RECOVER)
     previous_millis_cmd=millis();
 
-  if( (millis() - previous_millis_cmd) >  max_inactive_time )
-    if(max_inactive_time)
+  if( max_inactive_time && ((millis() - previous_millis_cmd) >  max_inactive_time) )
       kill();
   if(stepper_inactive_time)  {
     if( (millis() - previous_millis_cmd) >  stepper_inactive_time )

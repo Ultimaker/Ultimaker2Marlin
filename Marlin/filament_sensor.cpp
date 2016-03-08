@@ -31,7 +31,7 @@ bool checkFilamentSensor()
         //    - printing is not already paused
         if (card.sdprinting)
         {
-            if (!card.pause && !isPauseRequested())
+            if (!card.pause)
             {
                 lcd_lib_beep();
 
@@ -41,7 +41,7 @@ bool checkFilamentSensor()
         }
         else if (commands_queued())
         {
-            if (!card.pause && !isPauseRequested())
+            if (!card.pause)
             {
                 lcd_lib_beep();
                 enquecommand_P(PSTR("M0"));

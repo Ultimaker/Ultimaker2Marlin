@@ -144,25 +144,17 @@ void lcd_update()
     {
         if (!(sleep_state & SLEEP_SERIAL_SCREEN))
         {
-            // show printing screen during incoming serial communication
+            // show usb printing screen during incoming serial communication
             menu.add_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)), false);
             sleep_state |= SLEEP_SERIAL_SCREEN;
         }
         menu.processEvents();
-//        if (!serialScreenShown)
-//        {
-//            lcd_lib_clear();
-//            lcd_lib_draw_string_centerP(20, PSTR("Printing with USB..."));
-//            serialScreenShown = true;
-//        }
-//        if (printing_state == PRINT_STATE_HEATING || printing_state == PRINT_STATE_HEATING_BED || printing_state == PRINT_STATE_HOMING)
-//            lastSerialCommandTime = m;
-//        lcd_lib_update_screen();
     }
-    else if ((sleep_state & SLEEP_SERIAL_SCREEN) && printing_state != PRINT_STATE_NORMAL)
-    {
-        menu.processEvents();
-    }
+//    else if ((sleep_state & SLEEP_SERIAL_SCREEN) && buflen && !fromsd)
+//    {
+//        // show the usb printing screen as long as serial commands are queued
+//        menu.processEvents();
+//    }
     else
     {
         if (sleep_state & SLEEP_SERIAL_SCREEN)
