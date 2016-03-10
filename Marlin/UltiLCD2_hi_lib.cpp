@@ -262,7 +262,7 @@ void lcd_menu_edit_setting()
 
     lcd_basic_screen();
     lcd_lib_draw_string_centerP(20, lcd_setting_name);
-    char buffer[16] = {0};
+    char buffer[20] = {0};
     if (lcd_setting_type == 3)
         float_to_string2(float(lcd_lib_encoder_pos) / 100.0, buffer, lcd_setting_postfix);
     else
