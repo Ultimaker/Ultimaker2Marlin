@@ -503,6 +503,7 @@ void loop()
           if(card.logging)
           {
             process_command(cmdbuffer[bufindr]);
+            serialCmd &= ~(1 << bufindr);
           }
           else
           {
@@ -518,9 +519,11 @@ void loop()
       else
       {
         process_command(cmdbuffer[bufindr]);
+        serialCmd &= ~(1 << bufindr);
       }
     #else
       process_command(cmdbuffer[bufindr]);
+      serialCmd &= ~(1 << bufindr);
     #endif //SDSUPPORT
     if (buflen > 0)
     {
@@ -645,6 +648,10 @@ static void get_command()
         if (!code_seen(cmdbuffer[bufindw], 'M') || (code_value_long() != 105))
         {
             lastSerialCommandTime = millis();
+        }
+        else
+        {
+            serialCmd &= ~(1 << bufindw);
         }
 #endif
         ++bufindw;
