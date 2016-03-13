@@ -30,6 +30,7 @@ static void lcd_menu_print_printing();
 static void lcd_menu_print_error_sd();
 static void lcd_menu_print_error_position();
 static void lcd_menu_print_classic_warning();
+static void lcd_menu_print_material_warning();
 static void lcd_menu_print_tune_retraction();
 
 static bool primed = false;
@@ -79,12 +80,12 @@ void abortPrint()
 
     if (current_position[Z_AXIS] > max_pos[Z_AXIS] - 30)
     {
-        enquecommand_P(PSTR("G28 X0 Y0"));
-        enquecommand_P(PSTR("G28 Z0"));
+        homeHead();
+        homeBed();
     }
     else
     {
-        enquecommand_P(PSTR("G28"));
+        homeAll();
     }
     enquecommand_P(PSTR("M84"));
 
@@ -317,11 +318,15 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     LCD_DETAIL_CACHE_ID() = nr;
                     LCD_DETAIL_CACHE_TIME() = 0;
                     for(uint8_t e=0; e<EXTRUDERS; e++)
+                    {
                         LCD_DETAIL_CACHE_MATERIAL(e) = 0;
+                        LCD_DETAIL_CACHE_NOZZLE_DIAMETER(e) = 0.4;
+                        LCD_DETAIL_CACHE_MATERIAL_TYPE(e)[0] = '\0';
+                    }
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
-                        for(uint8_t n=0;n<8;n++)
+                        for(uint8_t n=0;n<16;n++)
                         {
                             card.fgets(buffer, sizeof(buffer));
                             buffer[sizeof(buffer)-1] = '\0';
@@ -332,10 +337,24 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                             {
                                 LCD_DETAIL_CACHE_MATERIAL(0) = strtol(buffer + 10, 0, 10);
                             }
+                            else if (strncmp_P(buffer, PSTR(";NOZZLE_DIAMETER:"), 17) == 0)
+                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0) = strtod(buffer + 17, NULL);
+                            else if (strncmp_P(buffer, PSTR(";MTYPE:"), 7) == 0)
+                            {
+                                strncpy(LCD_DETAIL_CACHE_MATERIAL_TYPE(0), buffer + 7, 8);
+                                LCD_DETAIL_CACHE_MATERIAL_TYPE(0)[7] = '\0';
+                            }
 #if EXTRUDERS > 1
                             else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
                             {
                                 LCD_DETAIL_CACHE_MATERIAL(1) = strtol(buffer + 11, 0, 10);
+                            }
+                            else if (strncmp_P(buffer, PSTR(";NOZZLE_DIAMETER2:"), 18) == 0)
+                                LCD_DETAIL_CACHE_NOZZLE_DIAMETER(1) = strtod(buffer + 18, NULL);
+                            else if (strncmp_P(buffer, PSTR(";MTYPE2:"), 8) == 0)
+                            {
+                                strncpy(LCD_DETAIL_CACHE_MATERIAL_TYPE(1), buffer + 8, 8);
+                                LCD_DETAIL_CACHE_MATERIAL_TYPE(1)[7] = '\0';
                             }
 #endif
                         }
@@ -353,34 +372,44 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     char* c = buffer;
                     if (led_glow_dir || !(LCD_DETAIL_CACHE_MATERIAL(0) || LCD_DETAIL_CACHE_MATERIAL(1)))
                     {
-                        strcpy_P(c, PSTR("Time ")); c += 5;
-                        c = int_to_time_min(LCD_DETAIL_CACHE_TIME(), c);
-                        if (LCD_DETAIL_CACHE_TIME() < 60)
+                        if ((led_glow < 63) || !(LCD_DETAIL_CACHE_MATERIAL(0) || LCD_DETAIL_CACHE_MATERIAL(1)))
                         {
-                                strcat_P(c, PSTR("min"));
+                            strcpy_P(c, PSTR("Time ")); c += 5;
+                            c = int_to_time_min(LCD_DETAIL_CACHE_TIME(), c);
+                            if (LCD_DETAIL_CACHE_TIME() < 60)
+                            {
+                                    strcat_P(c, PSTR("min"));
+                            }
+                            else
+                            {
+                                    strcat_P(c, PSTR("h"));
+                            }
                         }
                         else
                         {
-                                strcat_P(c, PSTR("h"));
-                        }
-                    }else{
-                        strcpy_P(c, PSTR("Material ")); c += 9;
-                        float length = float(LCD_DETAIL_CACHE_MATERIAL(0)) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
-                        if (length < 10000)
-                            c = float_to_string2(length / 1000.0, c, PSTR("m"));
-                        else
-                            c = int_to_string(length / 1000.0, c, PSTR("m"));
-#if EXTRUDERS > 1
-                        if (LCD_DETAIL_CACHE_MATERIAL(1))
-                        {
-                            *c++ = '/';
-                            length = float(LCD_DETAIL_CACHE_MATERIAL(1)) / (M_PI * (material[1].diameter / 2.0) * (material[1].diameter / 2.0));
+                            strcpy_P(c, PSTR("Material ")); c += 9;
+                            float length = float(LCD_DETAIL_CACHE_MATERIAL(0)) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
                             if (length < 10000)
                                 c = float_to_string2(length / 1000.0, c, PSTR("m"));
                             else
                                 c = int_to_string(length / 1000.0, c, PSTR("m"));
+    #if EXTRUDERS > 1
+                            if (LCD_DETAIL_CACHE_MATERIAL(1))
+                            {
+                                *c++ = '/';
+                                length = float(LCD_DETAIL_CACHE_MATERIAL(1)) / (M_PI * (material[1].diameter / 2.0) * (material[1].diameter / 2.0));
+                                if (length < 10000)
+                                    c = float_to_string2(length / 1000.0, c, PSTR("m"));
+                                else
+                                    c = int_to_string(length / 1000.0, c, PSTR("m"));
+                            }
+    #endif
                         }
-#endif
+                    }
+                    else
+                    {
+                        strcpy_P(c, PSTR("Nozzle: ")); c += 8;
+                        c = float_to_string2(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0), c);
                     }
                     lcd_lib_draw_string(3, BOTTOM_MENU_YPOS, buffer);
                 }else{
@@ -543,7 +572,7 @@ void lcd_menu_print_select()
                             // move to heatup position
                             char buffer[32] = {0};
                             sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), max(int(min_pos[X_AXIS]), 0)+5, max(int(min_pos[Y_AXIS]), 0)+5);
-                            enquecommand_P(PSTR("G28"));
+                            homeAll();
                             enquecommand(buffer);
                             printing_state = PRINT_STATE_NORMAL;
 
@@ -551,6 +580,14 @@ void lcd_menu_print_select()
                                 menu.add_menu(menu_t(lcd_menu_print_heatup_tg));
                             else
                                 menu.add_menu(menu_t(lcd_menu_print_heatup));
+
+                            if (strcasecmp(material[0].name, LCD_DETAIL_CACHE_MATERIAL_TYPE(0)) != 0)
+                            {
+                                if (strlen(material[0].name) > 0 && strlen(LCD_DETAIL_CACHE_MATERIAL_TYPE(0)) > 0)
+                                {
+                                    menu.replace_menu(menu_t(lcd_menu_print_material_warning), false);
+                                }
+                            }
                         }
                     }
                     else
@@ -559,7 +596,9 @@ void lcd_menu_print_select()
                         menu.add_menu(menu_t(lcd_menu_print_classic_warning, MAIN_MENU_ITEM_POS(0)));
                     }
                 }
-            }else{
+            }
+            else
+            {
                 lcd_lib_keyclick();
                 lcd_clear_cache();
                 card.chdir(card.filename);
@@ -590,7 +629,7 @@ void lcd_menu_print_heatup()
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
 #endif
-            target_temperature[e] = material[e].temperature;
+            target_temperature[e] = material[e].temperature[nozzleSizeToTemperatureIndex(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(e))];
             // printing_state = PRINT_STATE_START;
         }
 
@@ -658,7 +697,7 @@ void lcd_menu_print_heatup()
 void lcd_change_to_menu_change_material_return()
 {
     plan_set_e_position(current_position[E_AXIS]);
-    setTargetHotend(material[active_extruder].temperature, active_extruder);
+    setTargetHotend(material[active_extruder].temperature[nozzleSizeToTemperatureIndex(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(active_extruder))], active_extruder);
     menu.return_to_previous(false);
 }
 
@@ -742,10 +781,14 @@ static void lcd_menu_print_error_sd()
     lcd_lib_draw_string_centerP(10, PSTR("Error while"));
     lcd_lib_draw_string_centerP(20, PSTR("reading"));
     lcd_lib_draw_string_centerP(30, PSTR("SD-card!"));
+    /*
     char buffer[12];
     strcpy_P(buffer, PSTR("Code:"));
     int_to_string(card.errorCode(), buffer+5);
     lcd_lib_draw_string_center(40, buffer);
+    */
+    lcd_lib_draw_string_centerP(40, PSTR("See:"));
+    lcd_lib_draw_string_centerP(50, PSTR("ultimaker.com/ER08"));
 
     lcd_lib_update_screen();
 }
@@ -770,6 +813,26 @@ static void lcd_menu_print_classic_warning()
     lcd_lib_draw_string_centerP(20, PSTR("override machine"));
     lcd_lib_draw_string_centerP(30, PSTR("setting with setting"));
     lcd_lib_draw_string_centerP(40, PSTR("from the slicer."));
+
+    lcd_lib_update_screen();
+}
+
+static void lcd_cancel_material_warning()
+{
+    doCooldown();
+    lcd_remove_menu();
+}
+
+static void lcd_menu_print_material_warning()
+{
+    lcd_question_screen((ui_mode & UI_MODE_EXPERT) ? lcd_menu_print_heatup_tg : lcd_menu_print_heatup, NULL, PSTR("CONTINUE"), lcd_menu_print_select, lcd_cancel_material_warning, PSTR("CANCEL"));
+
+    lcd_lib_draw_string_centerP(10, PSTR("This file is created"));
+    lcd_lib_draw_string_centerP(20, PSTR("for a different"));
+    lcd_lib_draw_string_centerP(30, PSTR("material."));
+    char buffer[MATERIAL_NAME_SIZE * 2 + 5];
+    sprintf_P(buffer, PSTR("%s vs %s"), material[0].name, LCD_DETAIL_CACHE_MATERIAL_TYPE(0));
+    lcd_lib_draw_string_center(40, buffer);
 
     lcd_lib_update_screen();
 }
@@ -1207,6 +1270,7 @@ static void lcd_print_change_material()
 {
     if (!movesplanned())
     {
+        lcd_material_change_init(false);
         menu.add_menu(menu_t(lcd_change_to_menu_change_material_return), false);
         menu.add_menu(menu_t(lcd_menu_change_material_preheat));
     }

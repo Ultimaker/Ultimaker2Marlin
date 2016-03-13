@@ -28,12 +28,12 @@
 #define MOVE_DELAY 500  // 500ms
 
 // Use the lcd_cache memory to store manual moving positions
-#define TARGET_POS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-#define TARGET_MIN(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-#define TARGET_MAX(n) (*(float*)&lcd_cache[sizeof(min_pos) + (n) * sizeof(float)])
-#define OLD_FEEDRATE  (*(float*)&lcd_cache[0])
-#define OLD_ACCEL     (*(float*)&lcd_cache[sizeof(float)])
-#define TARGET_STEPS(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
+#define TARGET_POS(n)   (*(float*)&lcd_cache[(n) * sizeof(float)])
+#define TARGET_MIN(n)   (*(float*)&lcd_cache[(n) * sizeof(float)])
+#define TARGET_MAX(n)   (*(float*)&lcd_cache[sizeof(min_pos) + (n) * sizeof(float)])
+#define OLD_FEEDRATE    (*(float*)&lcd_cache[NUM_AXIS * sizeof(float)])
+#define OLD_ACCEL       (*(float*)&lcd_cache[(NUM_AXIS+1) * sizeof(float)])
+#define OLD_JERK        (*(float*)&lcd_cache[(NUM_AXIS+2) * sizeof(float)])
 
 uint8_t sleep_state = 0x0;
 
@@ -1226,8 +1226,7 @@ void lcd_menu_print_heatup_tg()
             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1 || target_temperature[e] > 0)
                 continue;
 #endif
-            target_temperature[e] = material[e].temperature;
-            // printing_state = PRINT_STATE_START;
+            target_temperature[e] = material[e].temperature[nozzleSizeToTemperatureIndex(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(e))];
         }
 
 #if TEMP_SENSOR_BED != 0
@@ -1493,7 +1492,7 @@ void lcd_menu_printing_tg()
             {
                 lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Heating nozzle"));
 #if EXTRUDERS > 1
-                int_to_string(active_extruder+1, buffer, NULL);
+                int_to_string(tmp_extruder+1, buffer, NULL);
                 lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT + 15*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, buffer);
 #endif // EXTRUDERS
                 index += 3;
@@ -1578,9 +1577,9 @@ void lcd_simple_buildplate_store()
 void lcd_simple_buildplate_quit()
 {
     // home z-axis
-    enquecommand_P(PSTR("G28 Z0"));
+    homeBed();
     // home head
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
@@ -2158,8 +2157,6 @@ static void lcd_position_z_axis()
 
 FORCE_INLINE void lcd_home_x_axis() { enquecommand_P(PSTR("G28 X0")); }
 FORCE_INLINE void lcd_home_y_axis() { enquecommand_P(PSTR("G28 Y0")); }
-FORCE_INLINE void lcd_home_z_axis() { enquecommand_P(PSTR("G28 Z0")); }
-FORCE_INLINE void lcd_home_all()    { enquecommand_P(PSTR("G28")); }
 
 static void drawMoveDetails()
 {
@@ -2183,7 +2180,7 @@ static const menu_t & get_move_menuoption(uint8_t nr, menu_t &opt)
     if (nr == index++)
     {
         // Home all axis
-        opt.setData(MENU_NORMAL, lcd_home_all);
+        opt.setData(MENU_NORMAL, homeAll);
     }
     else if (nr == index++)
     {
@@ -2233,7 +2230,7 @@ static const menu_t & get_move_menuoption(uint8_t nr, menu_t &opt)
     else if (nr == index++)
     {
         // z home
-        opt.setData(MENU_NORMAL, lcd_home_z_axis);
+        opt.setData(MENU_NORMAL, homeBed);
     }
     return opt;
 }
@@ -2555,7 +2552,7 @@ void manage_encoder_position(int8_t encoder_pos_interrupt)
 static void lcd_extrude_homehead()
 {
     lcd_lib_keyclick();
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
 
@@ -2566,7 +2563,7 @@ static void lcd_extrude_headtofront()
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(AXIS_CENTER_POS(X_AXIS)), int(min_pos[Y_AXIS])+5);
 
-    enquecommand_P(PSTR("G28 X0 Y0"));
+    homeHead();
     enquecommand(buffer);
     enquecommand_P(PSTR("M84 X0 Y0"));
 }
@@ -2753,8 +2750,10 @@ static void lcd_extrude_init_pull()
     //increase max. feedrate and reduce acceleration
     OLD_FEEDRATE = max_feedrate[E_AXIS];
     OLD_ACCEL = retract_acceleration;
-    max_feedrate[E_AXIS] = FILAMENT_REVERSAL_SPEED;
-    retract_acceleration = FILAMENT_LONG_MOVE_ACCELERATION;
+    OLD_JERK = max_e_jerk;
+    max_feedrate[E_AXIS] = float(FILAMENT_FAST_STEPS) / axis_steps_per_unit[E_AXIS];
+    retract_acceleration = float(FILAMENT_LONG_ACCELERATION_STEPS) / axis_steps_per_unit[E_AXIS];
+    max_e_jerk = FILAMENT_LONG_MOVE_JERK;
 }
 
 static void lcd_extrude_quit_pull()
@@ -2762,6 +2761,7 @@ static void lcd_extrude_quit_pull()
     // reset feeedrate and acceleration to default
     max_feedrate[E_AXIS] = OLD_FEEDRATE;
     retract_acceleration = OLD_ACCEL;
+    max_e_jerk = OLD_JERK;
     //Set E motor power to default.
 #if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
     digipot_current(2, active_extruder ? motor_current_e2 : motor_current_setting[2]);
@@ -2779,7 +2779,7 @@ static void lcd_extrude_pull()
         if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 1)
         {
             TARGET_POS(E_AXIS) -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS), FILAMENT_REVERSAL_SPEED*2/3, active_extruder);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS), max_feedrate[E_AXIS]*0.7f, active_extruder);
         }
     } else {
         quickStop();
@@ -3016,7 +3016,7 @@ void recover_start_print(const char *cmd)
     printing_state = PRINT_STATE_START;
 
     // move to heatup position
-    enquecommand_P(PSTR("G28"));
+    homeAll();
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
     enquecommand(buffer);

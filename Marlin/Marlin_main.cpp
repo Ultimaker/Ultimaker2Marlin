@@ -185,6 +185,7 @@ float extruder_offset[2][EXTRUDERS] = {
 };
 #endif
 uint8_t active_extruder = 0;
+uint8_t tmp_extruder = 0;
 uint8_t fanSpeed=0;
 uint8_t fanSpeedPercent=100;
 
@@ -250,9 +251,6 @@ static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l
 
 unsigned long starttime=0;
 unsigned long stoptime=0;
-
-static uint8_t tmp_extruder;
-
 
 uint8_t Stopped = false;
 
@@ -477,6 +475,7 @@ void loop()
   {
     lastSerialCommandTime = millis();
   }
+
   #ifdef SDSUPPORT
   card.checkautostart(false);
   #endif
@@ -907,6 +906,64 @@ static void homeaxis(int axis) {
   }
 }
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
+
+#if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
+  void print_heaterstates() {
+    #if (TEMP_SENSOR_0 != 0) || ENABLED(HEATER_0_USES_MAX6675)
+      SERIAL_PROTOCOLPGM(" T:");
+      SERIAL_PROTOCOL_F(degHotend(tmp_extruder), 1);
+      SERIAL_PROTOCOLPGM(" /");
+      SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder), 1);
+    #endif
+    #if (TEMP_SENSOR_BED != 0)
+      SERIAL_PROTOCOLPGM(" B:");
+      SERIAL_PROTOCOL_F(degBed(), 1);
+      SERIAL_PROTOCOLPGM(" /");
+      SERIAL_PROTOCOL_F(degTargetBed(), 1);
+    #endif
+    #if EXTRUDERS > 1
+      for (int8_t e = 0; e < EXTRUDERS; ++e) {
+        SERIAL_PROTOCOLPGM(" T");
+        SERIAL_PROTOCOL(e);
+        SERIAL_PROTOCOLCHAR(':');
+        SERIAL_PROTOCOL_F(degHotend(e), 1);
+        SERIAL_PROTOCOLPGM(" /");
+        SERIAL_PROTOCOL_F(degTargetHotend(e), 1);
+      }
+    #endif
+    #if (TEMP_SENSOR_BED != 0)
+      SERIAL_PROTOCOLPGM(" B@:");
+      SERIAL_PROTOCOL(getHeaterPower(-1));
+    #endif
+    SERIAL_PROTOCOLPGM(" @:");
+    SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
+    #if EXTRUDERS > 1
+      for (int8_t e = 0; e < EXTRUDERS; ++e) {
+        SERIAL_PROTOCOLPGM(" @");
+        SERIAL_PROTOCOL(e);
+        SERIAL_PROTOCOLCHAR(':');
+        SERIAL_PROTOCOL(getHeaterPower(e));
+      }
+    #endif
+  }
+#endif
+
+/**
+ * M105: Read hot end and bed temperature
+ */
+inline void gcode_M105() {
+  if (setTargetedHotend(105)) return;
+
+  #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
+    SERIAL_PROTOCOLPGM(MSG_OK);
+    print_heaterstates();
+  #else // !HAS_TEMP_0 && !HAS_TEMP_BED
+    SERIAL_ERROR_START;
+    SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
+  #endif
+
+  SERIAL_EOL;
+}
 
 void process_commands()
 {
@@ -1415,33 +1472,8 @@ void process_commands()
 #endif // TEMP_SENSOR_BED
       break;
     case 105 : // M105
-      if(setTargetedHotend(105)){
-        break;
-        }
-      #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
-        SERIAL_PROTOCOLPGM("ok T:");
-        SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
-        SERIAL_PROTOCOLPGM(" /");
-        SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder),1);
-        #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1 && TEMP_SENSOR_BED != 0
-          SERIAL_PROTOCOLPGM(" B:");
-          SERIAL_PROTOCOL_F(degBed(),1);
-          SERIAL_PROTOCOLPGM(" /");
-          SERIAL_PROTOCOL_F(degTargetBed(),1);
-        #endif //TEMP_BED_PIN
-      #else
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
-      #endif
-
-        SERIAL_PROTOCOLPGM(" @:");
-        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
-
-        SERIAL_PROTOCOLPGM(" B@:");
-        SERIAL_PROTOCOL(getHeaterPower(-1));
-
-        SERIAL_PROTOCOL_NEWLINE;
-      return;
+        gcode_M105();
+        return; // "ok" already printed
       break;
     case 109:
     {// M109 - Wait for extruder heater to reach target.
@@ -1485,10 +1517,9 @@ void process_commands()
       #endif //TEMP_RESIDENCY_TIME
           if( (millis() - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
-            SERIAL_PROTOCOLPGM("T:");
-            SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
-            SERIAL_PROTOCOLPGM(" E:");
-            SERIAL_PROTOCOL((int)tmp_extruder);
+            #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
+              print_heaterstates();
+            #endif
             #ifdef TEMP_RESIDENCY_TIME
               SERIAL_PROTOCOLPGM(" W:");
               if(residencyStart > -1)
@@ -1501,7 +1532,7 @@ void process_commands()
                  SERIAL_PROTOCOLLNPGM( "?" );
               }
             #else
-              SERIAL_PROTOCOL_NEWLINE;
+              SERIAL_EOL;
             #endif
             codenum = millis();
           }
@@ -1544,15 +1575,12 @@ void process_commands()
         {
           if(( millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
           {
-            float tt=degHotend(active_extruder);
-            SERIAL_PROTOCOLPGM("T:");
-            SERIAL_PROTOCOL(tt);
-            SERIAL_PROTOCOLPGM(" E:");
-            SERIAL_PROTOCOL((int)active_extruder);
-            SERIAL_PROTOCOLPGM(" B:");
-            SERIAL_PROTOCOL_F(degBed(),1);
-            SERIAL_PROTOCOL_NEWLINE;
             codenum = millis();
+            // float tt=degHotend(active_extruder);
+          #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
+            print_heaterstates();
+            SERIAL_EOL;
+          #endif
           }
           manage_heater();
           manage_inactivity();
@@ -1738,7 +1766,7 @@ void process_commands()
       SERIAL_PROTOCOLPGM("E:");
       SERIAL_PROTOCOL(float(st_get_position(E_AXIS))/axis_steps_per_unit[E_AXIS]);
 
-      SERIAL_PROTOCOL_NEWLINE;
+      SERIAL_EOL;
       break;
     case 120: // M120
       enable_endstops(false) ;
@@ -1930,7 +1958,7 @@ void process_commands()
          SERIAL_ECHOPGM(",");
          SERIAL_ECHO(extruder_offset[Y_AXIS][tmp_extruder]);
       }
-      SERIAL_ECHO_NEWLINE;
+      SERIAL_EOL;
     }break;
     #endif
     case 220: // M220 S<factor in percent>- set speed factor override percentage
@@ -1975,7 +2003,7 @@ void process_commands()
           SERIAL_PROTOCOL(servo_index);
           SERIAL_PROTOCOLPGM(": ");
           SERIAL_PROTOCOL(servos[servo_index].read());
-          SERIAL_PROTOCOL_NEWLINE;
+          SERIAL_EOL;
         }
       }
       break;
@@ -2031,11 +2059,6 @@ void process_commands()
         #endif // EXTRUDERS
         }
 
-
-//        #ifdef PID_ADD_EXTRUSION_RATE
-//        if(code_seen('C')) Kc = code_value();
-//        #endif
-
         updatePID();
         SERIAL_PROTOCOLPGM(MSG_OK);
         SERIAL_PROTOCOLPGM(" p:");
@@ -2044,12 +2067,7 @@ void process_commands()
         SERIAL_PROTOCOL(unscalePID_i(Ki));
         SERIAL_PROTOCOLPGM(" d:");
         SERIAL_PROTOCOL(unscalePID_d(Kd));
-//        #ifdef PID_ADD_EXTRUSION_RATE
-//        SERIAL_PROTOCOLPGM(" c:");
-//        //Kc does not have scaling applied above, or in resetting defaults
-//        SERIAL_PROTOCOL(Kc);
-//        #endif
-        SERIAL_PROTOCOL_NEWLINE;
+        SERIAL_EOL;
       }
       break;
     #endif //PIDTEMP
@@ -2070,7 +2088,7 @@ void process_commands()
             SERIAL_PROTOCOL(unscalePID_i(bedKi));
             SERIAL_PROTOCOLPGM(" d:");
             SERIAL_PROTOCOL(unscalePID_d(bedKd));
-            SERIAL_PROTOCOL_NEWLINE;
+            SERIAL_EOL;
         }
       }
       break;
