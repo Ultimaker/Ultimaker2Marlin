@@ -202,23 +202,37 @@ void lcd_progressbar(uint8_t progress)
 
 void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags)
 {
-    uint8_t buffer_len = (uint8_t) strlen(buffer);
-    if (flags & MENU_SELECTED)
-    {
-        if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
-        {
-            line_entry_pos_update(LINE_ENTRY_MAX_STEP(buffer_len - LINE_ENTRY_TEXT_LENGHT));
-            buffer += LINE_ENTRY_TEXT_BEGIN();
-            buffer[LINE_ENTRY_TEXT_LENGHT+LINE_ENTRY_TEXT_OFFSET()] = '\0';
-        }
-        //lcd_lib_set(3, drawOffset+8*n-1, 62, drawOffset+8*n+7);
-        lcd_lib_set(LCD_CHAR_MARGIN_LEFT-1, offsetY-1, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT, offsetY+7);
-        lcd_lib_clear_string(LCD_CHAR_MARGIN_LEFT+LINE_ENTRY_GFX_BEGIN(), offsetY, buffer);
-    }else{
-        if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
-            buffer[LINE_ENTRY_TEXT_LENGHT] = '\0';
-        lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT, offsetY, buffer);
-    }
+	uint8_t buffer_len = (uint8_t) strlen(buffer);
+	char    backup     = '\0';
+	uint8_t backup_pos = 0;
+	if (flags & MENU_SELECTED)
+	{
+		if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
+		{
+			line_entry_pos_update(LINE_ENTRY_MAX_STEP(buffer_len - LINE_ENTRY_TEXT_LENGHT));
+			buffer    += LINE_ENTRY_TEXT_BEGIN();
+			backup_pos = LINE_ENTRY_TEXT_LENGHT+LINE_ENTRY_TEXT_OFFSET();
+			backup     = buffer[backup_pos];
+			buffer[backup_pos] = '\0';
+		}
+		//
+		lcd_lib_set(LCD_CHAR_MARGIN_LEFT-1, offsetY-1, LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT, offsetY+7);
+		lcd_lib_clear_string(LCD_CHAR_MARGIN_LEFT+LINE_ENTRY_GFX_BEGIN(), offsetY, buffer);
+		//
+		if (backup != '\0')
+			buffer[backup_pos] = backup;
+	}else{
+		if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
+		{
+			backup = buffer[LINE_ENTRY_TEXT_LENGHT];
+			buffer[LINE_ENTRY_TEXT_LENGHT] = '\0';
+		}
+		//
+		lcd_lib_draw_string(LCD_CHAR_MARGIN_LEFT, offsetY, buffer);
+		//
+		if (backup != '\0')
+			buffer[LINE_ENTRY_TEXT_LENGHT] = backup;
+	}
 }
 
 void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, scrollDrawCallback_t entryDrawCallback, entryDetailsCallback_t entryDetailsCallback)
