@@ -931,7 +931,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   block_buffer_head = next_buffer_head;
 
   // Update position
-  memcpy(position, target, sizeof(target)); // position[] = target[]
+  memcpy(position, target, sizeof(position)); // position[] = target[]
 
   planner_recalculate();
 

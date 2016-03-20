@@ -254,7 +254,7 @@ static void lcd_toggle_preheat_bed()
   #if EXTRUDERS == 2
         setTargetBed(material[swapExtruders() ? 1 : 0].bed_temperature);
   #else
-        setTargetBed(target_temperature_bed = material[0].bed_temperature);
+        setTargetBed(material[0].bed_temperature);
   #endif
     }
     else

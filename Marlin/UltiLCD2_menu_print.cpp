@@ -388,7 +388,11 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                         }
                         else
                         {
+    #if EXTRUDERS > 1
+                            strcpy_P(c, PSTR("Mat. ")); c += 5;
+    #else
                             strcpy_P(c, PSTR("Material ")); c += 9;
+    #endif
                             float length = float(LCD_DETAIL_CACHE_MATERIAL(0)) / (M_PI * (material[0].diameter / 2.0) * (material[0].diameter / 2.0));
                             if (length < 10000)
                                 c = float_to_string2(length / 1000.0, c, PSTR("m"));
@@ -409,8 +413,13 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     }
                     else
                     {
-                        strcpy_P(c, PSTR("Nozzle: ")); c += 8;
+                        strcpy_P(c, PSTR("Nozzle ")); c += 7;
+    #if EXTRUDERS > 1
+                        c = float_to_string2(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0), c, PSTR("/"));
+                        c = float_to_string2(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(1), c, NULL);
+    #else
                         c = float_to_string2(LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0), c);
+    #endif
                     }
                     lcd_lib_draw_string(3, BOTTOM_MENU_YPOS, buffer);
                 }else{
@@ -974,7 +983,7 @@ static void tune_item_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("LED Brightness"));
     else if ((ui_mode & UI_MODE_EXPERT) && card.sdprinting && card.pause && (index++ == nr))
         strcpy_P(buffer, PSTR("Move material"));
-    else if (ui_mode & UI_MODE_EXPERT)
+    else if ((ui_mode & UI_MODE_EXPERT) && (index++ == nr))
         strcpy_P(buffer, PSTR("Sleep timer"));
     else
         strcpy_P(buffer, PSTR("???"));
@@ -1019,7 +1028,7 @@ static void tune_item_details_callback(uint8_t nr)
     }
     else
         return;
-    lcd_lib_draw_string(5, BOTTOM_MENU_YPOS, buffer);
+    lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, buffer);
 }
 
 void lcd_menu_print_tune_heatup_nozzle0()

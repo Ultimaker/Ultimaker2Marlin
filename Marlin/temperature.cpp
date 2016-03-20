@@ -35,10 +35,10 @@
 #include "UltiLCD2.h"
 #include "temperature.h"
 #include "watchdog.h"
-// #include "Sd2CardExt.h"
 #include "preferences.h"
 #include "tinkergnome.h"
 
+#define MAX_HEATERS  2     // activate max. 2 heaters at the same time
 
 //===========================================================================
 //=============================public variables============================
@@ -1189,22 +1189,29 @@ ISR(TIMER0_COMPB_vect)
   static unsigned char soft_pwm_b;
   #endif
 
-  if(pwm_count == 0){
+  if (pwm_count == 0)
+  {
     soft_pwm_0 = soft_pwm[0];
-    if(soft_pwm_0 > 0) WRITE(HEATER_0_PIN,1);
+    if (soft_pwm_0 > 0)
+    {
+      WRITE(HEATER_0_PIN,1);
+    }
     #if EXTRUDERS > 1
     soft_pwm_1 = soft_pwm[1];
-    if(soft_pwm_1 > 0) WRITE(HEATER_1_PIN,1);
+    if (soft_pwm_1 > 0)
+    {
+      WRITE(HEATER_1_PIN,1);
+    }
     #endif
     #if EXTRUDERS > 2
     soft_pwm_2 = soft_pwm[2];
-    if(soft_pwm_2 > 0) WRITE(HEATER_2_PIN,1);
+    if (soft_pwm_2 > 0)
+    {
+      WRITE(HEATER_2_PIN,1);
+    }
     #endif
     #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
     soft_pwm_b = soft_pwm_bed;
-      #if EXTRUDERS < 2
-      if(soft_pwm_b > 0) WRITE(HEATER_BED_PIN,1);
-      #endif
     #endif
     #ifdef FAN_SOFT_PWM
     soft_pwm_fan = fanSpeedSoftPwm / 2;
@@ -1219,29 +1226,29 @@ ISR(TIMER0_COMPB_vect)
   if(soft_pwm_2 <= pwm_count) WRITE(HEATER_2_PIN,0);
   #endif
   #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-    if(soft_pwm_b <= pwm_count)
-    {
-        WRITE(HEATER_BED_PIN,0);
-    }
+  if(soft_pwm_b <= pwm_count)
+  {
+    WRITE(HEATER_BED_PIN,0);
+  }
+  else
+  {
+    uint8_t heat_count = 0;
+    if (READ(HEATER_0_PIN))  ++heat_count;
     #if EXTRUDERS > 1
+    if (READ(HEATER_1_PIN))  ++heat_count;
+    #endif
+    #if EXTRUDERS > 2
+    if (READ(HEATER_2_PIN))  ++heat_count;
+    #endif
+    if (heat_count < MAX_HEATERS)
+    {
+        WRITE(HEATER_BED_PIN, 1);
+    }
     else
     {
-      uint8_t heat_count = 0;
-      if (READ(HEATER_0_PIN))  ++heat_count;
-      if (READ(HEATER_1_PIN))  ++heat_count;
-      #if EXTRUDERS > 2
-      if (READ(HEATER_2_PIN))  ++heat_count;
-      #endif
-      if (heat_count < 2)
-      {
-          WRITE(HEATER_BED_PIN, 1);
-      }
-      else
-      {
-          WRITE(HEATER_BED_PIN, 0);
-      }
+        WRITE(HEATER_BED_PIN, 0);
     }
-    #endif // EXTRUDERS
+  }
   #endif
   #ifdef FAN_SOFT_PWM
   if(soft_pwm_fan <= pwm_count) WRITE(FAN_PIN,0);

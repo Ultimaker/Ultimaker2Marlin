@@ -295,16 +295,16 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         }
         else if (nr == menu_index++)
         {
-            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-//            if (IS_SD_PRINTING)
-//            {
-//                opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-//            }
-//            else
-//            {
-//                opt.setData(MENU_NORMAL, lcd_print_tune);
-//
-//            }
+//            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
+            if (IS_SD_PRINTING)
+            {
+                opt.setData(MENU_NORMAL, lcd_print_ask_pause);
+            }
+            else
+            {
+                opt.setData(MENU_NORMAL, lcd_print_tune);
+
+            }
         }
         else if (nr == menu_index++)
         {
@@ -341,15 +341,15 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         }
         else if (nr == menu_index++)
         {
-            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-//            if (IS_SD_PRINTING)
-//            {
-//                opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-//            }
-//            else
-//            {
-//                opt.setData(MENU_NORMAL, lcd_print_tune);
-//            }
+//            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
+            if (IS_SD_PRINTING)
+            {
+                opt.setData(MENU_NORMAL, lcd_print_ask_pause);
+            }
+            else
+            {
+                opt.setData(MENU_NORMAL, lcd_print_tune);
+            }
         }
         else if (nr == menu_index++)
         {

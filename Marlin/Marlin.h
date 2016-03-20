@@ -102,7 +102,7 @@ void process_command(const char *strCmd);
 void process_command_P(const char *strCmd);
 
 void manage_inactivity();
-void idle(bool bCheckSerial = true); // the standard idle routine calls manage_inactivity()
+void idle(); // the standard idle routine calls manage_inactivity()
 
 #if defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1
   #define  enable_x() WRITE(X_ENABLE_PIN, X_ENABLE_ON)
@@ -231,6 +231,12 @@ extern float retract_recover_length, retract_recover_feedrate;
 
 extern unsigned long starttime;
 extern unsigned long stoptime;
+
+#if BUFSIZE > 8
+extern uint16_t serialCmd;
+#else
+extern uint8_t serialCmd;
+#endif // BUFSIZE
 
 //The printing state from the main command processor. Is not zero when the command processor is in a loop waiting for a result.
 extern uint8_t printing_state;
