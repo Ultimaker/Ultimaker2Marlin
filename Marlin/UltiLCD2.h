@@ -21,6 +21,7 @@ void doCooldown();
 #define LCD_MESSAGEPGM(x)
 #define LCD_ALERTMESSAGEPGM(x)
 
+extern unsigned long lastSerialCommandTime;
 extern uint8_t led_brightness_level;
 extern uint8_t led_mode;
 extern float dsp_temperature[EXTRUDERS];

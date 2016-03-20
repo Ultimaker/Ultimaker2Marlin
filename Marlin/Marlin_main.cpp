@@ -567,7 +567,6 @@ static void get_command()
       }
       cmdbuffer[bufindw][serial_count] = 0; //terminate string
       if(!comment_mode){
-        serialCmd |= (1 << bufindw); //set serial flag for new command
         if(code_seen(cmdbuffer[bufindw], 'N'))
         {
           gcode_N = code_value_long();
@@ -645,12 +644,14 @@ static void get_command()
 
         }
 #ifdef ENABLE_ULTILCD2
-        if (code_seen(cmdbuffer[bufindw], 'M') && (code_value_long() == 105))
-        {
-            // remove the serial flag for M105 commands
-            serialCmd &= ~(1 << bufindw);
-        }
+        if (!code_seen(cmdbuffer[bufindw], 'M') || (code_value_long() != 105))
 #endif
+        {
+            //set serial flag for new command
+            serialCmd |= (1 << bufindw);
+            lastSerialCommandTime = millis();
+        }
+
         ++bufindw;
         bufindw %= BUFSIZE;
         ++buflen;
@@ -672,7 +673,7 @@ static void get_command()
     return;
   if (serial_count!=0)
   {
-    if (buflen && serialCmd)
+    if ((buflen && serialCmd) || (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT))
       return;
     serial_count = 0;
   }
