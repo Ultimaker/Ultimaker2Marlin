@@ -10,7 +10,7 @@
  * Defines for long (vfat) filenames
  */
 /** Number of VFAT entries used. Every entry has 13 UTF-16 characters */
-#define MAX_VFAT_ENTRIES (2)
+#define MAX_VFAT_ENTRIES (4)
 /** Total size of the buffer used to store the long filenames */
 #define LONG_FILENAME_LENGTH (13*MAX_VFAT_ENTRIES+1)
 
