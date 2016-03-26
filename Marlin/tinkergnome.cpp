@@ -1463,7 +1463,7 @@ void lcd_menu_printing_tg()
                 // lcd_lib_draw_string_left(5, PSTR("Paused..."));
                 lcd_lib_draw_string_left(5, card.longFilename);
                 lcd_lib_draw_gfx(54, 15, hourglassGfx);
-                if (movesplanned() < 1)
+                if (!blocks_queued())
                 {
                     lcd_lib_draw_stringP(64, 15, PSTR("Paused..."));
                     lcd_lib_draw_string_leftP(BOTTOM_MENU_YPOS, PSTR("Click to continue..."));
@@ -2801,7 +2801,7 @@ static void lcd_extrude_pull()
 {
     if (lcd_lib_button_down)
     {
-        if (printing_state == PRINT_STATE_NORMAL && movesplanned() < 1)
+        if (printing_state == PRINT_STATE_NORMAL && !blocks_queued())
         {
             TARGET_POS(E_AXIS) -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS), max_feedrate[E_AXIS]*0.7f, active_extruder);

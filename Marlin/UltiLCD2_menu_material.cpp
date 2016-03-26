@@ -148,6 +148,7 @@ void lcd_menu_change_material_preheat()
             // temp = target;
             return;
         }
+#ifdef USE_CHANGE_TEMPERATURE
         else if (temp > target - 3 && temp < target + 3)
         {
             // show countdown
@@ -155,6 +156,7 @@ void lcd_menu_change_material_preheat()
             int_to_string((preheat_end_time-last_user_interaction)/1000UL, buffer+1, PSTR(">"));
             lcd_lib_draw_string_center(30, buffer);
         }
+#endif
     }
     else
     {

@@ -1207,10 +1207,7 @@ void lcd_print_pause()
 {
     if (!card.pause)
     {
-//        if (movesplanned() > 0 && commands_queued() < BUFSIZE)
-//        {
         card.pause = true;
-//        pauseRequested = false;
         recover_height = current_position[Z_AXIS];
 
         // move z up according to the current height - but minimum to z=70mm (above the gantry height)
@@ -1238,18 +1235,9 @@ void lcd_print_pause()
         process_command(buffer);
 
         primed = false;
-//        }
-//        else if (!pauseRequested)
-//        {
-//            pauseRequested = true;
-//        }
+
     }
 }
-
-//bool isPauseRequested()
-//{
-//    return pauseRequested;
-//}
 
 void lcd_print_tune()
 {
@@ -1263,31 +1251,19 @@ void lcd_print_abort()
     menu.add_menu(menu_t(lcd_menu_print_abort, MAIN_MENU_ITEM_POS(1)));
 }
 
-static void lcd_menu_print_resume_ready()
+static void lcd_print_resume()
 {
     menu.return_to_previous();
-//    pauseRequested = false;
     card.pause = false;
     if (LCD_DETAIL_CACHE_MATERIAL(active_extruder))
         primed = true;
-}
 
-static void lcd_print_resume()
-{
-//    if (card.sdprinting)
-//    {
-        menu.replace_menu(menu_t(lcd_menu_print_resume_ready));
-        check_preheat();
-//    }
-//    else
-//    {
-//        menu.return_to_previous();
-//    }
+    check_preheat();
 }
 
 static void lcd_print_change_material()
 {
-    if (!movesplanned())
+    if (!blocks_queued())
     {
         lcd_material_change_init(false);
         menu.add_menu(menu_t(lcd_change_to_menu_change_material_return), false);
@@ -1297,8 +1273,8 @@ static void lcd_print_change_material()
 
 static void lcd_show_pause_menu()
 {
-    lcd_print_pause();
     menu.replace_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)));
+    lcd_print_pause();
 }
 
 static const menu_t & get_pause_menuoption(uint8_t nr, menu_t &opt)
@@ -1443,39 +1419,20 @@ static void drawResumeSubmenu(uint8_t nr, uint8_t &flags)
     uint8_t index(0);
     if (nr == index++)
     {
-        if (card.pause && (!IS_SD_PRINTING || (movesplanned() == 0)))
+        LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
+                                , LCD_LINE_HEIGHT
+                                , 52
+                                , LCD_LINE_HEIGHT*4
+                                , PSTR("RESUME|")
+                                , ALIGN_CENTER
+                                , flags);
+        if (flags & MENU_SELECTED)
         {
-            LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
-                                    , LCD_LINE_HEIGHT
-                                    , 52
-                                    , LCD_LINE_HEIGHT*4
-                                    , PSTR("RESUME|")
-                                    , ALIGN_CENTER
-                                    , flags);
-            if (flags & MENU_SELECTED)
-            {
-                lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
-            }
-            else
-            {
-                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
-            }
-        } else {
-            LCDMenu::drawMenuString_P(LCD_CHAR_MARGIN_LEFT+3
-                                    , LCD_LINE_HEIGHT
-                                    , 52
-                                    , LCD_LINE_HEIGHT*4
-                                    , PSTR("PAUSING|")
-                                    , ALIGN_CENTER
-                                    , flags);
-            if (flags & MENU_SELECTED)
-            {
-                lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, hourglassGfx);
-            }
-            else
-            {
-                lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, hourglassGfx);
-            }
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+26, LCD_LINE_HEIGHT*3+2, startGfx);
         }
     }
     else if (IS_SD_PRINTING && (nr == index++))
@@ -1538,15 +1495,6 @@ static void drawResumeSubmenu(uint8_t nr, uint8_t &flags)
 
 void lcd_menu_print_resume()
 {
-//    if (pauseRequested)
-//    {
-//        lcd_print_pause();
-//    }
-//    if (movesplanned())
-//    {
-//        last_user_interaction = millis();
-//    }
-
     lcd_lib_clear();
     lcd_lib_draw_vline(64, 5, 46);
     lcd_lib_draw_hline(3, 124, 50);

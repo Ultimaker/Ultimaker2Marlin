@@ -29,29 +29,19 @@ bool checkFilamentSensor()
         // pause print only if:
         //    - printer is printing
         //    - printing is not already paused
-        if (card.sdprinting)
+
+        if (!card.pause && (card.sdprinting || is_command_queued()))
         {
-            if (!card.pause)
-            {
-                lcd_lib_beep();
+            SERIAL_ERROR_START;
+            SERIAL_ERRORLNPGM("Material transport issue detected.");
 
-                // pause print
-                lcd_print_pause();
-            }
-        }
-        else if (commands_queued())
-        {
-            if (!card.pause)
-            {
-                lcd_lib_beep();
-                enquecommand_P(PSTR("M0"));
+            SERIAL_ECHO_START
+            SERIAL_ECHOLNPGM("Print paused. Check feeder.");
 
-                SERIAL_ERROR_START;
-                SERIAL_ERRORLNPGM("Material transport issue detected.");
+            lcd_lib_beep();
 
-                SERIAL_ECHO_START
-                SERIAL_ECHOLNPGM("Print paused. Check feeder.");
-            }
+            // pause print
+            lcd_print_pause();
         }
     }
 
