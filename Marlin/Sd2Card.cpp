@@ -445,6 +445,8 @@ uint8_t Sd2Card::readData(uint32_t block,
 
  fail:
   chipSelectHigh();
+  // Send an additional dummy byte, required by Toshiba Flash Air SD Card
+  spiSend(0XFF);
   return false;
 }
 //------------------------------------------------------------------------------
@@ -468,6 +470,8 @@ void Sd2Card::readEnd(void) {
 #endif  // OPTIMIZE_HARDWARE_SPI
 
     chipSelectHigh();
+    // Send an additional dummy byte, required by Toshiba Flash Air SD Card
+    spiSend(0XFF);
     inBlock_ = 0;
   }
 }
