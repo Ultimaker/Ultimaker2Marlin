@@ -305,10 +305,10 @@ void serial_echopair_P(const char *s_P, unsigned long v)
  * @brief Fills binary array from hex string.
  * @param[out] bin pointer to buffer to write resulting binary data to.
  * @param[in] hex pointer to string to be converted.
- * @param[in] count Number of bytes the bin array is going to have.
- * @returns Nr of bytes converted, resulting string length is twice as large.
+ * @param[in] buf_size Maximum number of bytes the bin array is going to have.
+ * @returns Nr of bytes converted, resulting binary array is half as large.
  */
-int hex2bin(char* bin, const char* hex, int count);
+int hex2bin(uint8_t* bin, const char* hex, const int buf_size);
 
 extern "C"{
   extern unsigned int __bss_end;
@@ -2405,11 +2405,17 @@ void process_commands()
           if (code_seen('Y')) y = code_value_long();
           if (code_seen('S')) hex_data = strchr_pointer + 1;
           if (code_seen('I')) hex_data = strchr_pointer + 1;
-          if(strlen(hex_data)>44) break;
-          if(hex2bin(bin_string,hex_data,strlen(hex_data))) {
-            bin_string[strlen(hex_data)/2] = '\0';
-            if (code_seen('S')) lcd_lib_draw_string(x,y, bin_string);
-            else lcd_lib_clear_string(x,y, bin_string);
+          uint8_t len = strlen(hex_data);
+          if (len > 44 || len % 2 != 0)
+          {
+            SERIAL_PROTOCOLLNPGM("Error: Hex string too long or length not even");
+            break;
+          }
+          int end = hex2bin(bin_string, hex_data, len / 2);
+          if (end) {
+            bin_string[len / 2] = '\0';
+            if (code_seen('S')) lcd_lib_draw_string(x, y, bin_string);
+            else lcd_lib_clear_string(x, y, bin_string);
           }
         }
         break;
@@ -2938,12 +2944,31 @@ int8_t hexNibble2Bin(const char nibble)
     return 0;
 }
 
-int hex2bin(char* bin, const char* hex, int count)
+int hex2bin(uint8_t* bin, const char* hex, const int buf_size)
 {
-    for (int i = 0; i < count; i++)
+    int count;
+    for (count = 0; count < buf_size * 2; count++)
     {
-        *bin = hexNibble2Bin(*hex++) << 4;
-        *bin++ |= hexNibble2Bin(*hex++);
+        int bin_nibble = hexNibble2Bin(*hex++);
+        if (bin_nibble >= 0)
+        {
+            // If first nibble.
+            if (count % 2 == 0)
+            {
+                *bin = bin_nibble << 4;
+            }
+            else    // Second nibble.
+            {
+                *bin += bin_nibble;
+                bin++;
+            }
+        }
+        else
+        {
+            // End of hex string reached.
+            break;
+        }
     }
+
     return count;
 }
