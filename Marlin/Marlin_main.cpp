@@ -1834,17 +1834,19 @@ void process_commands()
       break;
     #endif // NUM_SERVOS > 0
 
-    #if LARGE_FLASH == true && ( BEEPER > 0 || defined(ULTRALCD) )
+    #if LARGE_FLASH == true && ( BEEPER > 0 || defined(ULTRALCD) || defined(ENABLE_ULTILCD2) )
     case 300: // M300
     {
-      int beepS = code_seen('S') ? code_value() : 110;
-      int beepP = code_seen('P') ? code_value() : 1000;
+      unsigned int beepS = code_seen('S') ? code_value() : 110;  //frequency Hz
+      unsigned int beepP = code_seen('P') ? code_value() : 1000; //duration ms
       if (beepS > 0)
       {
         #if BEEPER > 0
-          tone(BEEPER, beepS);
-          delay(beepP);
-          noTone(BEEPER);
+          // don't use tone libs that might mess with our timers
+          uint32_t notch = 500000 / beepS;
+          if(beepP > 4000) beepP = 4000; // prevent watchdog from tripping
+          uint32_t loops = ((((uint32_t) beepP) * 500) / notch);
+          for(uint32_t _i=0;_i<loops;_i++) { WRITE(BEEPER, HIGH); delayMicroseconds(notch); WRITE(BEEPER, LOW); delayMicroseconds(notch); }
         #elif defined(ULTRALCD)
           lcd_buzz(beepS, beepP);
         #endif
