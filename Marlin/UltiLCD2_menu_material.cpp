@@ -119,7 +119,11 @@ void lcd_change_to_menu_change_material(menuFunc_t return_menu)
 
 static void lcd_menu_change_material_preheat()
 {
+#ifdef USE_CHANGE_TEMPERATURE
     setTargetHotend(material[active_extruder].change_temperature, active_extruder);
+#else
+    setTargetHotend(material[active_extruder].temperature, active_extruder);
+#endif
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20;
     if (temp < 0) temp = 0;
@@ -150,7 +154,11 @@ static void lcd_menu_change_material_preheat()
     }
     else
     {
+#ifdef USE_CHANGE_TEMPERATURE
         preheat_end_time = millis() + (unsigned long)material[active_extruder].change_preheat_wait_time * 1000L;
+#else
+        preheat_end_time = millis();
+#endif
     }
 
     uint8_t progress = uint8_t(temp * 125 / target);
@@ -450,6 +458,7 @@ static void lcd_menu_material_export()
         float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(n)), ptr, PSTR("\n\n"));
         card.write_string(buffer);
 
+#ifdef USE_CHANGE_TEMPERATURE
         strcpy_P(buffer, PSTR("change_temp="));
         ptr = buffer + strlen(buffer);
         float_to_string(eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(n)), ptr, PSTR("\n\n"));
@@ -459,6 +468,7 @@ static void lcd_menu_material_export()
         ptr = buffer + strlen(buffer);
         float_to_string(eeprom_read_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(n)), ptr, PSTR("\n\n"));
         card.write_string(buffer);
+#endif
     }
     card.closefile();
 
@@ -542,12 +552,14 @@ static void lcd_menu_material_import()
                 }else if (strcmp_P(buffer, PSTR("diameter")) == 0)
                 {
                     eeprom_write_float(EEPROM_MATERIAL_DIAMETER_OFFSET(count), strtod(c, NULL));
+#ifdef USE_CHANGE_TEMPERATURE
                 }else if (strcmp_P(buffer, PSTR("change_temp")) == 0)
                 {
                     eeprom_write_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(count), strtol(c, NULL, 10));
                 }else if (strcmp_P(buffer, PSTR("change_wait")) == 0)
                 {
                     eeprom_write_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(count), strtol(c, NULL, 10));
+#endif
                 }
             }
         }
@@ -678,12 +690,17 @@ static char* lcd_material_settings_callback(uint8_t nr)
         strcpy_P(card.longFilename, PSTR("Fan"));
     else if (nr == 4 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Flow %"));
+#ifdef USE_CHANGE_TEMPERATURE
     else if (nr == 5 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Change temperature"));
     else if (nr == 6 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Change wait time"));
     else if (nr == 7 + BED_MENU_OFFSET)
         strcpy_P(card.longFilename, PSTR("Store as preset"));
+#else
+    else if (nr == 5 + BED_MENU_OFFSET)
+        strcpy_P(card.longFilename, PSTR("Store as preset"));
+#endif
     else
         strcpy_P(card.longFilename, PSTR("???"));
     return card.longFilename;
@@ -713,19 +730,25 @@ static void lcd_material_settings_details_callback(uint8_t nr)
     }else if (nr == 4 + BED_MENU_OFFSET)
     {
         int_to_string(material[active_extruder].flow, buffer, PSTR("%"));
+#ifdef USE_CHANGE_TEMPERATURE
     }else if (nr == 5 + BED_MENU_OFFSET)
     {
         int_to_string(material[active_extruder].change_temperature, buffer, PSTR("C"));
     }else if (nr == 6 + BED_MENU_OFFSET)
     {
         int_to_string(material[active_extruder].change_preheat_wait_time, buffer, PSTR("Sec"));
+#endif
     }
     lcd_lib_draw_string(5, 53, buffer);
 }
 
 static void lcd_menu_material_settings()
 {
+#ifdef USE_CHANGE_TEMPERATURE
     lcd_scroll_menu(PSTR("MATERIAL"), 8 + BED_MENU_OFFSET, lcd_material_settings_callback, lcd_material_settings_details_callback);
+#else
+    lcd_scroll_menu(PSTR("MATERIAL"), 6 + BED_MENU_OFFSET, lcd_material_settings_callback, lcd_material_settings_details_callback);
+#endif
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -744,12 +767,17 @@ static void lcd_menu_material_settings()
             LCD_EDIT_SETTING(material[active_extruder].fan_speed, "Fan speed", "%", 0, 100);
         else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET))
             LCD_EDIT_SETTING(material[active_extruder].flow, "Material flow", "%", 1, 1000);
+#ifdef USE_CHANGE_TEMPERATURE
         else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET))
             LCD_EDIT_SETTING(material[active_extruder].change_temperature, "Change temperature", "C", 0, HEATER_0_MAXTEMP - 15);
         else if (IS_SELECTED_SCROLL(6 + BED_MENU_OFFSET))
             LCD_EDIT_SETTING(material[active_extruder].change_preheat_wait_time, "Change wait time", "sec", 0, 180);
         else if (IS_SELECTED_SCROLL(7 + BED_MENU_OFFSET))
             lcd_change_to_menu(lcd_menu_material_settings_store);
+#else
+        else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET))
+            lcd_change_to_menu(lcd_menu_material_settings_store);
+#endif
     }
 }
 
