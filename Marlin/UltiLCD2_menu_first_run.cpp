@@ -1,4 +1,5 @@
 #include <avr/pgmspace.h>
+#include <float.h>
 
 #include "Configuration.h"
 #ifdef ENABLE_ULTILCD2
@@ -59,7 +60,7 @@ void lcd_menu_first_run_init()
 
 static void homeAndParkHeadForCenterAdjustment2()
 {
-    add_homeing[Z_AXIS] = 0;
+    add_homeing[Z_AXIS] = FLT_MIN;
     enquecommand_P(PSTR("G28 Z0 X0 Y0"));
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, int(AXIS_CENTER_POS(X_AXIS)), int(max_pos[Y_AXIS])-10);
@@ -276,20 +277,13 @@ static void storeBedLeveling()
     }
 }
 
-static void lcd_menu_first_run_bed_level_done()
-{
-    // menu.return_to_previous();
-    storeBedLeveling();
-    lcd_material_reset_defaults();
-}
-
 static void lcd_menu_first_run_bed_level_paper_right()
 {
     LED_GLOW
 
     SELECT_MAIN_MENU_ITEM(0);
     if (IS_FIRST_RUN_DONE())
-        lcd_info_screen(lcd_menu_first_run_material_select_1, lcd_menu_first_run_bed_level_done, PSTR("CONTINUE"));
+        lcd_info_screen(lcd_change_to_previous_menu, storeBedLeveling, PSTR("DONE"));
     else
         lcd_info_screen(lcd_menu_first_run_material_load, storeBedLeveling, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR_IF_NOT_DONE(10);
