@@ -157,7 +157,10 @@ static void lcd_menu_maintenance_advanced()
 #endif
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(2 + EXTRUDERS))
+        {
+            enquecommand_P(PSTR("G28 Z0"));
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);
+        }
 #endif
         else if (IS_SELECTED_SCROLL(2 + BED_MENU_OFFSET + EXTRUDERS))
         {
