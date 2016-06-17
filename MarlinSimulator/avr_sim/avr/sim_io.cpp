@@ -28,12 +28,12 @@ unsigned int twiIntStart = 0;
 
 void sim_check_interrupts()
 {
+    if (!(SREG & _BV(SREG_I)))
+        return;
+
     unsigned int ticks = SDL_GetTicks();
     int tickDiff = ticks - prevTicks;
     prevTicks = ticks;
-    
-    if (!(SREG & _BV(SREG_I)))
-        return;
 
 #ifdef ENABLE_ULTILCD2
     if ((TWCR & _BV(TWEN)) && (TWCR & _BV(TWINT)) && (TWCR & _BV(TWIE)))
@@ -85,7 +85,6 @@ void sim_check_interrupts()
         case 6: tickCount = 0; break;
         case 7: tickCount = 0; break;
         }
-        tickCount *= 4;//For some reason the stepper speed is to slow, so cheat the timer routine.
         
         if (tickCount > 0 && OCR1A > 0)
         {

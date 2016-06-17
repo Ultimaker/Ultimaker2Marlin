@@ -35,12 +35,12 @@ static void lcd_menu_change_material_preheat();
 static void lcd_menu_change_material_remove();
 static void lcd_menu_change_material_remove_wait_user();
 static void lcd_menu_change_material_remove_wait_user_ready();
+static void lcd_menu_change_material_select_material();
 static void lcd_menu_insert_material_preheat();
 static void lcd_menu_change_material_insert_wait_user();
 static void lcd_menu_change_material_insert_wait_user_ready();
 static void lcd_menu_change_material_insert_forward();
 static void lcd_menu_change_material_insert();
-static void lcd_menu_change_material_select_material();
 static void lcd_menu_material_select();
 static void lcd_menu_material_selected();
 static void lcd_menu_material_settings();
@@ -204,7 +204,7 @@ static void lcd_menu_change_material_remove()
 static void lcd_menu_change_material_remove_wait_user_ready()
 {
     plan_set_e_position(0);
-    lcd_change_to_menu(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0));
+    lcd_change_to_menu(lcd_menu_change_material_select_material);
 }
 
 static void lcd_menu_change_material_remove_wait_user()
@@ -215,6 +215,52 @@ static void lcd_menu_change_material_remove_wait_user()
     lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
     lcd_lib_update_screen();
+}
+
+static char* lcd_menu_change_material_select_material_callback(uint8_t nr)
+{
+    eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+    card.longFilename[8] = '\0';
+    return card.longFilename;
+}
+
+static void lcd_menu_change_material_select_material_details_callback(uint8_t nr)
+{
+    char buffer[32];
+    char* c = buffer;
+
+    if (led_glow_dir)
+    {
+        c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
+        while(c < buffer + 10) *c++ = ' ';
+        strcpy_P(c, PSTR("Flow:"));
+        c += 5;
+        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
+    }else{
+        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+#if TEMP_SENSOR_BED != 0
+        *c++ = ' ';
+        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
+#endif
+        while(c < buffer + 10) *c++ = ' ';
+        strcpy_P(c, PSTR("Fan: "));
+        c += 5;
+        c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
+    }
+    lcd_lib_draw_string(5, 53, buffer);
+}
+
+static void lcd_menu_change_material_select_material()
+{
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+
+    lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_menu_change_material_select_material_callback, lcd_menu_change_material_select_material_details_callback);
+    if (lcd_lib_button_pressed)
+    {
+        lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), active_extruder);
+
+        lcd_change_to_menu(lcd_menu_insert_material_preheat, MAIN_MENU_ITEM_POS(0));
+    }
 }
 
 void lcd_change_to_menu_insert_material(menuFunc_t return_menu)
@@ -229,7 +275,7 @@ static void lcd_menu_insert_material_preheat()
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20 - 10;
     if (temp < 0) temp = 0;
-    if (temp > target && !is_command_queued())
+    if (temp > target && temp < target + 20 && !is_command_queued())
     {
         set_extrude_min_temp(0);
         for(uint8_t e=0; e<EXTRUDERS; e++)
@@ -246,7 +292,10 @@ static void lcd_menu_insert_material_preheat()
         minProgress = progress;
 
     lcd_info_screen(post_change_material_menu, cancelMaterialInsert);
-    lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead for"));
+    if (temp < target + 10)
+        lcd_lib_draw_stringP(3, 10, PSTR("Heating printhead for"));
+    else
+        lcd_lib_draw_stringP(3, 10, PSTR("Cooling printhead for"));
     lcd_lib_draw_stringP(3, 20, PSTR("material insertion"));
 
     lcd_progressbar(progress);
@@ -324,7 +373,7 @@ static void lcd_menu_change_material_insert()
 {
     LED_GLOW();
 
-    lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
+    lcd_question_screen(post_change_material_menu, materialInsertReady, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Wait till material"));
     lcd_lib_draw_string_centerP(30, PSTR("comes out the nozzle"));
 
@@ -335,52 +384,6 @@ static void lcd_menu_change_material_insert()
     }
 
     lcd_lib_update_screen();
-}
-
-static char* lcd_menu_change_material_select_material_callback(uint8_t nr)
-{
-    eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
-    card.longFilename[8] = '\0';
-    return card.longFilename;
-}
-
-static void lcd_menu_change_material_select_material_details_callback(uint8_t nr)
-{
-    char buffer[32];
-    char* c = buffer;
-
-    if (led_glow_dir)
-    {
-        c = float_to_string(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
-        while(c < buffer + 10) *c++ = ' ';
-        strcpy_P(c, PSTR("Flow:"));
-        c += 5;
-        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
-    }else{
-        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
-#if TEMP_SENSOR_BED != 0
-        *c++ = ' ';
-        c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
-#endif
-        while(c < buffer + 10) *c++ = ' ';
-        strcpy_P(c, PSTR("Fan: "));
-        c += 5;
-        c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
-    }
-    lcd_lib_draw_string(5, 53, buffer);
-}
-
-static void lcd_menu_change_material_select_material()
-{
-    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
-
-    lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_menu_change_material_select_material_callback, lcd_menu_change_material_select_material_details_callback);
-    if (lcd_lib_button_pressed)
-    {
-        lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), active_extruder);
-
-        lcd_change_to_menu(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0));
-    }
 }
 
 static void lcd_menu_material_export_done()
