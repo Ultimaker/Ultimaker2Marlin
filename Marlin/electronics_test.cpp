@@ -3,10 +3,31 @@
 #include "electronics_test.h"
 #include "watchdog.h"
 
+#define I2C_SDA_PIN   20
+#define I2C_SCL_PIN   21
+
+#define I2C_FREQ 400000
+
+#define I2C_WRITE   0x00
+#define I2C_READ    0x01
+
 static void send(const char c)
 {
     while(!(UCSR0A & _BV(UDRE0))) {}
         UDR0 = c;
+}
+
+static void sendHex(uint8_t c)
+{
+    if (((c & 0xF0) >> 4) < 10)
+        send('0' + ((c & 0xF0) >> 4));
+    else
+        send('A' - 10 + ((c & 0xF0) >> 4));
+    
+    if ((c & 0x0F) < 10)
+        send('0' + (c & 0x0F));
+    else
+        send('A' - 10 + (c & 0x0F));
 }
 
 static void send(const char* str)
@@ -33,6 +54,78 @@ static void sendADC(uint8_t nr)
 
     send(ADCL);
     send(ADCH);
+}
+
+static void i2c_check_and_enable()
+{
+    if (!(TWEN & _BV(TWEN)))
+    {
+        //I2C is not enabled yet, enable it so we can use it.
+        SET_OUTPUT(I2C_SDA_PIN);
+        SET_OUTPUT(I2C_SCL_PIN);
+
+        WRITE(I2C_SDA_PIN, 1);
+        WRITE(I2C_SCL_PIN, 1);
+
+        TWBR = ((F_CPU / I2C_FREQ) - 16)/2*1;
+        TWSR = 0x00;
+    }
+}
+
+static inline void i2c_start()
+{
+    TWCR = (1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
+    while (!(TWCR & (1<<TWINT))) {}
+}
+
+static inline void i2c_send_raw(uint8_t data)
+{
+    TWDR = data;
+    TWCR = (1<<TWINT) | (1<<TWEN);
+    while (!(TWCR & (1<<TWINT))) {}
+}
+
+static inline uint8_t i2c_recv_raw_no_ack()
+{
+    TWCR = (1<<TWINT) | (1<<TWEN);
+    while (!(TWCR & (1<<TWINT))) {}
+    return TWDR;
+}
+
+static inline void i2c_end()
+{
+    TWCR = (1<<TWINT)|(1<<TWEN)|(1<<TWSTO);
+    while ((TWCR & (1<<TWSTO))) {}
+}
+
+static uint8_t addressWriteReg(uint8_t addr, uint8_t reg, uint8_t data)
+{
+    i2c_check_and_enable();
+    i2c_start();
+    i2c_send_raw((addr << 1) | I2C_WRITE);
+    if (TWSR == 0x18)
+    {
+        i2c_send_raw(reg);
+        i2c_send_raw(data);
+        i2c_end();
+        return 1;
+    }
+    i2c_end();
+    return 0;
+}
+
+static uint8_t addressI2C(uint8_t addr)
+{
+    i2c_check_and_enable();
+    i2c_start();
+    i2c_send_raw((addr << 1) | I2C_WRITE);
+    if (TWSR == 0x18)
+    {
+        i2c_end();
+        return 1;
+    }
+    i2c_end();
+    return 0;
 }
 
 void handleCommand(char* command)
@@ -83,6 +176,19 @@ void handleCommand(char* command)
         case 36: sendADC(13); break;
         case 37: sendADC(14); break;
         case 38: sendADC(15); break;
+        case 100: if (addressI2C(param)) { send('1'); } else { send('0'); } break;
+        case 101:
+            addressWriteReg(0b1100001, 0, 0x80);//Write from address 0 with auto-increase.
+            addressWriteReg(0b1100001, 1, 0x80);//MODE1
+            addressWriteReg(0b1100001, 2, 0x1C);//MODE2
+            addressWriteReg(0b1100001, 3, param == 1 ? 255 : 0);//PWM0=Red
+            addressWriteReg(0b1100001, 4, param == 2 ? 255 : 0);//PWM1=Green
+            addressWriteReg(0b1100001, 5, param == 3 ? 255 : 0);//PWM2=Blue
+            addressWriteReg(0b1100001, 6, param == 4 ? 255 : 0);//PWM3=White
+            addressWriteReg(0b1100001, 7, 0xFF);//GRPPWM
+            addressWriteReg(0b1100001, 8, 0x00);//GRPFREQ
+            addressWriteReg(0b1100001, 9, 0xAA);//LEDOUT
+            break;
         default:
             send_P(PSTR("?"));
             break;
