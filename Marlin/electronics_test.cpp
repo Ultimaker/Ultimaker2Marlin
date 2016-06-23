@@ -178,16 +178,15 @@ void handleCommand(char* command)
         case 38: sendADC(15); break;
         case 100: if (addressI2C(param)) { send('1'); } else { send('0'); } break;
         case 101:
-            addressWriteReg(0b1100001, 0, 0x80);//Write from address 0 with auto-increase.
-            addressWriteReg(0b1100001, 1, 0x80);//MODE1
-            addressWriteReg(0b1100001, 2, 0x1C);//MODE2
-            addressWriteReg(0b1100001, 3, param == 1 ? 255 : 0);//PWM0=Red
-            addressWriteReg(0b1100001, 4, param == 2 ? 255 : 0);//PWM1=Green
-            addressWriteReg(0b1100001, 5, param == 3 ? 255 : 0);//PWM2=Blue
-            addressWriteReg(0b1100001, 6, param == 4 ? 255 : 0);//PWM3=White
-            addressWriteReg(0b1100001, 7, 0xFF);//GRPPWM
-            addressWriteReg(0b1100001, 8, 0x00);//GRPFREQ
-            addressWriteReg(0b1100001, 9, 0xAA);//LEDOUT
+            addressWriteReg(0b1100001, 0, 0x80);//MODE1
+            addressWriteReg(0b1100001, 1, 0x1C);//MODE2
+            addressWriteReg(0b1100001, 2, param == 1 ? 255 : 0);//PWM0=Red
+            addressWriteReg(0b1100001, 3, param == 2 ? 255 : 0);//PWM1=Green
+            addressWriteReg(0b1100001, 4, param == 3 ? 255 : 0);//PWM2=Blue
+            addressWriteReg(0b1100001, 5, param == 4 ? 255 : 0);//PWM3=White
+            addressWriteReg(0b1100001, 6, 0xFF);//GRPPWM
+            addressWriteReg(0b1100001, 7, 0x00);//GRPFREQ
+            addressWriteReg(0b1100001, 8, 0xAA);//LEDOUT
             break;
         default:
             send_P(PSTR("?"));
