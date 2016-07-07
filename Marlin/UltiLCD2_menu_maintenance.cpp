@@ -396,7 +396,7 @@ static void lcd_menu_maintenance_retraction()
         if (IS_SELECTED_SCROLL(0))
         {
             Config_StoreSettings();
-            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(6 + EXTRUDERS * 2));
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(6 + BED_MENU_OFFSET + EXTRUDERS * 2));
         }
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
@@ -465,7 +465,7 @@ static void lcd_menu_maintenance_motion()
             digipot_current(1, motor_current_setting[1]);
             digipot_current(2, motor_current_setting[2]);
             Config_StoreSettings();
-            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7));
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7 + BED_MENU_OFFSET + EXTRUDERS * 2));
         }
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec^2", 0, 20000);
