@@ -236,20 +236,7 @@ static void lcd_preferences_details(uint8_t nr)
             strcpy_P(c, PSTR("off"));
         }
     }
-//#if TEMP_SENSOR_BED != 0
-//    else if (nr == 7)
-//    {
-//        if (pidTempBed())
-//        {
-//            strcpy_P(buffer, PSTR("PID controlled"));
-//        }
-//        else
-//        {
-//            strcpy_P(buffer, PSTR("Off (bang-bang mode)"));
-//        }
-//    }
-//#endif
-    else if (nr == 10+BED_MENU_OFFSET)
+    else if (nr == 11)
     {
         strcpy_P(buffer, PSTR(STRING_CONFIG_H_AUTHOR));
     }
