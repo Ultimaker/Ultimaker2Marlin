@@ -99,7 +99,9 @@ void lcd_menu_change_material_preheat()
     if (temp < 0) temp = 0;
 
     // draw menu
+#if (EXTRUDERS > 1) || defined(USE_CHANGE_TEMPERATURE)
     char buffer[8] = {0};
+#endif
     uint8_t progress = uint8_t(temp * 125 / target);
     if (progress < minProgress)
         progress = minProgress;
@@ -205,8 +207,11 @@ static void lcd_menu_change_material_remove()
 
 static void lcd_menu_change_material_remove_wait_user_ready()
 {
-    plan_set_e_position(0);
-    menu.replace_menu(menu_t(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0)));
+    st_synchronize();
+    plan_set_e_position(0.0);
+    current_position[E_AXIS] = 0.0;
+    // <<<<< menu.replace_menu(menu_t(lcd_menu_change_material_insert_wait_user, MAIN_MENU_ITEM_POS(0)));
+    menu.replace_menu(menu_t(lcd_menu_change_material_select_material, MAIN_MENU_ITEM_POS(0)));
     check_preheat();
 }
 
@@ -245,7 +250,7 @@ void lcd_menu_insert_material_preheat()
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20 - 10;
     if (temp < 0) temp = 0;
-    if (temp > target && !is_command_queued())
+    if (temp > target && temp < target + 20 && !is_command_queued())
     {
         set_extrude_min_temp(0);
         for(uint8_t e=0; e<EXTRUDERS; e++)
@@ -263,14 +268,21 @@ void lcd_menu_insert_material_preheat()
 
     lcd_info_screen(lcd_change_to_previous_menu, cancelMaterialInsert);
 #if EXTRUDERS > 1
-    lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle"));
+    if (temp < target + 10)
+        lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle"));
+    else
+        lcd_lib_draw_stringP(3, 10, PSTR("Cooling nozzle"));
+
     char buffer[8] = {0};
     strcpy_P(buffer, PSTR("("));
     int_to_string(active_extruder+1, buffer+1, PSTR(")"));
     lcd_lib_draw_string(3+(15*LCD_CHAR_SPACING), 10, buffer);
     lcd_lib_draw_stringP(3, 20, PSTR("for insertion"));
 #else
-    lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle for"));
+    if (temp < target + 10)
+        lcd_lib_draw_stringP(3, 10, PSTR("Heating nozzle for"));
+    else
+        lcd_lib_draw_stringP(3, 10, PSTR("Cooling nozzle for"));
     lcd_lib_draw_stringP(3, 20, PSTR("material insertion"));
 #endif
 
@@ -399,7 +411,9 @@ static void lcd_menu_change_material_insert()
     {
         LED_GLOW
 
-        lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
+        // <<<<< lcd_question_screen(lcd_menu_change_material_select_material, materialInsertReady, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
+        lcd_question_screen(lcd_change_to_previous_menu, materialInsertReady, PSTR("READY"), lcd_change_to_previous_menu, cancelMaterialInsert, PSTR("CANCEL"));
+
 #if EXTRUDERS > 1
         lcd_lib_draw_stringP(3, 20, PSTR("Wait till material"));
         lcd_lib_draw_stringP(3, 30, PSTR("comes out nozzle"));
@@ -469,7 +483,7 @@ static void lcd_menu_change_material_select_material()
     {
         lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), active_extruder);
 
-        menu.replace_menu(menu_t(lcd_menu_material_selected, MAIN_MENU_ITEM_POS(0)));
+        menu.replace_menu(menu_t(lcd_menu_insert_material_preheat, MAIN_MENU_ITEM_POS(0)));
     }
     lcd_lib_update_screen();
 }

@@ -1163,6 +1163,8 @@
  #error Oops!  Make sure you have 'Arduino Mega 2560' selected from the 'Tools -> Boards' menu.
 #endif
 
+#define LARGE_FLASH true
+
 //@NEB added more details (from board manual etc.)
 
 // these pin numbers do not number the pins of the AVR Mega 2560 directly, but their corresponding mapping on
