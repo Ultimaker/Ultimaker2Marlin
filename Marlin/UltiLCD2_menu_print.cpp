@@ -1414,7 +1414,7 @@ static void drawResumeSubmenu(uint8_t nr, uint8_t &flags)
                                 , LCD_LINE_HEIGHT
                                 , 52
                                 , LCD_LINE_HEIGHT*4
-                                , PSTR("RESUME|")
+                                , movesplanned() ? PSTR("Pausing...|") : PSTR("RESUME|")
                                 , ALIGN_CENTER
                                 , flags);
         if (flags & MENU_SELECTED)
