@@ -275,6 +275,13 @@ static void storeBedLeveling()
     }
 }
 
+static void lcd_menu_first_run_bed_level_store()
+{
+    // menu.return_to_previous();
+    storeBedLeveling();
+    menu.return_to_previous(true);
+}
+
 static void lcd_menu_first_run_bed_level_done()
 {
     // menu.return_to_previous();
@@ -288,9 +295,13 @@ static void lcd_menu_first_run_bed_level_paper_right()
 
     SELECT_MAIN_MENU_ITEM(0);
     if (IS_FIRST_RUN_DONE())
-        lcd_info_screen(lcd_menu_first_run_material_select_1, lcd_menu_first_run_bed_level_done, PSTR("CONTINUE"));
+    {
+        lcd_info_screen(NULL, lcd_menu_first_run_bed_level_store, PSTR("DONE"));
+    }
     else
-        lcd_info_screen(lcd_menu_first_run_material_load, storeBedLeveling, PSTR("CONTINUE"));
+    {
+        lcd_info_screen(lcd_menu_first_run_material_load, lcd_menu_first_run_bed_level_done, PSTR("CONTINUE"));
+    }
     DRAW_PROGRESS_NR_IF_NOT_DONE(10);
     lcd_lib_draw_string_centerP(20, PSTR("Repeat this for"));
     lcd_lib_draw_string_centerP(30, PSTR("the right corner..."));
@@ -376,7 +387,6 @@ static void lcd_menu_first_run_material_select_material()
         menu.replace_menu(menu_t(lcd_menu_first_run_material_select_confirm_material, MAIN_MENU_ITEM_POS(0)));
         strcat_P(LCD_CACHE_FILENAME(0), PSTR(" as material,"));
     }
-    lcd_lib_update_screen();
 }
 
 static void lcd_menu_first_run_material_select_confirm_material()

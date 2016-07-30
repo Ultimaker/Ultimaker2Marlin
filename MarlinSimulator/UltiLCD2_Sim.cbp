@@ -37,7 +37,7 @@
 			<Add option="-DF_CPU=16000000" />
 			<Add option="-DEXTRUDERS=1" />
 			<Add option="-DTEMP_SENSOR_1=0" />
-			<Add option="-DFILAMENT_SENSOR_PIN=30" />
+			<Add option="-DFILAMENT_SENSOR_PIN=-1" />
 			<Add option="-DBABYSTEPPING" />
 			<Add option="-DTEMP_SENSOR_BED=20" />
 			<Add option="-DHEATER_0_MAXTEMP=325" />
