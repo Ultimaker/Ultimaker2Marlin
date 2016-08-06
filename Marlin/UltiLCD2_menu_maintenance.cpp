@@ -304,16 +304,18 @@ void start_move_material()
     menu.return_to_previous();
 #endif // EXTRUDERS
     set_extrude_min_temp(0);
-    enquecommand_P(PSTR("G92 E0"));
+    // reset e-position
+    current_position[E_AXIS] = 0;
+    plan_set_e_position(0);
+    // heatup nozzle
+    target_temperature[active_extruder] = material[active_extruder].temperature[0];
+
     if (ui_mode & UI_MODE_EXPERT)
     {
-        if (current_temperature[active_extruder] < (material[active_extruder].temperature[0] / 2))
-        {
-            target_temperature[active_extruder] = material[active_extruder].temperature[0];
-        }
         menu.add_menu(menu_t(lcd_menu_expert_extrude));
-    }else{
-        target_temperature[active_extruder] = material[active_extruder].temperature[0];
+    }
+    else
+    {
         menu.add_menu(menu_t(lcd_menu_maintenance_extrude, MAIN_MENU_ITEM_POS(0)));
     }
 }
