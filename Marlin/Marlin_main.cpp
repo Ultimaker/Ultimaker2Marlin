@@ -673,7 +673,7 @@ static void get_command()
     return;
   if (serial_count!=0)
   {
-    if ((buflen && serialCmd) || (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT))
+    if ((is_command_queued() && serialCmd) || ((millis() - lastSerialCommandTime) < SERIAL_CONTROL_TIMEOUT))
       return;
     serial_count = 0;
   }

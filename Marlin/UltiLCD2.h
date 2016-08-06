@@ -31,7 +31,7 @@ extern float dsp_temperature_bed;
 #define LED_MODE_WHILE_PRINTING 2
 #define LED_MODE_BLINK_ON_DONE  3
 
-#define SERIAL_CONTROL_TIMEOUT 2000
+#define SERIAL_CONTROL_TIMEOUT 4000
 
 #endif
 

@@ -139,7 +139,7 @@ void lcd_update()
         LED_GLOW_ERROR
         lcd_lib_update_screen();
     }
-    else if ((is_command_queued() && serialCmd) || (millis() - lastSerialCommandTime < SERIAL_CONTROL_TIMEOUT))
+    else if ((is_command_queued() && serialCmd) || ((m - lastSerialCommandTime) < SERIAL_CONTROL_TIMEOUT))
     {
         if (!(sleep_state & SLEEP_SERIAL_SCREEN))
         {

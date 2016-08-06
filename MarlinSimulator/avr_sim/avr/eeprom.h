@@ -53,7 +53,6 @@ static inline uint32_t eeprom_read_dword (const uint32_t *__p)
 {
     return *(uint32_t*)&__eeprom__storage[int(__p)];
 }
-#define eeprom_read_float eeprom_read_float_
 static inline float eeprom_read_float_ (const float *__p)
 {
     return *(float*)&__eeprom__storage[int(__p)];
