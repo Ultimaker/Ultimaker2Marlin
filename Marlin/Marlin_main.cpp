@@ -229,7 +229,7 @@ static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
 #define RELATIVE_MODE 128
 uint8_t axis_relative_state = 0;
 
-static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
+static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE] = {0};
 #if BUFSIZE > 8
 uint16_t serialCmd = 0;
 #else
@@ -321,6 +321,7 @@ void enquecommand(const char *cmd)
   if(buflen < BUFSIZE)
   {
     //this is dangerous if a mixing of serial and this happsens
+    memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
     strcpy(&(cmdbuffer[bufindw][0]),cmd);
     // clear serial flag
     serialCmd &= ~(1 << bufindw);
@@ -339,6 +340,7 @@ void enquecommand_P(const char *cmd)
   if(buflen < BUFSIZE)
   {
     //this is dangerous if a mixing of serial and this happsens
+    memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
     strcpy_P(&(cmdbuffer[bufindw][0]),cmd);
     // clear serial flag
     serialCmd &= ~(1 << bufindw);
@@ -641,20 +643,29 @@ static void get_command()
           default:
             break;
           }
-
         }
 #ifdef ENABLE_ULTILCD2
+    #ifdef SDSUPPORT
+        if (card.saving || !code_seen(cmdbuffer[bufindw], 'M') || (code_value_long() != 105))
+    #else
         if (!code_seen(cmdbuffer[bufindw], 'M') || (code_value_long() != 105))
+    #endif // SDSUPPORT
 #endif
         {
             //set serial flag for new command
             serialCmd |= (1 << bufindw);
             lastSerialCommandTime = millis();
+            //start reading next command
+            ++bufindw;
+            bufindw %= BUFSIZE;
+            memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
+            ++buflen;
         }
-
-        ++bufindw;
-        bufindw %= BUFSIZE;
-        ++buflen;
+        else
+        {
+            //answer M105 immediately
+            process_command(cmdbuffer[bufindw]);
+        }
       }
       serial_count = 0; //clear buffer
     }
@@ -737,6 +748,7 @@ static void get_command()
         serialCmd &= ~(1 << bufindw);
         ++bufindw;
         bufindw %= BUFSIZE;
+        memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
         ++buflen;
 //      }
       comment_mode = false; //for new command
@@ -929,7 +941,7 @@ static void homeaxis(int axis) {
 #define HOMEAXIS(LETTER) homeaxis(LETTER##_AXIS)
 
 #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || ENABLED(HEATER_0_USES_MAX6675)
-  void print_heaterstates()
+  static void print_heaterstates()
   {
     #if (TEMP_SENSOR_0 != 0) || ENABLED(HEATER_0_USES_MAX6675)
       SERIAL_PROTOCOLPGM(" T:");
@@ -991,10 +1003,19 @@ inline void gcode_M105(const char *cmd)
   SERIAL_EOL;
 }
 
+static char * truncate_checksum(char *str)
+{
+    char *starpos = strchr(str, '*');
+    if(starpos)
+    {
+        *starpos='\0';
+    }
+    return starpos;
+}
+
 void process_command(const char *strCmd)
 {
   unsigned long codenum; //throw away variable
-  char *starpos = NULL;
 
   if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START))
     printing_state = PRINT_STATE_NORMAL;
@@ -1369,10 +1390,9 @@ void process_command(const char *strCmd)
     case 23: //M23 - Select file
       if (printing_state == PRINT_STATE_RECOVER)
         break;
-      starpos = (strchr(strchr_pointer + 4,'*'));
-      if(starpos!=NULL)
-        *(starpos)='\0';
-      card.openFile(strchr_pointer + 4,true);
+      strchr_pointer += 4;
+      truncate_checksum(strchr_pointer);
+      card.openFile(strchr_pointer, true);
       break;
     case 24: //M24 - Start SD print
       if (printing_state == PRINT_STATE_RECOVER)
@@ -1396,13 +1416,12 @@ void process_command(const char *strCmd)
       card.getStatus();
       break;
     case 28: //M28 - Start SD write
-      starpos = (strchr(strchr_pointer + 4,'*'));
-      if(starpos != NULL){
+      strchr_pointer += 4;
+      if(truncate_checksum(strchr_pointer)){
         char* npos = strchr(strCmd, 'N');
         strchr_pointer = strchr(npos,' ') + 1;
-        *(starpos) = '\0';
       }
-      card.openFile(strchr_pointer+4,false);
+      card.openFile(strchr_pointer, false);
       break;
     case 29: //M29 - Stop SD write
       //processed in write to file routine above
@@ -1413,32 +1432,29 @@ void process_command(const char *strCmd)
         break;
       if (card.isOk()){
         card.closefile();
-        starpos = (strchr(strchr_pointer + 4,'*'));
-        if(starpos != NULL){
+        strchr_pointer += 4;
+        if(truncate_checksum(strchr_pointer)){
           char* npos = strchr(strCmd, 'N');
           strchr_pointer = strchr(npos,' ') + 1;
-          *(starpos) = '\0';
         }
-        card.removeFile(strchr_pointer + 4);
+        card.removeFile(strchr_pointer);
       }
       break;
     case 923: //M923 - Select file and start printing
-      starpos = (strchr(strchr_pointer + 4,'*'));
-      if(starpos!=NULL)
-        *(starpos-1)='\0';
-      card.openFile(strchr_pointer + 4,true);
+      strchr_pointer += 4;
+      truncate_checksum(strchr_pointer);
+      card.openFile(strchr_pointer,true);
       card.startFileprint();
       starttime=millis();
       stoptime=starttime;
       break;
     case 928: //M928 - Start SD write
-      starpos = (strchr(strchr_pointer + 5,'*'));
-      if(starpos != NULL){
+      strchr_pointer += 5;
+      if(truncate_checksum(strchr_pointer)){
         char* npos = strchr(strCmd, 'N');
         strchr_pointer = strchr(npos,' ') + 1;
-        *(starpos) = '\0';
       }
-      card.openLogFile(strchr_pointer+5);
+      card.openLogFile(strchr_pointer);
       break;
 
 #endif //SDSUPPORT
@@ -1780,10 +1796,9 @@ void process_command(const char *strCmd)
       SERIAL_PROTOCOLPGM(MSG_M115_REPORT);
       break;
     case 117: // M117 display message
-      starpos = (strchr(strchr_pointer + 5,'*'));
-      if(starpos!=NULL)
-        *(starpos-1)='\0';
-      lcd_setstatus(strchr_pointer + 5);
+      strchr_pointer += 5;
+      truncate_checksum(strchr_pointer);
+      lcd_setstatus(strchr_pointer);
       break;
     case 114: // M114
       SERIAL_PROTOCOLPGM("X:");
@@ -2529,13 +2544,20 @@ void process_command(const char *strCmd)
           if (printing_state == PRINT_STATE_RECOVER)
             break;
           uint8_t x = 0, y = 0;
-          if (code_seen(strCmd, 'X')) {
+          if (code_seen(strCmd, 'X'))
+          {
             x = code_value_long();
             if (code_seen(strCmd, 'Y')) y = code_value_long();
             if (code_seen(strCmd, 'S')) lcd_lib_draw_string(x, y, strchr_pointer + 1);
-          } else {
+          }
+          else
+          {
             if (code_seen(strCmd, 'Y')) y = code_value_long();
-            if (code_seen(strCmd, 'S')) lcd_lib_draw_string_center(y, strchr_pointer + 1);
+            if (code_seen(strCmd, 'S'))
+            {
+              truncate_checksum(++strchr_pointer);
+              lcd_lib_draw_string_center(y, strchr_pointer);
+            }
           }
         }
         break;
@@ -2544,13 +2566,20 @@ void process_command(const char *strCmd)
           if (printing_state == PRINT_STATE_RECOVER)
             break;
           uint8_t x = 0, y = 0;
-          if (code_seen(strCmd, 'X')) {
+          if (code_seen(strCmd, 'X'))
+          {
             x = code_value_long();
             if (code_seen(strCmd, 'Y')) y = code_value_long();
             if (code_seen(strCmd, 'S')) lcd_lib_clear_string(x, y, strchr_pointer + 1);
-          } else {
+          }
+          else
+          {
             if (code_seen(strCmd, 'Y')) y = code_value_long();
-            if (code_seen(strCmd, 'S')) lcd_lib_clear_string_center(y, strchr_pointer + 1);
+            if (code_seen(strCmd, 'S'))
+            {
+              truncate_checksum(++strchr_pointer);
+              lcd_lib_clear_string_center(y, strchr_pointer);
+            }
           }
         }
         break;

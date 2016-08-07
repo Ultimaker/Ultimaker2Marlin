@@ -263,7 +263,14 @@ void lcd_buttons_update()
 
 void lcd_setstatus(const char* message)
 {
-    strncpy(lcd_status_message, message, LCD_CHARS_PER_LINE);
+    if (message)
+    {
+        strncpy(lcd_status_message, message, LCD_CHARS_PER_LINE);
+    }
+    else
+    {
+        *lcd_status_message = '\0';
+    }
 }
 
 void lcd_clearstatus()
