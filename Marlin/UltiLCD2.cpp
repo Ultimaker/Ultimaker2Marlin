@@ -26,7 +26,7 @@ uint8_t led_brightness_level = 100;
 uint8_t led_mode = LED_MODE_ALWAYS_ON;
 float dsp_temperature[EXTRUDERS] = { 20.0 };
 float dsp_temperature_bed = 20.0;
-char lcd_status_message[LCD_CHARS_PER_LINE+1];
+char lcd_status_message[LCD_CHARS_PER_LINE+1] = {0};
 
 //#define SPECIAL_STARTUP
 #define MILLIS_GLOW  (1000L / 40L)
@@ -59,7 +59,7 @@ void lcd_init()
 #endif // EXTRUDERS
 
     // initialize menu stack and show start animation
-    *lcd_status_message = 0;
+    lcd_clearstatus();
     menu.init_menu(menu_t(lcd_menu_main, MAIN_MENU_ITEM_POS(0)), false);
     menu.add_menu(menu_t(lcd_menu_startup), false);
     analogWrite(LED_PIN, 0);

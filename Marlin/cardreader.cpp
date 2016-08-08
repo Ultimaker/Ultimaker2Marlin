@@ -15,7 +15,6 @@ CardReader::CardReader() :
  , pause(false)
  , sdInserted(false)
  , filenameIsDir(false)
- , lastnr(0)
  , cardOK(false)
  , workDirDepth(0)
  , insertChangeDelay(1000 / 25)
@@ -139,8 +138,7 @@ void CardReader::ls()
 {
   lsAction=LS_SerialPrint;
   root.rewind();
-  SdFileExt* lsParents[MAX_DIR_DEPTH];
-  memset(lsParents, 0, sizeof(lsParents));
+  SdFileExt* lsParents[MAX_DIR_DEPTH] = {0};
   lsDive(root, lsParents, 0);
 }
 
@@ -429,14 +427,21 @@ bool CardReader::write_string(char* buffer)
 
 void CardReader::checkautostart(bool force)
 {
+  static uint8_t lastnr = 0;
   if(!force)
   {
     if(!autostart_stilltocheck)
       return;
     if(autostart_atmillis<millis())
       return;
+    lastnr = 0;
   }
   autostart_stilltocheck=false;
+  if (lastnr > 9)
+  {
+      return;
+  }
+
   if(!cardOK)
   {
     initsd();
@@ -446,31 +451,34 @@ void CardReader::checkautostart(bool force)
 
   char autoname[30];
   sprintf_P(autoname, PSTR("auto%i.g"), lastnr);
-  for(uint8_t i=0;i<(uint8_t)strlen(autoname);i++)
-    autoname[i]=tolower(autoname[i]);
-  dir_t p;
 
   root.rewind();
 
   bool found=false;
-  while (root.readDir(&p, NULL) > 0)
   {
-    for(uint8_t i=0;i<(uint8_t)strlen((char*)p.name);i++)
-    p.name[i]=tolower(p.name[i]);
-    if(p.name[9]!='~') //skip safety copies
-    if(strncmp((char*)p.name,autoname,5)==0)
+    dir_t p;
+    while (root.readDir(&p, NULL) > 0)
     {
-      char cmd[30];
+      // convert filename to lowercase
+      uint8_t *pChar = p.name;
+      for(uint8_t i=0; i<sizeof(p.name); ++i, ++pChar)
+        *pChar = tolower(*pChar);
 
-      sprintf_P(cmd, PSTR("M23 %s"), autoname);
-      enquecommand(cmd);
-      enquecommand_P(PSTR("M24"));
-      found=true;
+      if(p.name[9]!='~') //skip safety copies
+      if(strncmp((char*)p.name,autoname,5)==0)
+      {
+        char cmd[16];
+
+        sprintf_P(cmd, PSTR("M23 %s"), autoname);
+        enquecommand(cmd);
+        enquecommand_P(PSTR("M24"));
+        found=true;
+      }
     }
   }
   if(!found)
   {
-    lastnr=-1;
+    lastnr=0xFF;
     // card.reset();
   }
   else

@@ -223,7 +223,7 @@ static float delta[3] = {0.0, 0.0, 0.0};
 static float offset[3] = {0.0, 0.0, 0.0};
 static bool home_all_axis = true;
 static float feedrate = 1500.0, next_feedrate, saved_feedrate;
-static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
+static long gcode_LastN, Stopped_gcode_LastN = 0;
 
 // static bool relative_mode = false;  //Determines Absolute or Relative Coordinates
 #define RELATIVE_MODE 128
@@ -313,45 +313,86 @@ void clear_command_queue()
     }
 }
 
+static void next_command()
+{
+  #ifdef SDSUPPORT
+    if(card.saving)
+    {
+        if(strstr_P(cmdbuffer[bufindr], PSTR("M29")) == NULL)
+        {
+          card.write_command(cmdbuffer[bufindr]);
+          if(card.logging)
+          {
+            process_command(cmdbuffer[bufindr]);
+            serialCmd &= ~(1 << bufindr);
+          }
+          else
+          {
+            SERIAL_PROTOCOLLNPGM(MSG_OK);
+          }
+        }
+        else
+        {
+          card.closefile();
+          SERIAL_PROTOCOLLNPGM(MSG_FILE_SAVED);
+        }
+    }
+    else
+    {
+    process_command(cmdbuffer[bufindr]);
+    serialCmd &= ~(1 << bufindr);
+    }
+  #else
+    process_command(cmdbuffer[bufindr]);
+    serialCmd &= ~(1 << bufindr);
+  #endif //SDSUPPORT
+
+    --buflen;
+    ++bufindr;
+    bufindr %= BUFSIZE;
+}
+
+static void prepareenque()
+{
+    while(buflen >= BUFSIZE)
+    {
+        next_command();
+        idle();
+    }
+    //this is dangerous if a mixing of serial and this happens
+    memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
+}
+
+static void finishenque()
+{
+    // clear serial flag
+    serialCmd &= ~(1 << bufindw);
+    SERIAL_ECHO_START;
+    SERIAL_ECHOPGM("enqueing \"");
+    SERIAL_ECHO(cmdbuffer[bufindw]);
+    SERIAL_ECHOLNPGM("\"");
+    ++bufindw;
+    bufindw %= BUFSIZE;
+    ++buflen;
+}
+
 //adds an command to the main command buffer
 //thats really done in a non-safe way.
 //needs overworking someday
 void enquecommand(const char *cmd)
 {
-  if(buflen < BUFSIZE)
-  {
-    //this is dangerous if a mixing of serial and this happsens
-    memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
+    prepareenque();
+    //this is dangerous if a mixing of serial and this happens
     strcpy(&(cmdbuffer[bufindw][0]),cmd);
-    // clear serial flag
-    serialCmd &= ~(1 << bufindw);
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
-    SERIAL_ECHOLNPGM("\"");
-    ++bufindw;
-    bufindw %= BUFSIZE;
-    ++buflen;
-  }
+    finishenque();
 }
 
 void enquecommand_P(const char *cmd)
 {
-  if(buflen < BUFSIZE)
-  {
-    //this is dangerous if a mixing of serial and this happsens
-    memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
+    prepareenque();
+    //this is dangerous if a mixing of serial and this happens
     strcpy_P(&(cmdbuffer[bufindw][0]),cmd);
-    // clear serial flag
-    serialCmd &= ~(1 << bufindw);
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
-    SERIAL_ECHOLNPGM("\"");
-    ++bufindw;
-    bufindw %= BUFSIZE;
-    ++buflen;
-  }
+    finishenque();
 }
 
 bool is_command_queued()
@@ -486,54 +527,20 @@ void setup()
 
 void loop()
 {
-  if(buflen < (BUFSIZE-1))
-  {
-    get_command();
-  }
-
   #ifdef SDSUPPORT
   card.checkautostart(false);
   #endif
   if(buflen)
   {
-    #ifdef SDSUPPORT
-      if(card.saving)
-      {
-        if(strstr_P(cmdbuffer[bufindr], PSTR("M29")) == NULL)
-        {
-          card.write_command(cmdbuffer[bufindr]);
-          if(card.logging)
-          {
-            process_command(cmdbuffer[bufindr]);
-            serialCmd &= ~(1 << bufindr);
-          }
-          else
-          {
-            SERIAL_PROTOCOLLNPGM(MSG_OK);
-          }
-        }
-        else
-        {
-          card.closefile();
-          SERIAL_PROTOCOLLNPGM(MSG_FILE_SAVED);
-        }
-      }
-      else
-      {
-        process_command(cmdbuffer[bufindr]);
-        serialCmd &= ~(1 << bufindr);
-      }
-    #else
-      process_command(cmdbuffer[bufindr]);
-      serialCmd &= ~(1 << bufindr);
-    #endif //SDSUPPORT
-    if (buflen > 0)
-    {
-      --buflen;
-      ++bufindr;
-      bufindr %= BUFSIZE;
-    }
+    // process next command
+    next_command();
   }
+  if(buflen < (BUFSIZE))
+  {
+    // get next command
+    get_command();
+  }
+  // manage heater and inactivity
   idle();
   checkHitEndstops();
 }
@@ -556,6 +563,7 @@ static bool code_seen(const char *cmd, char code)
 
 static void get_command()
 {
+  long gcode_N;
   while( MYSERIAL.available() > 0  && buflen < BUFSIZE) {
     serial_char = MYSERIAL.read();
     if(serial_char == '\n' ||
@@ -582,11 +590,11 @@ static void get_command()
             return;
           }
 
-          if(code_seen(cmdbuffer[bufindw], '*'))
+          if(code_seen(strchr_pointer, '*'))
           {
             byte checksum = 0;
-            byte count = 0;
-            while(cmdbuffer[bufindw][count] != '*') checksum = checksum^cmdbuffer[bufindw][count++];
+            char *pChar = cmdbuffer[bufindw];
+            while(*pChar != '*') checksum ^= *pChar++;
 
             if( (int)(code_value()) != checksum) {
               SERIAL_ERROR_START;
@@ -645,27 +653,20 @@ static void get_command()
           }
         }
 #ifdef ENABLE_ULTILCD2
-    #ifdef SDSUPPORT
-        if (card.saving || !code_seen(cmdbuffer[bufindw], 'M') || (code_value_long() != 105))
-    #else
-        if (!code_seen(cmdbuffer[bufindw], 'M') || (code_value_long() != 105))
-    #endif // SDSUPPORT
+        // no printing screen for these commands
+        if(!code_seen(cmdbuffer[bufindw], 'M') || code_value_long() != 105)
 #endif
         {
             //set serial flag for new command
             serialCmd |= (1 << bufindw);
             lastSerialCommandTime = millis();
-            //start reading next command
-            ++bufindw;
-            bufindw %= BUFSIZE;
-            memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
-            ++buflen;
         }
-        else
-        {
-            //answer M105 immediately
-            process_command(cmdbuffer[bufindw]);
-        }
+
+        //start reading next command
+        ++bufindw;
+        bufindw %= BUFSIZE;
+        memset(cmdbuffer[bufindw], 0, MAX_CMD_SIZE);
+        ++buflen;
       }
       serial_count = 0; //clear buffer
     }
@@ -735,7 +736,6 @@ static void get_command()
         lcd_setstatus(time);
         card.printingHasFinished();
         card.checkautostart(true);
-
       }
       if(!serial_count)
       {
@@ -1005,12 +1005,16 @@ inline void gcode_M105(const char *cmd)
 
 static char * truncate_checksum(char *str)
 {
-    char *starpos = strchr(str, '*');
-    if(starpos)
+    if (*str)
     {
-        *starpos='\0';
+        char *starpos = strchr(str, '*');
+        if(starpos)
+        {
+            *starpos='\0';
+        }
+        return starpos;
     }
-    return starpos;
+    return 0;
 }
 
 void process_command(const char *strCmd)
@@ -1322,13 +1326,17 @@ void process_command(const char *strCmd)
 
       st_synchronize();
       previous_millis_cmd = millis();
-      if (codenum > 0){
+      if (codenum > 0)
+      {
         codenum += millis();  // keep track of when we started waiting
         while(millis()  < codenum && !lcd_clicked()){
           idle();
         }
-      }else{
-        while(!lcd_clicked()){
+      }
+      else
+      {
+        while(!lcd_clicked())
+        {
           idle();
         }
       }
@@ -1441,7 +1449,7 @@ void process_command(const char *strCmd)
       }
       break;
     case 923: //M923 - Select file and start printing
-      strchr_pointer += 4;
+      strchr_pointer += 5;
       truncate_checksum(strchr_pointer);
       card.openFile(strchr_pointer,true);
       card.startFileprint();
@@ -1599,6 +1607,7 @@ void process_command(const char *strCmd)
           }
         }
         LCD_MESSAGEPGM(MSG_HEATING_COMPLETE);
+        starttime=millis();
         previous_millis_cmd = millis();
       }
       break;
@@ -1739,13 +1748,6 @@ void process_command(const char *strCmd)
         bool all_axis = !((code_seen(strCmd, axis_codes[0])) || (code_seen(strCmd, axis_codes[1])) || (code_seen(strCmd, axis_codes[2]))|| (code_seen(strCmd, axis_codes[3])));
         if(all_axis)
         {
-          st_synchronize();
-          disable_e0();
-          disable_e1();
-          disable_e2();
-        #if EXTRUDERS > 1
-          last_extruder = 0xFF;
-        #endif
           finishAndDisableSteppers();
         }
         else
@@ -1796,9 +1798,15 @@ void process_command(const char *strCmd)
       SERIAL_PROTOCOLPGM(MSG_M115_REPORT);
       break;
     case 117: // M117 display message
-      strchr_pointer += 5;
       truncate_checksum(strchr_pointer);
-      lcd_setstatus(strchr_pointer);
+      if (strlen(strchr_pointer) > 5)
+      {
+        lcd_setstatus(strchr_pointer+5);
+      }
+      else
+      {
+        lcd_clearstatus();
+      }
       break;
     case 114: // M114
       SERIAL_PROTOCOLPGM("X:");
@@ -2317,7 +2325,8 @@ void process_command(const char *strCmd)
         delay(100);
         LCD_ALERTMESSAGEPGM(MSG_FILAMENTCHANGE);
         uint8_t cnt=0;
-        while(!lcd_clicked()){
+        while(!lcd_clicked())
+        {
           cnt++;
           idle();
           if(cnt==0)

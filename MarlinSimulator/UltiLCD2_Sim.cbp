@@ -46,12 +46,12 @@
 			<Add option="-DUSE_CHANGE_TEMPERATURE" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
-			<Add directory="../../SDL-1.2.15/include" />
+			<Add directory="D:/GitRepo/SDL-1.2.15/include" />
 		</Compiler>
 		<Linker>
 			<Add library="SDLmain" />
 			<Add library="SDL" />
-			<Add directory="../../SDL-1.2.15/lib" />
+			<Add directory="D:/GitRepo/SDL-1.2.15/lib" />
 		</Linker>
 		<Unit filename="../Marlin/Configuration.h" />
 		<Unit filename="../Marlin/ConfigurationStore.cpp" />
