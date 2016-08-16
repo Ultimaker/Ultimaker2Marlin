@@ -772,6 +772,10 @@ static void axis_is_at_home(int axis) {
   max_pos[axis] =          base_max_pos(axis);// + add_homeing[axis];
 }
 
+// Move the given axis to the home position.
+// Movement is in two parts:
+// 1) A quick move until the endstop switch is reached.
+// 2) A short backup and then slow move to home for accurately determining the home position.
 static void homeaxis(int axis) {
 #define HOMEAXIS_DO(LETTER) \
   ((LETTER##_MIN_PIN > -1 && LETTER##_HOME_DIR==-1) || (LETTER##_MAX_PIN > -1 && LETTER##_HOME_DIR==1))
@@ -785,6 +789,7 @@ static void homeaxis(int axis) {
       if (servo_endstops[axis] > -1) servos[servo_endstops[axis]].write(servo_endstop_angles[axis * 2]);
     #endif
 
+    // Do a fast run to the home position.
     current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = 1.5 * max_length(axis) * home_dir(axis);
@@ -815,12 +820,14 @@ static void homeaxis(int axis) {
         return;
     }
 
+    // Move back a little bit.
     current_position[axis] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
     destination[axis] = -home_retract_mm(axis) * home_dir(axis);
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
 
+    // Verify the endstop switch isn't stuck.
     bool endstop_pressed = false;
     switch(axis)
     {
@@ -849,7 +856,7 @@ static void homeaxis(int axis) {
         #endif
         break;
     }
-    if (endstop_pressed && axis == Z_AXIS)
+    if (endstop_pressed && axis == Z_AXIS)  // Temporarily verify Z-axis only until we know what incorrectly triggers the X- and Y-switches errors.
     {
         SERIAL_ERROR_START;
         SERIAL_ERRORLNPGM("Endstop still pressed after backing off. Endstop stuck?");
@@ -861,6 +868,7 @@ static void homeaxis(int axis) {
         return;
     }
 
+    // Do a second run at the home position, but now slower to be more accurate.
     destination[axis] = 2*home_retract_mm(axis) * home_dir(axis);
     feedrate = homing_feedrate[axis]/3;
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
@@ -1058,7 +1066,8 @@ void process_commands()
         current_position[X_AXIS] = 0;current_position[Y_AXIS] = 0;
 
         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
-        destination[X_AXIS] = 1.5 * X_MAX_LENGTH * X_HOME_DIR;destination[Y_AXIS] = 1.5 * Y_MAX_LENGTH * Y_HOME_DIR;
+        destination[X_AXIS] = 1.5 * X_MAX_LENGTH * X_HOME_DIR;
+	destination[Y_AXIS] = 1.5 * Y_MAX_LENGTH * Y_HOME_DIR;
         feedrate = homing_feedrate[X_AXIS];
         if(homing_feedrate[Y_AXIS]<feedrate)
           feedrate =homing_feedrate[Y_AXIS];
