@@ -303,13 +303,13 @@ extern "C"{
   }
 }
 
-//Clear all the commands in the ASCII command buffer, to make sure we have room for abort commands.
+//Clear all the commands in the ASCII command buffer
 void clear_command_queue()
 {
     if (buflen > 0)
     {
-        bufindw = (bufindr + 1)%BUFSIZE;
-        buflen = 1;
+        bufindw = bufindr;
+        buflen = 0;
     }
 }
 
@@ -347,9 +347,12 @@ static void next_command()
     serialCmd &= ~(1 << bufindr);
   #endif //SDSUPPORT
 
-    --buflen;
-    ++bufindr;
-    bufindr %= BUFSIZE;
+    if (buflen)
+    {
+        --buflen;
+        ++bufindr;
+        bufindr %= BUFSIZE;
+    }
 }
 
 static void prepareenque()
@@ -527,6 +530,10 @@ void setup()
 
 void loop()
 {
+  if (printing_state == PRINT_STATE_ABORT)
+  {
+    abortPrint();
+  }
   #ifdef SDSUPPORT
   card.checkautostart(false);
   #endif
@@ -681,7 +688,7 @@ static void get_command()
   {
     card.sdprinting = false;
   }
-  if(!card.sdprinting)
+  if(!card.sdprinting || (printing_state == PRINT_STATE_ABORT))
     return;
   if (serial_count!=0)
   {
@@ -1116,7 +1123,8 @@ void process_command(const char *strCmd)
     case 28: //G28 Home all Axis one at a time
       if ((printing_state == PRINT_STATE_RECOVER) || (printing_state == PRINT_STATE_HOMING))
         break;
-      if (printing_state != PRINT_STATE_START)
+
+      if ((printing_state != PRINT_STATE_START) && (printing_state != PRINT_STATE_ABORT))
         printing_state = PRINT_STATE_HOMING;
 
       saved_feedrate = feedrate;
@@ -2370,7 +2378,7 @@ void process_command(const char *strCmd)
         if (printing_state == PRINT_STATE_RECOVER)
           break;
 
-        serial_action_P(PSTR("pause"));
+//        serial_action_P(PSTR("pause"));
 
         st_synchronize();
         float target[NUM_AXIS];
@@ -2410,6 +2418,7 @@ void process_command(const char *strCmd)
         plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], retract_feedrate/60, active_extruder);
 
         memcpy(current_position, target, sizeof(current_position));
+        memcpy(destination, current_position, sizeof(destination));
 
         //finish moves
         st_synchronize();
@@ -2420,27 +2429,34 @@ void process_command(const char *strCmd)
     #if EXTRUDERS > 1
         last_extruder = 0xFF;
     #endif
-        while(card.pause)
-        {
+        while(card.pause){
           idle();
+          if (printing_state == PRINT_STATE_ABORT)
+          {
+            break;
+          }
         }
 
+        memcpy(current_position, target, sizeof(current_position));
+        memcpy(destination, current_position, sizeof(destination));
         plan_set_e_position(current_position[E_AXIS]);
-        //return to normal
-        if(code_seen(strCmd, 'L'))
+
+        if ((printing_state == PRINT_STATE_ABORT) && (card.sdprinting))
         {
-          target[E_AXIS] += code_value()/volume_to_filament_length[active_extruder];
-        }
-        plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], retract_feedrate/60, active_extruder); //Move back the L feed.
-        if (card.sdprinting)    //Only move to the last position if we are still printing. Else we aborted.
-        {
+            //return to normal
+            if(code_seen(strCmd, 'L'))
+            {
+                target[E_AXIS] += code_value()/volume_to_filament_length[active_extruder];
+            }
+            plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], retract_feedrate/60, active_extruder); //Move back the L feed.
+
             plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder); //move xy back
             plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder); //move z back
             plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], lastpos[E_AXIS], retract_feedrate/60, active_extruder); //final untretract
             memcpy(current_position, lastpos, sizeof(current_position));
             memcpy(destination, current_position, sizeof(destination));
         }
-        serial_action_P(PSTR("resume"));
+//        serial_action_P(PSTR("resume"));
     }
     break;
 

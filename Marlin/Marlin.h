@@ -248,6 +248,7 @@ extern uint8_t printing_state;
 #define PRINT_STATE_HOMING      5
 #define PRINT_STATE_RECOVER     6
 #define PRINT_STATE_START       7
+#define PRINT_STATE_ABORT       255
 
 // Handling multiple extruders pins
 extern uint8_t active_extruder;

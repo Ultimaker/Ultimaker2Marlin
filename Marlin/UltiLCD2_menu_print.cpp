@@ -34,7 +34,6 @@ static void lcd_menu_print_material_warning();
 static void lcd_menu_print_tune_retraction();
 
 static bool primed = false;
-//static bool pauseRequested = false;
 
 void lcd_clear_cache()
 {
@@ -46,12 +45,11 @@ void lcd_clear_cache()
 
 void abortPrint()
 {
-    postMenuCheck = NULL;
-    clear_command_queue();
-    // enquecommand_P(PSTR("M401"));
     quickStop();
+    clear_command_queue();
+    postMenuCheck = NULL;
 
-    if (primed || card.sdprinting)
+    if (primed)
     {
         // retract
         enquecommand_P(PSTR("G10"));
@@ -98,17 +96,18 @@ void abortPrint()
     stoptime=millis();
     lifetime_stats_print_end();
     card.pause = false;
-//    pauseRequested = false;
-    printing_state  = PRINT_STATE_NORMAL;
+    printing_state = PRINT_STATE_NORMAL;
     if (led_mode == LED_MODE_WHILE_PRINTING)
         analogWrite(LED_PIN, 0);
-}
 
-static void userAbortPrint()
-{
-    abortPrint();
-    sleep_state &= ~SLEEP_LED_OFF;
-    menu.return_to_main();
+    // reset defaults
+    feedmultiply = 100;
+    fanSpeedPercent = 100;
+    for(uint8_t e=0; e<EXTRUDERS; e++)
+    {
+        volume_to_filament_length[e] = 1.0;
+        extrudemultiply[e] = 100;
+    }
 }
 
 static void checkPrintFinished()
@@ -212,7 +211,7 @@ void doStartPrint()
     starttime = millis();
     stoptime = starttime;
     predictedTime = 0;
-    sleep_state = (sleep_state & SLEEP_SERIAL_SCREEN);
+    // sleep_state = (sleep_state & SLEEP_SERIAL_SCREEN);
 }
 
 static void userStartPrint()
@@ -846,10 +845,33 @@ static void lcd_menu_print_material_warning()
     lcd_lib_update_screen();
 }
 
+static void lcd_menu_doabort()
+{
+    LED_GLOW
+    if (printing_state == PRINT_STATE_ABORT)
+    {
+        lcd_lib_clear();
+        lcd_lib_draw_string_centerP(20, PSTR("Aborting..."));
+        lcd_lib_update_screen();
+    }
+    else
+    {
+        menu.replace_menu(menu_t(lcd_menu_print_ready, MAIN_MENU_ITEM_POS(0)));
+    }
+}
+
+static void set_abort_state()
+{
+    printing_state = PRINT_STATE_ABORT;
+    postMenuCheck = NULL;
+    sleep_state &= ~SLEEP_LED_OFF;
+    menu.return_to_main();
+}
+
 void lcd_menu_print_abort()
 {
     LED_GLOW
-    lcd_question_screen(lcd_menu_print_ready, userAbortPrint, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
+    lcd_question_screen(lcd_menu_doabort, set_abort_state, PSTR("YES"), NULL, lcd_change_to_previous_menu, PSTR("NO"));
 
     lcd_lib_draw_string_centerP(20, PSTR("Abort the print?"));
     lcd_lib_draw_gfx(LCD_GFX_WIDTH/2 - 4, 32, standbyGfx);
@@ -1414,7 +1436,7 @@ static void drawResumeSubmenu(uint8_t nr, uint8_t &flags)
                                 , LCD_LINE_HEIGHT
                                 , 52
                                 , LCD_LINE_HEIGHT*4
-                                , movesplanned() ? PSTR("Pausing...|") : PSTR("RESUME|")
+                                , movesplanned() ? PSTR("PAUSING|") : PSTR("RESUME|")
                                 , ALIGN_CENTER
                                 , flags);
         if (flags & MENU_SELECTED)

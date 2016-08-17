@@ -22,7 +22,6 @@ void lcd_clear_cache();
 
 void abortPrint();
 
-//bool isPauseRequested();
 void lcd_print_pause();
 void lcd_print_tune();
 void lcd_print_abort();

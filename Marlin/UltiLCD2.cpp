@@ -159,7 +159,10 @@ void lcd_update()
         }
         // serialScreenShown = false;
         menu.processEvents();
-        if (postMenuCheck) postMenuCheck();
+        if (postMenuCheck && (printing_state != PRINT_STATE_ABORT))
+        {
+            postMenuCheck();
+        }
     }
     // refresh the displayed temperatures
     for(uint8_t e=0; e<EXTRUDERS; ++e)
