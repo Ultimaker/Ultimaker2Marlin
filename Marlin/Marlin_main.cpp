@@ -2450,7 +2450,7 @@ void process_command(const char *strCmd)
         memcpy(destination, current_position, sizeof(destination));
         plan_set_e_position(current_position[E_AXIS]);
 
-        if ((printing_state == PRINT_STATE_ABORT) && (card.sdprinting))
+        if ((printing_state != PRINT_STATE_ABORT) && (card.sdprinting))
         {
             //return to normal
             if(code_seen(strCmd, 'L'))
