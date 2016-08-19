@@ -306,11 +306,8 @@ extern "C"{
 //Clear all the commands in the ASCII command buffer
 void clear_command_queue()
 {
-    if (buflen > 0)
-    {
-        bufindw = bufindr;
-        buflen = 0;
-    }
+    buflen = 0;
+    bufindw = bufindr;
 }
 
 static void next_command()
@@ -406,6 +403,17 @@ bool is_command_queued()
 uint8_t commands_queued()
 {
     return buflen;
+}
+
+void cmd_synchronize()
+{
+  while(buflen)
+  {
+    // process next command
+    next_command();
+    idle();
+    checkHitEndstops();
+  }
 }
 
 void setup_killpin()
@@ -1036,7 +1044,7 @@ void process_command(const char *strCmd)
 {
   unsigned long codenum; //throw away variable
 
-  if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START))
+  if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START) && (printing_state != PRINT_STATE_ABORT))
     printing_state = PRINT_STATE_NORMAL;
 
   if(code_seen(strCmd, 'G'))
@@ -2450,7 +2458,7 @@ void process_command(const char *strCmd)
         memcpy(destination, current_position, sizeof(destination));
         plan_set_e_position(current_position[E_AXIS]);
 
-        if ((printing_state == PRINT_STATE_ABORT) && (card.sdprinting))
+        if ((printing_state != PRINT_STATE_ABORT) && (card.sdprinting))
         {
             //return to normal
             if(code_seen(strCmd, 'L'))
@@ -2734,7 +2742,7 @@ void process_command(const char *strCmd)
     SERIAL_ECHOLNPGM("\"");
   }
 
-  if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START))
+  if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START) && (printing_state != PRINT_STATE_ABORT))
     printing_state = PRINT_STATE_NORMAL;
 
   // send acknowledge for serial commands

@@ -188,6 +188,7 @@ void enquecommand(const char *cmd); //put an ascii command at the end of the cur
 void enquecommand_P(const char *cmd); //put an ascii command at the end of the current buffer, read from flash
 bool is_command_queued();
 uint8_t commands_queued();
+void cmd_synchronize();
 void clamp_to_software_endstops(float target[3]);
 
 #ifdef FAST_PWM_FAN

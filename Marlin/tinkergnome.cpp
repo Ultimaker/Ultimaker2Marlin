@@ -1262,7 +1262,6 @@ void lcd_menu_print_heatup_tg()
             if (ready)
             {
                 menu.reset_submenu();
-                // printing_state = PRINT_STATE_NORMAL;
                 doStartPrint();
                 printing_page = 0;
                 menu.replace_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)), false);
