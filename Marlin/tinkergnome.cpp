@@ -1527,15 +1527,14 @@ void lcd_menu_printing_tg()
         }
         if (!(flags & MENU_STATUSLINE))
         {
-            if (IS_SD_PRINTING)
-            {
-                lcd_lib_draw_string_left(5, card.longFilename);
-            }
-            else
+            if (is_command_queued() && serialCmd)
             {
                 lcd_lib_draw_string_leftP(5, PSTR("USB communication..."));
             }
-
+            else if (card.isFileOpen())
+            {
+                lcd_lib_draw_string_left(5, card.longFilename);
+            }
         }
         lcd_lib_update_screen();
     }
