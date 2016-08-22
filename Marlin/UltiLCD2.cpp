@@ -139,7 +139,7 @@ void lcd_update()
         LED_GLOW_ERROR
         lcd_lib_update_screen();
     }
-    else if ((is_command_queued() && serialCmd) || ((m - lastSerialCommandTime) < SERIAL_CONTROL_TIMEOUT))
+    else if (HAS_SERIAL_CMD)
     {
         if (!(sleep_state & SLEEP_SERIAL_SCREEN))
         {
@@ -153,11 +153,10 @@ void lcd_update()
     {
         if (sleep_state & SLEEP_SERIAL_SCREEN)
         {
-            // end of serial communication
+            // hide usb printing screen
             sleep_state &= ~SLEEP_SERIAL_SCREEN;
             menu.removeMenu(lcd_menu_printing_tg);
         }
-        // serialScreenShown = false;
         menu.processEvents();
         if (postMenuCheck && (printing_state != PRINT_STATE_ABORT))
         {

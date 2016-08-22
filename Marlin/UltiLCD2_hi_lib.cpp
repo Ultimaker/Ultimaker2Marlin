@@ -319,7 +319,7 @@ bool check_heater_timeout()
     {
         const unsigned long m = millis();
         const unsigned long period = heater_timeout*MILLISECONDS_PER_MINUTE;
-        if (!serialCmd && (m-last_user_interaction > period) && (m-lastSerialCommandTime > period))
+        if (!HAS_SERIAL_CMD && (m-last_user_interaction > period) && (m-lastSerialCommandTime > period))
         {
             if (target_temperature[active_extruder] > (EXTRUDE_MINTEMP - 40))
             {

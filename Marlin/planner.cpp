@@ -59,6 +59,7 @@
 #include "ultralcd.h"
 #include "UltiLCD2.h"
 #include "language.h"
+#include "preferences.h"
 
 //===========================================================================
 //=============================public variables ============================
@@ -542,7 +543,7 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   while(block_buffer_tail == next_buffer_head)
   {
     idle();
-    if (serialCmd)
+    if (HAS_SERIAL_CMD)
     {
       lastSerialCommandTime = millis();
     }

@@ -59,12 +59,13 @@
 #define UI_BEEP_SHORT    32
 #define UI_BEEP_OFF      64
 
-// SLEEP STATE
+// SLEEP/LCD STATE
 #define SLEEP_LED_DIMMED     1
 #define SLEEP_LED_OFF        2
 #define SLEEP_LCD_DIMMED     4
 #define SLEEP_COOLING        8
-#define SLEEP_SERIAL_SCREEN 16
+#define SLEEP_SERIAL_CMD    16
+#define SLEEP_SERIAL_SCREEN 32
 
 #define SLEEP_UPDATE_LED   128
 
@@ -112,5 +113,7 @@ FORCE_INLINE bool swapExtruders() { return (expert_flags & FLAG_SWAP_EXTRUDERS);
 
 #define WORD_SETTING(n) (*(uint16_t*)&lcd_cache[(n) * sizeof(uint16_t)])
 #define FLOAT_SETTING(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
+
+#define HAS_SERIAL_CMD (sleep_state & SLEEP_SERIAL_CMD)
 
 #endif //PREFERENCES_H

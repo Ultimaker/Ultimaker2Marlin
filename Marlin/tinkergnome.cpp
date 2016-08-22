@@ -1526,7 +1526,7 @@ void lcd_menu_printing_tg()
         }
         if (!(flags & MENU_STATUSLINE))
         {
-            if (is_command_queued() && serialCmd)
+            if (HAS_SERIAL_CMD)
             {
                 lcd_lib_draw_string_leftP(5, PSTR("USB communication..."));
             }
