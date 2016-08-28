@@ -1247,7 +1247,7 @@ void lcd_menu_print_heatup_tg()
         }
 
 #if TEMP_SENSOR_BED != 0
-        if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
+        if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !commands_queued())
         {
 #endif // TEMP_SENSOR_BED
             bool ready = true;
@@ -2060,7 +2060,7 @@ static bool endstop_reached(AxisEnum axis, int8_t direction)
 
 static void plan_move(AxisEnum axis)
 {
-    if (!is_command_queued() && !blocks_queued())
+    if (!commands_queued() && !blocks_queued())
     {
         // enque next move
         if ((abs(TARGET_POS(axis) - current_position[axis])>0.005) && !endstop_reached(axis, (TARGET_POS(axis)>current_position[axis]) ? 1 : -1))

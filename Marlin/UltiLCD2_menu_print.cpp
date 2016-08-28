@@ -120,7 +120,7 @@ void abortPrint()
 
 static void checkPrintFinished()
 {
-    if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START) && (printing_state != PRINT_STATE_ABORT) && !card.sdprinting && !is_command_queued())
+    if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START) && (printing_state != PRINT_STATE_ABORT) && !card.sdprinting && !commands_queued())
     {
         abortPrint();
         recover_height = 0.0f;
@@ -177,7 +177,7 @@ void doStartPrint()
         {
             // move to priming height
             current_position[Z_AXIS] = priming_z;
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS], e);
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], homing_feedrate[Z_AXIS]/60, e);
             // note that we have primed, so that we know to de-prime at the end
             primed = true;
         }
@@ -506,7 +506,7 @@ void lcd_menu_print_select()
                 active_extruder = 0;
             #endif // EXTRUDERS
                 card.openFile(card.filename, true);
-                if (card.isFileOpen() && !is_command_queued())
+                if (card.isFileOpen() && !commands_queued())
                 {
                     if (led_mode == LED_MODE_WHILE_PRINTING || led_mode == LED_MODE_BLINK_ON_DONE)
                         analogWrite(LED_PIN, 255 * int(led_brightness_level) / 100);
@@ -651,7 +651,7 @@ void lcd_menu_print_heatup()
         }
 
 #if TEMP_SENSOR_BED != 0
-        if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !is_command_queued())
+        if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !commands_queued())
         {
 #endif // TEMP_SENSOR_BED
             bool ready = true;

@@ -72,7 +72,7 @@ void lcd_menu_material_main()
 
     if (lcd_lib_button_pressed)
     {
-        if (IS_SELECTED_MAIN(0) && !is_command_queued())
+        if (IS_SELECTED_MAIN(0) && !commands_queued())
         {
             lcd_material_change_init(false);
             menu.add_menu(menu_t(lcd_menu_change_material_preheat));
@@ -250,7 +250,7 @@ void lcd_menu_insert_material_preheat()
     int16_t temp = degHotend(active_extruder) - 20;
     int16_t target = degTargetHotend(active_extruder) - 20 - 10;
     if (temp < 0) temp = 0;
-    if (temp > target && temp < target + 20 && !is_command_queued())
+    if (temp > target && temp < target + 20 && !commands_queued())
     {
         set_extrude_min_temp(0);
         for(uint8_t e=0; e<EXTRUDERS; e++)
