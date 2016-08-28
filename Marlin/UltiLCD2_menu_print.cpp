@@ -1253,7 +1253,7 @@ void lcd_print_pause()
         uint8_t y = max(int(min_pos[Y_AXIS]), 0) + 5;
 
         sprintf_P(buffer, PSTR("M601 X%u Y%u Z%u L%u"), x, y, zdiff, uint8_t(end_of_print_retraction));
-        process_command(buffer);
+        process_command(buffer, false);
 
         primed = false;
 

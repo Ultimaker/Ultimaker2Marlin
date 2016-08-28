@@ -252,7 +252,9 @@ const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 //Inactivity shutdown variables
 static unsigned long previous_millis_cmd = 0;
 static unsigned long max_inactive_time = 0;
+#if DISABLE_X || DISABLE_Y || DISABLE_Z || DISABLE_E
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
+#endif
 
 unsigned long starttime=0;
 unsigned long stoptime=0;
@@ -320,7 +322,7 @@ static void next_command()
           card.write_command(cmdbuffer[bufindr]);
           if(card.logging)
           {
-            process_command(cmdbuffer[bufindr]);
+            process_command(cmdbuffer[bufindr], serialCmd & (1 << bufindr));
             serialCmd &= ~(1 << bufindr);
           }
           else
@@ -336,11 +338,11 @@ static void next_command()
     }
     else
     {
-    process_command(cmdbuffer[bufindr]);
+    process_command(cmdbuffer[bufindr], serialCmd & (1 << bufindr));
     serialCmd &= ~(1 << bufindr);
     }
   #else
-    process_command(cmdbuffer[bufindr]);
+    process_command(cmdbuffer[bufindr], serialCmd & (1 << bufindr));
     serialCmd &= ~(1 << bufindr);
   #endif //SDSUPPORT
 
@@ -1054,7 +1056,7 @@ static char * truncate_checksum(char *str)
     return 0;
 }
 
-void process_command(const char *strCmd)
+void process_command(const char *strCmd, bool sendAck)
 {
   unsigned long codenum; //throw away variable
 
@@ -1780,7 +1782,9 @@ void process_command(const char *strCmd)
       if (printing_state == PRINT_STATE_RECOVER)
         break;
       if(code_seen(strCmd, 'S')){
+#if DISABLE_X || DISABLE_Y || DISABLE_Z || DISABLE_E
         stepper_inactive_time = code_value() * 1000;
+#endif
       }
       else
       {
@@ -2760,7 +2764,7 @@ void process_command(const char *strCmd)
     printing_state = PRINT_STATE_NORMAL;
 
   // send acknowledge for serial commands
-  if ((strCmd == cmdbuffer[bufindr]) && (serialCmd & (1 << bufindr)))
+  if (sendAck)
   {
       ClearToSend();
   }
@@ -2770,21 +2774,20 @@ void process_command_P(const char *strCmd)
 {
     char cmd[MAX_CMD_SIZE] = {0};
     strcpy_P(cmd, strCmd);
-    process_command(cmd);
+    process_command(cmd, false);
 }
 
 static void FlushSerialRequestResend()
 {
-  //char cmdbuffer[bufindr][100]="Resend:";
   MYSERIAL.flush();
   SERIAL_PROTOCOLPGM(MSG_RESEND);
   SERIAL_PROTOCOLLN(gcode_LastN + 1);
-  previous_millis_cmd = millis();
   ClearToSend();
 }
 
 static void ClearToSend()
 {
+  previous_millis_cmd = millis();
   SERIAL_PROTOCOLLNPGM(MSG_OK);
 }
 
@@ -3059,6 +3062,7 @@ void manage_inactivity()
 
   if( max_inactive_time && ((millis() - previous_millis_cmd) >  max_inactive_time) )
       kill();
+#if DISABLE_X || DISABLE_Y || DISABLE_Z || DISABLE_E
   if(stepper_inactive_time)  {
     if( (millis() - previous_millis_cmd) >  stepper_inactive_time )
     {
@@ -3077,6 +3081,7 @@ void manage_inactivity()
       }
     }
   }
+#endif
   #if defined(KILL_PIN) && KILL_PIN > -1
     if( 0 == READ(KILL_PIN) )
       kill();
