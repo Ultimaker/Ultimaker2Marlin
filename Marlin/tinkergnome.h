@@ -24,7 +24,6 @@ void lcd_menu_move_axes();
 void manage_led_timeout();
 void manage_encoder_position(int8_t encoder_pos_interrupt);
 void lcd_menu_expert_extrude();
-void lcd_extrude_quit_menu();
 void recover_start_print(const char *cmd);
 void lcd_menu_recover_init();
 void lcd_menu_expert_recover();

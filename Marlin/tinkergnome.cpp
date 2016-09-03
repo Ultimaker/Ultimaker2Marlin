@@ -729,10 +729,11 @@ static void drawHeatupSubmenu (uint8_t nr, uint8_t &flags)
         {
 #if EXTRUDERS < 2
             strcpy_P(buffer, PSTR("Nozzle "));
+            int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer+7, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
 #else
             strcpy_P(buffer, PSTR("Nozzle(1) "));
+            int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer+10, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
 #endif
-            int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer+strlen(buffer), PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
             lcd_lib_draw_string_left(5, buffer);
             flags |= MENU_STATUSLINE;
         }
@@ -752,7 +753,7 @@ static void drawHeatupSubmenu (uint8_t nr, uint8_t &flags)
         if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(buffer, PSTR("Nozzle(2) "));
-            int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], buffer+strlen(buffer), PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
+            int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], buffer+10, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
             lcd_lib_draw_string_left(5, buffer);
             flags |= MENU_STATUSLINE;
         }
@@ -773,7 +774,7 @@ static void drawHeatupSubmenu (uint8_t nr, uint8_t &flags)
         if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             strcpy_P(buffer, PSTR("Buildplate "));
-            int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer+strlen(buffer), PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
+            int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer+11, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
             lcd_lib_draw_string_left(5, buffer);
             flags |= MENU_STATUSLINE;
         }
@@ -1051,10 +1052,11 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             {
     #if EXTRUDERS < 2
                 strcpy_P(buffer, PSTR("Flow "));
+                float_to_string1(e_smoothed_speed[0], buffer+5, PSTR(UNIT_FLOW));
     #else
                 strcpy_P(buffer, PSTR("Flow(1) "));
+                float_to_string1(e_smoothed_speed[0], buffer+8, PSTR(UNIT_FLOW));
     #endif
-                float_to_string1(e_smoothed_speed[0], buffer+strlen(buffer), PSTR(UNIT_FLOW));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -1075,7 +1077,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             if (flags & (MENU_SELECTED | MENU_ACTIVE))
             {
                 strcpy_P(buffer, PSTR("Flow(2) "));
-                float_to_string1(e_smoothed_speed[1], buffer+strlen(buffer), PSTR(UNIT_FLOW));
+                float_to_string1(e_smoothed_speed[1], buffer+8, PSTR(UNIT_FLOW));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -1095,7 +1097,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             if (flags & (MENU_SELECTED | MENU_ACTIVE))
             {
                 strcpy_P(buffer, PSTR("Speed "));
-                int_to_string(current_nominal_speed+0.5, buffer+strlen(buffer), PSTR(UNIT_SPEED));
+                int_to_string(current_nominal_speed+0.5, buffer+6, PSTR(UNIT_SPEED));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -1116,10 +1118,11 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             {
     #if EXTRUDERS < 2
                 strcpy_P(buffer, PSTR("Nozzle "));
+                int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer+7, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
     #else
                 strcpy_P(buffer, PSTR("Nozzle(1) "));
+                int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer+10, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
     #endif
-                int_to_string(target_temperature[0], int_to_string(dsp_temperature[0], buffer+strlen(buffer), PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -1140,7 +1143,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             if (flags & (MENU_SELECTED | MENU_ACTIVE))
             {
                 strcpy_P(buffer, PSTR("Nozzle(2) "));
-                int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], buffer+strlen(buffer), PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
+                int_to_string(target_temperature[1], int_to_string(dsp_temperature[1], buffer+10, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -1205,7 +1208,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
             if (flags & (MENU_SELECTED | MENU_ACTIVE))
             {
                 strcpy_P(buffer, PSTR("Buildplate "));
-                int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer+strlen(buffer), PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
+                int_to_string(target_temperature_bed, int_to_string(dsp_temperature_bed, buffer+11, PSTR(DEGREE_SLASH)), PSTR(DEGREE_SYMBOL));
                 lcd_lib_draw_string_left(5, buffer);
                 flags |= MENU_STATUSLINE;
             }
@@ -1423,7 +1426,11 @@ void lcd_menu_printing_tg()
 #endif // EXTRUDERS
         if (printing_page == 0)
         {
+#ifdef __AVR__
             uint8_t progress = IS_SD_PRINTING ? card.getFilePos() / ((card.getFileSize() + 123) / 124) : 0;
+#else
+            uint8_t progress = 0;
+#endif
 #if EXTRUDERS < 2
             char buffer[32] = {0};
 #endif // EXTRUDERS
@@ -1848,8 +1855,8 @@ static void lcd_recover_start()
     #else
     active_extruder = 0;
     #endif // EXTRUDERS
-    current_position[E_AXIS] = 0.0;
-    plan_set_e_position(0);
+    current_position[E_AXIS] = 0.0f;
+    plan_set_e_position(current_position[E_AXIS]);
     menu.replace_menu(menu_t(lcd_menu_recover_file));
     card.startFileprint();
 }
@@ -2074,7 +2081,6 @@ static void plan_move(AxisEnum axis)
 static void stopMove()
 {
     // stop moving
-    // enquecommand_P(PSTR("M401"));
     quickStop();
     lcd_lib_encoder_pos = 0;
     movingSpeed = 0;
@@ -2594,7 +2600,7 @@ static void lcd_extrude_headtofront()
 static void lcd_extrude_disablexy()
 {
     lcd_lib_keyclick();
-    enquecommand_P(PSTR("M84 X0 Y0"));
+    process_command_P(PSTR("M84 X0 Y0"));
 }
 
 static const menu_t & get_extrude_tune_menuoption(uint8_t nr, menu_t &opt)
@@ -2731,8 +2737,9 @@ static void lcd_extrude_temperature()
 static void lcd_extrude_reset_pos()
 {
     lcd_lib_keyclick();
-    plan_set_e_position(0.0f);
-    TARGET_POS(E_AXIS) = 0.0f;
+    current_position[E_AXIS] = 0.0f;
+    plan_set_e_position(current_position[E_AXIS]);
+    TARGET_POS(E_AXIS) = current_position[E_AXIS];
 }
 
 static void lcd_extrude_init_move()
@@ -2756,7 +2763,8 @@ static void lcd_extrude_move()
 static void lcd_extrude_quit_move()
 {
     // disable E-steppers
-    enquecommand_P(PSTR("M84 E0"));
+    st_synchronize();
+    process_command_P(PSTR("M84 E0"));
 }
 
 static void lcd_extrude_init_pull()
@@ -2792,7 +2800,7 @@ static void lcd_extrude_quit_pull()
     digipot_current(2, motor_current_setting[2]);
 #endif
     // disable E-steppers
-    enquecommand_P(PSTR("M84 E0"));
+    lcd_extrude_quit_move();
 }
 
 static void lcd_extrude_pull()
@@ -2987,11 +2995,6 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
                           , ALIGN_RIGHT | ALIGN_VCENTER
                           , flags);
     }
-}
-
-void lcd_extrude_quit_menu()
-{
-    plan_set_e_position(current_position[E_AXIS]);
 }
 
 void lcd_menu_expert_extrude()

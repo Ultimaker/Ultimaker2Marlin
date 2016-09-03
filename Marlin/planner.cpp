@@ -80,7 +80,7 @@ float mintravelfeedrate;
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 // The current position of the tool in absolute steps
-long position[4];   //rescaled from extern when axis_steps_per_unit are changed by gcode
+static long position[4];   //rescaled from extern when axis_steps_per_unit are changed by gcode
 static float previous_speed[4]; // Speed of previous path line segment
 static float previous_nominal_speed; // Nominal speed of previous path line segment
 
@@ -708,13 +708,13 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   // slow down when de buffer starts to empty, rather than wait at the corner for a buffer refill
 #ifdef OLD_SLOWDOWN
   if(moves_queued < (BLOCK_BUFFER_SIZE * 0.5) && moves_queued > 1)
-    feed_rate = feed_rate*moves_queued / (BLOCK_BUFFER_SIZE * 0.5);
+    feed_rate = feed_rate*moves_queued / (BLOCK_BUFFER_SIZE/2);
 #endif
 
 #ifdef SLOWDOWN
   //  segment time im micro seconds
   unsigned long segment_time = lround(1000000.0/inverse_second);
-  if ((moves_queued > 1) && (moves_queued < (BLOCK_BUFFER_SIZE * 0.5)))
+  if ((moves_queued > 1) && (moves_queued < (BLOCK_BUFFER_SIZE/2)))
   {
     if (segment_time < minsegmenttime)
     { // buffer is draining, add extra time.  The amount of time added increases if the buffer is still emptied more.
@@ -961,6 +961,17 @@ void plan_set_e_position(const float &e)
 {
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]*volume_to_filament_length[active_extruder]);
   st_set_e_position(position[E_AXIS]);
+}
+
+void plan_get_position(float *pos)
+{
+    // XYZ axis
+    for (uint8_t i = X_AXIS; i<E_AXIS; ++i, ++pos)
+    {
+        *pos = float(position[i]) / axis_steps_per_unit[i];
+    }
+    // E axis
+    *pos = float(position[E_AXIS]) / (axis_steps_per_unit[E_AXIS]*volume_to_filament_length[active_extruder]);
 }
 
 uint8_t movesplanned()

@@ -177,7 +177,6 @@
 		<Unit filename="component/base.cpp" />
 		<Unit filename="component/base.h" />
 		<Unit filename="component/delegate.h" />
-		<Unit filename="component/display_HD44780.cpp" />
 		<Unit filename="component/display_HD44780.h" />
 		<Unit filename="component/display_SSD1309.cpp" />
 		<Unit filename="component/display_SSD1309.h" />
