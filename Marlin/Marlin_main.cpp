@@ -1121,7 +1121,7 @@ void process_command(const char *strCmd, bool sendAck)
       if(Stopped == false) {
         get_coordinates(strCmd); // For X Y Z E F
         prepare_move(strCmd);
-        //ClearToSend();
+        if (sendAck) ClearToSend();
         return;
       }
       //break;
@@ -1129,12 +1129,14 @@ void process_command(const char *strCmd, bool sendAck)
       if(Stopped == false) {
         get_arc_coordinates(strCmd);
         prepare_arc_move(true);
+        if (sendAck) ClearToSend();
         return;
       }
     case 3: // G3  - CCW ARC
       if(Stopped == false) {
         get_arc_coordinates(strCmd);
         prepare_arc_move(false);
+        if (sendAck) ClearToSend();
         return;
       }
     case 4: // G4 dwell
