@@ -35,15 +35,15 @@
 			<Add option="-D__AVR_ATmega2560__=1" />
 			<Add option="-DARDUINO=165" />
 			<Add option="-DF_CPU=16000000" />
-			<Add option="-DEXTRUDERS=1" />
-			<Add option="-DTEMP_SENSOR_1=0" />
+			<Add option="-DEXTRUDERS=2" />
+			<Add option="-DTEMP_SENSOR_1=20" />
 			<Add option="-DFILAMENT_SENSOR_PIN=-1" />
 			<Add option="-DBABYSTEPPING" />
+			<Add option="-DDUAL_FAN" />
 			<Add option="-DTEMP_SENSOR_BED=20" />
 			<Add option="-DHEATER_0_MAXTEMP=325" />
 			<Add option="-DHEATER_1_MAXTEMP=325" />
 			<Add option="-DHEATER_2_MAXTEMP=325" />
-			<Add option="-DUSE_CHANGE_TEMPERATURE" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="D:/GitRepo/SDL-1.2.15/include" />
@@ -54,6 +54,8 @@
 			<Add directory="D:/GitRepo/SDL-1.2.15/lib" />
 		</Linker>
 		<Unit filename="../Marlin/Configuration.h" />
+		<Unit filename="../Marlin/ConfigurationDual.cpp" />
+		<Unit filename="../Marlin/ConfigurationDual.h" />
 		<Unit filename="../Marlin/ConfigurationStore.cpp" />
 		<Unit filename="../Marlin/ConfigurationStore.h" />
 		<Unit filename="../Marlin/Configuration_adv.h" />
@@ -83,6 +85,8 @@
 		<Unit filename="../Marlin/UltiLCD2_hi_lib.h" />
 		<Unit filename="../Marlin/UltiLCD2_low_lib.cpp" />
 		<Unit filename="../Marlin/UltiLCD2_low_lib.h" />
+		<Unit filename="../Marlin/UltiLCD2_menu_dual.cpp" />
+		<Unit filename="../Marlin/UltiLCD2_menu_dual.h" />
 		<Unit filename="../Marlin/UltiLCD2_menu_first_run.cpp" />
 		<Unit filename="../Marlin/UltiLCD2_menu_first_run.h" />
 		<Unit filename="../Marlin/UltiLCD2_menu_main.cpp" />
@@ -99,6 +103,8 @@
 		<Unit filename="../Marlin/UltiLCD2_menu_utils.h" />
 		<Unit filename="../Marlin/cardreader.cpp" />
 		<Unit filename="../Marlin/cardreader.h" />
+		<Unit filename="../Marlin/commandbuffer.cpp" />
+		<Unit filename="../Marlin/commandbuffer.h" />
 		<Unit filename="../Marlin/electronics_test.cpp" />
 		<Unit filename="../Marlin/electronics_test.h" />
 		<Unit filename="../Marlin/fastio.h" />

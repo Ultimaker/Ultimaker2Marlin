@@ -1395,7 +1395,7 @@ void process_command(const char *strCmd, bool sendAck)
       printing_state = PRINT_STATE_WAIT_USER;
       LCD_MESSAGEPGM(MSG_USERWAIT);
 
-      serial_action_P(PSTR("pause"));
+//      serial_action_P(PSTR("pause"));
 
       codenum = 0;
       if(code_seen(strCmd, 'P')) codenum = code_value(); // milliseconds to wait
@@ -1417,7 +1417,7 @@ void process_command(const char *strCmd, bool sendAck)
           idle();
         }
       }
-      serial_action_P(PSTR("resume"));
+//      serial_action_P(PSTR("resume"));
       LCD_MESSAGEPGM(MSG_RESUMING);
     }
     break;
@@ -1435,7 +1435,7 @@ void process_command(const char *strCmd, bool sendAck)
         {
           idle();
         }
-        plan_set_e_position(current_position[E_AXIS] / volume_to_filament_length[active_extruder]);
+        plan_set_e_position(current_position[E_AXIS]);
 //        serial_action_P(PSTR("resume"));
     }
     break;

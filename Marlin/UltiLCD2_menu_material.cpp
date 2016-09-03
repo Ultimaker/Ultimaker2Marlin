@@ -100,7 +100,7 @@ void lcd_menu_change_material_preheat()
     if (temp < 0) temp = 0;
 
     // draw menu
-#if (EXTRUDERS > 1) || defined(USE_CHANGE_TEMPERATURE)
+#if (EXTRUDERS > 1)
     char buffer[8] = {0};
 #endif
     uint8_t progress = uint8_t(temp * 125 / target);
