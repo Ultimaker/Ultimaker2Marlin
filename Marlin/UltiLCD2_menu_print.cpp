@@ -93,10 +93,6 @@ void abortPrint()
     // finish all moves
     cmd_synchronize();
     finishAndDisableSteppers();
-
-//    st_synchronize();
-//    enquecommand_P(PSTR("M84"));
-
     doCooldown();
 
     stoptime=millis();
@@ -874,6 +870,11 @@ static void set_abort_state()
     printing_state = PRINT_STATE_ABORT;
     postMenuCheck = NULL;
     sleep_state &= ~SLEEP_LED_OFF;
+    // force end of print retraction
+    if (IS_SD_PRINTING && !card.pause)
+    {
+        primed = true;
+    }
     menu.return_to_main();
 }
 
