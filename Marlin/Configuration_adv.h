@@ -233,7 +233,7 @@
 // it can e.g. be used to change z-positions in the print startup phase in real-time
 // does not respect endstops!
 // #define BABYSTEPPING
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
   #define BABYSTEP_XY  //not only z, but also XY in the menu. more clutter, more functions
   #define BABYSTEP_INVERT_Z false  //true for inverse movements in Z
 

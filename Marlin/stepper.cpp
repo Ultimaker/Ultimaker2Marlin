@@ -985,9 +985,15 @@ void quickStop()
     plan_discard_current_block();
   current_block = NULL;
   ENABLE_STEPPER_DRIVER_INTERRUPT();
+  for (uint8_t i=0; i<NUM_AXIS; ++i)
+  {
+    current_position[i] = float(st_get_position(i))/axis_steps_per_unit[i];
+  }
+  current_position[E_AXIS] /= volume_to_filament_length[active_extruder];
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 }
 
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
 
 // MUST ONLY BE CALLED BY AN ISR,
 // No other ISR should ever interrupt this!

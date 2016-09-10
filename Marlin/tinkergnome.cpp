@@ -52,7 +52,7 @@ static uint8_t printing_page = 0;
 static void lcd_menu_print_page_inc() { lcd_lib_keyclick(); lcd_basic_screen(); menu.set_selection(0); ++printing_page; }
 static void lcd_menu_print_page_dec() { lcd_lib_keyclick(); lcd_basic_screen(); menu.set_selection(1); --printing_page; }
 
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
 static void init_babystepping();
 static void lcd_menu_babystepping();
 #endif // BABYSTEPPING
@@ -266,7 +266,7 @@ static void lcd_print_ask_pause()
     menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_pause, NULL));
 }
 
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
 static void lcd_start_babystepping()
 {
     menu.add_menu(menu_t(init_babystepping, lcd_menu_babystepping, NULL));
@@ -355,7 +355,7 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         {
             opt.setData(MENU_NORMAL, lcd_menu_print_page_inc);
         }
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
         else if (nr == menu_index++)
         {
             // babystepping menu
@@ -461,7 +461,7 @@ static void lcd_print_tune_xyjerk()
     lcd_tune_value(max_xy_jerk, 0, 100, 1.0);
 }
 
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
 
 static void init_babystepping()
 {
@@ -1023,7 +1023,7 @@ static void drawPrintSubmenu (uint8_t nr, uint8_t &flags)
                 lcd_lib_draw_gfx(LCD_GFX_WIDTH - 2*LCD_CHAR_MARGIN_RIGHT - 2*LCD_CHAR_SPACING, BOTTOM_MENU_YPOS, nextGfx);
             }
         }
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
         else if (nr == index++)
         {
             if (flags & MENU_SELECTED)
@@ -1485,7 +1485,7 @@ void lcd_menu_printing_tg()
                 break;
             }
 
-#if DISABLED(BABYSTEPPING)
+#ifndef BABYSTEPPING
             // z position
             lcd_lib_draw_string_leftP(15, PSTR("Z"));
 
@@ -1496,7 +1496,7 @@ void lcd_menu_printing_tg()
         }
 
         uint8_t index = 0;
-#if ENABLED(BABYSTEPPING)
+#ifdef BABYSTEPPING
         uint8_t len = (printing_page == 1) ? 6 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 6;
 #else
         uint8_t len = (printing_page == 1) ? 6 + min(EXTRUDERS, 2) : EXTRUDERS*2 + BED_MENU_OFFSET + 5;

@@ -15,12 +15,12 @@
 #define NOMORE(v,n) do{ if (v > n) v = n; }while(0)
 
 // Macros to support option testing
-#define _CAT(a, ...) a ## __VA_ARGS__
-#define SWITCH_ENABLED_0 0
-#define SWITCH_ENABLED_1 1
-#define SWITCH_ENABLED_  1
-#define ENABLED(b) _CAT(SWITCH_ENABLED_, b)
-#define DISABLED(b) (!_CAT(SWITCH_ENABLED_, b))
+//#define _CAT(a, ...) a ## __VA_ARGS__
+//#define SWITCH_ENABLED_0 0
+//#define SWITCH_ENABLED_1 1
+//#define SWITCH_ENABLED_  1
+//#define ENABLED(b) _CAT(SWITCH_ENABLED_, b)
+//#define DISABLED(b) (!_CAT(SWITCH_ENABLED_, b))
 
 #define COUNT(a) (sizeof(a)/sizeof(*a))
 

@@ -58,7 +58,7 @@ extern float current_temperature_bed;
   extern float bedKp,bedKi,bedKd;
 #endif
 
-#if ENABLED(BABYSTEPPING)
+#if defined(BABYSTEPPING)
   extern volatile int babystepsTodo[3];
 #endif
 

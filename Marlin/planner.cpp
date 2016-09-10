@@ -963,17 +963,6 @@ void plan_set_e_position(const float &e)
   st_set_e_position(position[E_AXIS]);
 }
 
-void plan_get_position(float *pos)
-{
-    // XYZ axis
-    for (uint8_t i = X_AXIS; i<E_AXIS; ++i, ++pos)
-    {
-        *pos = float(position[i]) / axis_steps_per_unit[i];
-    }
-    // E axis
-    *pos = float(position[E_AXIS]) / (axis_steps_per_unit[E_AXIS]*volume_to_filament_length[active_extruder]);
-}
-
 uint8_t movesplanned()
 {
   return (block_buffer_head-block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1);
