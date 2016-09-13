@@ -323,7 +323,7 @@ endif
 # Default target.
 all: sizeafter
 
-build: $(BUILD_DIR) elf hex
+build: $(BUILD_DIR) elf hex lss sym
 
 # Creates the object directory
 $(BUILD_DIR):
