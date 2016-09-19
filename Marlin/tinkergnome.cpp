@@ -128,18 +128,13 @@ void tinkergnome_init()
 
         SET_HEATER_CHECK_TEMP(heater_check_temp);
         SET_HEATER_CHECK_TIME(heater_check_time);
-#if EXTRUDERS > 1
-        pid2[0] = Kp;
-        pid2[1] = Ki;
-        pid2[2] = Kd;
-        eeprom_write_block(pid2, (uint8_t*)EEPROM_PID_2, sizeof(pid2));
-#else
+#if EXTRUDERS < 2
         float pid2[3];
+#endif // EXTRUDERS
         pid2[0] = Kp;
         pid2[1] = Ki;
         pid2[2] = Kd;
         eeprom_write_block(pid2, (uint8_t*)EEPROM_PID_2, sizeof(pid2));
-#endif // EXTRUDERS
 
 #if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
         motor_current_e2 = motor_current_setting[2];
