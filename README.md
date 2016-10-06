@@ -229,19 +229,20 @@ Install the arduino software IDE/toolset v23 (Some configurations also work with
 For gen6/gen7 and sanguinololu the Sanguino directory in the Marlin dir needs to be copied to the arduino environment.
   copy ArduinoAddons\Arduino_x.x.x\sanguino <arduino home>\hardware\Sanguino
 
-Copy the Marlin firmware
-   https://github.com/ErikZalm/Marlin/tree/Marlin_v1
-   (Use the download button)
-
-Start the arduino IDE.
-Select Tools -> Board -> Arduino Mega 2560    or your microcontroller
-Select the correct serial port in Tools ->Serial Port
-Open Marlin.pde
-
-Click the Verify/Compile button
-
-Click the Upload button
-If all goes well the firmware is uploading
+Clone the software
+```
+$ git clone git@github.com:Ultimaker/Ultimaker2Marlin.git
+```
+Go into it
+```
+cd Ultimaker2Marlin/Marlin
+```
+Use the Makefile to compile & upload the firmware, for example:
+```
+make UPLOAD_PORT=/dev/ttyACM0
+make upload UPLOAD_PORT=/dev/ttyACM0
+```
+See the file `Makefile` for more instructions. 
 
 That's ok.  Enjoy Silky Smooth Printing.
 
