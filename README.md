@@ -239,7 +239,7 @@ cd Ultimaker2Marlin/Marlin
 ```
 Use the Makefile to compile & upload the firmware, for example:
 ```
-make UPLOAD_PORT=/dev/ttyACM0
+make
 make upload UPLOAD_PORT=/dev/ttyACM0
 ```
 See the file `Makefile` for more instructions. 
