@@ -233,6 +233,8 @@ Clone the software
 ```
 $ git clone git@github.com:Ultimaker/Ultimaker2Marlin.git
 ```
+Makefile compilation
+--------------------
 Go into it
 ```
 cd Ultimaker2Marlin/Marlin
@@ -244,8 +246,19 @@ make upload UPLOAD_PORT=/dev/ttyACM0
 ```
 See the file `Makefile` for more instructions. 
 
-That's ok.  Enjoy Silky Smooth Printing.
+Enjoy Silky Smooth Printing.
 
+Original Arduino IDE compilation
+--------------------------------
+Start the arduino IDE.
+Select Tools -> Board -> Arduino Mega 2560    or your microcontroller
+Select the correct serial port in Tools ->Serial Port
+Open Marlin.pde
 
+Click the Verify/Compile button
 
+Click the Upload button
+If all goes well the firmware is uploading
+
+Enjoy Silky Smooth Printing.
 
