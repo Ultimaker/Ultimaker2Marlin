@@ -1,21 +1,6 @@
 #ifndef ULTI_LCD2_MENU_MATERIAL_H
 #define ULTI_LCD2_MENU_MATERIAL_H
 
-struct materialSettings
-{
-    int16_t temperature;
-#if TEMP_SENSOR_BED != 0
-    int16_t bed_temperature;
-#endif
-    uint8_t fan_speed; //0-100% of requested speed by GCode
-    int16_t flow;      //Flow modification in %
-    float diameter; //Filament diameter in mm
-    int16_t change_temperature;      //Temperature for the hotend during the change material procedure.
-    int8_t change_preheat_wait_time; //when reaching the change material temperature, wait for this amount of seconds for the temperature to stabalize and the material to heatup.
-};
-
-extern struct materialSettings material[EXTRUDERS];
-
 #define FILAMENT_REVERSAL_LENGTH      (FILAMANT_BOWDEN_LENGTH + 50)
 #define FILAMENT_REVERSAL_SPEED       100
 #define FILAMENT_LONG_MOVE_ACCELERATION 30

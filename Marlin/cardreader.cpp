@@ -21,6 +21,7 @@ CardReader::CardReader()
    logging = false;
    autostart_atmillis=0;
    workDirDepth = 0;
+   uInitState = UInit_None;
    memset(workDirParents, 0, sizeof(workDirParents));
 
    autostart_stilltocheck=true; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
@@ -209,6 +210,17 @@ void CardReader::startFileprint()
   if(cardOK)
   {
     sdprinting = true;
+    pause = false;
+  }
+}
+
+void CardReader::doUltiInit()
+{
+  if(cardOK)
+  {
+    enquecommand_P(PSTR("G28"));
+    enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
+    uInitState = UInit_Heating;
     pause = false;
   }
 }
