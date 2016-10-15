@@ -11,7 +11,7 @@ void materialSettings::set_material_from_eeprom(uint8_t nr) {
 
   this.fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr));
   this.diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
-  
+
   if (this.temperature > HEATER_0_MAXTEMP - 15)
       this.temperature = HEATER_0_MAXTEMP - 15;
 #if TEMP_SENSOR_BED != 0
