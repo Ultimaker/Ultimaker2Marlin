@@ -22,6 +22,22 @@
 
 #include "Configuration.h"  // for EXTRUDERS
 
+#define EEPROM_MATERIAL_SETTINGS_OFFSET 0x800
+#define EEPROM_MATERIAL_EXTRA_TEMPERATURES_OFFSET 0xa00
+#define EEPROM_MATERIAL_CHANGE_TEMPERATURE_OFFSET 0xD00
+#define EEPROM_MATERIAL_CHANGE_WAIT_TIME_OFFSET 0xD30
+#define EEPROM_MATERIAL_SETTINGS_MAX_COUNT 16
+#define EEPROM_MATERIAL_SETTINGS_SIZE   (8 + 16)
+#define EEPROM_MATERIAL_COUNT_OFFSET()            ((uint8_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 0))
+#define EEPROM_MATERIAL_NAME_OFFSET(n)            ((uint8_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n)))
+#define EEPROM_MATERIAL_TEMPERATURE_OFFSET(n)     ((uint16_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 8))
+#define EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(n) ((uint16_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 10))
+#define EEPROM_MATERIAL_FAN_SPEED_OFFSET(n)       ((uint8_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 12))
+#define EEPROM_MATERIAL_FLOW_OFFSET(n)            ((uint16_t*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 13))
+#define EEPROM_MATERIAL_DIAMETER_OFFSET(n)        ((float*)(EEPROM_MATERIAL_SETTINGS_OFFSET + 1 + EEPROM_MATERIAL_SETTINGS_SIZE * uint16_t(n) + 15))
+#define EEPROM_MATERIAL_CHANGE_TEMPERATURE(n)     ((uint16_t*)(EEPROM_MATERIAL_CHANGE_TEMPERATURE_OFFSET + uint16_t(n) * 2))
+#define EEPROM_MATERIAL_CHANGE_WAIT_TIME(n)       ((uint8_t*)(EEPROM_MATERIAL_CHANGE_WAIT_TIME_OFFSET + uint16_t(n)))
+
 struct materialSettings
 {
     int16_t temperature;
@@ -34,7 +50,7 @@ struct materialSettings
     int16_t change_temperature;      //Temperature for the hotend during the change material procedure.
     int8_t change_preheat_wait_time; //when reaching the change material temperature, wait for this amount of seconds for the temperature to stabalize and the material to heatup.
 
-    void set_material_from_eeprom(int nr);
+    void set_material_from_eeprom(uint8_t nr);
 };
 
 extern struct materialSettings material[EXTRUDERS];

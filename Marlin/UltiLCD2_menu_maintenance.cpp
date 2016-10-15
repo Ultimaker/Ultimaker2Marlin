@@ -8,6 +8,7 @@
 #include "UltiLCD2_menu_material.h"
 #include "cardreader.h"
 #include "lifetime_stats.h"
+#include "material.h"
 #include "ConfigurationStore.h"
 #include "temperature.h"
 #include "pins.h"
