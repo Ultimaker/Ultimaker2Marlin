@@ -49,7 +49,7 @@ void displaySDD1309Sim::processMessage(uint8_t* message, int length)
             }else if (message[n] == 0xD9) { /*Precharge period*/ n++;
             }else if (message[n] == 0xDA) { /*COM pins hardware configuration*/ n++;
             }else if (message[n] == 0xDB) { /*VCOMH Deslect level*/ n++;
-            }else if (message[n] == 0xDF) { /*LCD_COMMAND_LOCK_COMMANDS*/ n++;
+            }else if (message[n] == 0xFD) { /*LCD_COMMAND_LOCK_COMMANDS*/ n++;
             }else if (message[n] == 0xAE) { //Display OFF
             }else if (message[n] == 0xAF) { //Display ON
             }else{
@@ -115,7 +115,7 @@ void displaySDD1309Sim::draw(int x, int y)
                 *pix2++ = 0xFFFFFF;
             }
     }
-    
+
     SDL_UnlockSurface(screen);
 */
 }

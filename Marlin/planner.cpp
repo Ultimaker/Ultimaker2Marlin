@@ -59,6 +59,7 @@
 #include "ultralcd.h"
 #include "UltiLCD2.h"
 #include "language.h"
+#include "preferences.h"
 
 //===========================================================================
 //=============================public variables ============================
@@ -79,7 +80,7 @@ float mintravelfeedrate;
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 // The current position of the tool in absolute steps
-long position[4];   //rescaled from extern when axis_steps_per_unit are changed by gcode
+static long position[4];   //rescaled from extern when axis_steps_per_unit are changed by gcode
 static float previous_speed[4]; // Speed of previous path line segment
 static float previous_nominal_speed; // Nominal speed of previous path line segment
 
@@ -468,19 +469,24 @@ void check_axes_activity()
       block_index = (block_index+1) & (BLOCK_BUFFER_SIZE - 1);
     }
   }
-  if((DISABLE_X) && (x_active == 0)) disable_x();
-  if((DISABLE_Y) && (y_active == 0)) disable_y();
-  if((DISABLE_Z) && (z_active == 0)) disable_z();
-  if((DISABLE_E) && (e_active == 0))
+  if ((printing_state != PRINT_STATE_RECOVER) && (printing_state != PRINT_STATE_START))
   {
-    disable_e0();
-    disable_e1();
-    disable_e2();
-  }
+    if((DISABLE_X) && (x_active == 0)) disable_x();
+    if((DISABLE_Y) && (y_active == 0)) disable_y();
+    if((DISABLE_Z) && (z_active == 0)) disable_z();
+    if((DISABLE_E) && (e_active == 0))
+    {
+      disable_e0();
+      disable_e1();
+      disable_e2();
+    #if EXTRUDERS > 1
+      last_extruder = 0xFF;
+    #endif
+    }
 #if defined(FAN_PIN) && FAN_PIN > -1
   #ifdef FAN_KICKSTART_TIME
     static unsigned long fan_kick_end;
-    if (tail_fan_speed) {
+    if (tail_fan_speed > FAN_KICKSTART_MINPWM) {
       if (fan_kick_end == 0) {
         // Just starting up fan - run at full power.
         fan_kick_end = millis() + FAN_KICKSTART_TIME;
@@ -497,6 +503,15 @@ void check_axes_activity()
   #else
   analogWrite(FAN_PIN,tail_fan_speed);
   #endif//!FAN_SOFT_PWM
+  }
+  else
+  {
+    #ifdef FAN_SOFT_PWM
+    fanSpeedSoftPwm = 0;
+    #else
+    analogWrite(FAN_PIN,0);
+    #endif//!FAN_SOFT_PWM
+  }
 #endif//FAN_PIN > -1
 #ifdef AUTOTEMP
   getHighESpeed();
@@ -527,10 +542,11 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   // Rest here until there is room in the buffer.
   while(block_buffer_tail == next_buffer_head)
   {
-    manage_heater();
-    manage_inactivity();
-    lcd_update();
-    lifetime_stats_tick();
+    idle();
+    if (HAS_SERIAL_CMD)
+    {
+      lastSerialCommandTime = millis();
+    }
   }
 
   // The target position of the tool in absolute steps
@@ -645,6 +661,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   if(block->steps_z != 0) enable_z();
 #endif
 
+#if EXTRUDERS < 2
   // Enable all
   if(block->steps_e != 0)
   {
@@ -652,6 +669,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
     enable_e1();
     enable_e2();
   }
+#endif // EXTRUDERS
 
   if (block->steps_e == 0)
   {
@@ -690,13 +708,13 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   // slow down when de buffer starts to empty, rather than wait at the corner for a buffer refill
 #ifdef OLD_SLOWDOWN
   if(moves_queued < (BLOCK_BUFFER_SIZE * 0.5) && moves_queued > 1)
-    feed_rate = feed_rate*moves_queued / (BLOCK_BUFFER_SIZE * 0.5);
+    feed_rate = feed_rate*moves_queued / (BLOCK_BUFFER_SIZE/2);
 #endif
 
 #ifdef SLOWDOWN
   //  segment time im micro seconds
   unsigned long segment_time = lround(1000000.0/inverse_second);
-  if ((moves_queued > 1) && (moves_queued < (BLOCK_BUFFER_SIZE * 0.5)))
+  if ((moves_queued > 1) && (moves_queued < (BLOCK_BUFFER_SIZE/2)))
   {
     if (segment_time < minsegmenttime)
     { // buffer is draining, add extra time.  The amount of time added increases if the buffer is still emptied more.
@@ -775,19 +793,20 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   {
     block->acceleration_st = ceil(retract_acceleration * steps_per_mm); // convert to: acceleration steps/sec^2
   }
-  else
-  {
+  else {
     block->acceleration_st = ceil(acceleration * steps_per_mm); // convert to: acceleration steps/sec^2
-    // Limit acceleration per axis
-    if(((float)block->acceleration_st * (float)block->steps_x / (float)block->step_event_count) > axis_steps_per_sqr_second[X_AXIS])
-      block->acceleration_st = axis_steps_per_sqr_second[X_AXIS];
-    if(((float)block->acceleration_st * (float)block->steps_y / (float)block->step_event_count) > axis_steps_per_sqr_second[Y_AXIS])
-      block->acceleration_st = axis_steps_per_sqr_second[Y_AXIS];
-    if(((float)block->acceleration_st * (float)block->steps_e / (float)block->step_event_count) > axis_steps_per_sqr_second[E_AXIS])
-      block->acceleration_st = axis_steps_per_sqr_second[E_AXIS];
-    if(((float)block->acceleration_st * (float)block->steps_z / (float)block->step_event_count ) > axis_steps_per_sqr_second[Z_AXIS])
-      block->acceleration_st = axis_steps_per_sqr_second[Z_AXIS];
   }
+
+  // Limit acceleration per axis
+  if(((float)block->acceleration_st * (float)block->steps_x / (float)block->step_event_count) > axis_steps_per_sqr_second[X_AXIS])
+    block->acceleration_st = axis_steps_per_sqr_second[X_AXIS];
+  if(((float)block->acceleration_st * (float)block->steps_y / (float)block->step_event_count) > axis_steps_per_sqr_second[Y_AXIS])
+    block->acceleration_st = min(block->acceleration_st, axis_steps_per_sqr_second[Y_AXIS]);
+  if(((float)block->acceleration_st * (float)block->steps_z / (float)block->step_event_count ) > axis_steps_per_sqr_second[Z_AXIS])
+    block->acceleration_st = min(block->acceleration_st, axis_steps_per_sqr_second[Z_AXIS]);
+  if(((float)block->acceleration_st * (float)block->steps_e / (float)block->step_event_count) > axis_steps_per_sqr_second[E_AXIS])
+    block->acceleration_st = min(block->acceleration_st, axis_steps_per_sqr_second[E_AXIS]);
+
   block->acceleration = block->acceleration_st / steps_per_mm;
   block->acceleration_rate = (long)((float)block->acceleration_st * (16777216.0 / (F_CPU / 8.0)));
 
@@ -917,7 +936,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   block_buffer_head = next_buffer_head;
 
   // Update position
-  memcpy(position, target, sizeof(target)); // position[] = target[]
+  memcpy(position, target, sizeof(position)); // position[] = target[]
 
   planner_recalculate();
 

@@ -1,6 +1,8 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+#include "macros.h"
+
 // This configuration file contains the basic settings.
 // Advanced settings can be found in Configuration_adv.h
 // BASIC SETTINGS: select your board type, temperature sensor type, axis scaling, and endstop configuration
@@ -10,7 +12,7 @@
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
 #ifndef STRING_CONFIG_H_AUTHOR
-#define STRING_CONFIG_H_AUTHOR "Version DEV" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Tinker_16.09-DEV" // Who made the changes.
 #endif
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
@@ -138,10 +140,18 @@
 // 52 is 200k thermistor - ATC Semitec 204GT-2 (1k pullup)
 // 55 is 100k thermistor - ATC Semitec 104GT-2 (Used in ParCan) (1k pullup)
 
-#define TEMP_SENSOR_0 20
-#define TEMP_SENSOR_1 20
-#define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 20
+#ifndef TEMP_SENSOR_0
+    #define TEMP_SENSOR_0 20
+#endif
+#ifndef TEMP_SENSOR_1
+    #define TEMP_SENSOR_1 20
+#endif
+#ifndef TEMP_SENSOR_2
+    #define TEMP_SENSOR_2 0
+#endif
+#ifndef TEMP_SENSOR_BED
+    #define TEMP_SENSOR_BED 20
+#endif
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
@@ -163,10 +173,16 @@
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define HEATER_0_MAXTEMP 275
-#define HEATER_1_MAXTEMP 275
-#define HEATER_2_MAXTEMP 275
-#define BED_MAXTEMP 130
+#ifndef HEATER_0_MAXTEMP
+    #define HEATER_0_MAXTEMP 275
+#endif
+#ifndef HEATER_1_MAXTEMP
+    #define HEATER_1_MAXTEMP 275
+#endif
+#ifndef HEATER_2_MAXTEMP
+    #define HEATER_2_MAXTEMP 275
+#endif
+#define BED_MAXTEMP 200
 
 //Check if the heater heats up MAX_HEATING_TEMPERATURE_INCREASE within MAX_HEATING_CHECK_MILLIS while the PID was at the maximum.
 // If not, raise an error because most likely the heater is not heating up the temperature sensor. Indicating an issue in the system.
@@ -182,14 +198,18 @@
 // Comment the following line to disable PID and enable bang-bang.
 #define PIDTEMP
 #define BANG_MAX 255 // limits current to nozzle while in bang-bang mode; 255=full current
-#define PID_MAX 255 // limits current to nozzle while PID is active (see PID_FUNCTIONAL_RANGE below); 255=full current
+#define PID_MAX BANG_MAX // limits current to nozzle while PID is active (see PID_FUNCTIONAL_RANGE below); 255=full current
 #ifdef PIDTEMP
   //#define PID_DEBUG // Sends debug data to the serial port.
   //#define PID_OPENLOOP 1 // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
-  #define PID_FUNCTIONAL_RANGE 1000 // If the temperature difference between the target temperature and the actual temperature
+ #ifdef __AVR
+  #define PID_FUNCTIONAL_RANGE 20 // If the temperature difference between the target temperature and the actual temperature
                                   // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
-  #define PID_INTEGRAL_DRIVE_MAX 255  //limit for the integral term
-  #define K1 0.99 //smoothing factor within the PID
+ #else
+  #define PID_FUNCTIONAL_RANGE 100 // simulator mode
+ #endif
+  #define PID_INTEGRAL_DRIVE_MAX PID_MAX  //limit for the integral term
+  #define K1 0.95 //smoothing factor within the PID
   #define PID_dT ((OVERSAMPLENR * 4.0)/(F_CPU / 64.0 / 256.0)) //sampling period of the temperature routine
 
 // If you are using a preconfigured hotend then you can use one of the value sets by uncommenting it
@@ -224,7 +244,7 @@
 // If your configuration is significantly different than this and you don't understand the issues involved, you probably
 // shouldn't use bed PID until someone else verifies your hardware works.
 // If this is enabled, find your own PID constants below.
-//#define PIDTEMPBED
+#define PIDTEMPBED
 //
 //#define BED_LIMIT_SWITCHING
 
@@ -319,12 +339,24 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 #define DISABLE_Z false
 #define DISABLE_E false // For all extruders
 
-#define INVERT_X_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
-#define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E1_DIR true    // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#ifndef INVERT_X_DIR
+  #define INVERT_X_DIR true     // for Mendel set to false, for Orca set to true
+#endif
+#ifndef INVERT_Y_DIR
+  #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
+#endif
+#ifndef INVERT_Z_DIR
+  #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
+#endif
+#ifndef INVERT_E0_DIR
+  #define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#endif
+#ifndef INVERT_E1_DIR
+  #define INVERT_E1_DIR true    // for direct drive extruder v9 set to true, for geared extruder set to false
+#endif
+#ifndef INVERT_E2_DIR
+  #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#endif
 
 // ENDSTOP SETTINGS:
 // Sets direction of endstops when homing; 1=MAX, -1=MIN
@@ -337,8 +369,12 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 // Travel limits after homing
 #define X_MAX_POS 230
 #define X_MIN_POS 0
-#define Y_MAX_POS 224.5
-#define Y_MIN_POS 0
+#define Y_MAX_POS 230
+#define Y_MIN_POS 5
+
+// #define Y_MAX_POS 224.5
+// #define Y_MIN_POS 0
+
 #define Z_MAX_POS 230
 #define Z_MIN_POS 0
 
@@ -362,8 +398,11 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 #define HOMING_FEEDRATE {100*60, 100*60, 40*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
-
+#ifdef UM2PLUS
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.0,80.0,200,369}  // default steps per unit for ultimaker2.1 JarJar
+#else
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {80.0,80.0,200,282}  // default steps per unit for ultimaker2
+#endif
 #define DEFAULT_MAX_FEEDRATE          {300, 300, 40, 45}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {9000,9000,100,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
@@ -587,7 +626,7 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 										// (Ultimaker 2 hot end capacity is approx 80 mm^3)
 #define PRIMING_MM3_PER_SEC 5			// Rate at which to prime head (in mm^3/s)
 										// (Ultimaker 2 upper limit is 8-10)
-#define PRIMING_HEIGHT 20				// Height at which to perform the priming extrusions
+#define PRIMING_HEIGHT 30				// Height at which to perform the priming extrusions
 
 // Bed leveling wizard configuration
 #define LEVELING_OFFSET 0.1				// Assumed thickness of feeler gauge/paper used in leveling (mm)

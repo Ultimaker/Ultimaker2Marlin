@@ -7,7 +7,7 @@ heaterSim::heaterSim(int heaterPinNr, adcSim* adc, int temperatureADCNr, float h
     this->adc = adc;
     this->temperatureADCNr = temperatureADCNr;
     this->heaterStrength = heaterStrength;
-    
+
     this->temperature = 20;
 }
 
@@ -26,7 +26,7 @@ void heaterSim::tick()
 
 void heaterSim::draw(int x, int y)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     sprintf(buffer, "%iC", int(temperature));
     drawString(x, y, buffer, 0xFFFFFF);
 }

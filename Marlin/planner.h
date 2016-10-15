@@ -78,8 +78,6 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
 void plan_set_position(const float &x, const float &y, const float &z, const float &e);
 void plan_set_e_position(const float &e);
 
-
-
 void check_axes_activity();
 uint8_t movesplanned(); //return the nr of buffered moves
 

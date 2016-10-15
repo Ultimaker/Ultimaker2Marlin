@@ -38,7 +38,13 @@ void _EEPROM_readData(int &pos, uint8_t* value, uint8_t size)
 // the default values are used whenever there is a change to the data, to prevent
 // wrong data being written to the variables.
 // ALSO:  always make sure the variables in the Store and retrieve sections are in the same order.
-#define EEPROM_VERSION "V11"
+#ifndef EEPROM_VERSION
+  #ifdef UM2PLUS
+    #define EEPROM_VERSION "V12"
+  #else
+    #define EEPROM_VERSION "V11"
+  #endif
+#endif
 
 #ifdef EEPROM_SETTINGS
 void Config_StoreSettings()
@@ -73,9 +79,9 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,Ki);
     EEPROM_WRITE_VAR(i,Kd);
   #else
-		float dummy = 3000.0f;
+	float dummy = 3000.0f;
     EEPROM_WRITE_VAR(i,dummy);
-		dummy = 0.0f;
+    dummy = 0.0f;
     EEPROM_WRITE_VAR(i,dummy);
     EEPROM_WRITE_VAR(i,dummy);
   #endif
@@ -105,35 +111,35 @@ void Config_PrintSettings()
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Steps per unit:");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M92 X",axis_steps_per_unit[0]);
-    SERIAL_ECHOPAIR(" Y",axis_steps_per_unit[1]);
-    SERIAL_ECHOPAIR(" Z",axis_steps_per_unit[2]);
-    SERIAL_ECHOPAIR(" E",axis_steps_per_unit[3]);
-    SERIAL_ECHOLN("");
+    SERIAL_ECHOPAIR("  M92 X",axis_steps_per_unit[X_AXIS]);
+    SERIAL_ECHOPAIR(" Y",axis_steps_per_unit[Y_AXIS]);
+    SERIAL_ECHOPAIR(" Z",axis_steps_per_unit[Z_AXIS]);
+    SERIAL_ECHOPAIR(" E",axis_steps_per_unit[E_AXIS]);
+    SERIAL_EOL;
 
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Maximum feedrates (mm/s):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M203 X",max_feedrate[0]);
-    SERIAL_ECHOPAIR(" Y",max_feedrate[1] );
-    SERIAL_ECHOPAIR(" Z", max_feedrate[2] );
-    SERIAL_ECHOPAIR(" E", max_feedrate[3]);
-    SERIAL_ECHOLN("");
+    SERIAL_ECHOPAIR("  M203 X",max_feedrate[X_AXIS]);
+    SERIAL_ECHOPAIR(" Y",max_feedrate[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z", max_feedrate[Z_AXIS] );
+    SERIAL_ECHOPAIR(" E", max_feedrate[E_AXIS]);
+    SERIAL_EOL;
 
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Maximum Acceleration (mm/s2):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M201 X" ,max_acceleration_units_per_sq_second[0] );
-    SERIAL_ECHOPAIR(" Y" , max_acceleration_units_per_sq_second[1] );
-    SERIAL_ECHOPAIR(" Z" ,max_acceleration_units_per_sq_second[2] );
-    SERIAL_ECHOPAIR(" E" ,max_acceleration_units_per_sq_second[3]);
-    SERIAL_ECHOLN("");
+    SERIAL_ECHOPAIR("  M201 X" ,max_acceleration_units_per_sq_second[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" , max_acceleration_units_per_sq_second[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,max_acceleration_units_per_sq_second[Z_AXIS] );
+    SERIAL_ECHOPAIR(" E" ,max_acceleration_units_per_sq_second[E_AXIS]);
+    SERIAL_EOL;
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Acceleration: S=acceleration, T=retract acceleration");
     SERIAL_ECHO_START;
     SERIAL_ECHOPAIR("  M204 S",acceleration );
     SERIAL_ECHOPAIR(" T" ,retract_acceleration);
-    SERIAL_ECHOLN("");
+    SERIAL_EOL;
 
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Advanced variables: S=Min feedrate (mm/s), T=Min travel feedrate (mm/s), B=minimum segment time (ms), X=maximum XY jerk (mm/s),  Z=maximum Z jerk (mm/s),  E=maximum E jerk (mm/s)");
@@ -144,15 +150,15 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR(" X" ,max_xy_jerk );
     SERIAL_ECHOPAIR(" Z" ,max_z_jerk);
     SERIAL_ECHOPAIR(" E" ,max_e_jerk);
-    SERIAL_ECHOLN("");
+    SERIAL_EOL;
 
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Home offset (mm):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M206 X",add_homeing[0] );
-    SERIAL_ECHOPAIR(" Y" ,add_homeing[1] );
-    SERIAL_ECHOPAIR(" Z" ,add_homeing[2] );
-    SERIAL_ECHOLN("");
+    SERIAL_ECHOPAIR("  M206 X",add_homeing[X_AXIS] );
+    SERIAL_ECHOPAIR(" Y" ,add_homeing[Y_AXIS] );
+    SERIAL_ECHOPAIR(" Z" ,add_homeing[Z_AXIS] );
+    SERIAL_EOL;
 #ifdef PIDTEMP
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("PID settings:");
@@ -160,7 +166,7 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR("   M301 P",Kp);
     SERIAL_ECHOPAIR(" I" ,unscalePID_i(Ki));
     SERIAL_ECHOPAIR(" D" ,unscalePID_d(Kd));
-    SERIAL_ECHOLN("");
+    SERIAL_EOL;
 #endif
 }
 #endif
@@ -280,9 +286,9 @@ void Config_ResetDefault()
     // call updatePID (similar to when we have processed M301)
     updatePID();
 
-#ifdef PID_ADD_EXTRUSION_RATE
-    Kc = DEFAULT_Kc;
-#endif//PID_ADD_EXTRUSION_RATE
+//#ifdef PID_ADD_EXTRUSION_RATE
+//    Kc = DEFAULT_Kc;
+//#endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
     float tmp_motor_current_setting[]=DEFAULT_PWM_MOTOR_CURRENT;
     motor_current_setting[0] = tmp_motor_current_setting[0];

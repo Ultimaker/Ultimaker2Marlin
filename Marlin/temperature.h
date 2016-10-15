@@ -35,22 +35,31 @@ void manage_heater(); //it is critical that this is called periodically.
 // do not use these routines and variables outside of temperature.cpp
 extern int target_temperature[EXTRUDERS];
 extern float current_temperature[EXTRUDERS];
+#if TEMP_SENSOR_BED != 0
 extern int target_temperature_bed;
 extern float current_temperature_bed;
+#endif
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   extern float redundant_temperature;
 #endif
 
 #ifdef PIDTEMP
-  extern float Kp,Ki,Kd,Kc;
+  extern float Kp,Ki,Kd;
+//  #ifdef PID_ADD_EXTRUSION_RATE
+//  extern float Kc;
+//  #endif // PID_ADD_EXTRUSION_RATE
   float scalePID_i(float i);
   float scalePID_d(float d);
   float unscalePID_i(float i);
   float unscalePID_d(float d);
 
 #endif
-#ifdef PIDTEMPBED
+#if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
   extern float bedKp,bedKi,bedKd;
+#endif
+
+#if defined(BABYSTEPPING)
+  extern volatile int babystepsTodo[3];
 #endif
 
 //high level conversion routines, for use outside of temperature.cpp
@@ -59,49 +68,51 @@ extern float current_temperature_bed;
 
 FORCE_INLINE float degHotend(uint8_t extruder) {
   return current_temperature[extruder];
-};
+}
 
+#if TEMP_SENSOR_BED != 0
 FORCE_INLINE float degBed() {
   return current_temperature_bed;
-};
-
-FORCE_INLINE float degTargetHotend(uint8_t extruder) {
-  return target_temperature[extruder];
-};
+}
 
 FORCE_INLINE float degTargetBed() {
   return target_temperature_bed;
-};
+}
+
+FORCE_INLINE bool isHeatingBed() {
+  return target_temperature_bed > current_temperature_bed;
+}
+
+FORCE_INLINE bool isCoolingBed() {
+  return target_temperature_bed < current_temperature_bed;
+}
+#endif // TEMP_SENSOR_BED
+
+FORCE_INLINE float degTargetHotend(uint8_t extruder) {
+  return target_temperature[extruder];
+}
 
 FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
   target_temperature[extruder] = celsius;
   if (target_temperature[extruder] >= HEATER_0_MAXTEMP - 15)
     target_temperature[extruder] = HEATER_0_MAXTEMP - 15;
-};
+}
 
 FORCE_INLINE void setTargetBed(const float &celsius) {
   target_temperature_bed = celsius;
 #ifdef BED_MAXTEMP
-  if (target_temperature_bed >= BED_MAXTEMP - 15)
+  if (target_temperature_bed > BED_MAXTEMP - 15)
     target_temperature_bed = BED_MAXTEMP - 15;
 #endif
-};
+}
 
 FORCE_INLINE bool isHeatingHotend(uint8_t extruder){
   return target_temperature[extruder] > current_temperature[extruder];
-};
-
-FORCE_INLINE bool isHeatingBed() {
-  return target_temperature_bed > current_temperature_bed;
-};
+}
 
 FORCE_INLINE bool isCoolingHotend(uint8_t extruder) {
   return target_temperature[extruder] < current_temperature[extruder];
-};
-
-FORCE_INLINE bool isCoolingBed() {
-  return target_temperature_bed < current_temperature_bed;
-};
+}
 
 #define degHotend0() degHotend(0)
 #define degTargetHotend0() degTargetHotend(0)
@@ -130,7 +141,13 @@ FORCE_INLINE bool isCoolingBed() {
 #error Invalid number of extruders
 #endif
 
+#define AUTOTUNE_OK            0x01
+#define AUTOTUNE_BAD_EXTRUDER  0x02
+#define AUTOTUNE_TEMP_HIGH     0x04
+#define AUTOTUNE_TIMEOUT       0x08
+#define AUTOTUNE_ABORT         0x10
 
+typedef bool (*autotuneFunc_t) (uint8_t state, uint8_t cycle, float kp, float ki, float kd);
 
 int getHeaterPower(int heater);
 void disable_heater();
@@ -148,7 +165,11 @@ FORCE_INLINE void autotempShutdown(){
  #endif
 }
 
-void PID_autotune(float temp, int extruder, int ncycles);
+void PID_autotune(float temp, int extruder, int ncycles, autotuneFunc_t pCallback = NULL);
+
+void set_maxtemp(uint8_t e, int maxTemp);
+int get_maxtemp(uint8_t e);
+
 
 #endif
 

@@ -16,7 +16,9 @@
 # define IS_SD_INSERTED true
 #endif
 
-#include "SdFile.h"
+#include "Sd2CardExt.h"
+#include "SdFileExt.h"
+
 enum LsAction {LS_SerialPrint,LS_Count,LS_GetFilename};
 class CardReader
 {
@@ -49,20 +51,20 @@ public:
   void updir();
   void setroot();
 
-
+//   FORCE_INLINE uint8_t reset() { return card.reset(); }
   FORCE_INLINE bool isFileOpen() { return file.isOpen(); }
-  FORCE_INLINE bool eof() { return sdpos>=filesize ;};
-  FORCE_INLINE int16_t get() {  sdpos = file.curPosition();return (int16_t)file.read();};
+  FORCE_INLINE bool eof() { return sdpos>=filesize ;}
+  FORCE_INLINE int16_t get() {  sdpos = file.curPosition();return (int16_t)file.read();}
   FORCE_INLINE int16_t fgets(char* str, int16_t num) { return file.fgets(str, num, NULL); }
-  FORCE_INLINE void setIndex(long index) {sdpos = index;file.seekSet(index);};
-  FORCE_INLINE uint8_t percentDone(){if(!isFileOpen()) return 0; if(filesize) return sdpos/((filesize+99)/100); else return 0;};
-  FORCE_INLINE char* getWorkDirName(){workDir.getFilename(filename);return filename;};
+  FORCE_INLINE void setIndex(long index) {sdpos = index;file.seekSet(index);}
+  FORCE_INLINE uint8_t percentDone(){if(!isFileOpen()) return 0; if(filesize) return sdpos/((filesize+99)/100); else return 0;}
+  FORCE_INLINE char* getWorkDirName(){workDir.getFilename(filename);return filename;}
   FORCE_INLINE bool atRoot() { return workDirDepth==0; }
   FORCE_INLINE uint32_t getFilePos() { return sdpos; }
   FORCE_INLINE uint32_t getFileSize() { return filesize; }
   FORCE_INLINE bool isOk() { return cardOK && card.errorCode() == 0; }
   FORCE_INLINE int errorCode() { return card.errorCode(); }
-  FORCE_INLINE void clearError() { card.error(0); }
+  FORCE_INLINE void clearError() { card.clearError(); }
   FORCE_INLINE void updateSDInserted()
   {
     bool newInserted = IS_SD_INSERTED;
@@ -86,15 +88,14 @@ public:
   char filename[13];
   char longFilename[LONG_FILENAME_LENGTH];
   bool filenameIsDir;
-  int lastnr; //last number of the autostart;
 private:
   bool cardOK;
-  SdFile root,*curDir,workDir,workDirParents[MAX_DIR_DEPTH];
+  SdFileExt root,*curDir,workDir,workDirParents[MAX_DIR_DEPTH];
   uint8_t workDirDepth;
   uint8_t insertChangeDelay;
-  Sd2Card card;
+  Sd2CardExt card;
   SdVolume volume;
-  SdFile file;
+  SdFileExt file;
   uint32_t filesize;
   //int16_t n;
   unsigned long autostart_atmillis;
@@ -105,7 +106,7 @@ private:
   LsAction lsAction; //stored for recursion.
   int16_t nrFiles; //counter for the files in the current directory and recycled as position counter for getting the nrFiles'th name in the directory.
   char* diveDirName;
-  void lsDive(const char *prepend,SdFile parent);
+  void lsDive(SdFileExt &parent, SdFileExt** parents, uint8_t dirDepth);
 };
 extern CardReader card;
 #define IS_SD_PRINTING (card.sdprinting)

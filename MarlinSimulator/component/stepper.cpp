@@ -8,12 +8,12 @@ stepperSim::stepperSim(arduinoIOSim* arduinoIO, int enablePinNr, int stepPinNr, 
     this->stepValue = 0;
     this->minEndstopPin = -1;
     this->maxEndstopPin = -1;
-    
+
     this->invertDir = invertDir;
     this->enablePin = enablePinNr;
     this->stepPin = stepPinNr;
     this->dirPin = dirPinNr;
-    
+
     arduinoIO->registerPortCallback(stepPinNr, DELEGATE(ioDelegate, stepperSim, *this, stepPinUpdate));
 }
 stepperSim::~stepperSim()
@@ -46,14 +46,14 @@ void stepperSim::setEndstops(int minEndstopPinNr, int maxEndstopPinNr)
 {
     minEndstopPin = minEndstopPinNr;
     maxEndstopPin = maxEndstopPinNr;
-    
+
     writeInput(minEndstopPin, stepValue != minStepValue);
     writeInput(maxEndstopPin, stepValue != maxStepValue);
 }
 
 void stepperSim::draw(int x, int y)
 {
-    char buffer[32];
+    char buffer[32] = {0};
     sprintf(buffer, "%i steps", int(stepValue));
     drawString(x, y, buffer, 0xFFFFFF);
 }

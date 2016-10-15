@@ -6,9 +6,12 @@
 //Random number to verify if the lifetime has actually been written to the EEPROM already
 #define LIFETIME_MAGIC 0x2624BA15
 
-//EEPROM has a 100.000 erase cycles garantee. By writing once a hour we get about 11 years of continues service. Which should be enough to last a lifetime.
+//EEPROM has a 100.000 erase cycles guarantee. By writing once a hour we get about 11 years of continues service. Which should be enough to last a lifetime.
 #define MILLIS_MINUTE (1000L * 60L)
-#define MILLIS_HOUR (MILLIS_MINUTE * 60L)
+#define LIFETIME_SAVEINTERVAL (MILLIS_MINUTE * 120L)
+
+// minimum printing time to save statistics (milliseconds)
+#define MIN_PRINTTIME (MILLIS_MINUTE * 30L)
 
 //Normal configuration from ConfigurationStore.cpp is stored at offset 100 (not 0x100), and has an undefined length.
 //Material profiles are stored at 0x800 and is currently 385 bytes long.
@@ -17,7 +20,7 @@
 
 static unsigned long startup_millis;
 static unsigned long minute_counter_millis;
-static unsigned long hour_save_millis;
+static unsigned long next_save_millis;
 static float last_e_pos;
 static float accumulated_e_diff;
 
@@ -35,7 +38,7 @@ static void save_lifetime_stats();
 void lifetime_stats_init()
 {
     startup_millis = millis();
-    hour_save_millis = startup_millis + MILLIS_HOUR;
+    next_save_millis = startup_millis + LIFETIME_SAVEINTERVAL;
     minute_counter_millis = startup_millis + MILLIS_MINUTE;
     is_printing = false;
     last_e_pos = current_position[E_AXIS];
@@ -74,10 +77,10 @@ void lifetime_stats_tick()
         }
     }
 
-    //Every hour, save the data to EEPROM.
-    if (hour_save_millis < m)
+    //Every two hour, save the data to EEPROM.
+    if (next_save_millis < m)
     {
-        hour_save_millis = m + MILLIS_HOUR;
+        next_save_millis = m + LIFETIME_SAVEINTERVAL;
         save_lifetime_stats();
     }
 }
@@ -92,7 +95,10 @@ void lifetime_stats_print_start()
 void lifetime_stats_print_end()
 {
     is_printing = false;
-    save_lifetime_stats();
+    if ((stoptime-starttime) > MIN_PRINTTIME)
+    {
+        save_lifetime_stats();
+    }
 }
 
 static void load_lifetime_stats()

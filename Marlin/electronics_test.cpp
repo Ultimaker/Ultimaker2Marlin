@@ -17,18 +17,18 @@ static void send(const char c)
         UDR0 = c;
 }
 
-static void sendHex(uint8_t c)
-{
-    if (((c & 0xF0) >> 4) < 10)
-        send('0' + ((c & 0xF0) >> 4));
-    else
-        send('A' - 10 + ((c & 0xF0) >> 4));
-    
-    if ((c & 0x0F) < 10)
-        send('0' + (c & 0x0F));
-    else
-        send('A' - 10 + (c & 0x0F));
-}
+//static void sendHex(uint8_t c)
+//{
+//    if (((c & 0xF0) >> 4) < 10)
+//        send('0' + ((c & 0xF0) >> 4));
+//    else
+//        send('A' - 10 + ((c & 0xF0) >> 4));
+//
+//    if ((c & 0x0F) < 10)
+//        send('0' + (c & 0x0F));
+//    else
+//        send('A' - 10 + (c & 0x0F));
+//}
 
 static void send(const char* str)
 {

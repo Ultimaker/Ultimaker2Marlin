@@ -8,7 +8,10 @@
 
 void lcd_init();
 void lcd_update();
-FORCE_INLINE void lcd_setstatus(const char* message) {}
+// FORCE_INLINE void lcd_setstatus(const char* message) {}
+void lcd_setstatus(const char* message);
+const char * lcd_getstatus();
+void lcd_clearstatus();
 void lcd_buttons_update();
 FORCE_INLINE void lcd_reset_alert_level() {}
 FORCE_INLINE void lcd_buzz(long duration,uint16_t freq) {}
@@ -28,7 +31,7 @@ extern float dsp_temperature_bed;
 #define LED_MODE_WHILE_PRINTING 2
 #define LED_MODE_BLINK_ON_DONE  3
 
-void lcd_menu_main();
+#define SERIAL_CONTROL_TIMEOUT 4000
 
 #endif
 
