@@ -1,10 +1,21 @@
 #include "Marlin.h"
 #include "cardreader.h"
+#include "material.h"
 #include "UltiLCD2.h"
 #include "ultralcd.h"
 #include "stepper.h"
 #include "temperature.h"
 #include "language.h"
+
+void doCooldown()
+{
+    for(uint8_t n=0; n<EXTRUDERS; n++)
+        setTargetHotend(0, n);
+    setTargetBed(0);
+    fanSpeed = 0;
+
+    //quickStop();         //Abort all moves already in the planner
+}
 
 #ifdef SDSUPPORT
 
@@ -23,6 +34,7 @@ CardReader::CardReader()
    workDirDepth = 0;
    uInitState = UInit_None;
    memset(workDirParents, 0, sizeof(workDirParents));
+   primed = false;
 
    autostart_stilltocheck=true; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
    lastnr=0;
@@ -216,11 +228,45 @@ void CardReader::startFileprint()
 
 void CardReader::doUltiInit()
 {
+  bool isGcode = false;
+
   if(cardOK)
   {
-    enquecommand_P(PSTR("G28"));
-    enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
-    uInitState = UInit_Heating;
+    if (isFileOpen()) {
+      isGcode = getGCodeHeader();
+    }
+
+    active_extruder = 0;
+    feedmultiply = 100;
+    if (isGcode) {
+      // Perform UltiGCode initialization
+      enquecommand_P(PSTR("G28"));
+      enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
+
+      fanSpeedPercent = 0;
+      for (uint8_t extruder = 0; extruder < EXTRUDERS; ++extruder) {
+        if (header.materialMeters[extruder] == 0) {
+          continue;
+        }
+        setTargetBed(max(target_temperature_bed, material[extruder].bed_temperature));
+        setTargetHotend(material[extruder].temperature, extruder);
+        fanSpeedPercent = max(fanSpeedPercent, material[extruder].fan_speed);
+        volume_to_filament_length[extruder] =
+          1.0 / (M_PI * (material[extruder].diameter / 2.0) * (material[extruder].diameter / 2.0));
+        extrudemultiply[extruder] = material[extruder].flow;
+      }
+      uInitState = UInit_Heating;
+    } else {
+      // Not UltiGCode, assume the file itself has init commands
+      fanSpeedPercent = 100;
+      for(uint8_t e=0; e<EXTRUDERS; e++)
+      {
+          volume_to_filament_length[e] = 1.0;
+          extrudemultiply[e] = 100;
+      }
+      uInitState = UInit_None;
+    }
+
     pause = false;
   }
 }
@@ -409,6 +455,36 @@ void CardReader::removeFile(const char* name)
 
 }
 
+bool CardReader::getGCodeHeader()
+{
+  if (cardOK && isFileOpen()) {
+    char buffer[64];
+    bool sawHeader = false;
+    header.clear();
+
+    for(uint8_t n=0;n<8;n++)
+    {
+        fgets(buffer, sizeof(buffer));
+        buffer[sizeof(buffer)-1] = '\0';
+        while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
+        if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
+            header.printTimeSec = atol(buffer + 6);
+        else if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 10) == 0) {
+          sawHeader = true;
+        } else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
+            header.materialMeters[0] = atol(buffer + 10);
+#if EXTRUDERS > 1
+        else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
+            header.materialMeters[1] = atol(buffer + 11);
+#endif
+    }
+    if (sawHeader) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void CardReader::getStatus()
 {
   if(cardOK){
@@ -580,11 +656,13 @@ void CardReader::printingHasFinished()
     file.close();
     sdprinting = false;
     pause = false;
+
     if(SD_FINISHED_STEPPERRELEASE)
     {
         //finishAndDisableSteppers();
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
     autotempShutdown();
+    uInitState = UInit_finishing;
 }
 #endif //SDSUPPORT

@@ -23,7 +23,6 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
 #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 
-void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error_sd();
