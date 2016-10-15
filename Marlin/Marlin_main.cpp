@@ -1227,6 +1227,11 @@ void process_commands()
       card.ls();
       SERIAL_PROTOCOLLNPGM(MSG_END_FILE_LIST);
       break;
+    case 720: // M20 - list SD card long filenames
+      SERIAL_PROTOCOLLNPGM(MSG_BEGIN_FILE_LIST);
+      card.lsl();
+      SERIAL_PROTOCOLLNPGM(MSG_END_FILE_LIST);
+      break;
     case 21: // M21 - init SD card
 
       card.initsd();
