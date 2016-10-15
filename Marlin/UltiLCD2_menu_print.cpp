@@ -4,6 +4,7 @@
 #ifdef ENABLE_ULTILCD2
 #include "Marlin.h"
 #include "cardreader.h"
+#include "material.h"
 #include "temperature.h"
 #include "lifetime_stats.h"
 #include "UltiLCD2.h"
