@@ -16,8 +16,12 @@
 # define IS_SD_INSERTED true
 #endif
 
+// Move commands used for UltiGCode initialization and cleanup to a shared space
+#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y10"
+
 #include "SdFile.h"
 enum LsAction {LS_SerialPrint,LS_Count,LS_GetFilename};
+enum UltiInitState {UInit_None, UInit_Heating, UInit_Priming};
 class CardReader
 {
 public:
@@ -36,6 +40,7 @@ public:
   void closefile();
   void release();
   void startFileprint();
+  void doUltiInit();
   void pauseSDPrint();
   void getStatus();
   void printingHasFinished();
@@ -81,6 +86,7 @@ public:
   bool saving;
   bool logging;
   bool sdprinting;
+  enum UltiInitState uInitState;
   bool pause;
   bool sdInserted;
   char filename[13];
