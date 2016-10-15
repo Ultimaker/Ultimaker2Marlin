@@ -4,6 +4,7 @@
 #ifdef ENABLE_ULTILCD2
 #include "Marlin.h"
 #include "cardreader.h"
+#include "material.h"
 #include "temperature.h"
 #include "lifetime_stats.h"
 #include "UltiLCD2.h"
@@ -11,8 +12,6 @@
 #include "UltiLCD2_menu_print.h"
 #include "UltiLCD2_menu_material.h"
 #include "UltiLCD2_menu_maintenance.h"
-
-#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y10"
 
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
@@ -24,7 +23,6 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
 #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 
-void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error_sd();

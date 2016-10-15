@@ -4,6 +4,7 @@
 #ifdef ENABLE_ULTILCD2
 #include "Marlin.h"
 #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
+#include "material.h"
 #include "temperature.h"
 #include "UltiLCD2.h"
 #include "UltiLCD2_hi_lib.h"
@@ -25,7 +26,6 @@ void inline eeprom_write_float(float* addr, float f)
 }
 #endif
 
-struct materialSettings material[EXTRUDERS];
 static menuFunc_t post_change_material_menu;
 static unsigned long preheat_end_time;
 
@@ -867,26 +867,10 @@ void lcd_material_reset_defaults()
 
 void lcd_material_set_material(uint8_t nr, uint8_t e)
 {
-    material[e].temperature = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr));
-#if TEMP_SENSOR_BED != 0
-    material[e].bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(nr));
-#endif
-    material[e].flow = eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr));
+    material[e].set_material_from_eeprom(nr);
 
-    material[e].fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr));
-    material[e].diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr));
     eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
     card.longFilename[8] = '\0';
-    if (material[e].temperature > HEATER_0_MAXTEMP - 15)
-        material[e].temperature = HEATER_0_MAXTEMP - 15;
-#if TEMP_SENSOR_BED != 0
-    if (material[e].bed_temperature > BED_MAXTEMP - 15)
-        material[e].bed_temperature = BED_MAXTEMP - 15;
-#endif
-    material[e].change_temperature = eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(nr));
-    material[e].change_preheat_wait_time = eeprom_read_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(nr));
-    if (material[e].change_temperature < 10)
-        material[e].change_temperature = material[e].temperature;
 
     lcd_material_store_current_material();
 }
@@ -911,19 +895,7 @@ void lcd_material_read_current_material()
 {
     for(uint8_t e=0; e<EXTRUDERS; e++)
     {
-        material[e].temperature = eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
-#if TEMP_SENSOR_BED != 0
-        material[e].bed_temperature = eeprom_read_word(EEPROM_MATERIAL_BED_TEMPERATURE_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
-#endif
-        material[e].flow = eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
-
-        material[e].fan_speed = eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
-        material[e].diameter = eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
-
-        material[e].change_temperature = eeprom_read_word(EEPROM_MATERIAL_CHANGE_TEMPERATURE(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
-        material[e].change_preheat_wait_time = eeprom_read_byte(EEPROM_MATERIAL_CHANGE_WAIT_TIME(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e));
-        if (material[e].change_temperature < 10)
-            material[e].change_temperature = material[e].temperature;
+        material[e].set_material_from_eeprom(EEPROM_MATERIAL_SETTINGS_MAX_COUNT+e);
     }
 }
 

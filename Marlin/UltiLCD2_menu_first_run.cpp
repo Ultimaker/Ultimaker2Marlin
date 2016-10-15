@@ -4,6 +4,7 @@
 #ifdef ENABLE_ULTILCD2
 #include "Marlin.h"
 #include "cardreader.h"//This code uses the card.longFilename as buffer to store data, to save memory.
+#include "material.h"
 #include "temperature.h"
 #include "ConfigurationStore.h"
 #include "UltiLCD2.h"

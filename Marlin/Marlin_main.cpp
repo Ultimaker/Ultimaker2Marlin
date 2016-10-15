@@ -645,8 +645,10 @@ void get_command()
     }
   }
   #ifdef SDSUPPORT
-  if(!card.sdprinting)
+  card.checkUltiInitState();
+  if(!card.sdprinting) {
     return;
+  }
   if (serial_count!=0)
   {
     if (millis() - lastSerialCommandTime < 5000)
@@ -655,7 +657,6 @@ void get_command()
   }
   if (card.pause)
   {
-
     return;
   }
   static uint32_t endOfLineFilePosition = 0;
@@ -1283,6 +1284,19 @@ void process_commands()
         card.removeFile(strchr_pointer + 4);
       }
       break;
+    case 723: // M723 select and print an SD file with UltoGCode prefix and suffix
+      starpos = (strchr(strchr_pointer + 4,'*'));
+      if(starpos!=NULL)
+        *(starpos-1)='\0';
+      // make filename lowercase
+      for (char *pos = strchr_pointer+4; *pos; ++pos) {
+        *pos = tolower(*pos);
+      }
+      card.openFile(strchr_pointer + 4,true);
+      card.doUltiInit();
+      starttime=millis();
+      break;
+
     case 923: //M923 - Select file and start printing
       starpos = (strchr(strchr_pointer + 4,'*'));
       if(starpos!=NULL)
@@ -2897,4 +2911,3 @@ bool setTargetedHotend(int code){
   }
   return false;
 }
-
