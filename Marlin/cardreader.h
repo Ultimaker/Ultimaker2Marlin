@@ -64,7 +64,9 @@ public:
   void chdir(const char * relpath);
   void updir();
   void setroot();
-
+  
+  bool primed;
+  void finishPrint();
 
   FORCE_INLINE bool isFileOpen() { return file.isOpen(); }
   FORCE_INLINE bool eof() { return sdpos>=filesize ;};
@@ -126,8 +128,6 @@ private:
   char* diveDirName;
   void lsDive(const char *prepend,SdFile parent);
   void primeExtruders();
-  bool primed;
-  void finishPrint();
 };
 extern CardReader card;
 #define IS_SD_PRINTING (card.sdprinting)
