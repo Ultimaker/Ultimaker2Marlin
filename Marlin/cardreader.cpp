@@ -461,12 +461,18 @@ bool CardReader::getGCodeHeader()
     char buffer[64];
     bool sawHeader = false;
     header.clear();
+    uint32_t lastLinePosition = 0;
 
     for(uint8_t n=0;n<8;n++)
     {
         fgets(buffer, sizeof(buffer));
         buffer[sizeof(buffer)-1] = '\0';
         while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
+        if (strlen(buffer) > 0 && buffer[0] != ';') {
+          setIndex(lastLinePosition);
+          break;
+        }
+        lastLinePosition = getFilePos();
         if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
             header.printTimeSec = atol(buffer + 6);
         else if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 10) == 0) {

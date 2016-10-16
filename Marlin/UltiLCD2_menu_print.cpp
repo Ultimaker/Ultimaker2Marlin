@@ -251,20 +251,12 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
-                        for(uint8_t n=0;n<8;n++)
-                        {
-                            card.fgets(buffer, sizeof(buffer));
-                            buffer[sizeof(buffer)-1] = '\0';
-                            while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
-                            if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
-                                LCD_DETAIL_CACHE_TIME() = atol(buffer + 6);
-                            else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(0) = atol(buffer + 10);
-#if EXTRUDERS > 1
-                            else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(1) = atol(buffer + 11);
-#endif
-                        }
+                      bool isUltiGCode = card.getGCodeHeader();
+                      if (isUltiGCode) {
+                        LCD_DETAIL_CACHE_TIME() = card.header.printTimeSec;
+                        LCD_DETAIL_CACHE_MATERIAL(0) = card.header.materialMeters[0];
+                        LCD_DETAIL_CACHE_MATERIAL(1) = card.header.materialMeters[1];
+                      }
                     }
                     if (card.errorCode())
                     {
