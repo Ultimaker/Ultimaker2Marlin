@@ -23,7 +23,6 @@ uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_DETAIL_CACHE_TIME() (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+1])
 #define LCD_DETAIL_CACHE_MATERIAL(n) (*(uint32_t*)&lcd_cache[LCD_DETAIL_CACHE_START+5+4*n])
 
-void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error_sd();
@@ -52,42 +51,8 @@ static void abortPrint()
 {
     postMenuCheck = NULL;
     lifetime_stats_print_end();
-    doCooldown();
-
-    clear_command_queue();
-    char buffer[32];
-    if (card.sdprinting)
-    {
-    	// we're not printing any more
-        card.sdprinting = false;
-    }
-    //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
-    card.pause = false;
-    pauseRequested = false;
-
-    enquecommand_P(PSTR("M401"));
-
-    if (primed)
-    {
-        // set up the end of print retraction
-        sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
-        enquecommand(buffer);
-        // perform the retraction at the standard retract speed
-        sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
-        enquecommand(buffer);
-
-        // no longer primed
-        primed = false;
-    }
-
-    if (current_position[Z_AXIS] > Z_MAX_POS - 30)
-    {
-        enquecommand_P(PSTR("G28 X0 Y0"));
-        enquecommand_P(PSTR("G28 Z0"));
-    }else{
-        enquecommand_P(PSTR("G28"));
-    }
-    enquecommand_P(PSTR("M84"));
+    card.primed = primed;
+    card.finishPrint();
 }
 
 static void checkPrintFinished()
@@ -252,20 +217,12 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
-                        for(uint8_t n=0;n<8;n++)
-                        {
-                            card.fgets(buffer, sizeof(buffer));
-                            buffer[sizeof(buffer)-1] = '\0';
-                            while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
-                            if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
-                                LCD_DETAIL_CACHE_TIME() = atol(buffer + 6);
-                            else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(0) = atol(buffer + 10);
-#if EXTRUDERS > 1
-                            else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
-                                LCD_DETAIL_CACHE_MATERIAL(1) = atol(buffer + 11);
-#endif
-                        }
+                      bool isUltiGCode = card.getGCodeHeader();
+                      if (isUltiGCode) {
+                        LCD_DETAIL_CACHE_TIME() = card.header.printTimeSec;
+                        LCD_DETAIL_CACHE_MATERIAL(0) = card.header.materialMeters[0];
+                        LCD_DETAIL_CACHE_MATERIAL(1) = card.header.materialMeters[1];
+                      }
                     }
                     if (card.errorCode())
                     {
