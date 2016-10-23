@@ -2283,17 +2283,6 @@ void process_commands()
     break;
     #endif//ENABLE_ULTILCD2
 
-    case 723: // M723 select and print an SD file with UltoGCode prefix and suffix
-    {
-      starpos = (strchr(strchr_pointer + 4,'*'));
-      if(starpos!=NULL)
-        *(starpos-1)='\0';
-      card.openFile(strchr_pointer + 4,true);
-      card.startFileprint();
-      starttime=millis();
-      break;
-    }
-
     case 907: // M907 Set digital trimpot motor current using axis codes.
     {
       #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
