@@ -31,15 +31,14 @@ static void lcd_menu_first_run_bed_level_paper_left();
 static void lcd_menu_first_run_bed_level_paper_right();
 
 static void lcd_menu_first_run_material_load();
-static void lcd_menu_first_run_material_load_heatup();
-static void lcd_menu_first_run_material_load_insert();
-static void lcd_menu_first_run_material_load_forward();
-static void lcd_menu_first_run_material_load_wait();
-
 static void lcd_menu_first_run_material_select_1();
 static void lcd_menu_first_run_material_select_material();
 static void lcd_menu_first_run_material_select_confirm_material();
 static void lcd_menu_first_run_material_select_2();
+static void lcd_menu_first_run_material_load_heatup();
+static void lcd_menu_first_run_material_load_insert();
+static void lcd_menu_first_run_material_load_forward();
+static void lcd_menu_first_run_material_load_wait();
 
 static void lcd_menu_first_run_print_1();
 static void lcd_menu_first_run_print_card_detect();
@@ -295,7 +294,7 @@ static void parkHeadForHeating()
 static void lcd_menu_first_run_material_load()
 {
     SELECT_MAIN_MENU_ITEM(0);
-    lcd_info_screen(lcd_menu_first_run_material_load_heatup, parkHeadForHeating, PSTR("CONTINUE"));
+    lcd_info_screen(lcd_menu_first_run_material_select_1, parkHeadForHeating, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(11);
     lcd_lib_draw_string_centerP(10, PSTR("Now that we leveled"));
     lcd_lib_draw_string_centerP(20, PSTR("the buildplate"));
@@ -304,9 +303,87 @@ static void lcd_menu_first_run_material_load()
     lcd_lib_update_screen();
 }
 
+static void lcd_menu_first_run_material_select_1()
+{
+    if (eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET()) == 1)
+    {
+        digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
+        
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+            lcd_material_set_material(0, e);
+        SET_FIRST_RUN_DONE();
+        
+        currentMenu = lcd_menu_first_run_material_load_heatup;
+        return;
+    }
+    SELECT_MAIN_MENU_ITEM(0);
+    lcd_info_screen(lcd_menu_first_run_material_select_material, doCooldown, PSTR("READY"));
+    DRAW_PROGRESS_NR(12);
+    lcd_lib_draw_string_centerP(10, PSTR("Next, select the"));
+    lcd_lib_draw_string_centerP(20, PSTR("material you will"));
+    lcd_lib_draw_string_centerP(30, PSTR("insert in this"));
+    lcd_lib_draw_string_centerP(40, PSTR("Ultimaker2."));
+    lcd_lib_update_screen();
+}
+
+static char* lcd_material_select_callback(uint8_t nr)
+{
+    eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
+    return card.longFilename;
+}
+
+static void lcd_material_select_details_callback(uint8_t nr)
+{
+    lcd_lib_draw_stringP(5, 53, PSTR("Select the material"));
+}
+
+static void lcd_menu_first_run_material_select_material()
+{
+    LED_GLOW();
+    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
+
+    lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_material_select_callback, lcd_material_select_details_callback);
+    CLEAR_PROGRESS_NR(13);
+    lcd_lib_update_screen();
+
+    if (lcd_lib_button_pressed)
+    {
+        digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
+
+        for(uint8_t e=0; e<EXTRUDERS; e++)
+            lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), e);
+        SET_FIRST_RUN_DONE();
+        lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_material);
+        strcat_P(card.longFilename, PSTR(" as material,"));
+    }
+}
+
+static void lcd_menu_first_run_material_select_confirm_material()
+{
+    LED_GLOW();
+    lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_material, NULL, PSTR("NO"));
+    DRAW_PROGRESS_NR(14);
+    lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
+    lcd_lib_draw_string_center(30, card.longFilename);
+    lcd_lib_draw_string_centerP(40, PSTR("is this right?"));
+    lcd_lib_update_screen();
+}
+
+static void lcd_menu_first_run_material_select_2()
+{
+    SELECT_MAIN_MENU_ITEM(0);
+    lcd_info_screen(lcd_menu_first_run_material_load_heatup, NULL, PSTR("CONTINUE"));
+    DRAW_PROGRESS_NR(15);
+    lcd_lib_draw_string_centerP(10, PSTR("Now your Ultimaker2"));
+    lcd_lib_draw_string_centerP(20, PSTR("knows what kind"));
+    lcd_lib_draw_string_centerP(30, PSTR("of material"));
+    lcd_lib_draw_string_centerP(40, PSTR("it is using."));
+    lcd_lib_update_screen();
+}
+
 static void lcd_menu_first_run_material_load_heatup()
 {
-    setTargetHotend(230, 0);
+    setTargetHotend(material[0].temperature, 0);
     int16_t temp = degHotend(0) - 20;
     int16_t target = degTargetHotend(0) - 10 - 20;
     if (temp < 0) temp = 0;
@@ -326,7 +403,7 @@ static void lcd_menu_first_run_material_load_heatup()
         minProgress = progress;
 
     lcd_basic_screen();
-    DRAW_PROGRESS_NR(12);
+    DRAW_PROGRESS_NR(16);
     lcd_lib_draw_string_centerP(10, PSTR("Please wait,"));
     lcd_lib_draw_string_centerP(20, PSTR("printhead heating for"));
     lcd_lib_draw_string_centerP(30, PSTR("material loading"));
@@ -366,7 +443,7 @@ static void lcd_menu_first_run_material_load_insert()
 
     SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_load_forward, runMaterialForward, PSTR("CONTINUE"));
-    DRAW_PROGRESS_NR(13);
+    DRAW_PROGRESS_NR(17);
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
     lcd_lib_draw_string_centerP(20, PSTR("from the rear of"));
     lcd_lib_draw_string_centerP(30, PSTR("your Ultimaker2,"));
@@ -377,7 +454,7 @@ static void lcd_menu_first_run_material_load_insert()
 static void lcd_menu_first_run_material_load_forward()
 {
     lcd_basic_screen();
-    DRAW_PROGRESS_NR(14);
+    DRAW_PROGRESS_NR(18);
     lcd_lib_draw_string_centerP(20, PSTR("Loading material..."));
 
     if (!blocks_queued())
@@ -401,8 +478,8 @@ static void lcd_menu_first_run_material_load_wait()
 {
     LED_GLOW();
 
-    lcd_info_screen(lcd_menu_first_run_material_select_1, doCooldown, PSTR("CONTINUE"));
-    DRAW_PROGRESS_NR(15);
+    lcd_info_screen(lcd_menu_first_run_print_1, doCooldown, PSTR("CONTINUE"));
+    DRAW_PROGRESS_NR(19);
     lcd_lib_draw_string_centerP(10, PSTR("Push button when"));
     lcd_lib_draw_string_centerP(20, PSTR("material exits"));
     lcd_lib_draw_string_centerP(30, PSTR("from nozzle..."));
@@ -413,84 +490,6 @@ static void lcd_menu_first_run_material_load_wait()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_EXTRUDE_SPEED, 0);
     }
 
-    lcd_lib_update_screen();
-}
-
-static void lcd_menu_first_run_material_select_1()
-{
-    if (eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET()) == 1)
-    {
-        digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
-        
-        for(uint8_t e=0; e<EXTRUDERS; e++)
-            lcd_material_set_material(0, e);
-        SET_FIRST_RUN_DONE();
-        
-        currentMenu = lcd_menu_first_run_print_1;
-        return;
-    }
-    SELECT_MAIN_MENU_ITEM(0);
-    lcd_info_screen(lcd_menu_first_run_material_select_material, doCooldown, PSTR("READY"));
-    DRAW_PROGRESS_NR(16);
-    lcd_lib_draw_string_centerP(10, PSTR("Next, select the"));
-    lcd_lib_draw_string_centerP(20, PSTR("material you have"));
-    lcd_lib_draw_string_centerP(30, PSTR("inserted in this"));
-    lcd_lib_draw_string_centerP(40, PSTR("Ultimaker2."));
-    lcd_lib_update_screen();
-}
-
-static char* lcd_material_select_callback(uint8_t nr)
-{
-    eeprom_read_block(card.longFilename, EEPROM_MATERIAL_NAME_OFFSET(nr), 8);
-    return card.longFilename;
-}
-
-static void lcd_material_select_details_callback(uint8_t nr)
-{
-    lcd_lib_draw_stringP(5, 53, PSTR("Select the material"));
-}
-
-static void lcd_menu_first_run_material_select_material()
-{
-    LED_GLOW();
-    uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
-
-    lcd_scroll_menu(PSTR("MATERIAL"), count, lcd_material_select_callback, lcd_material_select_details_callback);
-    CLEAR_PROGRESS_NR(17);
-    lcd_lib_update_screen();
-
-    if (lcd_lib_button_pressed)
-    {
-        digipot_current(2, motor_current_setting[2]);//Set E motor power to default.
-
-        for(uint8_t e=0; e<EXTRUDERS; e++)
-            lcd_material_set_material(SELECTED_SCROLL_MENU_ITEM(), e);
-        SET_FIRST_RUN_DONE();
-        lcd_change_to_menu(lcd_menu_first_run_material_select_confirm_material);
-        strcat_P(card.longFilename, PSTR(" as material,"));
-    }
-}
-
-static void lcd_menu_first_run_material_select_confirm_material()
-{
-    LED_GLOW();
-    lcd_question_screen(lcd_menu_first_run_material_select_2, NULL, PSTR("YES"), lcd_menu_first_run_material_select_material, NULL, PSTR("NO"));
-    DRAW_PROGRESS_NR(18);
-    lcd_lib_draw_string_centerP(20, PSTR("You have chosen"));
-    lcd_lib_draw_string_center(30, card.longFilename);
-    lcd_lib_draw_string_centerP(40, PSTR("is this right?"));
-    lcd_lib_update_screen();
-}
-
-static void lcd_menu_first_run_material_select_2()
-{
-    SELECT_MAIN_MENU_ITEM(0);
-    lcd_info_screen(lcd_menu_first_run_print_1, NULL, PSTR("CONTINUE"));
-    DRAW_PROGRESS_NR(19);
-    lcd_lib_draw_string_centerP(10, PSTR("Now your Ultimaker2"));
-    lcd_lib_draw_string_centerP(20, PSTR("knows what kind"));
-    lcd_lib_draw_string_centerP(30, PSTR("of material"));
-    lcd_lib_draw_string_centerP(40, PSTR("it is using."));
     lcd_lib_update_screen();
 }
 

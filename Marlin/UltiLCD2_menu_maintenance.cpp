@@ -157,7 +157,10 @@ static void lcd_menu_maintenance_advanced()
 #endif
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(2 + EXTRUDERS))
+        {
+            enquecommand_P(PSTR("G28 Z0"));
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);
+        }
 #endif
         else if (IS_SELECTED_SCROLL(2 + BED_MENU_OFFSET + EXTRUDERS))
         {
@@ -393,7 +396,7 @@ static void lcd_menu_maintenance_retraction()
         if (IS_SELECTED_SCROLL(0))
         {
             Config_StoreSettings();
-            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(6 + EXTRUDERS * 2));
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(6 + BED_MENU_OFFSET + EXTRUDERS * 2));
         }
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT001(retract_length, "Retract length", "mm", 0, 50);
@@ -462,7 +465,7 @@ static void lcd_menu_maintenance_motion()
             digipot_current(1, motor_current_setting[1]);
             digipot_current(2, motor_current_setting[2]);
             Config_StoreSettings();
-            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7));
+            lcd_change_to_menu(lcd_menu_maintenance_advanced, SCROLL_MENU_ITEM_POS(7 + BED_MENU_OFFSET + EXTRUDERS * 2));
         }
         else if (IS_SELECTED_SCROLL(1))
             LCD_EDIT_SETTING_FLOAT100(acceleration, "Acceleration", "mm/sec^2", 0, 20000);
