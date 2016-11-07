@@ -217,8 +217,8 @@ CXXSRC = UltiLCD2.cpp UltiLCD2_gfx.cpp UltiLCD2_hi_lib.cpp UltiLCD2_low_lib.cpp 
 CXXSRC += UltiLCD2_menu_utils.cpp UltiLCD2_menu_prefs.cpp tinkergnome.cpp  \
 	machinesettings.cpp filament_sensor.cpp new.cpp
 CXXSRC += WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
-	MarlinSerial.cpp Sd2Card.cpp Sd2CardExt.cpp SdFile.cpp \
-	SdFileExt.cpp SdVolume.cpp motion_control.cpp planner.cpp SPI.cpp \
+	MarlinSerial.cpp Sd2Card.cpp SdBaseFile.cpp SdFile.cpp \
+	SdVolume.cpp motion_control.cpp planner.cpp \
 	stepper.cpp temperature.cpp cardreader.cpp ConfigurationStore.cpp \
 	watchdog.cpp electronics_test.cpp
 #CXXSRC += LiquidCrystal.cpp ultralcd.cpp SPI.cpp Servo.cpp Tone.cpp

@@ -51,7 +51,7 @@ uint8_t led_glow = 0;
 uint8_t led_glow_dir;
 
 /**
- * i2c communiation low level functions.
+ * i2c communication low level functions.
  */
 static inline void i2c_start()
 {
@@ -198,7 +198,7 @@ void lcd_lib_init()
 uint16_t lcd_update_pos = 0;
 ISR(TWI_vect)
 {
-    if (lcd_update_pos == LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8)
+    if (lcd_update_pos == LCD_GFX_WIDTH*LCD_GFX_HEIGHT/8u)
     {
         i2c_end();
     }
@@ -290,7 +290,7 @@ void lcd_lib_update_screen()
         // update screen content
         i2c_start();
         i2c_send_raw(I2C_LCD_ADDRESS << 1 | I2C_WRITE);
-        //Set the drawin position to 0,0
+        //Set the drawing position to 0,0
         i2c_send_raw(I2C_LCD_SEND_COMMAND);
         i2c_send_raw(0x00 | (0 & 0x0F));
         i2c_send_raw(0x10 | (0 >> 4));

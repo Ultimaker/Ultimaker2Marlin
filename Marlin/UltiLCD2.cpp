@@ -139,7 +139,7 @@ void lcd_update()
         LED_GLOW_ERROR
         lcd_lib_update_screen();
     }
-    else if (HAS_SERIAL_CMD)
+    else if (HAS_SERIAL_CMD && !card.sdprinting())
     {
         if (!(sleep_state & SLEEP_SERIAL_SCREEN))
         {

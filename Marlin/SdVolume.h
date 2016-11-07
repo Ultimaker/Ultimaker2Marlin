@@ -27,7 +27,7 @@
  */
 #include "SdFatConfig.h"
 #include "Sd2Card.h"
-#include "FatStructs.h"
+#include "SdFatStructs.h"
 
 //==============================================================================
 // SdVolume class

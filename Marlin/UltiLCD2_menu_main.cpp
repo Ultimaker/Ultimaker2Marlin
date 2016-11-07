@@ -198,18 +198,7 @@ static void lcd_main_print()
     lcd_clear_cache();
     card.release();
     card.setroot();
-#ifdef __AVR__
     menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
-#else
-    *card.longFilename = '\0';
-    *card.filename = '\0';
-    card.sdprinting = true;
-    card.pause = false;
-    homeAll();
-    enquecommand_P(PSTR("G1 X110 Y110 F12000"));
-    enquecommand_P(PSTR("G1 Z10 F2400"));
-    menu.add_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)));
-#endif
 }
 
 static void lcd_toggle_preheat_nozzle0()

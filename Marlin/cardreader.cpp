@@ -9,23 +9,13 @@
 #ifdef SDSUPPORT
 
 CardReader::CardReader() :
-   saving(false)
- , logging(false)
- , sdprinting(false)
- , pause(false)
- , sdInserted(false)
- , filenameIsDir(false)
- , cardOK(false)
+   state(SD_CHECKAUTOSTART)
  , workDirDepth(0)
  , insertChangeDelay(1000 / 25)
  , filesize(0)
  , autostart_atmillis(0)
  , sdpos(0)
- , autostart_stilltocheck(true) //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
 {
-
-   // memset(workDirParents, 0, sizeof(workDirParents));
-
   //power to SD reader
   #if SDPOWER > -1
     SET_OUTPUT(SDPOWER);
@@ -52,7 +42,7 @@ char *createFilename(char *buffer, const dir_t &p) //buffer>12characters
 }
 
 
-void  CardReader::lsDive(SdFileExt &parent, SdFileExt** parents, uint8_t dirDepth)
+void  CardReader::lsDive(SdFile &parent, SdFile** parents, uint8_t dirDepth)
 {
   dir_t p;
   uint8_t cnt=0;
@@ -65,7 +55,7 @@ void  CardReader::lsDive(SdFileExt &parent, SdFileExt** parents, uint8_t dirDept
       char lfilename[13];
       createFilename(lfilename, p);
 
-      SdFileExt dir;
+      SdFile dir;
 
       if(!dir.open(parent, lfilename, O_READ))
       {
@@ -96,14 +86,15 @@ void  CardReader::lsDive(SdFileExt &parent, SdFileExt** parents, uint8_t dirDept
       }
 
       if (!DIR_IS_FILE_OR_SUBDIR(&p)) continue;
-      filenameIsDir=DIR_IS_SUBDIR(&p);
-
-
-      if(!filenameIsDir)
-      {
+      if (DIR_IS_SUBDIR(&p)) {
+        state |= SD_ISDIR;
+      }
+      else {
+        state &= ~SD_ISDIR;
         if(p.name[8]!='G') continue;
         if(p.name[9]=='~') continue;
       }
+
       createFilename(filename,p);
       if(lsAction==LS_SerialPrint)
       {
@@ -138,14 +129,15 @@ void CardReader::ls()
 {
   lsAction=LS_SerialPrint;
   root.rewind();
-  SdFileExt* lsParents[MAX_DIR_DEPTH] = {0};
+  SdFile* lsParents[MAX_DIR_DEPTH] = {0};
   lsDive(root, lsParents, 0);
 }
 
 
 void CardReader::initsd()
 {
-  cardOK = false;
+  // cardOK = false;
+  state &= ~SD_OK;
   if(root.isOpen())
     root.close();
 #ifdef SDSLOW
@@ -170,7 +162,8 @@ void CardReader::initsd()
   }
   else
   {
-    cardOK = true;
+    // cardOK = true;
+    state |= SD_OK;
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM(MSG_SD_CARD_OK);
   }
@@ -198,44 +191,39 @@ void CardReader::setroot()
 
 void CardReader::release()
 {
-  sdprinting = false;
-  pause = false;
-  cardOK = false;
-  // card.reset();
+//  sdprinting = false;
+//  pause = false;
+//  cardOK = false;
+  state &= ~(SD_PRINTING | SD_PAUSE | SD_OK);
 }
 
 void CardReader::startFileprint()
 {
-  if(cardOK)
+  if(cardOK())
   {
-    sdprinting = true;
-    pause = false;
-  }
-}
-
-void CardReader::pauseSDPrint()
-{
-  if(sdprinting)
-  {
-    pause = true;
+//    sdprinting = true;
+//    pause = false;
+    state |= SD_PRINTING;
+    state &= ~SD_PAUSE;
   }
 }
 
 void CardReader::openLogFile(const char* name)
 {
-  logging = true;
+  state |= SD_LOGGING;
   openFile(name, false);
 }
 
 void CardReader::openFile(const char* name,bool read)
 {
-  if(!cardOK)
+  if(!cardOK())
     return;
   file.close();
-  sdprinting = false;
-  pause = false;
+//  sdprinting = false;
+//  pause = false;
+  state &= ~(SD_PRINTING | SD_PAUSE | SD_SAVING | SD_LOGGING);
 
-  SdFileExt myDir;
+  SdFile myDir;
   curDir=&root;
   const char *fname=name;
 
@@ -307,7 +295,7 @@ void CardReader::openFile(const char* name,bool read)
     }
     else
     {
-      saving = true;
+      state |= SD_SAVING;
       SERIAL_PROTOCOLPGM(MSG_SD_WRITE_TO_FILE);
       SERIAL_PROTOCOLLN(name);
 #ifndef ENABLE_ULTILCD2
@@ -319,13 +307,14 @@ void CardReader::openFile(const char* name,bool read)
 
 void CardReader::removeFile(const char* name)
 {
-  if(!cardOK)
+  if(!cardOK())
     return;
   file.close();
-  sdprinting = false;
-  pause = false;
+//  sdprinting = false;
+//  pause = false;
+  state &= ~(SD_PRINTING | SD_PAUSE | SD_SAVING | SD_LOGGING);
 
-  SdFileExt myDir;
+  SdFile myDir;
   curDir=&root;
   const char *fname=name;
 
@@ -380,7 +369,7 @@ void CardReader::removeFile(const char* name)
 
 void CardReader::getStatus()
 {
-  if(cardOK){
+  if(cardOK()){
     SERIAL_PROTOCOLPGM(MSG_SD_PRINTING_BYTE);
     SERIAL_PROTOCOL(sdpos);
     SERIAL_PROTOCOLPGM("/");
@@ -430,22 +419,23 @@ void CardReader::checkautostart(bool force)
   static uint8_t lastnr = 0;
   if(!force)
   {
-    if(!autostart_stilltocheck)
+    if(!(state & SD_CHECKAUTOSTART))
       return;
     if(autostart_atmillis<millis())
       return;
     lastnr = 0;
   }
-  autostart_stilltocheck=false;
+  // autostart_stilltocheck=false;
+  state &= ~SD_CHECKAUTOSTART;
   if (lastnr > 9)
   {
       return;
   }
 
-  if(!cardOK)
+  if(!cardOK())
   {
     initsd();
-    if(!cardOK) //fail
+    if(!cardOK()) //fail
       return;
   }
 
@@ -479,7 +469,6 @@ void CardReader::checkautostart(bool force)
   if(!found)
   {
     lastnr=0xFF;
-    // card.reset();
   }
   else
   {
@@ -492,8 +481,9 @@ void CardReader::closefile()
 {
   file.sync();
   file.close();
-  saving = false;
-  logging = false;
+//  saving = false;
+//  logging = false;
+  state &= ~(SD_SAVING | SD_LOGGING);
 }
 
 void CardReader::getfilename(const uint8_t nr)
@@ -518,8 +508,8 @@ uint16_t CardReader::getnrfilenames()
 
 void CardReader::chdir(const char * relpath)
 {
-  SdFileExt newfile;
-  SdFileExt *parent=&root;
+  SdFile newfile;
+  SdFile *parent=&root;
 
   if(workDir.isOpen())
     parent=&workDir;
@@ -557,14 +547,14 @@ void CardReader::printingHasFinished()
     st_synchronize();
     quickStop();
     file.close();
-    sdprinting = false;
-    pause = false;
+//    sdprinting = false;
+//    pause = false;
+    state &= ~(SD_PRINTING | SD_PAUSE | SD_SAVING | SD_LOGGING);
     if(SD_FINISHED_STEPPERRELEASE)
     {
         //finishAndDisableSteppers();
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
     autotempShutdown();
-    // card.reset();
 }
 #endif //SDSUPPORT

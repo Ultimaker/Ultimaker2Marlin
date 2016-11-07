@@ -1334,7 +1334,7 @@ void lcd_menu_print_heatup_tg()
     }
     if (!(flags & MENU_STATUSLINE))
     {
-        lcd_lib_draw_string_left(5, card.longFilename);
+        lcd_lib_draw_string_left(5, card.currentLongFileName());
     }
 
     lcd_lib_update_screen();
@@ -1387,7 +1387,7 @@ static unsigned long predictTimeLeft()
 
 void lcd_menu_printing_tg()
 {
-    if (card.pause)
+    if (card.pause())
     {
         menu.add_menu(menu_t(lcd_select_first_submenu, lcd_menu_print_resume, NULL, MAIN_MENU_ITEM_POS(0)), true);
         if (!checkFilamentSensor())
@@ -1435,7 +1435,7 @@ void lcd_menu_printing_tg()
             {
             default:
 
-                if (card.pause)
+                if (card.pause())
                 {
                     lcd_lib_draw_gfx(54, 15, hourglassGfx);
                     lcd_lib_draw_stringP(64, 15, (movesplanned() < 1) ? PSTR("Paused...") : PSTR("Pausing..."));
@@ -1464,7 +1464,7 @@ void lcd_menu_printing_tg()
                 lcd_lib_encoder_pos = ENCODER_NO_SELECTION;
                 menu.reset_submenu();
                 // lcd_lib_draw_string_left(5, PSTR("Paused..."));
-                lcd_lib_draw_string_left(5, card.longFilename);
+                lcd_lib_draw_string_left(5, card.currentLongFileName());
                 lcd_lib_draw_gfx(54, 15, hourglassGfx);
                 if (!blocks_queued())
                 {
@@ -1536,7 +1536,7 @@ void lcd_menu_printing_tg()
             }
             else if (card.isFileOpen())
             {
-                lcd_lib_draw_string_left(5, card.longFilename);
+                lcd_lib_draw_string_left(5, card.currentLongFileName());
             }
         }
         lcd_lib_update_screen();
@@ -1838,7 +1838,7 @@ static void lcd_menu_recover_file()
     }
     if (!(flags & MENU_STATUSLINE))
     {
-        lcd_lib_draw_string_left(5, card.longFilename);
+        lcd_lib_draw_string_left(5, card.currentLongFileName());
     }
 
     lcd_lib_update_screen();
@@ -1866,8 +1866,7 @@ static void lcd_recover_zvalue()
 void reset_printing_state()
 {
     printing_state = PRINT_STATE_NORMAL;
-    card.sdprinting = false;
-//    card.reset();
+    card.stopPrinting();
 }
 
 static const menu_t & get_recover_menuoption(uint8_t nr, menu_t &opt)
@@ -2720,7 +2719,7 @@ static void lcd_extrude_return()
 {
     set_extrude_min_temp(EXTRUDE_MINTEMP);
     menu.return_to_previous();
-    if (!card.sdprinting)
+    if (!card.sdprinting())
     {
         target_temperature[active_extruder] = 0;
     }
@@ -2823,7 +2822,7 @@ static void lcd_extrude_tune()
 static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
 {
     uint8_t menu_index = 0;
-    if (card.sdprinting) ++nr;
+    if (card.sdprinting()) ++nr;
 
     if (nr == menu_index++)
     {
@@ -2856,7 +2855,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
     char buffer[32] = {0};
-    if (card.sdprinting) ++nr;
+    if (card.sdprinting()) ++nr;
 
     if (nr == index++)
     {
@@ -3005,7 +3004,7 @@ void lcd_menu_expert_extrude()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    uint8_t len = card.sdprinting ? 5 : 6;
+    uint8_t len = card.sdprinting() ? 5 : 6;
 
     menu.process_submenu(get_extrude_menuoption, len);
 
@@ -3031,7 +3030,7 @@ void lcd_menu_expert_extrude()
 void recover_start_print(const char *cmd)
 {
     // recover print from current position
-    card.sdprinting = false;
+    card.stopPrinting();
     quickStop();
     clear_command_queue();
     // keep last command in mind
