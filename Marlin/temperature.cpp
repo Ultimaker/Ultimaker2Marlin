@@ -468,7 +468,7 @@ void manage_heater()
   #endif
   int target_temp;
 
-  for(int e = 0; e < EXTRUDERS; e++)
+  for(uint8_t e = 0; e < EXTRUDERS; ++e)
   {
     target_temp = (printing_state == PRINT_STATE_RECOVER) ? recover_temperature[e] : target_temperature[e];
   #ifdef PIDTEMP
@@ -490,14 +490,14 @@ void manage_heater()
             pid_reset[e] = false;
           }
           #if EXTRUDERS > 1
-            pTerm[e] = (active_extruder ? pid2[0] : Kp) * pid_error[e];
+            pTerm[e] = (e ? pid2[0] : Kp) * pid_error[e];
           #else
             pTerm[e] = Kp * pid_error[e];
           #endif
           temp_iState[e] += pid_error[e];
           temp_iState[e] = constrain(temp_iState[e], temp_iState_min[e], temp_iState_max[e]);
           #if EXTRUDERS > 1
-            iTerm[e] = (active_extruder ? pid2[1] : Ki) * temp_iState[e];
+            iTerm[e] = (e ? pid2[1] : Ki) * temp_iState[e];
           #else
             iTerm[e] = Ki * temp_iState[e];
           #endif
@@ -505,7 +505,7 @@ void manage_heater()
           //K1 defined in Configuration.h in the PID settings
           #define K2 (1.0-K1)
           #if EXTRUDERS > 1
-            dTerm[e] = ((active_extruder ? pid2[2] : Kd) * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
+            dTerm[e] = ((e ? pid2[2] : Kd) * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
           #else
             dTerm[e] = (Kd * (pid_input - temp_dState[e]))*K2 + (K1 * dTerm[e]);
           #endif
