@@ -1,14 +1,12 @@
 #include "Configuration.h"
+
+#ifdef ENABLE_ULTILCD2
 #include "pins.h"
 #include "UltiLCD2_low_lib.h"
 
-#ifdef ENABLE_ULTILCD2
 /**
  * Implementation of the LCD display routines for a SSD1309 OLED graphical display connected with i2c.
  **/
-#define LCD_GFX_WIDTH 128
-#define LCD_GFX_HEIGHT 64
-
 #define LCD_RESET_PIN 5
 #define I2C_SDA_PIN   20
 #define I2C_SCL_PIN   21

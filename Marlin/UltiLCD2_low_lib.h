@@ -4,6 +4,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define LCD_GFX_WIDTH 128
+#define LCD_GFX_HEIGHT 64
+#define LCD_FONT_WIDTH  5
+#define LCD_FONT_WITH_SPACE_WIDTH   (LCD_FONT_WIDTH + 1)
+
+#define LCD_MAX_TEXT_LINE_LENGTH    (LCD_GFX_WIDTH / (LCD_FONT_WITH_SPACE_WIDTH))   // Rounded down this is 21 characters per line
+
 void lcd_lib_init();
 void lcd_lib_update_screen();   /* Start sending out the display buffer to the screen. Wait till lcd_lib_update_ready before issuing any draw functions */
 bool lcd_lib_update_ready();
