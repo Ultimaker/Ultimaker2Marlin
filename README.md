@@ -61,7 +61,7 @@ It leads to less over-deposition at corners, especially at flat angles.
 
 *Arc support:*
 
-Slic3r can find curves that, although broken into segments, were ment to describe an arc.
+Slic3r can find curves that, although broken into segments, were meant to describe an arc.
 Marlin is able to print those arcs. The advantage is the firmware can choose the resolution,
 and can perform the arc with nearly constant velocity, resulting in a nice finish.
 Also, less serial communication is needed.
@@ -230,13 +230,20 @@ For gen6/gen7 and sanguinololu the Sanguino directory in the Marlin dir needs to
   copy ArduinoAddons\Arduino_x.x.x\sanguino <arduino home>\hardware\Sanguino
 
 Copy the Marlin firmware
-   https://github.com/ErikZalm/Marlin/tree/Marlin_v1
+   https://github.com/Ultimaker/Ultimaker2Marlin
    (Use the download button)
 
+The firmware can be built from either the Arduino IDE or with a make file.
+
+To build with the Arduino IDE:
 Start the arduino IDE.
 Select Tools -> Board -> Arduino Mega 2560    or your microcontroller
 Select the correct serial port in Tools ->Serial Port
 Open Marlin.pde
+
+One time change:
+The UM2 made changes to the I2C driver. You will have to remove this driver function from the Arduino IDE by removing the TWI_vect interrupt routine in arduino/libraries/Wire/utility/twi.c, line 364
+Note: when you compile the sources using the makefile you can skip this step.
 
 Click the Verify/Compile button
 
@@ -244,7 +251,4 @@ Click the Upload button
 If all goes well the firmware is uploading
 
 That's ok.  Enjoy Silky Smooth Printing.
-
-
-
 
