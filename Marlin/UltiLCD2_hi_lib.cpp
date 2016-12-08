@@ -251,7 +251,7 @@ void lcd_menu_edit_setting()
 
     lcd_basic_screen();
     lcd_lib_draw_string_centerP(20, lcd_setting_name);
-    char buffer[16];
+    char buffer[LCD_MAX_TEXT_LINE_LENGTH + 1];          // Longest string: "Prev: 20000mm/sec^2" = 19 characters + 1
     if (lcd_setting_type == 3)
         float_to_string(float(lcd_lib_encoder_pos) / 100.0, buffer, lcd_setting_postfix);
     else
