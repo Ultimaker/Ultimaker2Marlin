@@ -386,6 +386,7 @@ ISR(TIMER1_COMPA_vect)
         {
             enable_e2();
         }
+        OCR1A = 2000; //1ms wait
       }
 #endif // EXTRUDERS
       trapezoid_generator_reset();
