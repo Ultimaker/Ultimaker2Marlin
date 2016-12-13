@@ -1,6 +1,9 @@
 #ifndef PREFERENCES_H
 #define PREFERENCES_H
 
+#include "Marlin.h"
+#include "fastio.h"
+
 #define EEPROM_UI_MODE_OFFSET 0x401
 #define EEPROM_LED_TIMEOUT_OFFSET 0x402
 #define EEPROM_LCD_TIMEOUT_OFFSET 0x404
@@ -19,7 +22,8 @@
 #define EEPROM_MOTOR_CURRENT_E2 0x438  // 2 Byte
 #define EEPROM_PID_BED 0x43A  // 12 Byte
 #define EEPROM_STEPS_E2 0x446  // 4 Byte
-#define EEPROM_RESERVED 0x44A  // next position
+#define EEPROM_AXIS_DIRECTION 0x44A  // 1 Byte
+#define EEPROM_RESERVED 0x44B  // next position
 
 #define GET_UI_MODE() (eeprom_read_byte((const uint8_t*)EEPROM_UI_MODE_OFFSET))
 #define SET_UI_MODE(n) do { eeprom_write_byte((uint8_t*)EEPROM_UI_MODE_OFFSET, n); } while(0)
@@ -51,6 +55,8 @@
 #define SET_MOTOR_CURRENT_E2(n) do { eeprom_write_word((uint16_t*)EEPROM_MOTOR_CURRENT_E2, n); } while(0)
 #define GET_STEPS_E2() (eeprom_read_float((const float*)EEPROM_STEPS_E2))
 #define SET_STEPS_E2(n) do { eeprom_write_float((float*)EEPROM_STEPS_E2, n); } while(0)
+#define GET_AXIS_DIRECTION() (eeprom_read_byte((const uint8_t*)EEPROM_AXIS_DIRECTION))
+#define SET_AXIS_DIRECTION(n) do { eeprom_write_byte((uint8_t*)EEPROM_AXIS_DIRECTION, n); } while(0)
 
 // UI Mode
 #define UI_MODE_STANDARD  0
@@ -94,15 +100,13 @@ extern uint8_t led_sleep_brightness;
 extern uint8_t heater_check_temp;
 extern uint8_t heater_check_time;
 extern uint8_t sleep_state;
+extern uint8_t axis_direction;
 
 #if EXTRUDERS > 1
 extern float pid2[3];
 #endif
 #if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
 extern uint16_t motor_current_e2;
-#endif
-#if EXTRUDERS > 1
-extern float e2_steps_per_unit;
 #endif
 
 FORCE_INLINE bool pidTempBed() { return (expert_flags & FLAG_PID_BED); }

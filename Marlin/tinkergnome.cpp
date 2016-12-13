@@ -70,7 +70,7 @@ static void lcd_print_tune_accel();
 static void lcd_print_tune_xyjerk();
 static void lcd_position_z_axis();
 
-#define EXPERT_VERSION 6
+#define EXPERT_VERSION 7
 
 void tinkergnome_init()
 {
@@ -78,6 +78,16 @@ void tinkergnome_init()
 
     uint16_t version = GET_EXPERT_VERSION()+1;
 
+    if (version > 7)
+    {
+        axis_direction = GET_AXIS_DIRECTION();
+    }
+    else
+    {
+        // init direction flags
+        axis_direction = DEFAULT_AXIS_DIR;
+        SET_AXIS_DIRECTION(axis_direction);
+    }
     if (version > 6)
     {
 #if defined(PIDTEMPBED) && (TEMP_SENSOR_BED != 0)
@@ -107,7 +117,7 @@ void tinkergnome_init()
 #endif
         eeprom_write_block(pidBed, (uint8_t*)EEPROM_PID_BED, sizeof(pidBed));
 
-        SET_STEPS_E2(axis_steps_per_unit[3]);
+        SET_STEPS_E2(axis_steps_per_unit[E_AXIS]);
     }
     if (version > 5)
     {
@@ -1410,7 +1420,7 @@ void lcd_menu_printing_tg()
     //                float mm_e = current_block->steps_e / axis_steps_per_unit[E_AXIS];
 
                 // calculate live extrusion rate from e speed and filament area
-                float speed_e = current_block->steps_e * current_block->nominal_rate / axis_steps_per_unit[E_AXIS] / current_block->step_event_count;
+                float speed_e = current_block->steps_e * current_block->nominal_rate / e_steps_per_unit(current_block->active_extruder) / current_block->step_event_count;
                 float volume = (volume_to_filament_length[current_block->active_extruder] < 0.99) ? speed_e / volume_to_filament_length[current_block->active_extruder] : speed_e*DEFAULT_FILAMENT_AREA;
 
                 e_smoothed_speed[current_block->active_extruder] = (e_smoothed_speed[current_block->active_extruder]*LOW_PASS_SMOOTHING) + ( volume *(1.0-LOW_PASS_SMOOTHING));
@@ -2741,8 +2751,8 @@ static void lcd_extrude_reset_pos()
 static void lcd_extrude_init_move()
 {
     st_synchronize();
-    plan_set_e_position(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS] / volume_to_filament_length[active_extruder]);
-    TARGET_POS(E_AXIS) = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    plan_set_e_position(st_get_position(E_AXIS) / e_steps_per_unit(active_extruder) / volume_to_filament_length[active_extruder]);
+    TARGET_POS(E_AXIS) = st_get_position(E_AXIS) / e_steps_per_unit(active_extruder);
 }
 
 static void lcd_extrude_move()
@@ -2766,8 +2776,8 @@ static void lcd_extrude_quit_move()
 static void lcd_extrude_init_pull()
 {
     st_synchronize();
-    plan_set_e_position(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS] / volume_to_filament_length[active_extruder]);
-    TARGET_POS(E_AXIS) = st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS];
+    plan_set_e_position(st_get_position(E_AXIS) / e_steps_per_unit(active_extruder) / volume_to_filament_length[active_extruder]);
+    TARGET_POS(E_AXIS) = st_get_position(E_AXIS) / e_steps_per_unit(active_extruder);
     //Set E motor power lower so the motor will skip instead of grind.
 #if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
     digipot_current(2, active_extruder ? (motor_current_e2*2/3) : (motor_current_setting[2]*2/3));
@@ -2778,8 +2788,8 @@ static void lcd_extrude_init_pull()
     OLD_FEEDRATE = max_feedrate[E_AXIS];
     OLD_ACCEL = retract_acceleration;
     OLD_JERK = max_e_jerk;
-    max_feedrate[E_AXIS] = float(FILAMENT_FAST_STEPS) / axis_steps_per_unit[E_AXIS];
-    retract_acceleration = float(FILAMENT_LONG_ACCELERATION_STEPS) / axis_steps_per_unit[E_AXIS];
+    max_feedrate[E_AXIS] = float(FILAMENT_FAST_STEPS) / e_steps_per_unit(active_extruder);
+    retract_acceleration = float(FILAMENT_LONG_ACCELERATION_STEPS) / e_steps_per_unit(active_extruder);
     max_e_jerk = FILAMENT_LONG_MOVE_JERK;
 }
 
@@ -2982,7 +2992,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
             flags |= MENU_STATUSLINE;
         }
         // lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-13*LCD_CHAR_SPACING-1, 35, flowGfx);
-        float_to_string2(st_get_position(E_AXIS) / axis_steps_per_unit[E_AXIS], buffer, PSTR("mm"));
+        float_to_string2(st_get_position(E_AXIS) / e_steps_per_unit(active_extruder), buffer, PSTR("mm"));
         LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-11*LCD_CHAR_SPACING
                           , 35
                           , 11*LCD_CHAR_SPACING

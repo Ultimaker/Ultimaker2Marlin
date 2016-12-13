@@ -1882,12 +1882,24 @@ void process_command(const char *strCmd, bool sendAck)
           if(i == 3) { // E
             float value = code_value();
             if(value < 20.0) {
-              float factor = axis_steps_per_unit[i] / value; // increase e constants if M92 E14 is given for netfab.
+              float factor = e_steps_per_unit(active_extruder) / value; // increase e constants if M92 E14 is given for netfab.
               max_e_jerk *= factor;
               max_feedrate[i] *= factor;
               axis_steps_per_sqr_second[i] *= factor;
+#if EXTRUDERS > 1
+              axis_steps_per_sqr_second[i+1] *= factor;
+#endif // EXTRUDERS
             }
+#if EXTRUDERS > 1
+            if (active_extruder) {
+                e2_steps_per_unit = value;
+            }
+            else{
+                axis_steps_per_unit[i] = value;
+            }
+#else
             axis_steps_per_unit[i] = value;
+#endif // EXTRUDERS
           }
           else {
             axis_steps_per_unit[i] = code_value();
@@ -1927,7 +1939,7 @@ void process_command(const char *strCmd, bool sendAck)
       SERIAL_PROTOCOLPGM("Z:");
       SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
       SERIAL_PROTOCOLPGM("E:");
-      SERIAL_PROTOCOL(float(st_get_position(E_AXIS))/axis_steps_per_unit[E_AXIS]);
+      SERIAL_PROTOCOL(float(st_get_position(E_AXIS))/e_steps_per_unit(active_extruder));
 
       SERIAL_EOL;
       break;

@@ -77,7 +77,7 @@ float max_xy_jerk; //speed than can be stopped at once, if i understand correctl
 float max_z_jerk;
 float max_e_jerk;
 float mintravelfeedrate;
-unsigned long axis_steps_per_sqr_second[NUM_AXIS];
+unsigned long axis_steps_per_sqr_second[NUM_AXIS+EXTRUDERS-1];
 
 // The current position of the tool in absolute steps
 static long position[4];   //rescaled from extern when axis_steps_per_unit are changed by gcode
@@ -556,7 +556,7 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   target[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   target[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
   target[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
-  target[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]*volume_to_filament_length[extruder]);
+  target[E_AXIS] = lround(e*e_steps_per_unit(extruder)*volume_to_filament_length[extruder]);
 
   #ifdef PREVENT_DANGEROUS_EXTRUDE
   if(target[E_AXIS]!=position[E_AXIS])
@@ -569,7 +569,7 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
     }
 
     #ifdef PREVENT_LENGTHY_EXTRUDE
-    if(labs(target[E_AXIS]-position[E_AXIS])>axis_steps_per_unit[E_AXIS]*EXTRUDE_MAXLENGTH)
+    if(labs(target[E_AXIS]-position[E_AXIS])>e_steps_per_unit(extruder)*EXTRUDE_MAXLENGTH)
     {
       position[E_AXIS]=target[E_AXIS]; //behave as if the move really took place, but ignore E part
       SERIAL_ECHO_START;
@@ -689,7 +689,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
     delta_mm[Y_AXIS] = ((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-position[Y_AXIS]))/axis_steps_per_unit[Y_AXIS];
   #endif
   delta_mm[Z_AXIS] = (target[Z_AXIS]-position[Z_AXIS])/axis_steps_per_unit[Z_AXIS];
-  delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/axis_steps_per_unit[E_AXIS])*float(extrudemultiply[extruder])/100.0;
+  delta_mm[E_AXIS] = ((target[E_AXIS]-position[E_AXIS])/e_steps_per_unit(extruder))*float(extrudemultiply[extruder])/100.0;
   if ( block->steps_x <=dropsegments && block->steps_y <=dropsegments && block->steps_z <=dropsegments )
   {
     block->millimeters = fabs(delta_mm[E_AXIS]);
@@ -804,8 +804,8 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
     block->acceleration_st = min(block->acceleration_st, axis_steps_per_sqr_second[Y_AXIS]);
   if(((float)block->acceleration_st * (float)block->steps_z / (float)block->step_event_count ) > axis_steps_per_sqr_second[Z_AXIS])
     block->acceleration_st = min(block->acceleration_st, axis_steps_per_sqr_second[Z_AXIS]);
-  if(((float)block->acceleration_st * (float)block->steps_e / (float)block->step_event_count) > axis_steps_per_sqr_second[E_AXIS])
-    block->acceleration_st = min(block->acceleration_st, axis_steps_per_sqr_second[E_AXIS]);
+  if(((float)block->acceleration_st * (float)block->steps_e / (float)block->step_event_count) > axis_steps_per_sqr_second[E_AXIS+extruder])
+    block->acceleration_st = min(block->acceleration_st, axis_steps_per_sqr_second[E_AXIS+extruder]);
 
   block->acceleration = block->acceleration_st / steps_per_mm;
   block->acceleration_rate = (long)((float)block->acceleration_st * (16777216.0 / (F_CPU / 8.0)));
@@ -948,7 +948,7 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
   position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   position[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
-  position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]*volume_to_filament_length[active_extruder]);
+  position[E_AXIS] = lround(e*e_steps_per_unit(active_extruder)*volume_to_filament_length[active_extruder]);
   st_set_position(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS]);
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   previous_speed[0] = 0.0;
@@ -959,7 +959,7 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
 
 void plan_set_e_position(const float &e)
 {
-  position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]*volume_to_filament_length[active_extruder]);
+  position[E_AXIS] = lround(e*e_steps_per_unit(active_extruder)*volume_to_filament_length[active_extruder]);
   st_set_e_position(position[E_AXIS]);
 }
 
@@ -979,7 +979,10 @@ void set_extrude_min_temp(float temp)
 void reset_acceleration_rates()
 {
 	for(int8_t i=0; i < NUM_AXIS; i++)
-        {
+    {
         axis_steps_per_sqr_second[i] = max_acceleration_units_per_sq_second[i] * axis_steps_per_unit[i];
-        }
+    }
+#if EXTRUDERS > 1
+    axis_steps_per_sqr_second[NUM_AXIS] = max_acceleration_units_per_sq_second[E_AXIS] * e_steps_per_unit(1);
+#endif // EXTRUDERS
 }

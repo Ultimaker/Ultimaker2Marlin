@@ -14,6 +14,7 @@
 #include "component/arduinoIO.h"
 #include "component/stepper.h"
 
+#include "../Marlin/preferences.h"
 #include "../Marlin/UltiLCD2.h"
 #include "../Marlin/temperature.h"
 #include "../Marlin/stepper.h"

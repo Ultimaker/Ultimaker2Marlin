@@ -12,7 +12,7 @@
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
 #ifndef STRING_CONFIG_H_AUTHOR
-#define STRING_CONFIG_H_AUTHOR "Tinker_16.11-DEV" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Tinker_16.12-DEV" // Who made the changes.
 #endif
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
@@ -339,24 +339,40 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 #define DISABLE_Z false
 #define DISABLE_E false // For all extruders
 
-#ifndef INVERT_X_DIR
-  #define INVERT_X_DIR true     // for Mendel set to false, for Orca set to true
+//#ifndef INVERT_X_DIR
+//#define INVERT_X_DIR true     // for Mendel set to false, for Orca set to true
+//#endif
+//#ifndef INVERT_Y_DIR
+//  #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
+//#endif
+//#ifndef INVERT_Z_DIR
+//  #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
+//#endif
+//#ifndef INVERT_E0_DIR
+//  #define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+//#endif
+//#ifndef INVERT_E1_DIR
+//  #define INVERT_E1_DIR true    // for direct drive extruder v9 set to true, for geared extruder set to false
+//#endif
+//#ifndef INVERT_E2_DIR
+//  #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+//#endif
+
+#define AXIS_INVERTED true
+#define AXIS_NORMAL false
+
+#ifdef UM2PLUS
+#define DEFAULT_AXIS_DIR 0xFD
+#else
+#define DEFAULT_AXIS_DIR 0x15
 #endif
-#ifndef INVERT_Y_DIR
-  #define INVERT_Y_DIR false    // for Mendel set to true, for Orca set to false
-#endif
-#ifndef INVERT_Z_DIR
-  #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#endif
-#ifndef INVERT_E0_DIR
-  #define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
-#endif
-#ifndef INVERT_E1_DIR
-  #define INVERT_E1_DIR true    // for direct drive extruder v9 set to true, for geared extruder set to false
-#endif
-#ifndef INVERT_E2_DIR
-  #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
-#endif
+
+#define INVERT_X_DIR  (axis_direction &  1)
+#define INVERT_Y_DIR  (axis_direction &  2)
+#define INVERT_Z_DIR  (axis_direction &  4)
+#define INVERT_E0_DIR (axis_direction &  8)
+#define INVERT_E1_DIR (axis_direction & 16)
+#define INVERT_E2_DIR (axis_direction & 32)
 
 // ENDSTOP SETTINGS:
 // Sets direction of endstops when homing; 1=MAX, -1=MIN
@@ -369,8 +385,8 @@ const bool Z_ENDSTOPS_INVERTING = true; // set to true to invert the logic of th
 // Travel limits after homing
 #define X_MAX_POS 230
 #define X_MIN_POS 0
-#define Y_MAX_POS 230
-#define Y_MIN_POS 5
+#define Y_MAX_POS 225
+#define Y_MIN_POS 0
 
 // #define Y_MAX_POS 224.5
 // #define Y_MIN_POS 0
