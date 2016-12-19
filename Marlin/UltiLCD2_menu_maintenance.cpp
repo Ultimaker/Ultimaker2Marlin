@@ -174,15 +174,17 @@ static void lcd_menu_maintenance_advanced()
         }
         else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET + EXTRUDERS))   // Raise bed
         {
+            char buffer[32];
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 Z"));
-            enquecommand_P(PSTR("G1 Z40"));
+            sprintf_P(buffer, PSTR("G1 F%i Z40"), int(homing_feedrate[Z_AXIS]));
+            enquecommand(buffer);
         }
         else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET + EXTRUDERS))   // Insert material
         {
             char buffer[32];
             enquecommand_P(PSTR("G28 X Y"));
-            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), X_MAX_LENGTH/2, 10);
             enquecommand(buffer);
             
             lcd_change_to_menu_insert_material(lcd_menu_maintenance_advanced_return);
