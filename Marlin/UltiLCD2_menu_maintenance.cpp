@@ -166,11 +166,13 @@ static void lcd_menu_maintenance_advanced()
         {
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 X Y"));
+            enquecommand_P(PSTR("M84"));        // Release motors
         }
         else if (IS_SELECTED_SCROLL(3 + BED_MENU_OFFSET + EXTRUDERS))   // Lower bed
         {
             lcd_lib_beep();
             enquecommand_P(PSTR("G28 Z"));
+            enquecommand_P(PSTR("M84"));        // Release motors
         }
         else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET + EXTRUDERS))   // Raise bed
         {
@@ -179,6 +181,7 @@ static void lcd_menu_maintenance_advanced()
             enquecommand_P(PSTR("G28 Z"));
             sprintf_P(buffer, PSTR("G1 F%i Z40"), int(homing_feedrate[Z_AXIS]));
             enquecommand(buffer);
+            // Note: motors remain powered, otherwise the bed will descend by gravity.
         }
         else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET + EXTRUDERS))   // Insert material
         {
