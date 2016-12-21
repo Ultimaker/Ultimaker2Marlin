@@ -396,6 +396,55 @@ ISR(TIMER1_COMPA_vect)
       counter_e = counter_x;
       step_events_completed = 0;
 
+      // Set directions, This should be done once during init of trapezoid. Endstops -> interrupt
+      out_bits = current_block->direction_bits;
+
+      // Set the direction bits (X_AXIS=A_AXIS and Y_AXIS=B_AXIS for COREXY)
+      if((out_bits & (1<<X_AXIS))!=0){
+        WRITE(X_DIR_PIN, INVERT_X_DIR);
+        count_direction[X_AXIS]=-1;
+      }
+      else{
+        WRITE(X_DIR_PIN, !INVERT_X_DIR);
+        count_direction[X_AXIS]=1;
+      }
+      if((out_bits & (1<<Y_AXIS))!=0){
+        WRITE(Y_DIR_PIN, INVERT_Y_DIR);
+        count_direction[Y_AXIS]=-1;
+      }
+      else{
+        WRITE(Y_DIR_PIN, !INVERT_Y_DIR);
+        count_direction[Y_AXIS]=1;
+      }
+      if ((out_bits & (1<<Z_AXIS)) != 0) {   // -direction
+        WRITE(Z_DIR_PIN, INVERT_Z_DIR);
+
+	    #ifdef Z_DUAL_STEPPER_DRIVERS
+          WRITE(Z2_DIR_PIN, INVERT_Z_DIR);
+        #endif
+
+        count_direction[Z_AXIS]=-1;
+      }
+      else {
+        WRITE(Z_DIR_PIN, !INVERT_Z_DIR);
+
+	    #ifdef Z_DUAL_STEPPER_DRIVERS
+          WRITE(Z2_DIR_PIN, !INVERT_Z_DIR);
+        #endif
+
+        count_direction[Z_AXIS]=1;
+      }
+    #ifndef ADVANCE
+      if ((out_bits & (1<<E_AXIS)) != 0) {  // -direction
+        REV_E_DIR();
+        count_direction[E_AXIS]=-1;
+      }
+      else { // +direction
+        NORM_E_DIR();
+        count_direction[E_AXIS]=1;
+      }
+    #endif //!ADVANCE
+
       #ifdef Z_LATE_ENABLE
         if(current_block->steps_z > 0) {
           enable_z();
@@ -414,42 +463,6 @@ ISR(TIMER1_COMPA_vect)
   }
 
   if (current_block != NULL) {
-    // Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
-    out_bits = current_block->direction_bits;
-
-    // Set the direction bits (X_AXIS=A_AXIS and Y_AXIS=B_AXIS for COREXY)
-    if((out_bits & (1<<X_AXIS))!=0){
-      count_direction[X_AXIS]=-1;
-    }
-    else{
-      // WRITE(X_DIR_PIN, !INVERT_X_DIR);
-      count_direction[X_AXIS]=1;
-    }
-    if((out_bits & (1<<X_AXIS))^(axis_direction & (1<<X_AXIS)))
-    {
-      WRITE(X_DIR_PIN, AXIS_NORMAL);
-    }
-    else
-    {
-      WRITE(X_DIR_PIN, AXIS_INVERTED);
-    }
-
-    if((out_bits & (1<<Y_AXIS))!=0){
-      // WRITE(Y_DIR_PIN, (axis_direction & 2));
-      count_direction[Y_AXIS]=-1;
-    }
-    else{
-      count_direction[Y_AXIS]=1;
-    }
-    if((out_bits & (1<<Y_AXIS))^(axis_direction & (1<<Y_AXIS)))
-    {
-      WRITE(Y_DIR_PIN, AXIS_NORMAL);
-    }
-    else
-    {
-      WRITE(Y_DIR_PIN, AXIS_INVERTED);
-    }
-
     // Set direction en check limit switches
     #ifndef COREXY
     if ((out_bits & (1<<X_AXIS)) != 0) {   // stepping along -X axis
@@ -518,13 +531,6 @@ ISR(TIMER1_COMPA_vect)
     }
 
     if ((out_bits & (1<<Z_AXIS)) != 0) {   // -direction
-      WRITE(Z_DIR_PIN, INVERT_Z_DIR);
-
-	  #ifdef Z_DUAL_STEPPER_DRIVERS
-        WRITE(Z2_DIR_PIN,INVERT_Z_DIR);
-      #endif
-
-      count_direction[Z_AXIS]=-1;
       CHECK_ENDSTOPS
       {
         #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
@@ -539,13 +545,6 @@ ISR(TIMER1_COMPA_vect)
       }
     }
     else { // +direction
-      WRITE(Z_DIR_PIN,!INVERT_Z_DIR);
-
-	  #ifdef Z_DUAL_STEPPER_DRIVERS
-        WRITE(Z2_DIR_PIN,!INVERT_Z_DIR);
-      #endif
-
-      count_direction[Z_AXIS]=1;
       CHECK_ENDSTOPS
       {
         #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
@@ -559,19 +558,6 @@ ISR(TIMER1_COMPA_vect)
         #endif
       }
     }
-
-    #ifndef ADVANCE
-      if ((out_bits & (1<<E_AXIS)) != 0) {  // -direction
-        REV_E_DIR();
-        count_direction[E_AXIS]=-1;
-      }
-      else { // +direction
-        NORM_E_DIR();
-        count_direction[E_AXIS]=1;
-      }
-    #endif //!ADVANCE
-
-
 
     for(int8_t i=0; i < step_loops; i++) { // Take multiple steps per interrupt (For high speed moves)
       #ifndef AT90USB

@@ -579,6 +579,8 @@ static void lcd_motion_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
         strcpy_P(buffer, PSTR("Motor Current"));
     else if (nr == 4)
         strcpy_P(buffer, PSTR("Axis steps/mm"));
+    else if (nr == 5)
+        strcpy_P(buffer, PSTR("Invert axis"));
     else
        strcpy_P(buffer, PSTR("???"));
 
@@ -587,7 +589,7 @@ static void lcd_motion_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 
 static void lcd_menu_maintenance_motion()
 {
-    lcd_scroll_menu(PSTR("MOTION"), 5, lcd_motion_item, NULL);
+    lcd_scroll_menu(PSTR("MOTION"), 6, lcd_motion_item, NULL);
     if (lcd_lib_button_pressed)
     {
         if (IS_SELECTED_SCROLL(0))
@@ -600,6 +602,8 @@ static void lcd_menu_maintenance_motion()
             menu.add_menu(menu_t(lcd_menu_motorcurrent, MAIN_MENU_ITEM_POS(1)));
         else if (IS_SELECTED_SCROLL(4))
             menu.add_menu(menu_t(lcd_menu_steps, MAIN_MENU_ITEM_POS(1)));
+        else if (IS_SELECTED_SCROLL(5))
+            menu.add_menu(menu_t(lcd_menu_axisdirection, MAIN_MENU_ITEM_POS(1)));
     }
     lcd_lib_update_screen();
 }

@@ -6,6 +6,7 @@
 void lcd_menu_sleeptimer();
 void lcd_menu_axeslimit();
 void lcd_menu_steps();
+void lcd_menu_axisdirection();
 void lcd_menu_retraction();
 void lcd_menu_motorcurrent();
 void lcd_menu_maxspeed();
