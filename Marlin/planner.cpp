@@ -66,10 +66,10 @@
 //===========================================================================
 
 unsigned long minsegmenttime;
-float max_feedrate[4]; // set the max speeds
-float axis_steps_per_unit[4];
+float max_feedrate[NUM_AXIS]; // set the max speeds
+float axis_steps_per_unit[NUM_AXIS];
 float volume_to_filament_length[EXTRUDERS];
-unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
+unsigned long max_acceleration_units_per_sq_second[NUM_AXIS]; // Use M201 to override by software
 float minimumfeedrate;
 float acceleration;         // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX
 float retract_acceleration; //  mm/s^2   filament pull-pack and push-forward  while standing still in the other axis M204 TXXXX
@@ -80,8 +80,8 @@ float mintravelfeedrate;
 unsigned long axis_steps_per_sqr_second[NUM_AXIS+EXTRUDERS-1];
 
 // The current position of the tool in absolute steps
-static long position[4];   //rescaled from extern when axis_steps_per_unit are changed by gcode
-static float previous_speed[4]; // Speed of previous path line segment
+static long position[NUM_AXIS];   //rescaled from extern when axis_steps_per_unit are changed by gcode
+static float previous_speed[NUM_AXIS]; // Speed of previous path line segment
 static float previous_nominal_speed; // Nominal speed of previous path line segment
 
 #ifdef AUTOTEMP
@@ -552,7 +552,7 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   // The target position of the tool in absolute steps
   // Calculate target position in absolute steps
   //this should be done after the wait, because otherwise a M92 code within the gcode disrupts this calculation somehow
-  long target[4];
+  long target[NUM_AXIS];
   target[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   target[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
   target[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
@@ -680,7 +680,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
     if(feed_rate<minimumfeedrate) feed_rate=minimumfeedrate;
   }
 
-  float delta_mm[4];
+  float delta_mm[NUM_AXIS];
   #ifndef COREXY
     delta_mm[X_AXIS] = (target[X_AXIS]-position[X_AXIS])/axis_steps_per_unit[X_AXIS];
     delta_mm[Y_AXIS] = (target[Y_AXIS]-position[Y_AXIS])/axis_steps_per_unit[Y_AXIS];
@@ -732,9 +732,9 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   block->nominal_rate = ceil(block->step_event_count * inverse_second); // (step/sec) Always > 0
 
   // Calculate and limit speed in mm/sec for each axis
-  float current_speed[4];
+  float current_speed[NUM_AXIS];
   float speed_factor = 1.0; //factor <=1 do decrease speed
-  for(int i=0; i < 4; i++)
+  for(int i=0; i < NUM_AXIS; i++)
   {
     current_speed[i] = delta_mm[i] * inverse_second;
     if(fabs(current_speed[i]) > max_feedrate[i])
@@ -779,7 +779,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   // Correct the speed
   if( speed_factor < 1.0)
   {
-    for(unsigned char i=0; i < 4; i++)
+    for(unsigned char i=0; i < NUM_AXIS; i++)
     {
       current_speed[i] *= speed_factor;
     }

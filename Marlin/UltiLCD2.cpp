@@ -139,32 +139,32 @@ void lcd_update()
         LED_GLOW_ERROR
         lcd_lib_update_screen();
     }
-    else if (card.sdprinting())
-    {
-        menu.processEvents();
-        if (postMenuCheck && (printing_state != PRINT_STATE_ABORT))
-        {
-            postMenuCheck();
-        }
-    }
     else
     {
-        if (HAS_SERIAL_CMD)
+        if (!card.sdprinting())
         {
-            if (!(sleep_state & SLEEP_SERIAL_SCREEN))
+            if (HAS_SERIAL_CMD)
             {
-                // show usb printing screen during incoming serial communication
-                menu.add_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)), false);
-                sleep_state |= SLEEP_SERIAL_SCREEN;
+                if (!(sleep_state & SLEEP_SERIAL_SCREEN))
+                {
+                    // show usb printing screen during incoming serial communication
+                    menu.add_menu(menu_t(lcd_menu_printing_tg, MAIN_MENU_ITEM_POS(1)), false);
+                    sleep_state |= SLEEP_SERIAL_SCREEN;
+                }
+            }
+            else if (sleep_state & SLEEP_SERIAL_SCREEN)
+            {
+                // hide usb printing screen
+                sleep_state &= ~SLEEP_SERIAL_SCREEN;
+                menu.removeMenu(lcd_menu_printing_tg);
             }
         }
-        else if (sleep_state & SLEEP_SERIAL_SCREEN)
-        {
-            // hide usb printing screen
-            sleep_state &= ~SLEEP_SERIAL_SCREEN;
-            menu.removeMenu(lcd_menu_printing_tg);
-        }
         menu.processEvents();
+    }
+
+    if (postMenuCheck && (printing_state != PRINT_STATE_ABORT))
+    {
+        postMenuCheck();
     }
 
     // refresh the displayed temperatures

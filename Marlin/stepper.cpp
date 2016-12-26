@@ -351,7 +351,6 @@ ISR(TIMER1_COMPA_vect)
     // Anything in the buffer?
     current_block = plan_get_current_block();
     if (current_block != NULL) {
-      current_block->busy = true;
 #if EXTRUDERS > 1
       if (current_block->active_extruder != last_extruder)
       {
@@ -364,15 +363,17 @@ ISR(TIMER1_COMPA_vect)
         {
             disable_e1();
         }
-        else
+      #if EXTRUDERS > 2
+        else if (last_extruder == 2)
         {
             disable_e2();
         }
+      #endif
     #if defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
         // adjust motor current
         digipot_current(2, current_block->active_extruder ? motor_current_e2 : motor_current_setting[2]);
-        last_extruder = current_block->active_extruder;
     #endif
+        last_extruder = current_block->active_extruder;
         // enable current stepper
         if (last_extruder == 0)
         {
@@ -382,11 +383,14 @@ ISR(TIMER1_COMPA_vect)
         {
             enable_e1();
         }
-        else
+      #if EXTRUDERS > 2
+        else if (last_extruder == 2)
         {
             enable_e2();
         }
+      #endif
         OCR1A = 2000; //1ms wait
+        return;
       }
 #endif // EXTRUDERS
       trapezoid_generator_reset();
