@@ -351,48 +351,6 @@ ISR(TIMER1_COMPA_vect)
     // Anything in the buffer?
     current_block = plan_get_current_block();
     if (current_block != NULL) {
-#if EXTRUDERS > 1
-      if (current_block->active_extruder != last_extruder)
-      {
-        // disable unused steppers
-        if (last_extruder == 0)
-        {
-            disable_e0();
-        }
-        else if (last_extruder == 1)
-        {
-            disable_e1();
-        }
-      #if EXTRUDERS > 2
-        else if (last_extruder == 2)
-        {
-            disable_e2();
-        }
-      #endif
-    #if defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
-        // adjust motor current
-        digipot_current(2, current_block->active_extruder ? motor_current_e2 : motor_current_setting[2]);
-    #endif
-        last_extruder = current_block->active_extruder;
-        // enable current stepper
-        if (last_extruder == 0)
-        {
-            enable_e0();
-        }
-        else if (last_extruder == 1)
-        {
-            enable_e1();
-        }
-      #if EXTRUDERS > 2
-        else if (last_extruder == 2)
-        {
-            enable_e2();
-        }
-      #endif
-        OCR1A = 2000; //1ms wait
-        return;
-      }
-#endif // EXTRUDERS
       trapezoid_generator_reset();
       counter_x = -(current_block->step_event_count >> 1);
       counter_y = counter_x;
@@ -449,6 +407,66 @@ ISR(TIMER1_COMPA_vect)
       }
     #endif //!ADVANCE
 
+#if EXTRUDERS > 1
+    #ifdef Z_LATE_ENABLE
+      bool bReturn(false);
+    #endif
+      if (current_block->active_extruder != last_extruder)
+      {
+        // disable unused steppers
+        if (last_extruder == 0)
+        {
+            disable_e0();
+        }
+        else if (last_extruder == 1)
+        {
+            disable_e1();
+        }
+      #if EXTRUDERS > 2
+        else if (last_extruder == 2)
+        {
+            disable_e2();
+        }
+      #endif
+    #if defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
+        // adjust motor current
+        digipot_current(2, current_block->active_extruder ? motor_current_e2 : motor_current_setting[2]);
+    #endif
+        last_extruder = current_block->active_extruder;
+        // enable current stepper
+        if (last_extruder == 0)
+        {
+            enable_e0();
+        }
+        else if (last_extruder == 1)
+        {
+            enable_e1();
+        }
+      #if EXTRUDERS > 2
+        else if (last_extruder == 2)
+        {
+            enable_e2();
+        }
+      #endif
+        OCR1A = 2000; //1ms wait
+      #ifdef Z_LATE_ENABLE
+        bReturn = true;
+      #else
+        return;
+      #endif // Z_LATE_ENABLE
+      }
+    #ifdef Z_LATE_ENABLE
+      if(current_block->steps_z > 0) {
+        enable_z();
+        OCR1A = 2000; //1ms wait
+        bReturn = true;
+      }
+      if (bReturn) {
+        return;
+      }
+    #endif
+
+#else
       #ifdef Z_LATE_ENABLE
         if(current_block->steps_z > 0) {
           enable_z();
@@ -456,6 +474,7 @@ ISR(TIMER1_COMPA_vect)
           return;
         }
       #endif
+#endif // EXTRUDERS
 
 //      #ifdef ADVANCE
 //      e_steps[current_block->active_extruder] = 0;
