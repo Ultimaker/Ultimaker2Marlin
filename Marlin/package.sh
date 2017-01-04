@@ -8,7 +8,7 @@
 #############################
 
 ##Which version name are we appending to the final archive
-export BUILD_NAME=16.12
+export BUILD_NAME=16.12.1
 
 #############################
 # Actual build script

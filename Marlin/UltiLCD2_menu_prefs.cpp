@@ -837,6 +837,7 @@ void lcd_menu_steps()
 static void lcd_store_axisdir()
 {
     SET_AXIS_DIRECTION(axis_direction);
+    menu.return_to_previous();
 }
 
 static void lcd_axisdir_x()
@@ -862,7 +863,7 @@ static void lcd_axisdir_e1()
 #if EXTRUDERS > 1
 static void lcd_axisdir_e2()
 {
-    axis_direction ^= 0x16;
+    axis_direction ^= 0x10;
 }
 #endif // EXTRUDERS
 
@@ -985,15 +986,6 @@ static void drawAxisDirSubmenu(uint8_t nr, uint8_t &flags)
         {
             lcd_lib_draw_gfx(9+LCD_CHAR_SPACING*2, 18, INVERT_X_DIR?checkbox_on:checkbox_off);
         }
-
-
-//        LCDMenu::drawMenuString_P((LCD_CHAR_MARGIN_LEFT*2)+LCD_CHAR_SPACING
-//                                , 18
-//                                , LCD_CHAR_SPACING*3
-//                                , LCD_CHAR_HEIGHT
-//                                , INVERT_X_DIR ? PSTR("yes") : PSTR("no")
-//                                , ALIGN_RIGHT | ALIGN_VCENTER
-//                                , flags);
     }
     else if (nr == index++)
     {
