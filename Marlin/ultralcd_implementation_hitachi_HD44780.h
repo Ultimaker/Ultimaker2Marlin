@@ -3,7 +3,7 @@
 
 /**
 * Implementation of the LCD display routines for a hitachi HD44780 display. These are common LCD character displays.
-* When selecting the rusian language, a slightly different LCD implementation is used to handle UTF8 characters.
+* When selecting the russian language, a slightly different LCD implementation is used to handle UTF8 characters.
 **/
 
 #ifndef REPRAPWORLD_KEYPAD

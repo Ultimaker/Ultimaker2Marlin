@@ -313,12 +313,12 @@ const int8_t dropsegments=5; //everything with less than this number of steps wi
 #endif
 
 
-//The ASCII buffer for recieving from the serial:
+//The ASCII buffer for receiving from the serial:
 #define MAX_CMD_SIZE 96
 #define BUFSIZE 8
 
 
-// Firmware based and LCD controled retract
+// Firmware based and LCD controlled retract
 // M207 and M208 can be used to define parameters for the retraction.
 // The retraction can be called by the slicer using G10 and G11
 // until then, intended retractions can be detected by moves that only extrude and the direction.
