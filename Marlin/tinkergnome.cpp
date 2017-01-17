@@ -185,12 +185,12 @@ void tinkergnome_init()
     }
     if (version > 1)
     {
-        expert_flags = GET_EXPERT_FLAGS();
+        control_flags = GET_CONTROL_FLAGS();
     }
     else
     {
-        expert_flags = FLAG_PID_NOZZLE;
-        SET_EXPERT_FLAGS(expert_flags);
+        control_flags = FLAG_PID_NOZZLE;
+        SET_CONTROL_FLAGS(control_flags);
     }
     if (version > 0)
     {

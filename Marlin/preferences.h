@@ -41,8 +41,8 @@
 #define SET_SLEEP_CONTRAST(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_CONTRAST_OFFSET, n); } while(0)
 #define GET_SLEEP_GLOW() (eeprom_read_byte((const uint8_t*)EEPROM_SLEEP_GLOW_OFFSET))
 #define SET_SLEEP_GLOW(n) do { eeprom_write_byte((uint8_t*)EEPROM_SLEEP_GLOW_OFFSET, n); } while(0)
-#define GET_EXPERT_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
-#define SET_EXPERT_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
+#define GET_CONTROL_FLAGS() (eeprom_read_byte((const uint8_t*)EEPROM_PID_FLAGS))
+#define SET_CONTROL_FLAGS(n) do { eeprom_write_byte((uint8_t*)EEPROM_PID_FLAGS, n); } while(0)
 #define GET_HEATER_TIMEOUT() (eeprom_read_byte((const uint8_t*)EEPROM_HEATER_TIMEOUT))
 #define SET_HEATER_TIMEOUT(n) do { eeprom_write_byte((uint8_t*)EEPROM_HEATER_TIMEOUT, n); } while(0)
 #define GET_END_RETRACT() (eeprom_read_float((const float*)EEPROM_END_RETRACT))
@@ -93,7 +93,7 @@ extern uint16_t lcd_timeout;
 extern uint8_t lcd_contrast;
 extern uint8_t led_sleep_glow;
 extern uint8_t lcd_sleep_contrast;
-extern uint8_t expert_flags;
+extern uint8_t control_flags;
 extern float end_of_print_retraction;
 extern uint16_t led_timeout;
 extern uint8_t led_sleep_brightness;
@@ -109,10 +109,10 @@ extern float pid2[3];
 extern uint16_t motor_current_e2;
 #endif
 
-FORCE_INLINE bool pidTempBed() { return (expert_flags & FLAG_PID_BED); }
+FORCE_INLINE bool pidTempBed() { return (control_flags & FLAG_PID_BED); }
 
 #if EXTRUDERS > 1
-FORCE_INLINE bool swapExtruders() { return (expert_flags & FLAG_SWAP_EXTRUDERS); }
+FORCE_INLINE bool swapExtruders() { return (control_flags & FLAG_SWAP_EXTRUDERS); }
 #endif
 
 #define WORD_SETTING(n) (*(uint16_t*)&lcd_cache[(n) * sizeof(uint16_t)])
