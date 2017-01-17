@@ -109,13 +109,13 @@ static void lcd_cooldown()
 {
     for(uint8_t n=0; n<EXTRUDERS; ++n)
     {
-        PREHEAT_FLAG(n+1) = 0;
-        setTargetHotend(0, n);
+        PREHEAT_FLAG(n) = 0;
+        setTargetHotend(0.0f, n);
     }
 
 #if TEMP_SENSOR_BED != 0
     setTargetBed(0);
-    PREHEAT_FLAG(0) = 0;
+    PREHEAT_FLAG(EXTRUDERS) = 0;
 #endif
     printing_state = PRINT_STATE_NORMAL;
     // menu.return_to_previous();
@@ -201,43 +201,48 @@ static void lcd_main_print()
     menu.add_menu(menu_t(lcd_menu_print_select, SCROLL_MENU_ITEM_POS(0)));
 }
 
-static void lcd_toggle_preheat_nozzle0()
+static void lcd_toggle_preheat_nozzle(uint8_t e)
 {
-    PREHEAT_FLAG(1) = !PREHEAT_FLAG(1);
-    if (!PREHEAT_FLAG(1))
+    PREHEAT_FLAG(e) = !PREHEAT_FLAG(e);
+    if (!PREHEAT_FLAG(e))
     {
-        setTargetHotend(0, 0);
+        setTargetHotend(0.0f, e);
     }
 }
 
-static void lcd_preheat_tune_nozzle0()
+static void lcd_preheat_tune_nozzle(uint8_t e)
 {
-    lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15);
-    PREHEAT_FLAG(1) = (target_temperature[0]>0);
+    lcd_tune_value(target_temperature[e], 0, get_maxtemp(e) - 15);
+    PREHEAT_FLAG(e) = (target_temperature[e]>0);
+}
+
+FORCE_INLINE static void lcd_toggle_preheat_nozzle0()
+{
+    lcd_toggle_preheat_nozzle(0);
+}
+
+FORCE_INLINE static void lcd_preheat_tune_nozzle0()
+{
+    lcd_preheat_tune_nozzle(0);
 }
 
 #if EXTRUDERS > 1
-static void lcd_toggle_preheat_nozzle1()
+FORCE_INLINE static void lcd_toggle_preheat_nozzle1()
 {
-    PREHEAT_FLAG(2) = !PREHEAT_FLAG(2);
-    if (!PREHEAT_FLAG(2))
-    {
-        setTargetHotend(0, 1);
-    }
+    lcd_toggle_preheat_nozzle(1);
 }
 
-static void lcd_preheat_tune_nozzle1()
+FORCE_INLINE static void lcd_preheat_tune_nozzle1()
 {
-    lcd_tune_value(target_temperature[1], 0, get_maxtemp(1) - 15);
-    PREHEAT_FLAG(2) = (target_temperature[0]>0);
+    lcd_preheat_tune_nozzle(1);
 }
 #endif
 
 #if TEMP_SENSOR_BED != 0
 static void lcd_toggle_preheat_bed()
 {
-    PREHEAT_FLAG(0) = !PREHEAT_FLAG(0);
-    if (PREHEAT_FLAG(0))
+    PREHEAT_FLAG(EXTRUDERS) = !PREHEAT_FLAG(EXTRUDERS);
+    if (PREHEAT_FLAG(EXTRUDERS))
     {
   #if EXTRUDERS == 2
         setTargetBed(material[swapExtruders() ? 1 : 0].bed_temperature);
@@ -254,7 +259,7 @@ static void lcd_toggle_preheat_bed()
 static void lcd_preheat_tune_bed()
 {
     lcd_tune_value(target_temperature_bed, 0, BED_MAXTEMP - 15);
-    PREHEAT_FLAG(0) = (target_temperature_bed>0);
+    PREHEAT_FLAG(EXTRUDERS) = (target_temperature_bed>0);
 }
 #endif
 
@@ -267,13 +272,13 @@ static void init_preheat()
   #else
     setTargetBed(target_temperature_bed = material[0].bed_temperature);
   #endif
-    PREHEAT_FLAG(0) = ((int)degTargetBed() > 0) ? 1 : 0;
+    PREHEAT_FLAG(EXTRUDERS) = ((int)degTargetBed() > 0) ? 1 : 0;
 #endif
 
     for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
-        PREHEAT_FLAG(e+1) = 0;
-        setTargetHotend(0, e);
+        PREHEAT_FLAG(e) = 0;
+        setTargetHotend(0.0f, e);
     }
     printing_state = PRINT_STATE_HEATING;
     menu.add_menu(menu_t(lcd_main_preheat, MAIN_MENU_ITEM_POS(0)));
@@ -420,10 +425,10 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
         {
 #if EXTRUDERS < 2
             strcpy_P(buffer, PSTR("Nozzle: "));
-            strcpy_P(buffer+8, PREHEAT_FLAG(1) ? PSTR("on") : PSTR("off"));
+            strcpy_P(buffer+8, PREHEAT_FLAG(0) ? PSTR("on") : PSTR("off"));
 #else
             strcpy_P(buffer, PSTR("Nozzle(1): "));
-            strcpy_P(buffer+11, PREHEAT_FLAG(1) ? PSTR("on") : PSTR("off"));
+            strcpy_P(buffer+11, PREHEAT_FLAG(0) ? PSTR("on") : PSTR("off"));
 #endif
             lcd_lib_draw_string_left(5, buffer);
             flags |= MENU_STATUSLINE;
@@ -435,11 +440,11 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
                            , flags);
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(1)?checkbox_on:checkbox_off);
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(0)?checkbox_on:checkbox_off);
         }
         else
         {
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(1)?checkbox_on:checkbox_off);
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 47-(EXTRUDERS*LCD_LINE_HEIGHT)-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(0)?checkbox_on:checkbox_off);
         }
     }
 #if EXTRUDERS > 1
@@ -449,7 +454,7 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
         if (flags & MENU_SELECTED)
         {
             strcpy_P(buffer, PSTR("Nozzle(2): "));
-            strcpy_P(buffer+11, PREHEAT_FLAG(2) ? PSTR("on") : PSTR("off"));
+            strcpy_P(buffer+11, PREHEAT_FLAG(1) ? PSTR("on") : PSTR("off"));
 
             lcd_lib_draw_string_left(5, buffer);
             flags |= MENU_STATUSLINE;
@@ -461,11 +466,11 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
                            , flags);
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(2)?checkbox_on:checkbox_off);
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(1)?checkbox_on:checkbox_off);
         }
         else
         {
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(2)?checkbox_on:checkbox_off);
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 39-(BED_MENU_OFFSET*LCD_LINE_HEIGHT), PREHEAT_FLAG(1)?checkbox_on:checkbox_off);
         }
     }
 #endif
@@ -476,7 +481,7 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
         if (flags & MENU_SELECTED)
         {
             strcpy_P(buffer, PSTR("Buildplate: "));
-            strcpy_P(buffer+12, PREHEAT_FLAG(0) ? PSTR("on") : PSTR("off"));
+            strcpy_P(buffer+12, PREHEAT_FLAG(EXTRUDERS) ? PSTR("on") : PSTR("off"));
 
             lcd_lib_draw_string_left(5, buffer);
             flags |= MENU_STATUSLINE;
@@ -488,11 +493,11 @@ static void drawPreheatSubmenu (uint8_t nr, uint8_t &flags)
                            , flags);
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 40, PREHEAT_FLAG(0)?checkbox_on:checkbox_off);
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 40, PREHEAT_FLAG(EXTRUDERS)?checkbox_on:checkbox_off);
         }
         else
         {
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 40, PREHEAT_FLAG(0)?checkbox_on:checkbox_off);
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING, 40, PREHEAT_FLAG(EXTRUDERS)?checkbox_on:checkbox_off);
         }
     }
 #endif
@@ -570,13 +575,13 @@ static void lcd_main_preheat()
 
     char buffer[32] = {0};
 #if TEMP_SENSOR_BED != 0
-    if ((!PREHEAT_FLAG(0)) | (current_temperature_bed > target_temperature_bed - 10))
+    if ((!PREHEAT_FLAG(EXTRUDERS)) | (current_temperature_bed > target_temperature_bed - 10))
     {
 #endif
         // set preheat nozzle temperature
         for(uint8_t e=0; e<EXTRUDERS; ++e)
         {
-            if ((PREHEAT_FLAG(e+1)) & (target_temperature[e] < 1))
+            if ((PREHEAT_FLAG(e)) & (target_temperature[e] < 1))
             {
                 target_temperature[e] = (material[e].temperature[0] /5*4);
                 target_temperature[e] -= target_temperature[e] % 10;
