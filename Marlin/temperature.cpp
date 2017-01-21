@@ -43,11 +43,11 @@
 //===========================================================================
 //=============================public variables============================
 //===========================================================================
-int target_temperature[EXTRUDERS] = { 0 };
+uint16_t target_temperature[EXTRUDERS] = { 0 };
 int current_temperature_raw[EXTRUDERS] = { 0 };
 float current_temperature[EXTRUDERS] = { 0.0 };
 #if TEMP_SENSOR_BED != 0
-int target_temperature_bed = 0;
+uint16_t target_temperature_bed = 0;
 int current_temperature_bed_raw = 0;
 float current_temperature_bed = 0.0;
 #endif // TEMP_SENSOR_BED
@@ -551,7 +551,7 @@ void manage_heater()
     {
         if(degHotend(e) < watch_start_temp[e] + WATCH_TEMP_INCREASE)
         {
-            setTargetHotend(0, e);
+            cooldownHotend(e);
             LCD_MESSAGEPGM("Heating failed");
             SERIAL_ECHO_START;
             SERIAL_ECHOLNPGM("Heating failed");
@@ -1021,8 +1021,8 @@ void setWatch()
 
 void disable_heater()
 {
-  for(int i=0;i<EXTRUDERS;i++)
-    setTargetHotend(0,i);
+  for(int i=0;i<EXTRUDERS;++i)
+    cooldownHotend(i);
   #if TEMP_SENSOR_BED != 0
     setTargetBed(0);
   #endif
@@ -1530,6 +1530,27 @@ int get_maxtemp(uint8_t e)
 {
     return maxttemp[e];
 }
+
+void setTargetHotend(const uint16_t &celsius, uint8_t extruder) {
+  target_temperature[extruder] = celsius;
+  if (target_temperature[extruder] >= HEATER_0_MAXTEMP - 15)
+    target_temperature[extruder] = HEATER_0_MAXTEMP - 15;
+}
+
+void cooldownHotend(uint8_t extruder)
+{
+    target_temperature[extruder] = 0;
+}
+
+#ifdef BED_MAXTEMP
+void setTargetBed(const uint16_t &celsius)
+{
+  target_temperature_bed = celsius;
+  if (target_temperature_bed > BED_MAXTEMP - 15)
+    target_temperature_bed = BED_MAXTEMP - 15;
+}
+#endif
+
 
 #endif //PIDTEMP
 

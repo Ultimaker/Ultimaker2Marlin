@@ -221,7 +221,8 @@ void lcd_lib_update_screen()
 {
     if (lcd_timeout > 0)
     {
-        if ((millis() - last_user_interaction) > (lcd_timeout*MILLISECONDS_PER_MINUTE))
+        const unsigned long timeout=last_user_interaction + (lcd_timeout*MILLISECONDS_PER_MINUTE);
+        if (timeout < millis())
         {
             if (!(sleep_state & SLEEP_LCD_DIMMED))
             {

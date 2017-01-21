@@ -253,8 +253,8 @@ static void lcd_menu_special_startup()
 
 void doCooldown()
 {
-    for(uint8_t n=0; n<EXTRUDERS; n++)
-        setTargetHotend(0, n);
+    for(uint8_t n=0; n<EXTRUDERS; ++n)
+        cooldownHotend(n);
 #if TEMP_SENSOR_BED != 0
     setTargetBed(0);
 #endif

@@ -32,7 +32,7 @@ void lcd_select_nozzle(menuFunc_t callbackOnSelect = 0, menuFunc_t callbackOnAbo
 #endif // EXTRUDERS
 
 extern uint8_t heater_timeout;
-extern int backup_temperature[EXTRUDERS];
+extern uint16_t backup_temperature[EXTRUDERS];
 
 extern const char* lcd_setting_name;
 extern const char* lcd_setting_postfix;

@@ -110,7 +110,7 @@ static void lcd_cooldown()
     for(uint8_t n=0; n<EXTRUDERS; ++n)
     {
         PREHEAT_FLAG(n) = 0;
-        setTargetHotend(0.0f, n);
+        cooldownHotend(n);
     }
 
 #if TEMP_SENSOR_BED != 0
@@ -206,7 +206,7 @@ static void lcd_toggle_preheat_nozzle(uint8_t e)
     PREHEAT_FLAG(e) = !PREHEAT_FLAG(e);
     if (!PREHEAT_FLAG(e))
     {
-        setTargetHotend(0.0f, e);
+        cooldownHotend(e);
     }
 }
 
@@ -278,7 +278,7 @@ static void init_preheat()
     for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
         PREHEAT_FLAG(e) = 0;
-        setTargetHotend(0.0f, e);
+        cooldownHotend(e);
     }
     printing_state = PRINT_STATE_HEATING;
     menu.add_menu(menu_t(lcd_main_preheat, MAIN_MENU_ITEM_POS(0)));
