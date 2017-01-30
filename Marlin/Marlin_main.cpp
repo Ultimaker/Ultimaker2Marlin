@@ -827,7 +827,7 @@ static void get_command()
   get_serial_commands();
 
   // detect serial communication
-  if ((commands_queued() && serialCmd) || ((millis() - lastSerialCommandTime) < SERIAL_CONTROL_TIMEOUT))
+  if ((commands_queued() && serialCmd) || ((lastSerialCommandTime>0) && ((millis() - lastSerialCommandTime) < SERIAL_CONTROL_TIMEOUT)))
   {
       sleep_state |= SLEEP_SERIAL_CMD;
   }
