@@ -533,7 +533,7 @@ float junction_deviation = 0.1;
 // Add a new linear movement to the buffer. steps_x, _y and _z is the absolute position in
 // mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
 // calculation the caller must also provide the physical length of the line in millimeters.
-void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t &extruder)
+void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t extruder)
 {
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
@@ -939,12 +939,12 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   st_wake_up();
 }
 
-void plan_set_position(const float &x, const float &y, const float &z, const float &e)
+void plan_set_position(const float &x, const float &y, const float &z, const float &e, const uint8_t extruder)
 {
   position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   position[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
-  position[E_AXIS] = lround(e*e_steps_per_unit(active_extruder)*volume_to_filament_length[active_extruder]);
+  position[E_AXIS] = lround(e*e_steps_per_unit(extruder)*volume_to_filament_length[extruder]);
   st_set_position(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS]);
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   previous_speed[0] = 0.0;
@@ -953,9 +953,9 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
   previous_speed[3] = 0.0;
 }
 
-void plan_set_e_position(const float &e)
+void plan_set_e_position(const float &e, const uint8_t extruder)
 {
-  position[E_AXIS] = lround(e*e_steps_per_unit(active_extruder)*volume_to_filament_length[active_extruder]);
+  position[E_AXIS] = lround(e*e_steps_per_unit(extruder)*volume_to_filament_length[extruder]);
   st_set_e_position(position[E_AXIS]);
 }
 

@@ -59,7 +59,7 @@ void abortPrint()
     if (primed)
     {
         // perform the end-of-print retraction at the standard retract speed
-        plan_set_e_position(end_of_print_retraction / volume_to_filament_length[active_extruder]);
+        plan_set_e_position(end_of_print_retraction / volume_to_filament_length[active_extruder], active_extruder);
         current_position[E_AXIS] = 0.0f;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, active_extruder);
 
@@ -145,7 +145,7 @@ void doStartPrint()
 
     // zero the extruder position
     current_position[E_AXIS] = 0.0;
-    plan_set_e_position(0);
+    plan_set_e_position(current_position[E_AXIS], active_extruder);
 
 	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
 	retracted = false;
@@ -176,18 +176,18 @@ void doStartPrint()
             primed = true;
         }
         // undo the end-of-print retraction
-        plan_set_e_position((- end_of_print_retraction) / volume_to_filament_length[e]);
+        plan_set_e_position((- end_of_print_retraction) / volume_to_filament_length[e], e);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], END_OF_PRINT_RECOVERY_SPEED, e);
 
         // perform additional priming
-        plan_set_e_position(-PRIMING_MM3);
+        plan_set_e_position(-PRIMING_MM3, e);
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], (PRIMING_MM3_PER_SEC * volume_to_filament_length[e]), e);
 
 #if EXTRUDERS > 1
         // for extruders other than the first one, perform end of print retraction
         if (e != active_extruder)
         {
-            plan_set_e_position(extruder_swap_retract_length / volume_to_filament_length[e]);
+            plan_set_e_position(extruder_swap_retract_length / volume_to_filament_length[e], e);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, e);
         }
 #endif
@@ -196,7 +196,7 @@ void doStartPrint()
     if (printing_state == PRINT_STATE_START)
     {
         // move to the recover start position
-        plan_set_e_position(recover_position[E_AXIS]);
+        plan_set_e_position(recover_position[E_AXIS], active_extruder);
         plan_buffer_line(recover_position[X_AXIS], recover_position[Y_AXIS], recover_position[Z_AXIS], recover_position[E_AXIS], min(homing_feedrate[X_AXIS], homing_feedrate[Z_AXIS]), active_extruder);
         for(int8_t i=0; i < NUM_AXIS; i++) {
             current_position[i] = recover_position[i];

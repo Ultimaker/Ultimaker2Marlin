@@ -1014,7 +1014,7 @@ void quickStop()
     current_position[i] = float(st_get_position(i))/axis_steps_per_unit[i];
   }
   current_position[E_AXIS] = (float(st_get_position(E_AXIS))/e_steps_per_unit(active_extruder))/volume_to_filament_length[active_extruder];
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
 }
 
 #if defined(BABYSTEPPING)
