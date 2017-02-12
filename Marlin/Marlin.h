@@ -1,5 +1,5 @@
 // Tonokip RepRap firmware rewrite based off of Hydra-mmm firmware.
-// Licence: GPL
+// License: GPL
 
 #ifndef MARLIN_H
 #define MARLIN_H
