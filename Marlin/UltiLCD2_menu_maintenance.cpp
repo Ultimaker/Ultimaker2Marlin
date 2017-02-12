@@ -16,6 +16,7 @@
 #include "pins.h"
 #include "preferences.h"
 #include "tinkergnome.h"
+#include "powerbudget.h"
 
 static void lcd_menu_maintenance_advanced_heatup();
 //static void lcd_menu_maintenance_led();
@@ -165,6 +166,8 @@ static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Print area"));
     else if (nr == index++)
+        strcpy_P(buffer, PSTR("Power budget"));
+    else if (nr == index++)
         strcpy_P(buffer, PSTR("Version"));
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Runtime stats"));
@@ -236,7 +239,7 @@ static void lcd_preferences_details(uint8_t nr)
             strcpy_P(c, PSTR("off"));
         }
     }
-    else if (nr == 11)
+    else if (nr == 12)
     {
         strcpy_P(buffer, PSTR(STRING_CONFIG_H_AUTHOR));
     }
@@ -843,7 +846,7 @@ static void lcd_menu_screen_contrast()
 
 static void lcd_menu_preferences()
 {
-    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 13, lcd_preferences_item, lcd_preferences_details);
+    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 14, lcd_preferences_item, lcd_preferences_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
@@ -873,6 +876,8 @@ static void lcd_menu_preferences()
             menu.add_menu(menu_t(lcd_menu_maintenance_motion, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_axeslimit, MAIN_MENU_ITEM_POS(1)));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_powerbudget, MAIN_MENU_ITEM_POS(1)));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_advanced_version, SCROLL_MENU_ITEM_POS(0)));
         else if (IS_SELECTED_SCROLL(index++))

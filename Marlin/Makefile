@@ -213,7 +213,7 @@ SRC = wiring.c hooks.c \
 	wiring_shift.c WInterrupts.c
 CXXSRC = UltiLCD2.cpp UltiLCD2_gfx.cpp UltiLCD2_hi_lib.cpp UltiLCD2_low_lib.cpp \
 	UltiLCD2_menu_first_run.cpp UltiLCD2_menu_maintenance.cpp UltiLCD2_menu_material.cpp \
-	UltiLCD2_menu_print.cpp lifetime_stats.cpp UltiLCD2_menu_main.cpp
+	UltiLCD2_menu_print.cpp lifetime_stats.cpp UltiLCD2_menu_main.cpp powerbudget.cpp
 CXXSRC += UltiLCD2_menu_utils.cpp UltiLCD2_menu_prefs.cpp tinkergnome.cpp  \
 	machinesettings.cpp filament_sensor.cpp new.cpp
 CXXSRC += WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\

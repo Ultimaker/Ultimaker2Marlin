@@ -37,8 +37,7 @@
 #include "watchdog.h"
 #include "preferences.h"
 #include "tinkergnome.h"
-
-#define MAX_HEATERS  2     // activate max. 2 heaters at the same time
+#include "powerbudget.h"
 
 //===========================================================================
 //=============================public variables============================
@@ -1160,6 +1159,30 @@ static int read_max6675()
 }
 #endif
 
+static unsigned char limit_power(uint16_t wattage, unsigned char pwm, uint16_t &budget)
+{
+    if (pwm)
+    {
+        if (budget && wattage)
+        {
+            uint16_t power = (float(pwm) / 0x7f) * wattage;
+            if (power > budget)
+            {
+                pwm = (float(budget) / wattage) * 0x7f;
+                budget = 0;
+            }
+            else
+            {
+                budget -= power;
+            }
+        }
+        else
+        {
+            pwm = 0;
+        }
+    }
+    return pwm;
+}
 
 // Timer 0 is shared with millies
 ISR(TIMER0_COMPB_vect)
@@ -1191,27 +1214,29 @@ ISR(TIMER0_COMPB_vect)
 
   if (pwm_count == 0)
   {
-    soft_pwm_0 = soft_pwm[0];
+    uint16_t budget = power_budget;
+
+    soft_pwm_0 = limit_power(power_extruder[0], soft_pwm[0], budget);
     if (soft_pwm_0 > 0)
     {
-      WRITE(HEATER_0_PIN,1);
+      WRITE(HEATER_0_PIN, 1);
     }
     #if EXTRUDERS > 1
-    soft_pwm_1 = soft_pwm[1];
+    soft_pwm_1 = limit_power(power_extruder[1], soft_pwm[1], budget);
     if (soft_pwm_1 > 0)
     {
-      WRITE(HEATER_1_PIN,1);
+      WRITE(HEATER_1_PIN, 1);
     }
     #endif
     #if EXTRUDERS > 2
-    soft_pwm_2 = soft_pwm[2];
+    soft_pwm_2 = limit_power(power_extruder[2], soft_pwm[2], budget);
     if (soft_pwm_2 > 0)
     {
-      WRITE(HEATER_2_PIN,1);
+      WRITE(HEATER_2_PIN, 1);
     }
     #endif
     #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-    soft_pwm_b = soft_pwm_bed;
+    soft_pwm_b = limit_power(power_buildplate, soft_pwm_bed, budget);
     #endif
     #ifdef FAN_SOFT_PWM
     soft_pwm_fan = fanSpeedSoftPwm / 2;
@@ -1226,28 +1251,18 @@ ISR(TIMER0_COMPB_vect)
   if(soft_pwm_2 <= pwm_count) WRITE(HEATER_2_PIN,0);
   #endif
   #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-  if(soft_pwm_b <= pwm_count)
+  // bed is reverse of other heaters - nozzle heaters typically turn on at pwm_count=0 and typically
+  // turns off before pwm_count gets to 127.  But the bed typically does not turn on until pwm_count
+  // is part way through the cycle and turns off when pwm_count gets back to 0.  This minimizes overlap
+  // when bed and nozzles are both on to reduce the load variation on the power supply (probably not necessary
+  // but possibly it lengthens the life of the capacitor inside the power brick).
+  if (pwm_count > (0x7f-soft_pwm_b) ) // reverse timing
   {
-    WRITE(HEATER_BED_PIN,0);
+    WRITE(HEATER_BED_PIN, 1);
   }
   else
   {
-    uint8_t heat_count = 0;
-    if (READ(HEATER_0_PIN))  ++heat_count;
-    #if EXTRUDERS > 1
-    if (READ(HEATER_1_PIN))  ++heat_count;
-    #endif
-    #if EXTRUDERS > 2
-    if (READ(HEATER_2_PIN))  ++heat_count;
-    #endif
-    if (heat_count < MAX_HEATERS)
-    {
-        WRITE(HEATER_BED_PIN, 1);
-    }
-    else
-    {
-        WRITE(HEATER_BED_PIN, 0);
-    }
+    WRITE(HEATER_BED_PIN, 0);
   }
   #endif
   #ifdef FAN_SOFT_PWM

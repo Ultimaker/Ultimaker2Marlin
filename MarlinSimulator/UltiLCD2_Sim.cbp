@@ -35,15 +35,14 @@
 			<Add option="-D__AVR_ATmega2560__=1" />
 			<Add option="-DARDUINO=165" />
 			<Add option="-DF_CPU=16000000" />
-			<Add option="-DEXTRUDERS=2" />
-			<Add option="-DTEMP_SENSOR_1=20" />
+			<Add option="-DEXTRUDERS=1" />
+			<Add option="-DTEMP_SENSOR_1=0" />
 			<Add option="-DFILAMENT_SENSOR_PIN=-1" />
 			<Add option="-DBABYSTEPPING" />
-			<Add option="-DDUAL_FAN" />
 			<Add option="-DTEMP_SENSOR_BED=20" />
-			<Add option="-DHEATER_0_MAXTEMP=325" />
-			<Add option="-DHEATER_1_MAXTEMP=325" />
-			<Add option="-DHEATER_2_MAXTEMP=325" />
+			<Add option="-DHEATER_0_MAXTEMP=315" />
+			<Add option="-DHEATER_1_MAXTEMP=315" />
+			<Add option="-DHEATER_2_MAXTEMP=315" />
 			<Add directory="arduino_sim" />
 			<Add directory="avr_sim" />
 			<Add directory="D:/GitRepo/SDL-1.2.15/include" />
@@ -112,6 +111,8 @@
 		<Unit filename="../Marlin/pins.h" />
 		<Unit filename="../Marlin/planner.cpp" />
 		<Unit filename="../Marlin/planner.h" />
+		<Unit filename="../Marlin/powerbudget.cpp" />
+		<Unit filename="../Marlin/powerbudget.h" />
 		<Unit filename="../Marlin/preferences.h" />
 		<Unit filename="../Marlin/speed_lookuptable.h" />
 		<Unit filename="../Marlin/stepper.cpp" />
