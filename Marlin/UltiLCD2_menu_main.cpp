@@ -270,7 +270,7 @@ static void init_preheat()
   #if EXTRUDERS == 2
     setTargetBed(material[swapExtruders() ? 1 : 0].bed_temperature);
   #else
-    setTargetBed(target_temperature_bed = material[0].bed_temperature);
+    setTargetBed(material[0].bed_temperature);
   #endif
     PREHEAT_FLAG(EXTRUDERS) = ((int)degTargetBed() > 0) ? 1 : 0;
 #endif
