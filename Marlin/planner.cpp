@@ -379,9 +379,12 @@ void planner_recalculate() {
   planner_recalculate_trapezoids();
 }
 
-void plan_init() {
+void plan_init()
+{
+  CRITICAL_SECTION_START
   block_buffer_head = 0;
   block_buffer_tail = 0;
+  CRITICAL_SECTION_END
   memset(position, 0, sizeof(position)); // clear position
   previous_speed[0] = 0.0;
   previous_speed[1] = 0.0;
@@ -451,15 +454,19 @@ void check_axes_activity()
   #endif
   block_t *block;
 
-  if(block_buffer_tail != block_buffer_head)
+  CRITICAL_SECTION_START
+  uint8_t block_head  = block_buffer_head;
+  uint8_t block_index = block_buffer_tail;
+  CRITICAL_SECTION_END
+
+  if(block_index != block_head)
   {
-    uint8_t block_index = block_buffer_tail;
     tail_fan_speed = block_buffer[block_index].fan_speed;
     #ifdef BARICUDA
     tail_valve_pressure = block_buffer[block_index].valve_pressure;
     tail_e_to_p_pressure = block_buffer[block_index].e_to_p_pressure;
     #endif
-    while(block_index != block_buffer_head)
+    while(block_index != block_head)
     {
       block = &block_buffer[block_index];
       if(block->steps_x != 0) x_active++;
@@ -929,7 +936,9 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   calculate_trapezoid_for_block(block, block->entry_speed/block->nominal_speed, safe_speed/block->nominal_speed);
 
   // Move buffer head
+  CRITICAL_SECTION_START
   block_buffer_head = next_buffer_head;
+  CRITICAL_SECTION_END
 
   // Update position
   memcpy(position, target, sizeof(position)); // position[] = target[]

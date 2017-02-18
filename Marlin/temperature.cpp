@@ -445,11 +445,33 @@ void checkExtruderAutoFans()
 
 #endif // any extruder auto fan pins set
 
+static unsigned char limit_power(uint16_t wattage, unsigned char pwm, uint16_t &budget)
+{
+    if (pwm)
+    {
+        if (budget && wattage)
+        {
+            uint16_t power = (float(pwm) / 0x7f) * wattage;
+            if (power > budget)
+            {
+                pwm = (float(budget) / wattage) * 0x7f;
+                budget = 0;
+            }
+            else
+            {
+                budget -= power;
+            }
+        }
+        else
+        {
+            pwm = 0;
+        }
+    }
+    return pwm;
+}
+
 void manage_heater()
 {
-  float pid_input;
-  float pid_output;
-
   if(temp_meas_ready != true)   //better readability
     return;
 
@@ -465,6 +487,25 @@ void manage_heater()
 	  min_temp_error(0);
   }
   #endif
+
+  uint16_t budget = power_budget;
+  {
+      // reduce power budget on axis activity
+      if (block_buffer_head != block_buffer_tail)
+      {
+          block_t *block = &block_buffer[block_buffer_tail];
+          uint16_t budget_part = constrain(8, 0, power_budget >> 4);
+          uint8_t  counter = 0x01;
+          if(block->steps_x != 0) counter <<= 0x01;
+          if(block->steps_y != 0) counter <<= 0x01;
+          if(block->steps_z != 0) counter <<= 0x01;
+          if(block->steps_e != 0) counter <<= 0x01;
+          while (counter >>= 1) budget -= budget_part;
+      }
+  }
+
+  float pid_input;
+  float pid_output;
   int target_temp;
 
   for(uint8_t e = 0; e < EXTRUDERS; ++e)
@@ -539,7 +580,7 @@ void manage_heater()
     // Check if temperature is within the correct range
     if((current_temperature[e] > minttemp[e]) && (current_temperature[e] < maxttemp[e]))
     {
-      soft_pwm[e] = (int)pid_output >> 1;
+      soft_pwm[e] = limit_power(power_extruder[e], (int)pid_output >> 1, budget);
     }
     else {
       soft_pwm[e] = 0;
@@ -625,14 +666,12 @@ void manage_heater()
 
   #if TEMP_SENSOR_BED != 0
 
-//  #ifndef PIDTEMPBED
   if (!pidTempBed())
   {
     if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
       return;
     previous_millis_bed_heater = millis();
   }
-//  #endif
 
   #ifdef PIDTEMPBED
   if (pidTempBed())
@@ -659,7 +698,7 @@ void manage_heater()
 
 	  if((current_temperature_bed > BED_MINTEMP) && (current_temperature_bed < BED_MAXTEMP))
 	  {
-	    soft_pwm_bed = (int)pid_output >> 1;
+	    soft_pwm_bed = limit_power(power_buildplate, (int)pid_output >> 1, budget);
 	  }
 	  else {
 	    soft_pwm_bed = 0;
@@ -678,7 +717,7 @@ void manage_heater()
         }
         else
         {
-          soft_pwm_bed = MAX_BED_POWER>>1;
+          soft_pwm_bed = limit_power(power_buildplate, MAX_BED_POWER>>1, budget);
         }
       }
       else
@@ -696,7 +735,7 @@ void manage_heater()
         }
         else if(current_temperature_bed <= target_temperature_bed - BED_HYSTERESIS)
         {
-          soft_pwm_bed = MAX_BED_POWER>>1;
+          soft_pwm_bed = limit_power(power_buildplate, MAX_BED_POWER>>1, budget);
         }
       }
       else
@@ -1159,31 +1198,6 @@ static int read_max6675()
 }
 #endif
 
-static unsigned char limit_power(uint16_t wattage, unsigned char pwm, uint16_t &budget)
-{
-    if (pwm)
-    {
-        if (budget && wattage)
-        {
-            uint16_t power = (float(pwm) / 0x7f) * wattage;
-            if (power > budget)
-            {
-                pwm = (float(budget) / wattage) * 0x7f;
-                budget = 0;
-            }
-            else
-            {
-                budget -= power;
-            }
-        }
-        else
-        {
-            pwm = 0;
-        }
-    }
-    return pwm;
-}
-
 // Timer 0 is shared with millies
 ISR(TIMER0_COMPB_vect)
 {
@@ -1214,32 +1228,30 @@ ISR(TIMER0_COMPB_vect)
 
   if (pwm_count == 0)
   {
-    uint16_t budget = power_budget;
-
-    soft_pwm_0 = limit_power(power_extruder[0], soft_pwm[0], budget);
+    soft_pwm_0 = soft_pwm[0];
     if (soft_pwm_0 > 0)
     {
       WRITE(HEATER_0_PIN, 1);
     }
     #if EXTRUDERS > 1
-    soft_pwm_1 = limit_power(power_extruder[1], soft_pwm[1], budget);
+    soft_pwm_1 = soft_pwm[1];
     if (soft_pwm_1 > 0)
     {
       WRITE(HEATER_1_PIN, 1);
     }
     #endif
     #if EXTRUDERS > 2
-    soft_pwm_2 = limit_power(power_extruder[2], soft_pwm[2], budget);
+    soft_pwm_2 = soft_pwm[2];
     if (soft_pwm_2 > 0)
     {
       WRITE(HEATER_2_PIN, 1);
     }
     #endif
     #if defined(HEATER_BED_PIN) && HEATER_BED_PIN > -1
-    soft_pwm_b = limit_power(power_buildplate, soft_pwm_bed, budget);
+    soft_pwm_b = soft_pwm_bed;
     #endif
     #ifdef FAN_SOFT_PWM
-    soft_pwm_fan = fanSpeedSoftPwm / 2;
+    soft_pwm_fan = fanSpeedSoftPwm >> 1;
     if(soft_pwm_fan > 0) WRITE(FAN_PIN,1);
     #endif
   }
