@@ -2208,6 +2208,11 @@ static void drawMoveDetails()
     }
 }
 
+static void pos2string(uint8_t flags, uint8_t axis, char *buffer)
+{
+    float_to_string2((flags & MENU_ACTIVE) ? TARGET_POS(axis) : st_get_position(axis) / axis_steps_per_unit[axis], buffer, PSTR("mm"));
+}
+
 // create menu options for "move axes"
 static const menu_t & get_move_menuoption(uint8_t nr, menu_t &opt)
 {
@@ -2348,7 +2353,7 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
             lcd_lib_draw_string_leftP(5, PSTR("X axis position"));
             flags |= MENU_STATUSLINE;
         }
-        float_to_string2(st_get_position(X_AXIS) / axis_steps_per_unit[X_AXIS], buffer, PSTR("mm"));
+        pos2string(flags, X_AXIS, buffer);
         LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
                               , 17
                               , 48
@@ -2408,7 +2413,7 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
             lcd_lib_draw_string_leftP(5, PSTR("Y axis position"));
             flags |= MENU_STATUSLINE;
         }
-        float_to_string2(st_get_position(Y_AXIS) / axis_steps_per_unit[Y_AXIS], buffer, PSTR("mm"));
+        pos2string(flags, Y_AXIS, buffer);
         LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
                               , 29
                               , 48
@@ -2468,7 +2473,7 @@ static void drawMoveSubmenu(uint8_t nr, uint8_t &flags)
             lcd_lib_draw_string_leftP(5, PSTR("Z axis position"));
             flags |= MENU_STATUSLINE;
         }
-        float_to_string2(st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS], buffer, PSTR("mm"));
+        pos2string(flags, Z_AXIS, buffer);
         LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+5*LCD_CHAR_SPACING
                               , 41
                               , 48
@@ -2938,7 +2943,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
     }
     else if (nr == index++)
     {
-        // move material
+        // reverse material
         if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             lcd_lib_draw_string_leftP(5, PSTR("Click & hold to pull"));
@@ -2962,7 +2967,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
     }
     else if (nr == index++)
     {
-        // move material
+        // zero e position
         if (flags & (MENU_SELECTED | MENU_ACTIVE))
         {
             lcd_lib_draw_string_leftP(5, PSTR("Reset position"));
@@ -2992,8 +2997,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
             lcd_lib_draw_string_leftP(5, PSTR("Rotate to extrude"));
             flags |= MENU_STATUSLINE;
         }
-        // lcd_lib_draw_gfx(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-13*LCD_CHAR_SPACING-1, 35, flowGfx);
-        float_to_string2(st_get_position(E_AXIS) / e_steps_per_unit(active_extruder), buffer, PSTR("mm"));
+        float_to_string2(flags & MENU_ACTIVE ? TARGET_POS(E_AXIS) : st_get_position(E_AXIS) / e_steps_per_unit(active_extruder), buffer, PSTR("mm"));
         LCDMenu::drawMenuString(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-11*LCD_CHAR_SPACING
                           , 35
                           , 11*LCD_CHAR_SPACING
