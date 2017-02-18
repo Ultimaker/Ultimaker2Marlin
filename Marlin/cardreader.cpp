@@ -557,4 +557,22 @@ void CardReader::printingHasFinished()
     }
     autotempShutdown();
 }
+
+void CardReader::getFilenameFromNr(char* buffer, uint8_t nr)
+{
+	getfilename(nr);
+	if (*longFilename)
+	{
+		strncpy(buffer, longFilename, LONG_FILENAME_LENGTH-1);
+	}
+	else
+    {
+		strncpy(buffer, filename, LONG_FILENAME_LENGTH-1);
+	}
+	if (!filenameIsDir())
+	{
+		if (strrchr(buffer, '.')) strrchr(buffer, '.')[0] = '\0';
+	}
+}
+
 #endif //SDSUPPORT

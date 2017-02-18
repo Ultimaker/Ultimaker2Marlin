@@ -19,9 +19,6 @@
 #include "tinkergnome.h"
 
 uint8_t lcd_cache[LCD_CACHE_SIZE];
-#define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
-#define LCD_CACHE_TYPE(n) lcd_cache[LCD_CACHE_COUNT + (n)]
-#define LCD_DETAIL_CACHE_ID() lcd_cache[LCD_DETAIL_CACHE_START]
 
 unsigned long predictedTime = 0;
 
@@ -37,8 +34,10 @@ static bool primed = false;
 
 void lcd_clear_cache()
 {
-    for(uint8_t n=0; n<LCD_CACHE_COUNT; n++)
+    for(uint8_t n=0; n<LCD_CACHE_COUNT; ++n)
         LCD_CACHE_ID(n) = 0xFF;
+    for(uint8_t n=0; n<LCD_CACHE_REMAIN_COUNT; ++n)
+        LCD_CACHE_REMAIN_ID(n) = 0xFF;
     LCD_DETAIL_CACHE_ID() = 0;
     LCD_CACHE_NR_OF_FILES() = 0xFF;
 }
@@ -243,7 +242,7 @@ static void cardUpdir()
 
 static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[32] = {0};
+    char buffer[LONG_FILENAME_LENGTH] = {0};
     memset(buffer, '\0', sizeof(buffer));
     if (nr == 0)
     {
@@ -254,42 +253,61 @@ static void lcd_sd_menu_filename_callback(uint8_t nr, uint8_t offsetY, uint8_t f
             strcpy_P(buffer, PSTR("< BACK"));
         }
     }else{
-        // buffer[0] = '\0';
-        for(uint8_t idx=0; idx<LCD_CACHE_COUNT; ++idx)
+        uint8_t idx;
+        for(idx=0; idx<LCD_CACHE_COUNT; ++idx)
         {
             if (LCD_CACHE_ID(idx) == nr)
             {
-                strncpy(buffer, LCD_CACHE_FILENAME(idx), LONG_FILENAME_LENGTH-1);
+                strncpy(buffer, LCD_CACHE_FILENAME(idx), LCD_CACHE_TEXT_SIZE_SHORT);
                 break;
             }
         }
         if (buffer[0] == '\0')
         {
-            card.getfilename(nr - 1);
-            if (card.currentLongFileName()[0])
-            {
-                strncpy(buffer, card.currentLongFileName(), LONG_FILENAME_LENGTH-1);
-            } else {
-                strncpy(buffer, card.currentFileName(), LONG_FILENAME_LENGTH-1);
-            }
-            if (!card.filenameIsDir())
-            {
-                if (strrchr(buffer, '.')) strrchr(buffer, '.')[0] = '\0';
-            }
-
-            uint8_t idx = nr % LCD_CACHE_COUNT;
+            card.getFilenameFromNr(buffer, nr - 1);
+            idx = nr % LCD_CACHE_COUNT;
             LCD_CACHE_ID(idx) = nr;
-            strncpy(LCD_CACHE_FILENAME(idx), buffer, LONG_FILENAME_LENGTH-1);
+            strncpy(LCD_CACHE_FILENAME(idx), buffer, LCD_CACHE_TEXT_SIZE_SHORT);
+            if (strlen(buffer) < LCD_CACHE_TEXT_SIZE_SHORT)
+                LCD_CACHE_FILENAME(idx)[LCD_CACHE_TEXT_SIZE_SHORT-1] = '\0';
             LCD_CACHE_TYPE(idx) = card.filenameIsDir() ? 1 : 0;
             if (card.errorCode() && card.sdInserted())
             {
-                //On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
+                // On a read error reset the file position and try to keep going. (not pretty, but these read errors are annoying as hell)
                 card.clearError();
                 LCD_CACHE_ID(idx) = 0xFF;
                 card.clearLongFilename();
             }
         }
-        buffer[20] = '\0';
+        if (flags & MENU_SELECTED)
+        { // full filename length is needed
+            // check if filename is short enough
+            if (buffer[LCD_CACHE_TEXT_SIZE_SHORT-1] == '\0')
+                goto far_break;
+            // load from cache
+            for(idx=0; idx<LCD_CACHE_REMAIN_COUNT; ++idx)
+            {
+                if (LCD_CACHE_REMAIN_ID(idx) == nr)
+                {
+                    strncpy(buffer+LCD_CACHE_TEXT_SIZE_SHORT, LCD_CACHE_REMAIN_FILENAME(idx), LCD_CACHE_TEXT_SIZE_REMAIN);
+                    goto far_break;
+                }
+            }
+            // nothing in cache - load from card
+            card.getFilenameFromNr(buffer, nr - 1);
+            if (card.errorCode() && card.sdInserted())
+            {
+                // On a read error try to keep going with short file name. (not pretty, but these read errors are annoying as hell)
+                card.clearError();
+                card.clearLongFilename();
+                goto far_break;
+            }
+            idx = nr % LCD_CACHE_REMAIN_COUNT;
+            LCD_CACHE_REMAIN_ID(idx) = nr;
+            strncpy(LCD_CACHE_REMAIN_FILENAME(idx), buffer+LCD_CACHE_TEXT_SIZE_SHORT, LCD_CACHE_TEXT_SIZE_REMAIN);
+
+            far_break:;
+        }
     }
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }

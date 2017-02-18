@@ -51,6 +51,7 @@ public:
   void printingHasFinished();
 
   void getfilename(const uint8_t nr);
+  void getFilenameFromNr(char* buffer, uint8_t nr);
   uint16_t getnrfilenames();
 
 
