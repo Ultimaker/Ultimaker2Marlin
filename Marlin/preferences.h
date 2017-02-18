@@ -65,25 +65,26 @@
 #define UI_BEEP_SHORT    32
 #define UI_BEEP_OFF      64
 
-// SLEEP/LCD STATE
-#define SLEEP_LED_DIMMED     1
-#define SLEEP_LED_OFF        2
-#define SLEEP_LCD_DIMMED     4
-#define SLEEP_COOLING        8
-#define SLEEP_SERIAL_CMD    16
-#define SLEEP_SERIAL_SCREEN 32
 
-#define SLEEP_UPDATE_LED   128
+// SLEEP/LCD/SERIAL STATE
+#define SLEEP_LED_DIMMED     0x01
+#define SLEEP_LED_OFF        0x02
+#define SLEEP_LCD_DIMMED     0x04
+#define SLEEP_COOLING        0x08
+#define SLEEP_SERIAL_CMD     0x10
+#define SLEEP_SERIAL_SCREEN  0x20
+#define SLEEP_RESERVED       0x40
+#define SLEEP_UPDATE_LED     0x80
 
 // control flags
-#define FLAG_PID_NOZZLE      1
-#define FLAG_PID_BED         2
-#define FLAG_SWAP_EXTRUDERS  4
-#define FLAG_RESERVED_3      8
-#define FLAG_RESERVED_4     16
-#define FLAG_RESERVED_5     32
-#define FLAG_RESERVED_6     64
-#define FLAG_RESERVED_7    128
+#define FLAG_PID_NOZZLE      0x01
+#define FLAG_PID_BED         0x02
+#define FLAG_SWAP_EXTRUDERS  0x04
+#define FLAG_MANUAL_FAN2     0x08
+#define FLAG_RESERVED_4      0x10
+#define FLAG_RESERVED_5      0x20
+#define FLAG_RESERVED_6      0x40
+#define FLAG_RESERVED_7      0x80
 
 #define LED_DIM_TIME 0		    // 0 min -> off
 #define LED_DIM_MAXTIME 240		// 240 min

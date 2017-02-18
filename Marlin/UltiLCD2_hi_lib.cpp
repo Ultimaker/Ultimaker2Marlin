@@ -317,7 +317,7 @@ bool check_heater_timeout()
 {
     if (heater_timeout && !commands_queued() && !HAS_SERIAL_CMD)
     {
-        const unsigned long timeout = max(last_user_interaction, lastSerialCommandTime) + (heater_timeout*MILLISECONDS_PER_MINUTE);
+        const unsigned long timeout = last_user_interaction + (heater_timeout*MILLISECONDS_PER_MINUTE);
         if (timeout < millis())
         {
             for(uint8_t e=0; e<EXTRUDERS; ++e)

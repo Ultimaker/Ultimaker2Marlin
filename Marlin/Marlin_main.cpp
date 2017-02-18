@@ -315,7 +315,6 @@ static void commit_command(bool isSerialCmd)
   {
     //set serial flag for new command
     serialCmd |= (1 << bufindw);
-    lastSerialCommandTime = millis();
   }
   else
   {
@@ -824,22 +823,10 @@ inline void get_sdcard_commands()
 
 static void get_command()
 {
-  get_serial_commands();
-
-  // detect serial communication
-  if ((commands_queued() && serialCmd) || ((lastSerialCommandTime>0) && ((millis() - lastSerialCommandTime) < SERIAL_CONTROL_TIMEOUT)))
-  {
-      sleep_state |= SLEEP_SERIAL_CMD;
-  }
-  else
-  {
-      sleep_state &= ~SLEEP_SERIAL_CMD;
-  }
-
-#ifdef SDSUPPORT
-  get_sdcard_commands();
-#endif //SDSUPPORT
-
+    get_serial_commands();
+  #ifdef SDSUPPORT
+    get_sdcard_commands();
+  #endif //SDSUPPORT
 }
 
 #define DEFINE_PGM_READ_ANY(type, reader)       \
@@ -3145,10 +3132,27 @@ void controllerFan()
  */
 void idle()
 {
+    static unsigned long lastSerialCommandTime = 0;
+
     manage_heater();
     manage_inactivity();
     lcd_update();
     lifetime_stats_tick();
+
+    // detect serial communication
+    if (commands_queued() && serialCmd)
+    {
+      sleep_state |= SLEEP_SERIAL_CMD;
+      lastSerialCommandTime = millis();
+    }
+    else if ((lastSerialCommandTime>0) && ((millis() - lastSerialCommandTime) < SERIAL_CONTROL_TIMEOUT))
+    {
+        sleep_state |= SLEEP_SERIAL_CMD;
+    }
+    else
+    {
+      sleep_state &= ~SLEEP_SERIAL_CMD;
+    }
 }
 
 static void manage_inactivity()

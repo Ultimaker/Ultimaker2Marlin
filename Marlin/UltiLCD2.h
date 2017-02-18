@@ -21,7 +21,6 @@ void doCooldown();
 #define LCD_MESSAGEPGM(x)
 #define LCD_ALERTMESSAGEPGM(x)
 
-extern unsigned long lastSerialCommandTime;
 extern uint8_t led_brightness_level;
 extern uint8_t led_mode;
 extern float dsp_temperature[EXTRUDERS];
@@ -31,7 +30,7 @@ extern float dsp_temperature_bed;
 #define LED_MODE_WHILE_PRINTING 2
 #define LED_MODE_BLINK_ON_DONE  3
 
-#define SERIAL_CONTROL_TIMEOUT 4000
+#define SERIAL_CONTROL_TIMEOUT 2500
 
 #endif
 
