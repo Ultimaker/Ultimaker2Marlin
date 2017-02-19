@@ -148,15 +148,13 @@ static void lcd_preferences_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Click sound"));
     else if (nr == index++)
+        strcpy_P(buffer, PSTR("Scroll filenames"));
+    else if (nr == index++)
         strcpy_P(buffer, PSTR("Sleep timer"));
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Screen contrast"));
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Heater timeout"));
-//#if TEMP_SENSOR_BED != 0
-//    else if (nr == index++)
-//        strcpy_P(buffer, PSTR("Buildplate PID"));
-//#endif
     else if (nr == index++)
         strcpy_P(buffer, PSTR("Temperature control"));
     else if (nr == index++)
@@ -214,11 +212,22 @@ static void lcd_preferences_details(uint8_t nr)
             strcpy_P(buffer, PSTR("Standard"));
         }
     }
-    else if (nr == 5)
+    else if (nr == 4)
+    {
+        if (ui_mode & UI_SCROLL_ENTRY)
+        {
+            strcpy_P(buffer, PSTR("Enabled"));
+        }
+        else
+        {
+            strcpy_P(buffer, PSTR("Disabled"));
+        }
+    }
+    else if (nr == 6)
     {
         int_to_string(float(lcd_contrast)*100/255 + 0.5f, buffer, PSTR("%"));
     }
-    else if (nr == 6)
+    else if (nr == 7)
     {
         char *c = buffer;
         if (heater_timeout)
@@ -239,7 +248,7 @@ static void lcd_preferences_details(uint8_t nr)
             strcpy_P(c, PSTR("off"));
         }
     }
-    else if (nr == 12)
+    else if (nr == 13)
     {
         strcpy_P(buffer, PSTR(STRING_CONFIG_H_AUTHOR));
     }
@@ -763,6 +772,34 @@ static void lcd_clicksound_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
     lcd_draw_scroll_entry(offsetY, buffer, flags);
 }
 
+static void lcd_scrollentry_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
+{
+    char buffer[20] = {' '};
+
+    if (nr == 0)
+    {
+        strcpy_P(buffer, PSTR("< RETURN"));
+    }
+    else if (nr == 1)
+    {
+        if (!(ui_mode & UI_SCROLL_ENTRY))
+        {
+            strcpy_P(buffer, PSTR(">"));
+        }
+        strcpy_P(buffer+1, PSTR("No scrolling"));
+    }
+    else if (nr == 2)
+    {
+        if (ui_mode & UI_SCROLL_ENTRY)
+        {
+            strcpy_P(buffer, PSTR(">"));
+        }
+        strcpy_P(buffer+1, PSTR("Scroll filenames"));
+    }
+
+    lcd_draw_scroll_entry(offsetY, buffer, flags);
+}
+
 static void lcd_menu_uimode()
 {
     lcd_scroll_menu(PSTR("User interface"), 3, lcd_uimode_item, NULL);
@@ -814,6 +851,28 @@ static void lcd_menu_clicksound()
     lcd_lib_update_screen();
 }
 
+static void lcd_menu_scrollentry()
+{
+    lcd_scroll_menu(PSTR("Scroll filenames"), 3, lcd_scrollentry_item, NULL);
+    if (lcd_lib_button_pressed)
+    {
+        if (IS_SELECTED_SCROLL(1))
+        {
+            ui_mode &= ~UI_SCROLL_ENTRY;
+        }
+        else if (IS_SELECTED_SCROLL(2))
+        {
+            ui_mode |= UI_SCROLL_ENTRY;
+        }
+        if (ui_mode != GET_UI_MODE())
+        {
+            SET_UI_MODE(ui_mode);
+        }
+        menu.return_to_previous();
+    }
+    lcd_lib_update_screen();
+}
+
 static void lcd_menu_screen_contrast()
 {
     if (lcd_tune_byte(lcd_contrast, 0, 100))
@@ -843,7 +902,7 @@ static void lcd_menu_screen_contrast()
 
 static void lcd_menu_preferences()
 {
-    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 14, lcd_preferences_item, lcd_preferences_details);
+    lcd_scroll_menu(PSTR("PREFERENCES"), BED_MENU_OFFSET + 15, lcd_preferences_item, lcd_preferences_details);
     if (lcd_lib_button_pressed)
     {
         uint8_t index = 0;
@@ -855,6 +914,8 @@ static void lcd_menu_preferences()
             menu.add_menu(menu_t(init_maintenance_led, lcd_menu_maintenance_led, NULL));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_clicksound));
+        else if (IS_SELECTED_SCROLL(index++))
+            menu.add_menu(menu_t(lcd_menu_scrollentry));
         else if (IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_sleeptimer));
         else if (IS_SELECTED_SCROLL(index++))

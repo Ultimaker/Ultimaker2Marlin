@@ -59,11 +59,12 @@
 #define SET_AXIS_DIRECTION(n) do { eeprom_write_byte((uint8_t*)EEPROM_AXIS_DIRECTION, n); } while(0)
 
 // UI Mode
-#define UI_MODE_STANDARD  0
-#define UI_MODE_EXPERT    1
+// UI Mode
+#define UI_MODE_EXPERT    0x01
+#define UI_SCROLL_ENTRY   0x02
 
-#define UI_BEEP_SHORT    32
-#define UI_BEEP_OFF      64
+#define UI_BEEP_SHORT     0x20
+#define UI_BEEP_OFF       0x40
 
 
 // SLEEP/LCD/SERIAL STATE

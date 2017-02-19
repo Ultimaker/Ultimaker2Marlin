@@ -33,8 +33,6 @@ extern uint8_t lcd_cache[LCD_CACHE_SIZE];
 
 extern unsigned long predictedTime;
 
-void getFilenameFromNr(char* buffer, uint8_t nr);
-
 void lcd_menu_print_select();
 void lcd_clear_cache();
 

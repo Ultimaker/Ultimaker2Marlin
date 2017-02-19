@@ -19,6 +19,9 @@ int16_t lcd_setting_min;
 int16_t lcd_setting_max;
 int16_t lcd_setting_start_value;
 
+uint16_t lineEntryPos  = 0;
+int8_t   lineEntryWait = 0;
+
 uint8_t heater_timeout = 3;
 uint16_t backup_temperature[EXTRUDERS] = { 0 };
 
@@ -37,12 +40,10 @@ void eeprom_write_float(const float* addr, float f)
     eeprom_write_dword((uint32_t*)addr, n.i);
 }
 
-uint16_t lineEntryPos  = 0;
-int8_t   lineEntryWait = 0;
 void line_entry_pos_update (uint16_t maxStep)
 {
 	if (lineEntryPos > maxStep) lineEntryPos = 0;
-	// 
+	//
 	lineEntryWait++;
 	if (lineEntryWait >= LINE_ENTRY_WAIT_END)
 	{
@@ -206,7 +207,7 @@ void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags)
 	uint8_t backup_pos = 0;
 	if (flags & MENU_SELECTED)
 	{
-		if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
+		if ((ui_mode & UI_SCROLL_ENTRY) && (buffer_len > LINE_ENTRY_TEXT_LENGHT))
 		{
 			line_entry_pos_update(LINE_ENTRY_MAX_STEP(buffer_len - LINE_ENTRY_TEXT_LENGHT));
 			buffer    += LINE_ENTRY_TEXT_BEGIN();
@@ -220,8 +221,10 @@ void lcd_draw_scroll_entry(uint8_t offsetY, char * buffer, uint8_t flags)
 		//
 		if (backup != '\0')
 			buffer[backup_pos] = backup;
-	}else{
-		if (buffer_len > LINE_ENTRY_TEXT_LENGHT)
+	}
+	else
+    {
+		if ((ui_mode & UI_SCROLL_ENTRY) && (buffer_len > LINE_ENTRY_TEXT_LENGHT))
 		{
 			backup = buffer[LINE_ENTRY_TEXT_LENGHT];
 			buffer[LINE_ENTRY_TEXT_LENGHT] = '\0';

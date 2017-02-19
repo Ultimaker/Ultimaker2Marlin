@@ -4,7 +4,6 @@
 #include "pins.h"
 #include "preferences.h"
 #include "UltiLCD2_low_lib.h"
-#include "UltiLCD2_hi_lib.h"
 #include "tinkergnome.h"
 
 /**
