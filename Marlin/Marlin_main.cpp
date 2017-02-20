@@ -43,6 +43,7 @@
 #include "language.h"
 #include "pins_arduino.h"
 #include "tinkergnome.h"
+#include "powerbudget.h"
 #include "machinesettings.h"
 #include "filament_sensor.h"
 #include "preferences.h"
@@ -543,6 +544,7 @@ void setup()
 
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
+  PowerBudget_RetrieveSettings();
   lifetime_stats_init();
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
