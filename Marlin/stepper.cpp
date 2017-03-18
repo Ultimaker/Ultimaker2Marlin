@@ -29,7 +29,6 @@
 #include "UltiLCD2.h"
 #include "language.h"
 #include "lifetime_stats.h"
-#include "cardreader.h"
 #include "speed_lookuptable.h"
 #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
 #include <SPI.h>
@@ -45,7 +44,7 @@ block_t *current_block;  // A pointer to the block currently being traced
 //===========================================================================
 //=============================private variables ============================
 //===========================================================================
-//static makes it inpossible to be called from outside of this file by extern.!
+//static makes it impossible to be called from outside of this file by extern.!
 
 // Variables used by The Stepper Driver Interrupt
 static unsigned char out_bits;        // The next stepping-bits to be output
@@ -53,7 +52,7 @@ static long counter_x,       // Counter variables for the bresenham line tracer
             counter_y,
             counter_z,
             counter_e;
-volatile static unsigned long step_events_completed; // The number of step events executed in the current block
+volatile static uint32_t step_events_completed; // The number of step events executed in the current block
 #ifdef ADVANCE
   static long advance_rate, advance, final_advance = 0;
   static long old_advance = 0;
@@ -61,10 +60,10 @@ volatile static unsigned long step_events_completed; // The number of step event
 #endif
 static long acceleration_time, deceleration_time;
 //static unsigned long accelerate_until, decelerate_after, acceleration_rate, initial_rate, final_rate, nominal_rate;
-static unsigned short acc_step_rate; // needed for deccelaration start point
-static char step_loops;
-static unsigned short OCR1A_nominal;
-static unsigned short step_loops_nominal;
+static uint16_t acc_step_rate; // needed for deceleration start point
+static uint8_t step_loops;
+static uint8_t step_loops_nominal;
+static uint16_t OCR1A_nominal;
 
 volatile long endstops_trigsteps[3]={0,0,0};
 volatile long endstops_stepsTotal,endstops_stepsDone;
@@ -137,8 +136,13 @@ volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1};
 // intRes = longIn1 * longIn2 >> 24
 // uses:
 // r26 to store 0
-// r27 to store the byte 1 of the 48bit result
-#define MultiU24X24toH16(intRes, longIn1, longIn2) \
+// r27 to store bits 16-23 of the 48bit result. The top bit is used to round the two byte result.
+// note that the lower two bytes and the upper byte of the 48bit result are not calculated.
+// this can cause the result to be out by one as the lower bytes may cause carries into the upper ones.
+// B0 A0 are bits 24-39 and are the returned value
+// C1 B1 A1 is longIn1
+// D2 C2 B2 A2 is longIn2
+#define MultiU24X32toH16(intRes, longIn1, longIn2) \
 asm volatile ( \
 "clr r26 \n\t" \
 "mul %A1, %B2 \n\t" \
@@ -169,6 +173,11 @@ asm volatile ( \
 "lsr r27 \n\t" \
 "adc %A0, r26 \n\t" \
 "adc %B0, r26 \n\t" \
+"mul %D2, %A1 \n\t" \
+"add %A0, r0 \n\t" \
+"adc %B0, r1 \n\t" \
+"mul %D2, %B1 \n\t" \
+"add %B0, r0 \n\t" \
 "clr r1 \n\t" \
 : \
 "=&r" (intRes) \
@@ -184,7 +193,7 @@ asm volatile ( \
 #define MultiU16X8toH16(intRes, charIn1, intIn2) do { (intRes) = (uint32_t(charIn1) * uint32_t(intIn2)) >> 16; } while(0)
 
 // intRes = longIn1 * longIn2 >> 24
-#define MultiU24X24toH16(intRes, longIn1, longIn2) do { (intRes) = (uint64_t(longIn1) * uint64_t(longIn2)) >> 24; } while(0)
+#define MultiU24X32toH16(intRes, longIn1, longIn2) do { (intRes) = (uint64_t(longIn1) * uint64_t(longIn2)) >> 24; } while(0)
 #endif
 
 // Some useful constants
@@ -259,7 +268,7 @@ void enable_endstops(bool check)
 //  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates
 //  first block->accelerate_until step_events_completed, then keeps going at constant speed until
 //  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
-//  The slope of acceleration is calculated with the leib ramp alghorithm.
+//  The slope of acceleration is calculated using v = u + at where t is the accumulated timer values of the steps so far.
 
 void st_wake_up() {
   //  TCNT1 = 0;
@@ -272,8 +281,8 @@ void step_wait(){
 }
 
 
-FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
-  unsigned short timer;
+FORCE_INLINE uint16_t calc_timer(uint16_t step_rate) {
+  uint16_t timer;
   if(step_rate > MAX_STEP_FREQUENCY) step_rate = MAX_STEP_FREQUENCY;
 
   if(step_rate > 20000) { // If steprate > 20kHz >> step 4 times
@@ -293,15 +302,15 @@ FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
   if(step_rate >= (8*256)){ // higher step rate
     const uint8_t* table_address = (const uint8_t*)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
     unsigned char tmp_step_rate = (step_rate & 0x00ff);
-    unsigned short gain = (unsigned short)pgm_read_word_near(table_address+2);
+    uint16_t gain = (uint16_t)pgm_read_word_near(table_address+2);
     MultiU16X8toH16(timer, tmp_step_rate, gain);
-    timer = (unsigned short)pgm_read_word_near(table_address) - timer;
+    timer = (uint16_t)pgm_read_word_near(table_address) - timer;
   }
   else { // lower step rates
     const uint8_t* table_address = (const uint8_t*)&speed_lookuptable_slow[0][0];
     table_address += ((step_rate)>>1) & 0xfffc;
-    timer = (unsigned short)pgm_read_word_near(table_address);
-    timer -= (((unsigned short)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
+    timer = (uint16_t)pgm_read_word_near(table_address);
+    timer -= (((uint16_t)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
   }
   if(timer < 100) { timer = 100; MYSERIAL.print(MSG_STEPPER_TOO_HIGH); MYSERIAL.println(step_rate); }//(20kHz this should never happen)
   return timer;
@@ -352,6 +361,8 @@ ISR(TIMER1_COMPA_vect)
     current_block = plan_get_current_block();
     if (current_block != NULL) {
       trapezoid_generator_reset();
+
+      // Initialize Bresenham counters to 1/2 the ceiling
       counter_x = -(current_block->step_event_count >> 1);
       counter_y = counter_x;
       counter_z = counter_x;
@@ -428,33 +439,61 @@ ISR(TIMER1_COMPA_vect)
             disable_e2();
         }
       #endif
+
+        last_extruder = current_block->active_extruder;
     #if defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
         // adjust motor current
-        digipot_current(2, current_block->active_extruder ? motor_current_e2 : motor_current_setting[2]);
+        digipot_current(2, last_extruder ? motor_current_e2 : motor_current_setting[2]);
     #endif
-        last_extruder = current_block->active_extruder;
-        // enable current stepper
-        if (last_extruder == 0)
-        {
-            enable_e0();
-        }
-        else if (last_extruder == 1)
-        {
-            enable_e1();
-        }
-      #if EXTRUDERS > 2
-        else if (last_extruder == 2)
-        {
-            enable_e2();
-        }
-      #endif
+
+        current_block = NULL;
+
         OCR1A = 2000; //1ms wait
       #ifdef Z_LATE_ENABLE
         bReturn = true;
       #else
         return;
       #endif // Z_LATE_ENABLE
+
       }
+      else
+      {
+#ifdef __AVR
+        uint8_t wait = 0;
+        // enable current stepper
+        if ((last_extruder == 0) && (READ(E0_ENABLE_PIN) != E_ENABLE_ON))
+        {
+            enable_e0();
+            ++wait;
+        }
+        else if ((last_extruder == 1) && (READ(E1_ENABLE_PIN) != E_ENABLE_ON))
+        {
+            enable_e1();
+            ++wait;
+        }
+      #if EXTRUDERS > 2
+        else if ((last_extruder == 2) && (READ(E2_ENABLE_PIN) != E_ENABLE_ON))
+        {
+            enable_e2();
+            ++wait;
+        }
+      #endif
+        if (wait)
+        {
+          OCR1A = 2000; //1ms wait
+        #ifdef Z_LATE_ENABLE
+          bReturn = true;
+        #else
+          return;
+        #endif // Z_LATE_ENABLE
+        }
+#else  // simulator
+    enable_e0();
+    enable_e1();
+    enable_e2();
+#endif
+      }
+
     #ifdef Z_LATE_ENABLE
       if(current_block->steps_z > 0) {
         enable_z();
@@ -465,7 +504,6 @@ ISR(TIMER1_COMPA_vect)
         return;
       }
     #endif
-
 #else
       #ifdef Z_LATE_ENABLE
         if(current_block->steps_z > 0) {
@@ -645,12 +683,10 @@ ISR(TIMER1_COMPA_vect)
       step_events_completed += 1;
       if(step_events_completed >= current_block->step_event_count) break;
     }
-    // Calculare new timer value
-    unsigned short timer;
-    unsigned short step_rate;
-    if (step_events_completed <= (unsigned long int)current_block->accelerate_until) {
+    // Calculate new timer value
+    if (step_events_completed <= (uint32_t)current_block->accelerate_until) {
 
-      MultiU24X24toH16(acc_step_rate, acceleration_time, current_block->acceleration_rate);
+      MultiU24X32toH16(acc_step_rate, acceleration_time, current_block->acceleration_rate);
       acc_step_rate += current_block->initial_rate;
 
       // upper limit
@@ -658,7 +694,7 @@ ISR(TIMER1_COMPA_vect)
         acc_step_rate = current_block->nominal_rate;
 
       // step_rate to timer interval
-      timer = calc_timer(acc_step_rate);
+      uint16_t timer = calc_timer(acc_step_rate);
       OCR1A = timer;
       acceleration_time += timer;
       #ifdef ADVANCE
@@ -672,22 +708,19 @@ ISR(TIMER1_COMPA_vect)
 
       #endif
     }
-    else if (step_events_completed > (unsigned long int)current_block->decelerate_after) {
-      MultiU24X24toH16(step_rate, deceleration_time, current_block->acceleration_rate);
+    else if (step_events_completed > (uint32_t)current_block->decelerate_after) {
+      uint16_t step_rate;
+      MultiU24X32toH16(step_rate, deceleration_time, current_block->acceleration_rate);
 
-      if(step_rate > acc_step_rate) { // Check step_rate stays positive
-        step_rate = current_block->final_rate;
+      if (step_rate < acc_step_rate) { // Still decelerating?
+        step_rate = max(uint16_t(acc_step_rate - step_rate), current_block->final_rate);
       }
       else {
-        step_rate = acc_step_rate - step_rate; // Decelerate from aceleration end point.
+        step_rate = current_block->final_rate;  // lower limit
       }
 
-      // lower limit
-      if(step_rate < current_block->final_rate)
-        step_rate = current_block->final_rate;
-
       // step_rate to timer interval
-      timer = calc_timer(step_rate);
+      uint16_t timer = calc_timer(step_rate);
       OCR1A = timer;
       deceleration_time += timer;
       #ifdef ADVANCE
@@ -705,6 +738,13 @@ ISR(TIMER1_COMPA_vect)
       // ensure we're running at the correct step rate, even if we just came off an acceleration
       step_loops = step_loops_nominal;
     }
+
+#ifdef __AVR
+    // Hack to address stuttering caused by ISR not finishing in time.
+    // When the ISR does not finish in time, the timer will wrap in the computation of the next interrupt time.
+    // This hack replaces the correct (past) time with a time not far in the future.
+    OCR1A = max(OCR1A, TCNT1 + 16);
+#endif
 
     // If current block is finished, reset pointer
     if (step_events_completed >= current_block->step_event_count) {
@@ -770,6 +810,19 @@ ISR(TIMER1_COMPA_vect)
     }
   }
 #endif // ADVANCE
+
+void microstep_init()
+{
+  #if defined(X_MS1_PIN) && X_MS1_PIN > -1
+  const uint8_t microstep_modes[] = MICROSTEP_MODES;
+  pinMode(X_MS2_PIN,OUTPUT);
+  pinMode(Y_MS2_PIN,OUTPUT);
+  pinMode(Z_MS2_PIN,OUTPUT);
+  pinMode(E0_MS2_PIN,OUTPUT);
+  pinMode(E1_MS2_PIN,OUTPUT);
+  for(int i=0;i<=4;i++) microstep_mode(i,microstep_modes[i]);
+  #endif
+}
 
 void st_init()
 {
@@ -933,6 +986,7 @@ void st_init()
   // create_speed_lookuptable.py
   TCCR1B = (TCCR1B & ~(0x07<<CS10)) | (2<<CS10);
 
+  // Init Stepper ISR to 122 Hz for quick starting
   OCR1A = 0x4000;
   TCNT1 = 0;
   ENABLE_STEPPER_DRIVER_INTERRUPT();
@@ -962,8 +1016,13 @@ void st_synchronize()
     }
 }
 
+/**
+ * Set the stepper positions directly in steps
+ */
 void st_set_position(const long &x, const long &y, const long &z, const long &e)
 {
+  st_synchronize(); // Bad to set stepper counts in the middle of a move
+
   CRITICAL_SECTION_START;
   count_position[X_AXIS] = x;
   count_position[Y_AXIS] = y;
@@ -972,18 +1031,24 @@ void st_set_position(const long &x, const long &y, const long &z, const long &e)
   CRITICAL_SECTION_END;
 }
 
+/**
+ * Set the stepper positions directly in steps
+ */
 void st_set_e_position(const long &e)
 {
+  st_synchronize(); // Bad to set stepper counts in the middle of a move
   CRITICAL_SECTION_START;
   count_position[E_AXIS] = e;
   CRITICAL_SECTION_END;
 }
 
+/**
+ * Get a stepper's position in steps.
+ */
 long st_get_position(uint8_t axis)
 {
-  long count_pos;
   CRITICAL_SECTION_START;
-  count_pos = count_position[axis];
+  long count_pos = count_position[axis];
   CRITICAL_SECTION_END;
   return count_pos;
 }
@@ -1014,7 +1079,7 @@ void quickStop()
     current_position[i] = float(st_get_position(i))/axis_steps_per_unit[i];
   }
   current_position[E_AXIS] = (float(st_get_position(E_AXIS))/e_steps_per_unit(active_extruder))/volume_to_filament_length[active_extruder];
-  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+  plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
 }
 
 #if defined(BABYSTEPPING)
@@ -1202,19 +1267,7 @@ void digipot_current(uint8_t driver, int current)
   #endif
 }
 
-void microstep_init()
-{
-  #if defined(X_MS1_PIN) && X_MS1_PIN > -1
-  const uint8_t microstep_modes[] = MICROSTEP_MODES;
-  pinMode(X_MS2_PIN,OUTPUT);
-  pinMode(Y_MS2_PIN,OUTPUT);
-  pinMode(Z_MS2_PIN,OUTPUT);
-  pinMode(E0_MS2_PIN,OUTPUT);
-  pinMode(E1_MS2_PIN,OUTPUT);
-  for(int i=0;i<=4;i++) microstep_mode(i,microstep_modes[i]);
-  #endif
-}
-
+#if defined(X_MS1_PIN) && X_MS1_PIN > -1
 void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2)
 {
   if(ms1 > -1) switch(driver)
@@ -1266,4 +1319,4 @@ void microstep_readings()
       SERIAL_PROTOCOL(   digitalRead(E1_MS1_PIN));
       SERIAL_PROTOCOLLN( digitalRead(E1_MS2_PIN));
 }
-
+#endif

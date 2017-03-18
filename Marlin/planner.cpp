@@ -94,7 +94,7 @@ bool autotemp_enabled=false;
 //===========================================================================
 //=================semi-private variables, used in inline  functions    =====
 //===========================================================================
-block_t block_buffer[BLOCK_BUFFER_SIZE];            // A ring buffer for motion instfructions
+block_t block_buffer[BLOCK_BUFFER_SIZE];            // A ring buffer for motion instructions
 volatile unsigned char block_buffer_head;           // Index of the next block to be pushed
 volatile unsigned char block_buffer_tail;           // Index of the block to process now
 
@@ -114,7 +114,7 @@ static long y_segment_time[3]={MAX_FREQ_TIME + 1,0,0};
 
 // Returns the index of the next block in the ring buffer
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.
-static int8_t next_block_index(int8_t block_index) {
+static uint8_t next_block_index(uint8_t block_index) {
   block_index++;
   if (block_index == BLOCK_BUFFER_SIZE) {
     block_index = 0;
@@ -124,7 +124,7 @@ static int8_t next_block_index(int8_t block_index) {
 
 
 // Returns the index of the previous block in the ring buffer
-static int8_t prev_block_index(int8_t block_index) {
+static uint8_t prev_block_index(uint8_t block_index) {
   if (block_index == 0) {
     block_index = BLOCK_BUFFER_SIZE;
   }
@@ -167,7 +167,7 @@ FORCE_INLINE float intersection_distance(float initial_rate, float final_rate, f
 
 // Calculates trapezoid parameters so that the entry- and exit-speed is compensated by the provided factors.
 
-void calculate_trapezoid_for_block(block_t *block, float entry_factor, float exit_factor) {
+static void calculate_trapezoid_for_block(block_t *block, float entry_factor, float exit_factor) {
   unsigned long initial_rate = ceil(block->nominal_rate*entry_factor); // (step/min)
   unsigned long final_rate = ceil(block->nominal_rate*exit_factor); // (step/min)
 
@@ -235,7 +235,7 @@ FORCE_INLINE float max_allowable_speed(float acceleration, float target_velocity
 
 
 // The kernel called by planner_recalculate() when scanning the plan from last to first entry.
-void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *next) {
+static void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *next) {
   if(!current) {
     return;
   }
@@ -263,11 +263,11 @@ void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *n
 
 // planner_recalculate() needs to go over the current plan twice. Once in reverse and once forward. This
 // implements the reverse pass.
-void planner_reverse_pass() {
+static void planner_reverse_pass() {
   uint8_t block_index = block_buffer_head;
 
   //Make a local copy of block_buffer_tail, because the interrupt can alter it
-  CRITICAL_SECTION_START;
+  CRITICAL_SECTION_START
   unsigned char tail = block_buffer_tail;
   CRITICAL_SECTION_END
 
@@ -286,7 +286,7 @@ void planner_reverse_pass() {
 }
 
 // The kernel called by planner_recalculate() when scanning the plan from first to last entry.
-void planner_forward_pass_kernel(block_t *previous, block_t *current, block_t *next) {
+static void planner_forward_pass_kernel(block_t *previous, block_t *current, block_t *next) {
   if(!previous) {
     return;
   }
@@ -391,12 +391,9 @@ void plan_init()
   previous_speed[2] = 0.0;
   previous_speed[3] = 0.0;
   previous_nominal_speed = 0.0;
-  for(uint8_t e=0; e<EXTRUDERS; e++)
-    volume_to_filament_length[e] = 1.0;
+  for(uint8_t e=0; e<EXTRUDERS; ++e)
+    volume_to_filament_length[e] = 1.0f;
 }
-
-
-
 
 #ifdef AUTOTEMP
 void getHighESpeed()
@@ -536,14 +533,15 @@ void check_axes_activity()
 }
 
 
-float junction_deviation = 0.1;
-// Add a new linear movement to the buffer. steps_x, _y and _z is the absolute position in
-// mm. Microseconds specify how many microseconds the move should take to perform. To aid acceleration
-// calculation the caller must also provide the physical length of the line in millimeters.
+// float junction_deviation = 0.1;
+#define JUNCTION_DEVIATION  0.1f
+
+// Add a new linear movement to the buffer. x, y and z is the signed, absolute target position in
+// millimeters. Feed rate specifies the speed of the motion.
 void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t extruder)
 {
   // Calculate the buffer head after we push this byte
-  int next_buffer_head = next_block_index(block_buffer_head);
+  uint8_t next_buffer_head = next_block_index(block_buffer_head);
 
   // If the buffer is full: good! That means we are well ahead of the robot.
   // Rest here until there is room in the buffer.
@@ -848,7 +846,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
         // Compute maximum junction velocity based on maximum acceleration and junction deviation
         double sin_theta_d2 = sqrt(0.5*(1.0-cos_theta)); // Trig half angle identity. Always positive.
         vmax_junction = min(vmax_junction,
-        sqrt(block->acceleration * junction_deviation * sin_theta_d2/(1.0-sin_theta_d2)) );
+        sqrt(block->acceleration * JUNCTION_DEVIATION * sin_theta_d2/(1.0-sin_theta_d2)) );
       }
     }
   }
@@ -948,24 +946,30 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   st_wake_up();
 }
 
-void plan_set_position(const float &x, const float &y, const float &z, const float &e, const uint8_t extruder)
+void plan_set_position(const float &x, const float &y, const float &z, const float &e, const uint8_t extruder, bool bSynchronize)
 {
   position[X_AXIS] = lround(x*axis_steps_per_unit[X_AXIS]);
   position[Y_AXIS] = lround(y*axis_steps_per_unit[Y_AXIS]);
   position[Z_AXIS] = lround(z*axis_steps_per_unit[Z_AXIS]);
   position[E_AXIS] = lround(e*e_steps_per_unit(extruder)*volume_to_filament_length[extruder]);
-  st_set_position(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS]);
   previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
   previous_speed[0] = 0.0;
   previous_speed[1] = 0.0;
   previous_speed[2] = 0.0;
   previous_speed[3] = 0.0;
+  if (bSynchronize)
+  {
+    st_set_position(position[X_AXIS], position[Y_AXIS], position[Z_AXIS], position[E_AXIS]);
+  }
 }
 
-void plan_set_e_position(const float &e, const uint8_t extruder)
+void plan_set_e_position(const float &e, const uint8_t extruder, bool bSynchronize)
 {
   position[E_AXIS] = lround(e*e_steps_per_unit(extruder)*volume_to_filament_length[extruder]);
-  st_set_e_position(position[E_AXIS]);
+  if (bSynchronize)
+  {
+      st_set_e_position(position[E_AXIS]);
+  }
 }
 
 uint8_t movesplanned()
@@ -977,6 +981,11 @@ uint8_t movesplanned()
 void set_extrude_min_temp(float temp)
 {
   extrude_min_temp=temp;
+}
+
+float get_extrude_min_temp()
+{
+  return extrude_min_temp;
 }
 #endif
 

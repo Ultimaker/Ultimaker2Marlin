@@ -78,12 +78,13 @@ extern block_t *current_block;  // A pointer to the block currently being traced
 void quickStop();
 
 void digitalPotWrite(int address, int value);
-void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2);
-void microstep_mode(uint8_t driver, uint8_t stepping);
 void digipot_init();
 void digipot_current(uint8_t driver, int current);
-void microstep_init();
+#if defined(X_MS1_PIN) && X_MS1_PIN > -1
+void microstep_ms(uint8_t driver, int8_t ms1, int8_t ms2);
+void microstep_mode(uint8_t driver, uint8_t stepping);
 void microstep_readings();
+#endif
 
 #if defined(BABYSTEPPING)
   void babystep(const uint8_t axis,const bool direction); // perform a short step with a single stepper motor, outside of any convention

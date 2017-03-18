@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 
 /*
-    Reprap firmware based on Sprinter and grbl.
+ Reprap firmware based on Sprinter and grbl.
  Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
 
  This program is free software: you can redistribute it and/or modify
@@ -259,7 +259,7 @@ static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l
 unsigned long starttime=0;
 unsigned long stoptime=0;
 
-uint8_t Stopped = false;
+static uint8_t Stopped = 0x0;
 
 #if NUM_SERVOS > 0
   Servo servos[NUM_SERVOS];
@@ -287,6 +287,8 @@ void serial_echopair_P(const char *s_P, double v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
 void serial_echopair_P(const char *s_P, unsigned long v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
+void serial_echopair_P(const char *s_P, unsigned int v)
+    { serialprintPGM(s_P); SERIAL_ECHO(v); }
 void serial_action_P(const char *s_P)
     { serialprintPGM(PSTR("//action:")); serialprintPGM(s_P); SERIAL_EOL; }
 
@@ -312,6 +314,7 @@ extern "C"{
  */
 static void commit_command(bool isSerialCmd)
 {
+  ++buflen;
   if (isSerialCmd)
   {
     //set serial flag for new command
@@ -323,8 +326,7 @@ static void commit_command(bool isSerialCmd)
     serialCmd &= ~(1 << bufindw);
   }
   ++bufindw;
-  bufindw %= BUFSIZE;
-  ++buflen;
+  bufindw &= BUFMASK;
 }
 
 /**
@@ -332,11 +334,10 @@ static void commit_command(bool isSerialCmd)
  */
 static void remove_command()
 {
-    memset(cmdbuffer[bufindr], 0, MAX_CMD_SIZE);
     serialCmd &= ~(1 << bufindr);
-    --buflen;
     ++bufindr;
-    bufindr %= BUFSIZE;
+    bufindr &= BUFMASK;
+    --buflen;
 }
 
 //Clear all the commands in the ASCII command buffer
@@ -389,9 +390,10 @@ static void next_command()
 
 static void prepareenque()
 {
-    while(buflen >= BUFSIZE)
+    while (buflen >= BUFSIZE)
     {
         next_command();
+        checkHitEndstops();
         idle();
     }
 }
@@ -565,7 +567,7 @@ void loop()
 {
   if (printing_state == PRINT_STATE_ABORT)
   {
-    abortPrint();
+    abortPrint(true);
   }
   #ifdef SDSUPPORT
   card.checkautostart(false);
@@ -575,14 +577,14 @@ void loop()
     // process next command
     next_command();
   }
-  if(buflen < (BUFSIZE))
+  if(buflen < BUFSIZE)
   {
     // get next command
     get_command();
   }
   // manage heater and inactivity
-  idle();
   checkHitEndstops();
+  idle();
 }
 
 FORCE_INLINE float code_value()
@@ -723,7 +725,6 @@ inline void get_serial_commands()
 #else
       insertcommand(command, true);
 #endif
-      memset(cmd_line_buffer, 0, MAX_CMD_SIZE);
 
     }
     else if (serial_count >= MAX_CMD_SIZE - 1) {
@@ -751,6 +752,7 @@ inline void get_sdcard_commands()
     if (!card.sdprinting() || card.pause() || (printing_state == PRINT_STATE_ABORT)) return;
 
     uint16_t sd_count = 0;
+    char sd_char = '\0';
     static uint32_t endOfLineFilePosition = 0;
 
     bool card_eof = card.eof();
@@ -776,13 +778,21 @@ inline void get_sdcard_commands()
             return;
         }
 
-        char sd_char = (char)n;
-        card_eof = card.eof();
-        if (card_eof || n == -1
+        if (n<=0)
+        {
+            card_eof = true;
+            sd_char = '\0';
+        }
+        else
+        {
+            card_eof = card.eof();
+            sd_char = (char)n;
+        }
+        if (card_eof
             || sd_char == '\n' || sd_char == '\r'
-            || ((sd_char == '#' || sd_char == ':') && !comment_mode)
-        ) {
-            if (card_eof || (n == -1)) {
+            || ((sd_char == '#' || sd_char == ':') && !comment_mode))
+        {
+            if (card_eof) {
                 SERIAL_PROTOCOLLNPGM(MSG_FILE_PRINTED);
 
                 stoptime=millis();
@@ -808,12 +818,18 @@ inline void get_sdcard_commands()
             endOfLineFilePosition = card.getFilePos();
 
             insertcommand(cmd_line_buffer, false);
-            memset(cmd_line_buffer, 0, MAX_CMD_SIZE);
         }
         else if (sd_count < MAX_CMD_SIZE - 1)
         {
-            if (sd_char == ';') comment_mode = true;
-            if (!comment_mode) cmd_line_buffer[sd_count++] = sd_char;
+            if (sd_char == ';')
+            {
+                comment_mode = true;
+            }
+            else if (!comment_mode)
+            {
+                // add char to line buffer
+                cmd_line_buffer[sd_count++] = sd_char;
+            }
         }
         /**
          * Keep fetching, but ignore normal characters beyond the max length
@@ -825,10 +841,13 @@ inline void get_sdcard_commands()
 
 static void get_command()
 {
-    get_serial_commands();
-  #ifdef SDSUPPORT
-    get_sdcard_commands();
-  #endif //SDSUPPORT
+    if (printing_state != PRINT_STATE_ABORT)
+    {
+          get_serial_commands();
+        #ifdef SDSUPPORT
+          get_sdcard_commands();
+        #endif //SDSUPPORT
+    }
 }
 
 #define DEFINE_PGM_READ_ANY(type, reader)       \
@@ -851,7 +870,8 @@ static inline type array(int axis)          \
 XYZ_CONSTS_FROM_CONFIG(float, home_retract_mm, HOME_RETRACT_MM);
 XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
 
-static void axis_is_at_home(int axis) {
+static void axis_is_at_home(int axis)
+{
     float baseHomePos;
 #ifdef BED_CENTER_AT_0_0
     float maxLength = max_pos[axis] - min_pos[axis];
@@ -917,7 +937,7 @@ static void homeaxis(int axis) {
 
     // Do a fast run to the home position.
     current_position[axis] = 0;
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
     destination[axis] = 1.5 * (max_pos[axis]-min_pos[axis]) * home_dir(axis);
     feedrate = homing_feedrate[axis];
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
@@ -929,7 +949,7 @@ static void homeaxis(int axis) {
             //Move the bed upwards, as most likely something is stuck under the bed when we cannot reach the endstop.
             // We need to move up, as the Z screw is quite strong and will lodge the bed into a position where it is hard to remove by hand.
             current_position[axis] = 0;
-            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+            plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
             destination[axis] = -5 * home_dir(axis);
             plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
             //Disable the motor power so the bed can be moved by hand
@@ -948,7 +968,7 @@ static void homeaxis(int axis) {
 
     // Move back a little bit.
     current_position[axis] = 0;
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
     destination[axis] = -home_retract_mm(axis) * home_dir(axis);
     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
     st_synchronize();
@@ -1067,37 +1087,42 @@ inline void gcode_M105(const char *cmd)
   #if (TEMP_SENSOR_0 != 0) || (TEMP_SENSOR_BED != 0) || defined(HEATER_0_USES_MAX6675)
     SERIAL_PROTOCOLPGM(MSG_OK);
     print_heaterstates();
+    SERIAL_EOL;
   #else // !HAS_TEMP_0 && !HAS_TEMP_BED
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
   #endif
-
-  SERIAL_EOL;
 }
 
 /**
  * G92: Set current position to given X Y Z E
  */
-inline void gcode_G92(const char *cmd) {
-  bool didE = code_seen(cmd, axis_codes[E_AXIS]);
-
-  if (!didE) st_synchronize();
+inline void gcode_G92(const char *cmd)
+{
+  // bool didE = code_seen(cmd, axis_codes[E_AXIS]);
+  // if (!didE) st_synchronize();
 
   bool didXYZ = false;
+  bool didE   = false;
   for(uint8_t i=0; i < NUM_AXIS; ++i)
   {
     if (code_seen(cmd, axis_codes[i]))
     {
       current_position[i] = code_value();
-      if (i != E_AXIS) {
+      if (i == E_AXIS)
+      {
+         didE = true;
+      }
+      else
+      {
         didXYZ = true;
       }
     }
   }
   if (didXYZ)
-    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+    plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
   else if (didE)
-    plan_set_e_position(current_position[E_AXIS], active_extruder);
+    plan_set_e_position(current_position[E_AXIS], active_extruder, false);
 }
 
 static char * truncate_checksum(char *str)
@@ -1127,7 +1152,7 @@ void process_command(const char *strCmd, bool sendAck)
     {
     case 0: // G0 -> G1
     case 1: // G1
-      if(Stopped == false) {
+      if(!Stopped) {
         get_coordinates(strCmd); // For X Y Z E F
         prepare_move(strCmd);
         if (sendAck) ClearToSend();
@@ -1135,14 +1160,14 @@ void process_command(const char *strCmd, bool sendAck)
       }
       //break;
     case 2: // G2  - CW ARC
-      if(Stopped == false) {
+      if(!Stopped) {
         get_arc_coordinates(strCmd);
         prepare_arc_move(true);
         if (sendAck) ClearToSend();
         return;
       }
     case 3: // G3  - CCW ARC
-      if(Stopped == false) {
+      if(!Stopped) {
         get_arc_coordinates(strCmd);
         prepare_arc_move(false);
         if (sendAck) ClearToSend();
@@ -1219,6 +1244,7 @@ void process_command(const char *strCmd, bool sendAck)
       if ((printing_state != PRINT_STATE_START) && (printing_state != PRINT_STATE_ABORT))
         printing_state = PRINT_STATE_HOMING;
 
+      st_synchronize();
       saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
       feedmultiply = 100;
@@ -1226,10 +1252,8 @@ void process_command(const char *strCmd, bool sendAck)
 
       enable_endstops(true);
 
-      for(int8_t i=0; i < NUM_AXIS; i++) {
-        destination[i] = current_position[i];
-      }
-          feedrate = 0.0;
+      memcpy(destination, current_position, sizeof(destination));
+      feedrate = 0.0;
 
 #ifdef DELTA
           // A delta can only safely home all axis at the same time
@@ -1239,7 +1263,7 @@ void process_command(const char *strCmd, bool sendAck)
           current_position[X_AXIS] = 0;
           current_position[Y_AXIS] = 0;
           current_position[Z_AXIS] = 0;
-          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+          plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
 
           destination[X_AXIS] = 3 * AXIS_LENGTH(Z_AXIS);
           destination[Y_AXIS] = 3 * AXIS_LENGTH(Z_AXIS);
@@ -1259,11 +1283,11 @@ void process_command(const char *strCmd, bool sendAck)
           HOMEAXIS(Z);
 
           calculate_delta(current_position);
-          plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS], active_extruder);
+          plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS], active_extruder, true);
 
 #else // NOT DELTA
 
-          home_all_axis = !((code_seen(strCmd, axis_codes[0])) || (code_seen(strCmd, axis_codes[1])) || (code_seen(strCmd, axis_codes[2])));
+          home_all_axis = !((code_seen(strCmd, axis_codes[X_AXIS])) || (code_seen(strCmd, axis_codes[Y_AXIS])) || (code_seen(strCmd, axis_codes[Z_AXIS])));
 
       #if Z_HOME_DIR > 0                      // If homing away from BED do Z first
       #if defined(QUICK_HOME)
@@ -1271,7 +1295,7 @@ void process_command(const char *strCmd, bool sendAck)
       {
         current_position[X_AXIS] = 0; current_position[Y_AXIS] = 0; current_position[Z_AXIS] = 0;
 
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
 
         destination[X_AXIS] = 1.5 * AXIS_LENGTH(X_AXIS) * X_HOME_DIR;
         destination[Y_AXIS] = 1.5 * AXIS_LENGTH(Y_AXIS) * Y_HOME_DIR;
@@ -1284,7 +1308,7 @@ void process_command(const char *strCmd, bool sendAck)
         axis_is_at_home(X_AXIS);
         axis_is_at_home(Y_AXIS);
         axis_is_at_home(Z_AXIS);
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
         destination[X_AXIS] = current_position[X_AXIS];
         destination[Y_AXIS] = current_position[Y_AXIS];
         destination[Z_AXIS] = current_position[Z_AXIS];
@@ -1308,7 +1332,7 @@ void process_command(const char *strCmd, bool sendAck)
       {
         current_position[X_AXIS] = 0;current_position[Y_AXIS] = 0;
 
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
         destination[X_AXIS] = 1.5 * AXIS_LENGTH(X_AXIS) * X_HOME_DIR;
 		destination[Y_AXIS] = 1.5 * AXIS_LENGTH(Y_AXIS) * Y_HOME_DIR;
         feedrate = homing_feedrate[X_AXIS];
@@ -1319,7 +1343,7 @@ void process_command(const char *strCmd, bool sendAck)
 
         axis_is_at_home(X_AXIS);
         axis_is_at_home(Y_AXIS);
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
         destination[X_AXIS] = current_position[X_AXIS];
         destination[Y_AXIS] = current_position[Y_AXIS];
         plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], feedrate/60, active_extruder);
@@ -1351,22 +1375,22 @@ void process_command(const char *strCmd, bool sendAck)
       if(code_seen(strCmd, axis_codes[X_AXIS]))
       {
         if(code_value_long() != 0) {
-          current_position[X_AXIS]=code_value()+add_homeing[0];
+          current_position[X_AXIS]=code_value()+add_homeing[X_AXIS];
         }
       }
 
       if(code_seen(strCmd, axis_codes[Y_AXIS])) {
         if(code_value_long() != 0) {
-          current_position[Y_AXIS]=code_value()+add_homeing[1];
+          current_position[Y_AXIS]=code_value()+add_homeing[Y_AXIS];
         }
       }
 
       if(code_seen(strCmd, axis_codes[Z_AXIS])) {
         if(code_value_long() != 0) {
-          current_position[Z_AXIS]=code_value()+add_homeing[2];
+          current_position[Z_AXIS]=code_value()+add_homeing[Z_AXIS];
         }
       }
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
 #endif // DELTA
 
       #ifdef ENDSTOPS_ONLY_FOR_HOMING
@@ -1400,7 +1424,7 @@ void process_command(const char *strCmd, bool sendAck)
     case 0: // M0 - Unconditional stop - Wait for user button press on LCD
     case 1: // M1 - Conditional stop - Wait for user button press on LCD
     {
-      if (printing_state == PRINT_STATE_RECOVER)
+      if ((printing_state == PRINT_STATE_RECOVER) || (printing_state == PRINT_STATE_ABORT))
         break;
 
       printing_state = PRINT_STATE_WAIT_USER;
@@ -1446,7 +1470,7 @@ void process_command(const char *strCmd, bool sendAck)
         {
           idle();
         }
-        plan_set_e_position(current_position[E_AXIS], active_extruder);
+        plan_set_e_position(current_position[E_AXIS], active_extruder, true);
 //        serial_action_P(PSTR("resume"));
     }
     break;
@@ -1624,7 +1648,12 @@ void process_command(const char *strCmd, bool sendAck)
       break;
     case 109:
     {// M109 - Wait for extruder heater to reach target.
-      if(setTargetedHotend(strCmd, 109)){
+      if (printing_state == PRINT_STATE_ABORT)
+      {
+        break;
+      }
+      if(setTargetedHotend(strCmd, 109))
+	  {
         break;
       }
       #ifdef AUTOTEMP
@@ -1658,8 +1687,7 @@ void process_command(const char *strCmd, bool sendAck)
       bool target_direction = isHeatingHotend(tmp_extruder); // true if heating, false if cooling
 
       #ifdef TEMP_RESIDENCY_TIME
-        long residencyStart;
-        residencyStart = -1;
+        long residencyStart = -1;
         /* continue to loop until we have reached the target temp
           _and_ until TEMP_RESIDENCY_TIME hasn't passed since we reached it */
         while((residencyStart == -1) ||
@@ -1715,7 +1743,7 @@ void process_command(const char *strCmd, bool sendAck)
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1 && TEMP_SENSOR_BED != 0
         if (code_seen(strCmd, 'S')) setTargetBed(code_value());
 
-        if (printing_state == PRINT_STATE_RECOVER)
+        if ((printing_state == PRINT_STATE_RECOVER) || (printing_state == PRINT_STATE_ABORT))
             break;
 
         printing_state = PRINT_STATE_HEATING_BED;
@@ -1906,7 +1934,7 @@ void process_command(const char *strCmd, bool sendAck)
           }
         }
       }
-      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
       break;
     case 115: // M115
       SERIAL_PROTOCOLPGM(MSG_M115_REPORT);
@@ -2019,6 +2047,23 @@ void process_command(const char *strCmd, bool sendAck)
       #endif
       break;
       //TODO: update for all axis, use for loop
+    case 200: // M200 - set filament diameter
+      if(setTargetedHotend(strCmd, 200)){
+        break;
+      }
+      if(code_seen(strCmd, 'D'))
+      {
+          float radius = code_value() / 2;
+          if (abs(radius) < 0.01f)
+          {
+              volume_to_filament_length[tmp_extruder] = 1.0f;
+          }
+          else
+          {
+              volume_to_filament_length[tmp_extruder] = 1.0f / (M_PI * radius * radius);
+          }
+      }
+      break;
     case 201: // M201
       for(int8_t i=0; i < NUM_AXIS; i++)
       {
@@ -2470,7 +2515,7 @@ void process_command(const char *strCmd, bool sendAck)
           #endif
         }
         current_position[E_AXIS]=target[E_AXIS]; //the long retract of L is compensated by manual filament feeding
-        plan_set_e_position(current_position[E_AXIS] / volume_to_filament_length[active_extruder], active_extruder);
+        plan_set_e_position(current_position[E_AXIS] / volume_to_filament_length[active_extruder], active_extruder, true);
         plan_buffer_line(target[X_AXIS], target[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //should do nothing
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], target[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move xy back
         plan_buffer_line(lastpos[X_AXIS], lastpos[Y_AXIS], lastpos[Z_AXIS], target[E_AXIS], feedrate/60, active_extruder); //move z back
@@ -2543,6 +2588,8 @@ void process_command(const char *strCmd, bool sendAck)
     #if EXTRUDERS > 1
         last_extruder = 0xFF;
     #endif
+        // serial_action_P(PSTR("pause"));
+        card.pauseSDPrint();
         while(card.pause()){
           idle();
           if (printing_state == PRINT_STATE_ABORT)
@@ -2551,8 +2598,7 @@ void process_command(const char *strCmd, bool sendAck)
           }
         }
 
-        st_synchronize();
-        plan_set_e_position(target[E_AXIS], active_extruder);
+        plan_set_e_position(target[E_AXIS], active_extruder, true);
 
         if ((printing_state != PRINT_STATE_ABORT) && (card.sdprinting() || HAS_SERIAL_CMD))
         {
@@ -2676,7 +2722,7 @@ void process_command(const char *strCmd, bool sendAck)
     case 999: // M999: Restart after being stopped
       if (printing_state == PRINT_STATE_RECOVER)
         break;
-      Stopped = false;
+      Stopped = 0x0;
       lcd_reset_alert_level();
       gcode_LastN = Stopped_gcode_LastN;
       FlushSerialRequestResend();
@@ -2768,7 +2814,7 @@ void process_command(const char *strCmd, bool sendAck)
     case 10010://M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
         {
             SERIAL_PROTOCOLPGM("ok R:");
-            SERIAL_PROTOCOL_F(lcd_lib_encoder_pos, 10);
+            SERIAL_PROTOCOL(lcd_lib_encoder_pos);
             lcd_lib_encoder_pos = 0;
             if (lcd_lib_button_down)
                 SERIAL_PROTOCOLLNPGM(" B:1");
@@ -2784,14 +2830,16 @@ void process_command(const char *strCmd, bool sendAck)
   else if(code_seen(strCmd, 'T'))
   {
     tmp_extruder = code_value();
-    if(tmp_extruder >= EXTRUDERS) {
+    if(tmp_extruder >= EXTRUDERS)
+    {
       SERIAL_ECHO_START;
       SERIAL_ECHOPGM("T");
       SERIAL_ECHO(tmp_extruder);
       SERIAL_ECHOLNPGM(MSG_INVALID_EXTRUDER);
     }
-    else {
-      #if EXTRUDERS > 1
+    else
+    {
+#if EXTRUDERS > 1
       boolean make_move = false;
       if (swapExtruders() && (tmp_extruder < 2))
       {
@@ -2799,9 +2847,9 @@ void process_command(const char *strCmd, bool sendAck)
       }
       #endif
       if(code_seen(strCmd, 'F')) {
-        #if EXTRUDERS > 1
+#if EXTRUDERS > 1
         make_move = true;
-        #endif
+#endif
         next_feedrate = code_value();
         if(next_feedrate > 0.0) {
           feedrate = next_feedrate;
@@ -2823,10 +2871,11 @@ void process_command(const char *strCmd, bool sendAck)
         }
         // Set the new active extruder and position
         active_extruder = tmp_extruder;
-        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder);
+        plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
 
         // Move to the old position if 'F' was in the parameters
-        if(make_move && Stopped == false) {
+        if((printing_state < PRINT_STATE_ABORT) && make_move && !Stopped && (IS_SD_PRINTING || commands_queued()))
+        {
            prepare_move(strCmd);
         }
       }
@@ -3066,9 +3115,7 @@ static void prepare_move(const char *cmd)
     }
   }
 #endif
-  for(int8_t i=0; i < NUM_AXIS; i++) {
-    current_position[i] = destination[i];
-  }
+  memcpy(current_position, destination, sizeof(current_position));
 }
 
 static void prepare_arc_move(char isclockwise)
@@ -3138,6 +3185,7 @@ void idle()
 
     manage_heater();
     manage_inactivity();
+
     lcd_update();
     lifetime_stats_tick();
 
@@ -3213,9 +3261,8 @@ static void manage_inactivity()
                       EXTRUDER_RUNOUT_SPEED/60.*EXTRUDER_RUNOUT_ESTEPS/e_steps_per_unit(active_extruder), active_extruder);
      current_position[E_AXIS]=oldepos;
      destination[E_AXIS]=oldedes;
-     plan_set_e_position(oldepos, active_extruder);
+     plan_set_e_position(oldepos, active_extruder, true);
      previous_millis_cmd=millis();
-     st_synchronize();
      WRITE(E0_ENABLE_PIN,oldstatus);
     }
   #endif
@@ -3250,7 +3297,7 @@ void kill()
 void Stop(uint8_t reasonNr)
 {
   disable_heater();
-  if(Stopped == false) {
+  if(!Stopped) {
     Stopped = reasonNr;
     Stopped_gcode_LastN = gcode_LastN; // Save last g_code for restart
     SERIAL_ERROR_START;

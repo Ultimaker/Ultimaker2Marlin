@@ -316,7 +316,7 @@ const int8_t dropsegments=5; //everything with less than this number of steps wi
 //The ASCII buffer for receiving from the serial:
 #define MAX_CMD_SIZE 96
 #define BUFSIZE 8
-
+#define BUFMASK 0x07
 
 // Firmware based and LCD controlled retract
 // M207 and M208 can be used to define parameters for the retraction.
