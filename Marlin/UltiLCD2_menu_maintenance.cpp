@@ -156,33 +156,38 @@ static void lcd_menu_maintenance_advanced()
         }
 #endif
 #if TEMP_SENSOR_BED != 0
-        else if (IS_SELECTED_SCROLL(2 + EXTRUDERS))
+        else if (IS_SELECTED_SCROLL(2 + EXTRUDERS))                     // Heatup buildplate
         {
-            enquecommand_P(PSTR("G28 Z0"));
+            enquecommand_P(PSTR("G28 Z"));
             lcd_change_to_menu(lcd_menu_maintenance_advanced_bed_heatup, 0);
         }
 #endif
-        else if (IS_SELECTED_SCROLL(2 + BED_MENU_OFFSET + EXTRUDERS))
+        else if (IS_SELECTED_SCROLL(2 + BED_MENU_OFFSET + EXTRUDERS))   // Home head
         {
             lcd_lib_beep();
-            enquecommand_P(PSTR("G28 X0 Y0"));
+            enquecommand_P(PSTR("G28 X Y"));
+            enquecommand_P(PSTR("M84"));        // Release motors
         }
-        else if (IS_SELECTED_SCROLL(3 + BED_MENU_OFFSET + EXTRUDERS))
+        else if (IS_SELECTED_SCROLL(3 + BED_MENU_OFFSET + EXTRUDERS))   // Lower bed
         {
             lcd_lib_beep();
-            enquecommand_P(PSTR("G28 Z0"));
+            enquecommand_P(PSTR("G28 Z"));
+            enquecommand_P(PSTR("M84"));        // Release motors
         }
-        else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET + EXTRUDERS))
-        {
-            lcd_lib_beep();
-            enquecommand_P(PSTR("G28 Z0"));
-            enquecommand_P(PSTR("G1 Z40"));
-        }
-        else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET + EXTRUDERS))
+        else if (IS_SELECTED_SCROLL(4 + BED_MENU_OFFSET + EXTRUDERS))   // Raise bed
         {
             char buffer[32];
-            enquecommand_P(PSTR("G28 X0 Y0"));
-            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[0]), X_MAX_LENGTH/2, 10);
+            lcd_lib_beep();
+            enquecommand_P(PSTR("G28 Z"));
+            sprintf_P(buffer, PSTR("G1 F%i Z40"), int(homing_feedrate[Z_AXIS]));
+            enquecommand(buffer);
+            // Note: motors remain powered, otherwise the bed will descend by gravity.
+        }
+        else if (IS_SELECTED_SCROLL(5 + BED_MENU_OFFSET + EXTRUDERS))   // Insert material
+        {
+            char buffer[32];
+            enquecommand_P(PSTR("G28 X Y"));
+            sprintf_P(buffer, PSTR("G1 F%i X%i Y%i"), int(homing_feedrate[X_AXIS]), int(X_MAX_LENGTH/2), 10);
             enquecommand(buffer);
             
             lcd_change_to_menu_insert_material(lcd_menu_maintenance_advanced_return);

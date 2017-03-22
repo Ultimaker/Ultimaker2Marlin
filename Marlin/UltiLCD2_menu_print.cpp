@@ -962,7 +962,7 @@ static void lcd_menu_print_pause()
             }
 
             char buffer[32];
-            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), zdiff, END_OF_PRINT_RETRACTION);
+            sprintf_P(buffer, PSTR("M601 X5 Y5 Z%i L%i"), int(zdiff), int(END_OF_PRINT_RETRACTION));
             enquecommand(buffer);
 
             primed = false;

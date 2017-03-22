@@ -527,7 +527,7 @@ void manage_heater()
             max_heating_start_millis[e] = millis();
             max_heating_start_temperature[e] = current_temperature[e];
         }
-        if (millis() > max_heating_start_millis[e] + MAX_HEATING_CHECK_MILLIS)
+        if (millis() - max_heating_start_millis[e] > MAX_HEATING_CHECK_MILLIS)
         {
             //Did not heat up MAX_HEATING_TEMPERATURE_INCREASE in MAX_HEATING_CHECK_MILLIS while the PID was at the maximum.
             //Potential problems could be that the heater is not working, or the temperature sensor is not measuring what the heater is heating.
