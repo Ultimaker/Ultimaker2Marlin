@@ -37,6 +37,9 @@
 #include "watchdog.h"
 #include "Sd2Card.h"
 
+// coefficient for the exponential moving average
+#define ALPHA 0.05f
+#define ONE_MINUS_ALPHA 0.95f
 
 //===========================================================================
 //=============================public variables============================
@@ -44,9 +47,9 @@
 int target_temperature[EXTRUDERS] = { 0 };
 int target_temperature_bed = 0;
 int current_temperature_raw[EXTRUDERS] = { 0 };
-float current_temperature[EXTRUDERS] = { 0.0 };
+float current_temperature[EXTRUDERS] = { 20.0 };
 int current_temperature_bed_raw = 0;
-float current_temperature_bed = 0.0;
+float current_temperature_bed = 20.0;
 #ifdef TEMP_SENSOR_1_AS_REDUNDANT
   int redundant_temperature_raw = 0;
   float redundant_temperature = 0.0;
@@ -732,11 +735,11 @@ static void updateTemperaturesFromRawValues()
 
     for(uint8_t e=0;e<EXTRUDERS;e++)
     {
-        current_temperature[e] = analog2temp(current_temperature_raw[e], e);
+        current_temperature[e] = (ALPHA * analog2temp(current_temperature_raw[e], e)) + ONE_MINUS_ALPHA * current_temperature[e];
     }
-    current_temperature_bed = analog2tempBed(current_temperature_bed_raw);
+    current_temperature_bed = (ALPHA * analog2tempBed(current_temperature_bed_raw)) + ONE_MINUS_ALPHA * current_temperature_bed;
     #ifdef TEMP_SENSOR_1_AS_REDUNDANT
-      redundant_temperature = analog2temp(redundant_temperature_raw, 1);
+      redundant_temperature = (ALPHA * analog2temp(redundant_temperature_raw, 1)) + ONE_MINUS_ALPHA * redundant_temperature;
     #endif
     //Reset the watchdog after we know we have a temperature measurement.
     watchdog_reset();
@@ -1095,16 +1098,16 @@ ISR(TIMER0_COMPB_vect)
   //these variables are only accesible from the ISR, but static, so they don't lose their value
   static unsigned char temp_count = 0;
   static unsigned long raw_temp_0_value = 0;
-  static unsigned long raw_temp_1_value = 0;
-  static unsigned long raw_temp_2_value = 0;
   static unsigned long raw_temp_bed_value = 0;
   static unsigned char temp_state = 5;
   static unsigned char pwm_count = (1 << SOFT_PWM_SCALE);
   static unsigned char soft_pwm_0;
   #if EXTRUDERS > 1
+  static unsigned long raw_temp_1_value = 0;
   static unsigned char soft_pwm_1;
   #endif
   #if EXTRUDERS > 2
+  static unsigned long raw_temp_2_value = 0;
   static unsigned char soft_pwm_2;
   #endif
   #if HEATER_BED_PIN > -1
@@ -1250,8 +1253,12 @@ ISR(TIMER0_COMPB_vect)
     temp_meas_ready = true;
     temp_count = 0;
     raw_temp_0_value = 0;
+#if EXTRUDERS > 1
     raw_temp_1_value = 0;
+#endif
+#if EXTRUDERS > 2
     raw_temp_2_value = 0;
+#endif
     raw_temp_bed_value = 0;
 
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
