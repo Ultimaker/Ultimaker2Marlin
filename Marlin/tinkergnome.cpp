@@ -1352,15 +1352,24 @@ void lcd_menu_print_heatup_tg()
 
 static unsigned long predictTimeLeft()
 {
-    if ((printing_state == PRINT_STATE_HEATING) || (printing_state == PRINT_STATE_HEATING_BED) || (!card.getFilePos()))
+    if ((printing_state == PRINT_STATE_HEATING) || (printing_state == PRINT_STATE_HEATING_BED) || (!card.getFilePos()) || (!card.getFileSize()))
     {
         return 0;
     }
 
-    unsigned long printTime = (millis() - starttime) / 1000L;
+    unsigned long printTime;
+    {
+        unsigned long m(millis());
+        if (starttime >= m)
+        {
+            return 0;
+        }
+        printTime = m/1000L - starttime/1000L;
+    }
+
     float progress = float(card.getFilePos()) / float(card.getFileSize());
 
-    if ((printTime < 60) || (progress < 0.001f))
+    if ((printTime < 60) || (progress < 0.01f))
     {
         return LCD_DETAIL_CACHE_TIME();
     }
@@ -1392,7 +1401,7 @@ static unsigned long predictTimeLeft()
         totalTime = predictedTime;
     }
 
-    return (printTime >= totalTime) ? 1 : totalTime - printTime;
+    return (printTime >= totalTime) ? 0 : totalTime - printTime;
 }
 
 void lcd_menu_printing_tg()
@@ -1434,7 +1443,15 @@ void lcd_menu_printing_tg()
         if (printing_page == 0)
         {
 #ifdef __AVR__
-            uint8_t progress = IS_SD_PRINTING ? card.getFilePos() / ((card.getFileSize() + 123) / 124) : 0;
+            uint8_t progress(0);
+            if IS_SD_PRINTING
+            {
+                uint32_t divisor = (card.getFileSize() + 123) / 124;
+                if (divisor)
+                {
+                    progress = card.getFilePos() / divisor;
+                }
+            }
 #else
             uint8_t progress = 0;
 #endif
@@ -1462,11 +1479,11 @@ void lcd_menu_printing_tg()
                             int_to_time_min(timeLeftSec, buffer);
                             lcd_lib_draw_string(64, 15, buffer);
                         }
+                        // draw progress string right aligned
+                        int_to_string(progress*100/124, buffer, PSTR("%"));
+                        lcd_lib_draw_string_right(15, buffer);
+                        lcd_progressline(progress);
                     }
-                    // draw progress string right aligned
-                    int_to_string(progress*100/124, buffer, PSTR("%"));
-                    lcd_lib_draw_string_right(15, buffer);
-                    lcd_progressline(progress);
                 }
 
                 break;
@@ -1485,10 +1502,10 @@ void lcd_menu_printing_tg()
                 {
                     lcd_lib_draw_stringP(64, 15, PSTR("Pausing..."));
                 }
-                if (!led_glow)
-                {
-                    lcd_lib_tick();
-                }
+//                if (!led_glow)
+//                {
+//                    lcd_lib_tick();
+//                }
                 break;
             }
 
