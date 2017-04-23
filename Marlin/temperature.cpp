@@ -1569,7 +1569,7 @@ void cooldownHotend(uint8_t extruder)
     target_temperature[extruder] = 0;
 }
 
-#ifdef BED_MAXTEMP
+#if (TEMP_SENSOR_BED != 0) && defined(BED_MAXTEMP)
 void setTargetBed(const uint16_t &celsius)
 {
   target_temperature_bed = celsius;
