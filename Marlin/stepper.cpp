@@ -902,8 +902,6 @@ void st_synchronize()
  */
 void st_set_position(const long &x, const long &y, const long &z, const long &e)
 {
-  st_synchronize(); // Bad to set stepper counts in the middle of a move
-
   CRITICAL_SECTION_START;
   count_position[X_AXIS] = x;
   count_position[Y_AXIS] = y;
