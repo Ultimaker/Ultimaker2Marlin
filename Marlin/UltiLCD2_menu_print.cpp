@@ -59,7 +59,7 @@ static void abortPrint()
     char buffer[32];
     if (card.sdprinting)
     {
-    	// we're not printing any more
+        // we're not printing any more
         card.sdprinting = false;
     }
     //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
@@ -71,8 +71,11 @@ static void abortPrint()
     if (primed)
     {
         // set up the end of print retraction
-        sprintf_P(buffer, PSTR("G92 E%i"), int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+        sprintf_P(buffer, PSTR("G92 E%i"), int( ((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]) - (retracted ? retract_length : 0) );
         enquecommand(buffer);
+        // since we have just parked the filament accounting for the retracted length, forget about any G10/G11 retractions that happened at end of this print.
+        retracted = false;
+
         // perform the retraction at the standard retract speed
         sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
         enquecommand(buffer);
@@ -119,22 +122,19 @@ static void checkPrintFinished()
 
 static void doStartPrint()
 {
-	// zero the extruder position
-	current_position[E_AXIS] = 0.0;
-	plan_set_e_position(0);
-	primed = false;
-	position_error = false;
-
-	// since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
-	retracted = false;
+    // zero the extruder position
+    current_position[E_AXIS] = 0.0;
+    plan_set_e_position(0);
+    primed = false;
+    position_error = false;
 
     for(uint8_t e = 0; e<EXTRUDERS; e++)
     {
         if (!LCD_DETAIL_CACHE_MATERIAL(e))
         {
-        	// don't prime the extruder if it isn't used in the (Ulti)gcode
-        	// traditional gcode files typically won't have the Material lines at start, so we won't prime for those
-        	// Also, on dual/multi extrusion files, only prime the extruders that are used in the gcode-file.
+                // don't prime the extruder if it isn't used in the (Ulti)gcode
+                // traditional gcode files typically won't have the Material lines at start, so we won't prime for those
+                // Also, on dual/multi extrusion files, only prime the extruders that are used in the gcode-file.
             continue;
         }
         active_extruder = e;
