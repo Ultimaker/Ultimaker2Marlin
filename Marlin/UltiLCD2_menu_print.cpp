@@ -81,6 +81,11 @@ void abortPrint(bool bQuickstop)
         primed = false;
     }
 
+    // switch off all heaters
+    doCooldown();
+    st_synchronize();
+
+    // home all axis
     if (current_position[Z_AXIS] > max_pos[Z_AXIS] - 30)
     {
         homeHead();
@@ -94,7 +99,6 @@ void abortPrint(bool bQuickstop)
     // finish all moves
     cmd_synchronize();
     finishAndDisableSteppers();
-    doCooldown();
     current_position[E_AXIS] = 0.0f;
     plan_set_e_position(current_position[E_AXIS], active_extruder, true);
 
