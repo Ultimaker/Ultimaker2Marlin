@@ -495,7 +495,7 @@ static void lcd_store_babystep_z()
     lcd_lib_keyclick();
     if (fabs(FLOAT_SETTING(Z_AXIS)) > 0.001)
     {
-        add_homeing[Z_AXIS] += FLOAT_SETTING(Z_AXIS);
+        add_homeing[Z_AXIS] -= FLOAT_SETTING(Z_AXIS);
         Config_StoreSettings();
         FLOAT_SETTING(Z_AXIS) = 0;
     }
