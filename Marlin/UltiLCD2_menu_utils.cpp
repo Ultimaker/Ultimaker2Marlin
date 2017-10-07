@@ -162,10 +162,10 @@ void LCDMenu::removeMenu(menuFunc_t func)
         }
         lastEncoderPos = lcd_lib_encoder_pos = menuStack[currentIndex].encoderPos;
         lcd_lib_button_pressed = false;
-//        if (menuStack[currentIndex].initMenuFunc)
-//        {
-//            menuStack[currentIndex].initMenuFunc();
-//        }
+        if (menuStack[currentIndex].initMenuFunc)
+        {
+            menuStack[currentIndex].initMenuFunc();
+        }
     }
     LED_NORMAL
 }

@@ -265,23 +265,32 @@ static void lcd_preheat_tune_bed()
 
 static void init_preheat()
 {
-    // init preheat Temperature settings
+#if TEMP_SENSOR_BED != 0
+    PREHEAT_FLAG(EXTRUDERS) = (target_temperature_bed>0);
+#endif
+    for(uint8_t e=0; e<EXTRUDERS; ++e)
+    {
+        PREHEAT_FLAG(e) = (target_temperature[e]>0);
+    }
+}
+
+static void add_preheat_menu()
+{
+    // init preheat temperature settings
 #if TEMP_SENSOR_BED != 0
   #if EXTRUDERS == 2
     setTargetBed(material[swapExtruders() ? 1 : 0].bed_temperature);
   #else
     setTargetBed(material[0].bed_temperature);
   #endif
-    PREHEAT_FLAG(EXTRUDERS) = ((int)degTargetBed() > 0) ? 1 : 0;
 #endif
 
     for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
-        PREHEAT_FLAG(e) = 0;
         cooldownHotend(e);
     }
     printing_state = PRINT_STATE_HEATING;
-    menu.add_menu(menu_t(lcd_main_preheat, MAIN_MENU_ITEM_POS(0)));
+    menu.add_menu(menu_t(init_preheat, lcd_main_preheat, NULL, MAIN_MENU_ITEM_POS(0)));
 }
 
 static void lcd_preheat_print()
@@ -574,6 +583,7 @@ static void lcd_main_preheat()
     lcd_lib_draw_hline(3, 124, 13);
 
     char buffer[32] = {0};
+
 #if TEMP_SENSOR_BED != 0
     if ((!PREHEAT_FLAG(EXTRUDERS)) | (current_temperature_bed > target_temperature_bed - 10))
     {
@@ -602,19 +612,15 @@ static void lcd_main_preheat()
     // lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(-1));
     ypos -= LCD_LINE_HEIGHT+1;
 #endif // TEMP_SENSOR_BED
-#if EXTRUDERS > 1
-    // temperature second extruder
-    lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-26, ypos, PSTR("/"));
-    int_to_string(dsp_temperature[1], buffer, PSTR(DEGREE_SYMBOL));
-    lcd_lib_draw_string_right(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-34, ypos, buffer);
-    lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(1));
-    ypos -= LCD_LINE_HEIGHT+1;
-#endif // EXTRUDERS
-    // temperature first extruder
-    lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-26, ypos, PSTR("/"));
-    int_to_string(dsp_temperature[0], buffer, PSTR(DEGREE_SYMBOL));
-    lcd_lib_draw_string_right(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-34, ypos, buffer);
-    lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(0));
+    for (int8_t e=EXTRUDERS-1; e >= 0; --e)
+    {
+        // extruder temperature
+        lcd_lib_draw_string_rightP(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-26, ypos, PSTR("/"));
+        int_to_string(dsp_temperature[e], buffer, PSTR(DEGREE_SYMBOL));
+        lcd_lib_draw_string_right(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-34, ypos, buffer);
+        lcd_lib_draw_heater(LCD_GFX_WIDTH-LCD_CHAR_MARGIN_RIGHT-70, ypos, getHeaterPower(e));
+        ypos -= LCD_LINE_HEIGHT+1;
+    }
 
     menu.process_submenu(get_preheat_menuoption, 2*EXTRUDERS + 2*BED_MENU_OFFSET + 3);
 
@@ -709,7 +715,7 @@ static const menu_t & get_main_expert(uint8_t nr, menu_t &opt)
     uint8_t menu_index = 0;
     if (nr == menu_index++)
     {
-        opt.setData(MENU_NORMAL, init_preheat);
+        opt.setData(MENU_NORMAL, add_preheat_menu);
     }
     else if (nr == menu_index++)
     {
