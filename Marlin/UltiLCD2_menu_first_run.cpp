@@ -420,10 +420,10 @@ static void lcd_menu_first_run_material_load_heatup()
     if (temp < 0) temp = 0;
     if (temp > target)
     {
-        for(uint8_t e=0; e<EXTRUDERS; e++)
+        for(uint8_t e=0; e<EXTRUDERS; ++e)
             volume_to_filament_length[e] = 1.0;//Set the extrusion to 1mm per given value, so we can move the filament a set distance.
 
-        menu.replace_menu(menu_t(lcd_menu_first_run_material_load_insert));
+        menu.replace_menu(menu_t(lcd_menu_first_run_material_load_insert, MAIN_MENU_ITEM_POS(0)));
         temp = target;
     }
 
@@ -454,6 +454,7 @@ static void runMaterialForward()
     retract_acceleration = float(FILAMENT_LONG_ACCELERATION_STEPS) / e_steps_per_unit(active_extruder);
     max_e_jerk = FILAMENT_LONG_MOVE_JERK;
 
+    quickStop();
     current_position[E_AXIS] = 0;
     plan_set_e_position(current_position[E_AXIS], active_extruder, true);
     current_position[E_AXIS] = FILAMENT_FORWARD_LENGTH;
@@ -475,7 +476,6 @@ static void lcd_menu_first_run_material_load_insert()
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], FILAMENT_INSERT_SPEED, 0);
     }
 
-    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_first_run_material_load_forward, runMaterialForward, PSTR("CONTINUE"));
     DRAW_PROGRESS_NR(17);
     lcd_lib_draw_string_centerP(10, PSTR("Insert new material"));
@@ -496,8 +496,7 @@ static void lcd_menu_first_run_material_load_forward()
         lcd_lib_keyclick();
         // led_glow_dir = led_glow = 0;
         digipot_current(2, motor_current_setting[2]*2/3);//Set E motor power lower so the motor will skip instead of grind.
-        menu.replace_menu(menu_t(lcd_menu_first_run_material_load_wait));
-        SELECT_MAIN_MENU_ITEM(0);
+        menu.replace_menu(menu_t(lcd_menu_first_run_material_load_wait, MAIN_MENU_ITEM_POS(0)));
     }
 
     long pos = st_get_position(E_AXIS);
