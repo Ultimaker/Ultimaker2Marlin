@@ -730,7 +730,7 @@ static void updateTemperaturesFromRawValues()
 	current_temperature_raw[0] = read_max6675();
 #endif
 
-    for(uint8_t e=0;e<EXTRUDERS;e++)
+    for(uint8_t e=0;e<1;e++)
     {
         current_temperature[e] = analog2temp(current_temperature_raw[e], e);
     }
