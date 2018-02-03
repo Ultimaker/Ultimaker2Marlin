@@ -239,7 +239,7 @@ Select the correct serial port in Tools ->Serial Port
 Open Marlin.pde
 
 One time change:
-The UM2 made changes to the I2C driver. You will have to remove this driver function from the Arduino IDE by removing the complete TWI_vect interrupt routine (located in arduino/libraries/Wire/utility/twi.c, starting at line 364).
+The UM2 made changes to the I2C driver. You will have to remove this driver function from the Arduino IDE by removing the entire TWI_vect interrupt routine (located in arduino/libraries/Wire/utility/twi.c, starting at line 364).
 Note: when you compile the sources using the makefile you can skip this step.
 
 Click the Verify/Compile button
