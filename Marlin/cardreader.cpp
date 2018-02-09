@@ -58,7 +58,7 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
 
   while (parent.readDir(p, longFilename) > 0)
   {
-    if( DIR_IS_SUBDIR(&p) && lsAction!=LS_Count && lsAction!=LS_GetFilename) // hence LS_SerialPrint
+    if( DIR_IS_SUBDIR(&p) && lsAction!=LS_Count && lsAction!=LS_GetFilename) // hence LS_SerialPrint or SerialPrintLong
     {
 
       char path[13*2];
@@ -79,7 +79,7 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
       SdFile dir;
       if(!dir.open(parent,lfilename, O_READ))
       {
-        if(lsAction==LS_SerialPrint)
+        if(lsAction==LS_SerialPrint || lsAction == LS_SerialPrintLong)
         {
           SERIAL_ECHO_START;
           SERIAL_ECHOLNPGM(MSG_SD_CANT_OPEN_SUBDIR);
@@ -119,6 +119,13 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
         SERIAL_PROTOCOL(prepend);
         SERIAL_PROTOCOLLN(filename);
       }
+      else if(lsAction==LS_SerialPrintLong)
+      {
+        SERIAL_PROTOCOL(prepend);
+        SERIAL_PROTOCOL(longFilename);
+        SERIAL_PROTOCOL(" = ");
+        SERIAL_PROTOCOLLN(filename);
+      }
       else if(lsAction==LS_Count)
       {
         nrFiles++;
@@ -137,6 +144,16 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
 void CardReader::ls()
 {
   lsAction=LS_SerialPrint;
+  if(lsAction==LS_Count)
+  nrFiles=0;
+
+  root.rewind();
+  lsDive("",root);
+}
+
+void CardReader::lsl()
+{
+  lsAction=LS_SerialPrintLong;
   if(lsAction==LS_Count)
   nrFiles=0;
 

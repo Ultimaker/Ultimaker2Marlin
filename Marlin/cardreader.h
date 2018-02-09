@@ -17,7 +17,7 @@
 #endif
 
 #include "SdFile.h"
-enum LsAction {LS_SerialPrint,LS_Count,LS_GetFilename};
+enum LsAction {LS_SerialPrint,LS_Count,LS_GetFilename,LS_SerialPrintLong};
 class CardReader
 {
 public:
@@ -45,6 +45,7 @@ public:
 
 
   void ls();
+  void lsl();
   void chdir(const char * relpath);
   void updir();
   void setroot();
