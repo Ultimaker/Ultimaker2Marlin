@@ -16,8 +16,21 @@
 # define IS_SD_INSERTED true
 #endif
 
+// Move commands used for UltiGCode initialization and cleanup to a shared space
+#define HEATUP_POSITION_COMMAND "G1 F12000 X5 Y10"
+
 #include "SdFile.h"
 enum LsAction {LS_SerialPrint,LS_Count,LS_GetFilename};
+enum UltiInitState {UInit_None, UInit_Heating, UInit_Priming, UInit_Printing, UInit_finishing};
+
+struct GCodeHeader
+{
+    long printTimeSec;
+    long materialMeters[EXTRUDERS];
+    GCodeHeader() { clear(); }
+    void clear() { memset(this, 0, sizeof(*this)); }
+};
+
 class CardReader
 {
 public:
@@ -36,19 +49,24 @@ public:
   void closefile();
   void release();
   void startFileprint();
+  void doUltiInit();
   void pauseSDPrint();
   void getStatus();
   void printingHasFinished();
+  void checkUltiInitState();
 
   void getfilename(const uint8_t nr);
   uint16_t getnrfilenames();
 
+  bool getGCodeHeader();
 
   void ls();
   void chdir(const char * relpath);
   void updir();
   void setroot();
-
+  
+  bool primed;
+  void finishPrint();
 
   FORCE_INLINE bool isFileOpen() { return file.isOpen(); }
   FORCE_INLINE bool eof() { return sdpos>=filesize ;};
@@ -63,6 +81,7 @@ public:
   FORCE_INLINE bool isOk() { return cardOK && card.errorCode() == 0; }
   FORCE_INLINE int errorCode() { return card.errorCode(); }
   FORCE_INLINE void clearError() { card.error(0); }
+  void doCooldown();
   FORCE_INLINE void updateSDInserted()
   {
     bool newInserted = IS_SD_INSERTED;
@@ -81,12 +100,14 @@ public:
   bool saving;
   bool logging;
   bool sdprinting;
+  enum UltiInitState uInitState;
   bool pause;
   bool sdInserted;
   char filename[13];
   char longFilename[LONG_FILENAME_LENGTH];
   bool filenameIsDir;
   int lastnr; //last number of the autostart;
+  struct GCodeHeader header;
 private:
   bool cardOK;
   SdFile root,*curDir,workDir,workDirParents[MAX_DIR_DEPTH];
@@ -106,6 +127,7 @@ private:
   int16_t nrFiles; //counter for the files in the current directory and recycled as position counter for getting the nrFiles'th name in the directory.
   char* diveDirName;
   void lsDive(const char *prepend,SdFile parent);
+  void primeExtruders();
 };
 extern CardReader card;
 #define IS_SD_PRINTING (card.sdprinting)

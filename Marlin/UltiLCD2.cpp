@@ -219,16 +219,6 @@ static void lcd_menu_special_startup()
 }
 #endif//SPECIAL_STARTUP
 
-void doCooldown()
-{
-    for(uint8_t n=0; n<EXTRUDERS; n++)
-        setTargetHotend(0, n);
-    setTargetBed(0);
-    fanSpeed = 0;
-
-    //quickStop();         //Abort all moves already in the planner
-}
-
 void lcd_menu_main()
 {
     lcd_tripple_menu(PSTR("PRINT"), PSTR("MATERIAL"), PSTR("MAINTENANCE"));

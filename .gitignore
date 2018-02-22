@@ -3,6 +3,7 @@ applet/
 *~
 *.orig
 *.rej
+*.gch
 Marlin/debug.log
 Marlin/Marlin.sdf
 Marlin/Marlin.sln

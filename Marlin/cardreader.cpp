@@ -1,10 +1,21 @@
 #include "Marlin.h"
 #include "cardreader.h"
+#include "material.h"
 #include "UltiLCD2.h"
 #include "ultralcd.h"
 #include "stepper.h"
 #include "temperature.h"
 #include "language.h"
+
+void doCooldown()
+{
+    for(uint8_t n=0; n<EXTRUDERS; n++)
+        setTargetHotend(0, n);
+    setTargetBed(0);
+    fanSpeed = 0;
+
+    //quickStop();         //Abort all moves already in the planner
+}
 
 #ifdef SDSUPPORT
 
@@ -21,7 +32,9 @@ CardReader::CardReader()
    logging = false;
    autostart_atmillis=0;
    workDirDepth = 0;
+   uInitState = UInit_None;
    memset(workDirParents, 0, sizeof(workDirParents));
+   primed = false;
 
    autostart_stilltocheck=true; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
    lastnr=0;
@@ -213,6 +226,188 @@ void CardReader::startFileprint()
   }
 }
 
+void CardReader::doUltiInit()
+{
+  bool isGcode = false;
+
+  if(cardOK)
+  {
+    if (isFileOpen()) {
+      isGcode = getGCodeHeader();
+    }
+
+    active_extruder = 0;
+    feedmultiply = 100;
+    if (isGcode) {
+      // Perform UltiGCode initialization
+      enquecommand_P(PSTR("G28"));
+      enquecommand_P(PSTR(HEATUP_POSITION_COMMAND));
+
+      fanSpeedPercent = 0;
+      for (uint8_t extruder = 0; extruder < EXTRUDERS; ++extruder) {
+        if (header.materialMeters[extruder] == 0) {
+          continue;
+        }
+        setTargetBed(max(target_temperature_bed, material[extruder].bed_temperature));
+        setTargetHotend(material[extruder].temperature, extruder);
+        fanSpeedPercent = max(fanSpeedPercent, material[extruder].fan_speed);
+        volume_to_filament_length[extruder] =
+          1.0 / (M_PI * (material[extruder].diameter / 2.0) * (material[extruder].diameter / 2.0));
+        extrudemultiply[extruder] = material[extruder].flow;
+      }
+      uInitState = UInit_Heating;
+    } else {
+      // Not UltiGCode, assume the file itself has init commands
+      fanSpeedPercent = 100;
+      for(uint8_t e=0; e<EXTRUDERS; e++)
+      {
+          volume_to_filament_length[e] = 1.0;
+          extrudemultiply[e] = 100;
+      }
+      uInitState = UInit_None;
+    }
+
+    pause = false;
+  }
+}
+
+void CardReader::checkUltiInitState()
+{
+  switch (uInitState) {
+    case UInit_None:
+      break;
+    case UInit_Heating:
+    {
+      if (current_temperature_bed < target_temperature_bed - TEMP_WINDOW * 2) {
+        break;
+      }
+      bool ready = true;
+      for(uint8_t extruder=0; extruder<EXTRUDERS; extruder++) {
+        if (current_temperature[extruder] < target_temperature[extruder] - TEMP_WINDOW) {
+          ready = false;
+          break;
+        }
+      }
+      if (ready) {
+        // heated up, time to start priming
+        uInitState = UInit_Priming;
+      }
+    }
+      break;
+    case UInit_Priming:
+      if (!primed) {
+        primeExtruders();
+      }
+      uInitState = UInit_Printing;
+      startFileprint();
+    case UInit_Printing:
+      break;
+    case UInit_finishing:
+      finishPrint();
+      uInitState = UInit_None;
+      break;
+  }
+}
+
+void CardReader::primeExtruders()
+{
+  // zero the extruder position
+	current_position[E_AXIS] = 0.0;
+	plan_set_e_position(0);
+	primed = false;
+	position_error = false;
+  // since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
+  retracted = false;
+
+  for (uint8_t extruder = 0; extruder < EXTRUDERS; ++extruder) {
+    if (header.materialMeters[extruder] == 0) {
+      continue;
+    }
+    active_extruder = extruder;
+
+    if (!primed)
+    {
+        // move to priming height
+        current_position[Z_AXIS] = PRIMING_HEIGHT;
+        plan_buffer_line(current_position[X_AXIS],
+          current_position[Y_AXIS],
+          current_position[Z_AXIS],
+          current_position[E_AXIS],
+          homing_feedrate[Z_AXIS],
+          active_extruder);
+        // note that we have primed, so that we know to de-prime at the end
+        primed = true;
+    }
+
+    // undo the end-of-print retraction
+    plan_set_e_position((0.0 - END_OF_PRINT_RETRACTION) / volume_to_filament_length[extruder]);
+    plan_buffer_line(current_position[X_AXIS],
+      current_position[Y_AXIS],
+      current_position[Z_AXIS],
+      current_position[E_AXIS],
+      END_OF_PRINT_RECOVERY_SPEED,
+      extruder);
+
+    // perform additional priming
+    plan_set_e_position(-PRIMING_MM3);
+    plan_buffer_line(current_position[X_AXIS],
+      current_position[Y_AXIS],
+      current_position[Z_AXIS],
+      current_position[E_AXIS],
+      (PRIMING_MM3_PER_SEC * volume_to_filament_length[extruder]),
+      extruder);
+
+#if EXTRUDERS > 1
+    // for extruders other than the first one, perform end of print retraction
+    if (extruder > 0)
+    {
+        plan_set_e_position((END_OF_PRINT_RETRACTION) / volume_to_filament_length[extruder]);
+        plan_buffer_line(current_position[X_AXIS],
+          current_position[Y_AXIS],
+          current_position[Z_AXIS],
+          current_position[E_AXIS],
+          retract_feedrate/60,
+          extruder);
+    }
+#endif
+  }
+  active_extruder = 0;
+  primed = true;
+}
+
+void CardReader::finishPrint()
+{
+  ::doCooldown();
+  clear_command_queue();
+  sdprinting = false;
+  pause = false;
+  enquecommand_P(PSTR("M401"));
+
+  if (primed)
+  {
+    char buffer[64];
+    // set up the end of print retraction
+    sprintf_P(buffer, PSTR("G92 E%i"),
+      int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+    enquecommand(buffer);
+    // perform the retraction at the standard retract speed
+    sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
+    enquecommand(buffer);
+
+    // no longer primed
+    primed = false;
+  }
+
+  if (current_position[Z_AXIS] > Z_MAX_POS - 30)
+  {
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    enquecommand_P(PSTR("G28 Z0"));
+  }else{
+    enquecommand_P(PSTR("G28"));
+  }
+  enquecommand_P(PSTR("M84"));
+}
+
 void CardReader::pauseSDPrint()
 {
   if(sdprinting)
@@ -397,6 +592,42 @@ void CardReader::removeFile(const char* name)
 
 }
 
+bool CardReader::getGCodeHeader()
+{
+  if (cardOK && isFileOpen()) {
+    char buffer[64];
+    bool sawHeader = false;
+    header.clear();
+    uint32_t lastLinePosition = 0;
+
+    for(uint8_t n=0;n<8;n++)
+    {
+        fgets(buffer, sizeof(buffer));
+        buffer[sizeof(buffer)-1] = '\0';
+        while (strlen(buffer) > 0 && buffer[strlen(buffer)-1] < ' ') buffer[strlen(buffer)-1] = '\0';
+        if (strlen(buffer) > 0 && buffer[0] != ';') {
+          setIndex(lastLinePosition);
+          break;
+        }
+        lastLinePosition = getFilePos();
+        if (strncmp_P(buffer, PSTR(";TIME:"), 6) == 0)
+            header.printTimeSec = atol(buffer + 6);
+        else if (strncmp_P(buffer, PSTR(";FLAVOR:UltiGCode"), 10) == 0) {
+          sawHeader = true;
+        } else if (strncmp_P(buffer, PSTR(";MATERIAL:"), 10) == 0)
+            header.materialMeters[0] = atol(buffer + 10);
+#if EXTRUDERS > 1
+        else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
+            header.materialMeters[1] = atol(buffer + 11);
+#endif
+    }
+    if (sawHeader) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void CardReader::getStatus()
 {
   if(cardOK){
@@ -568,11 +799,13 @@ void CardReader::printingHasFinished()
     file.close();
     sdprinting = false;
     pause = false;
+
     if(SD_FINISHED_STEPPERRELEASE)
     {
         //finishAndDisableSteppers();
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
     autotempShutdown();
+    uInitState = UInit_finishing;
 }
 #endif //SDSUPPORT
