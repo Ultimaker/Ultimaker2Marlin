@@ -271,6 +271,143 @@ void CardReader::doUltiInit()
   }
 }
 
+void CardReader::checkUltiInitState()
+{
+  switch (uInitState) {
+    case UInit_None:
+      break;
+    case UInit_Heating:
+    {
+      if (current_temperature_bed < target_temperature_bed - TEMP_WINDOW * 2) {
+        break;
+      }
+      bool ready = true;
+      for(uint8_t extruder=0; extruder<EXTRUDERS; extruder++) {
+        if (current_temperature[extruder] < target_temperature[extruder] - TEMP_WINDOW) {
+          ready = false;
+          break;
+        }
+      }
+      if (ready) {
+        // heated up, time to start priming
+        uInitState = UInit_Priming;
+      }
+    }
+      break;
+    case UInit_Priming:
+      if (!primed) {
+        primeExtruders();
+      }
+      uInitState = UInit_Printing;
+      startFileprint();
+    case UInit_Printing:
+      break;
+    case UInit_finishing:
+      finishPrint();
+      uInitState = UInit_None;
+      break;
+  }
+}
+
+void CardReader::primeExtruders()
+{
+  // zero the extruder position
+	current_position[E_AXIS] = 0.0;
+	plan_set_e_position(0);
+	primed = false;
+	position_error = false;
+  // since we are going to prime the nozzle, forget about any G10/G11 retractions that happened at end of previous print
+  retracted = false;
+
+  for (uint8_t extruder = 0; extruder < EXTRUDERS; ++extruder) {
+    if (header.materialMeters[extruder] == 0) {
+      continue;
+    }
+    active_extruder = extruder;
+
+    if (!primed)
+    {
+        // move to priming height
+        current_position[Z_AXIS] = PRIMING_HEIGHT;
+        plan_buffer_line(current_position[X_AXIS],
+          current_position[Y_AXIS],
+          current_position[Z_AXIS],
+          current_position[E_AXIS],
+          homing_feedrate[Z_AXIS],
+          active_extruder);
+        // note that we have primed, so that we know to de-prime at the end
+        primed = true;
+    }
+
+    // undo the end-of-print retraction
+    plan_set_e_position((0.0 - END_OF_PRINT_RETRACTION) / volume_to_filament_length[extruder]);
+    plan_buffer_line(current_position[X_AXIS],
+      current_position[Y_AXIS],
+      current_position[Z_AXIS],
+      current_position[E_AXIS],
+      END_OF_PRINT_RECOVERY_SPEED,
+      extruder);
+
+    // perform additional priming
+    plan_set_e_position(-PRIMING_MM3);
+    plan_buffer_line(current_position[X_AXIS],
+      current_position[Y_AXIS],
+      current_position[Z_AXIS],
+      current_position[E_AXIS],
+      (PRIMING_MM3_PER_SEC * volume_to_filament_length[extruder]),
+      extruder);
+
+#if EXTRUDERS > 1
+    // for extruders other than the first one, perform end of print retraction
+    if (extruder > 0)
+    {
+        plan_set_e_position((END_OF_PRINT_RETRACTION) / volume_to_filament_length[extruder]);
+        plan_buffer_line(current_position[X_AXIS],
+          current_position[Y_AXIS],
+          current_position[Z_AXIS],
+          current_position[E_AXIS],
+          retract_feedrate/60,
+          extruder);
+    }
+#endif
+  }
+  active_extruder = 0;
+  primed = true;
+}
+
+void CardReader::finishPrint()
+{
+  ::doCooldown();
+  clear_command_queue();
+  sdprinting = false;
+  pause = false;
+  enquecommand_P(PSTR("M401"));
+
+  if (primed)
+  {
+    char buffer[64];
+    // set up the end of print retraction
+    sprintf_P(buffer, PSTR("G92 E%i"),
+      int(((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]));
+    enquecommand(buffer);
+    // perform the retraction at the standard retract speed
+    sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
+    enquecommand(buffer);
+
+    // no longer primed
+    primed = false;
+  }
+
+  if (current_position[Z_AXIS] > Z_MAX_POS - 30)
+  {
+    enquecommand_P(PSTR("G28 X0 Y0"));
+    enquecommand_P(PSTR("G28 Z0"));
+  }else{
+    enquecommand_P(PSTR("G28"));
+  }
+  enquecommand_P(PSTR("M84"));
+}
+
 void CardReader::pauseSDPrint()
 {
   if(sdprinting)

@@ -51,45 +51,8 @@ static void abortPrint()
 {
     postMenuCheck = NULL;
     lifetime_stats_print_end();
-    doCooldown();
-
-    clear_command_queue();
-    char buffer[32];
-    if (card.sdprinting)
-    {
-        // we're not printing any more
-        card.sdprinting = false;
-    }
-    //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
-    card.pause = false;
-    pauseRequested = false;
-
-    enquecommand_P(PSTR("M401"));
-
-    if (primed)
-    {
-        // set up the end of print retraction
-        sprintf_P(buffer, PSTR("G92 E%i"), int( ((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]) - (retracted ? retract_length : 0) );
-        enquecommand(buffer);
-        // since we have just parked the filament accounting for the retracted length, forget about any G10/G11 retractions that happened at end of this print.
-        retracted = false;
-
-        // perform the retraction at the standard retract speed
-        sprintf_P(buffer, PSTR("G1 F%i E0"), int(retract_feedrate));
-        enquecommand(buffer);
-
-        // no longer primed
-        primed = false;
-    }
-
-    if (current_position[Z_AXIS] > Z_MAX_POS - 30)
-    {
-        enquecommand_P(PSTR("G28 X0 Y0"));
-        enquecommand_P(PSTR("G28 Z0"));
-    }else{
-        enquecommand_P(PSTR("G28"));
-    }
-    enquecommand_P(PSTR("M84"));
+    card.primed = primed;
+    card.finishPrint();
 }
 
 static void checkPrintFinished()

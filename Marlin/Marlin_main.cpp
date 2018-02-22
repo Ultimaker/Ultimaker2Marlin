@@ -645,6 +645,7 @@ void get_command()
     }
   }
   #ifdef SDSUPPORT
+  card.checkUltiInitState();
   if(!card.sdprinting) {
     return;
   }
