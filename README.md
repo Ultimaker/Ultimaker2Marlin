@@ -216,6 +216,7 @@ Custom M Codes
 *  M908 - Control digital trimpot directly.
 *  M350 - Set microstepping mode.
 *  M351 - Toggle MS1 MS2 pins directly.
+*  M723 - Print an UltiGCode file from the SD card
 *  M928 - Start SD logging (M928 filename.g) - ended by M29
 *  M999 - Restart after being stopped by error
 

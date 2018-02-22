@@ -1284,7 +1284,7 @@ void process_commands()
         card.removeFile(strchr_pointer + 4);
       }
       break;
-    case 723: // M723 select and print an SD file with UltoGCode prefix and suffix
+    case 723: // M723 select and print an SD file with UltiGCode
       starpos = (strchr(strchr_pointer + 4,'*'));
       if(starpos!=NULL)
         *(starpos-1)='\0';
