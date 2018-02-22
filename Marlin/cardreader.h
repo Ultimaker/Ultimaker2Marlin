@@ -53,7 +53,6 @@ public:
   void pauseSDPrint();
   void getStatus();
   void printingHasFinished();
-  void checkUltiInitState();
 
   void getfilename(const uint8_t nr);
   uint16_t getnrfilenames();
