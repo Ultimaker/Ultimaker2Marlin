@@ -73,11 +73,12 @@ void abortPrint(bool bQuickstop)
     if (primed)
     {
         // perform the end-of-print retraction at the standard retract speed
-        plan_set_e_position(end_of_print_retraction / volume_to_filament_length[active_extruder], active_extruder, true);
+        plan_set_e_position((end_of_print_retraction / volume_to_filament_length[active_extruder]) - (retracted ? retract_length : 0), active_extruder, true);
         current_position[E_AXIS] = 0.0f;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, active_extruder);
 
         // no longer primed
+        retracted = false;
         primed = false;
     }
 
