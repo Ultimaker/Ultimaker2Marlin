@@ -245,7 +245,7 @@ static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
 static bool fromsd[BUFSIZE];
 static int bufindr = 0;
 static int bufindw = 0;
-static int buflen = 0;
+static uint8_t buflen = 0;
 static int serial_count = 0;
 static bool comment_mode = false;
 static char *strchr_pointer; // just a pointer to find chars in the cmd string like X, Y, Z, E, etc
