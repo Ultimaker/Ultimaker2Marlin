@@ -246,16 +246,11 @@ static bool fromsd[BUFSIZE];
 static int bufindr = 0;
 static int bufindw = 0;
 static int buflen = 0;
-//static int i = 0;
-static char serial_char;
 static int serial_count = 0;
-static boolean comment_mode = false;
+static bool comment_mode = false;
 static char *strchr_pointer; // just a pointer to find chars in the cmd string like X, Y, Z, E, etc
 
 const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
-
-//static float tt = 0;
-//static float bt = 0;
 
 //Inactivity shutdown variables
 static unsigned long previous_millis_cmd = 0;
@@ -322,14 +317,14 @@ void enquecommand(const char *cmd)
 {
   if(buflen < BUFSIZE)
   {
-    //this is dangerous if a mixing of serial and this happsens
+    //this is dangerous when a mixing of serial and this happens
     strcpy(&(cmdbuffer[bufindw][0]),cmd);
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("enqueing \"");
     SERIAL_ECHO(cmdbuffer[bufindw]);
     SERIAL_ECHOLNPGM("\"");
     bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
+    buflen++;
   }
 }
 
@@ -337,14 +332,14 @@ void enquecommand_P(const char *cmd)
 {
   if(buflen < BUFSIZE)
   {
-    //this is dangerous if a mixing of serial and this happsens
+    //this is dangerous when a mixing of serial and this happens
     strcpy_P(&(cmdbuffer[bufindw][0]),cmd);
     SERIAL_ECHO_START;
     SERIAL_ECHOPGM("enqueing \"");
     SERIAL_ECHO(cmdbuffer[bufindw]);
     SERIAL_ECHOLNPGM("\"");
     bufindw= (bufindw + 1)%BUFSIZE;
-    buflen += 1;
+    buflen++;
   }
 }
 
@@ -520,7 +515,7 @@ void loop()
     #endif //SDSUPPORT
     if (buflen > 0)
     {
-      buflen = (buflen-1);
+      buflen--;
       bufindr = (bufindr + 1)%BUFSIZE;
     }
   }
@@ -535,7 +530,7 @@ void loop()
 void get_command()
 {
   while( MYSERIAL.available() > 0  && buflen < BUFSIZE) {
-    serial_char = MYSERIAL.read();
+    char serial_char = MYSERIAL.read();
     if(serial_char == '\n' ||
        serial_char == '\r' ||
        (serial_char == ':' && comment_mode == false) ||
@@ -634,7 +629,7 @@ void get_command()
             lastSerialCommandTime = millis();
 #endif
         bufindw = (bufindw + 1)%BUFSIZE;
-        buflen += 1;
+        buflen++;
       }
       serial_count = 0; //clear buffer
     }
@@ -644,7 +639,8 @@ void get_command()
       if(!comment_mode) cmdbuffer[bufindw][serial_count++] = serial_char;
     }
   }
-  #ifdef SDSUPPORT
+
+#ifdef SDSUPPORT
   if(!card.sdprinting)
     return;
   if (serial_count!=0)
@@ -659,7 +655,8 @@ void get_command()
     return;
   }
   static uint32_t endOfLineFilePosition = 0;
-  while( !card.eof()  && buflen < BUFSIZE) {
+  while( !card.eof() && buflen < BUFSIZE)
+  {
     int16_t n=card.get();
     if (card.errorCode())
     {
@@ -681,7 +678,7 @@ void get_command()
         return;
     }
 
-    serial_char = (char)n;
+    char serial_char = (char)n;
     if(serial_char == '\n' ||
        serial_char == '\r' ||
        (serial_char == ':' && comment_mode == false) ||
@@ -725,7 +722,7 @@ void get_command()
     }
   }
 
-  #endif //SDSUPPORT
+#endif //SDSUPPORT
 
 }
 
