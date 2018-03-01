@@ -172,14 +172,14 @@ void lcd_progressbar(uint8_t progress)
 void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback_t entryNameCallback, entryDetailsCallback_t entryDetailsCallback)
 {
     if (lcd_lib_button_pressed)
-		return;//Selection possibly changed the menu, so do not update it this cycle.
+        return; // Selection possibly changed the menu, so do not update it this cycle.
 
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
         lcd_lib_encoder_pos = 0;
 
-	static int16_t viewPos = 0;
-	if (lcd_lib_encoder_pos < 0) lcd_lib_encoder_pos += entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
-	if (lcd_lib_encoder_pos >= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM) lcd_lib_encoder_pos -= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
+    static int16_t viewPos = 0;
+    if (lcd_lib_encoder_pos < 0) lcd_lib_encoder_pos += entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
+    if (lcd_lib_encoder_pos >= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM) lcd_lib_encoder_pos -= entryCount * ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
 
     uint8_t selIndex = uint16_t(lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
 
@@ -201,11 +201,9 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
             continue;
 
         char* ptr = entryNameCallback(itemIdx);
-		//ptr[10] = '\0';
-		ptr[20] = '\0';
+        ptr[20] = '\0';
         if (itemIdx == selIndex)
         {
-            //lcd_lib_set(3, drawOffset+8*n-1, 62, drawOffset+8*n+7);
             lcd_lib_set(3, drawOffset+8*n-1, 124, drawOffset+8*n+7);
             lcd_lib_clear_string(4, drawOffset+8*n, ptr);
         }else{
@@ -220,7 +218,7 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, entryNameCallback
 
     lcd_lib_clear_string_centerP(1, menuNameP);
 
-	entryDetailsCallback(selIndex);
+    entryDetailsCallback(selIndex);
 
     lcd_lib_update_screen();
 }
