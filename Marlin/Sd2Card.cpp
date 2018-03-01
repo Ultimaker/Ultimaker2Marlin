@@ -369,8 +369,7 @@ bool Sd2Card::init(uint8_t sckRateID, uint8_t chipSelectPin) {
  *
  * \param[in] blockNumber Logical block to be read.
  * \param[out] dst Pointer to the location that will receive the data.
- * \return The value one, true, is returned for success and
- * the value zero, false, is returned for failure.
+ * \return true for success and false for failure.
  */
 bool Sd2Card::readBlock(uint32_t blockNumber, uint8_t* dst) {
   uint8_t retryCnt = 3;
@@ -471,8 +470,8 @@ bool Sd2Card::readData(uint8_t* dst, uint16_t count) {
   // transfer data
   spiRead(dst, count);
 
-  // discard CRC
-{
+  // Verify CRC
+  {
     uint16_t calcCrc = CRC_CCITT(dst, count);
     uint16_t recvCrc = spiRec() << 8;
     recvCrc |= spiRec();
@@ -486,7 +485,7 @@ bool Sd2Card::readData(uint8_t* dst, uint16_t count) {
         error(SD_CARD_ERROR_CRC);
         goto fail;
     }
-}
+  }
   chipSelectHigh();
   return true;
 

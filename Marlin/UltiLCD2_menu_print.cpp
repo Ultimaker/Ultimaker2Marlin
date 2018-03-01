@@ -14,6 +14,11 @@
 
 #define HEATUP_POSITION_COMMAND "G1 F12000 X-10 Y10"
 
+#define LCD_CACHE_COUNT 6
+
+#define LCD_DETAIL_CACHE_SIZE (5+4*EXTRUDERS)
+#define LCD_CACHE_SIZE (1 + (2 + LONG_FILENAME_LENGTH) * LCD_CACHE_COUNT + LCD_DETAIL_CACHE_SIZE)
+
 uint8_t lcd_cache[LCD_CACHE_SIZE];
 #define LCD_CACHE_NR_OF_FILES() lcd_cache[(LCD_CACHE_COUNT*(LONG_FILENAME_LENGTH+2))]
 #define LCD_CACHE_ID(n) lcd_cache[(n)]
@@ -195,7 +200,9 @@ static char* lcd_sd_menu_filename_callback(uint8_t nr)
         for(uint8_t idx=0; idx<LCD_CACHE_COUNT; idx++)
         {
             if (LCD_CACHE_ID(idx) == nr)
+            {
                 strcpy(card.longFilename, LCD_CACHE_FILENAME(idx));
+            }
         }
         if (card.longFilename[0] == '\0')
         {
