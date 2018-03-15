@@ -101,7 +101,7 @@ static void checkPrintFinished()
         lcd_menu_print_pause();
     }
 
-    if (!card.sdprinting && !is_command_queued())
+    if (!card.sdprinting && !is_command_queued() && !blocks_queued())
     {
         abortPrint();
         currentMenu = lcd_menu_print_ready;
