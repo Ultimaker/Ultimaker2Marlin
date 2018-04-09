@@ -687,7 +687,11 @@ static float analog2temp(int raw, uint8_t e) {
     // Overflow: Set to last value in the table
     if (i == heater_ttbllen_map[e]) celsius = PGM_RD_W((*tt)[i-1][1]);
 
-    return celsius;
+    #ifdef IDEL_TEMP_CORRECTION
+      return celsius * 1.05769231;  //Sensor Read: 260°C => Real 275°C
+    #else
+      return celsius;
+    #endif
   }
   return ((raw * ((5.0 * 100.0) / 1024.0) / OVERSAMPLENR) * TEMP_SENSOR_AD595_GAIN) + TEMP_SENSOR_AD595_OFFSET;
 }

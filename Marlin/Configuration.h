@@ -10,7 +10,7 @@
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
 #ifndef STRING_CONFIG_H_AUTHOR
-#define STRING_CONFIG_H_AUTHOR "Version DEV" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Version IDEL" // Who made the changes.
 #endif
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
@@ -21,6 +21,10 @@
 // This determines the communication speed of the printer
 #define BAUDRATE 250000
 //#define BAUDRATE 115200
+
+
+
+#define IDEL_TEMP_CORRECTION  //Temperaturkorrektur für Ultimaker2
 
 //// The following define selects which electronics board you have. Please choose the one that matches your setup
 // 10 = Gen7 custom (Alfons3 Version) "https://github.com/Alfons3/Generation_7_Electronics"
@@ -64,7 +68,7 @@
 
 // This defines the number of extruders
 #ifndef EXTRUDERS
-#define EXTRUDERS 1
+#define EXTRUDERS 2
 #endif
 
 //// The following define selects which power supply you have. Please choose the one that matches your setup
@@ -202,7 +206,7 @@
     #define  DEFAULT_Kp 10.0
     #define  DEFAULT_Ki 2.5
     #define  DEFAULT_Kd 100.0
-
+        
 // Makergear
 //    #define  DEFAULT_Kp 7.0
 //    #define  DEFAULT_Ki 0.1
@@ -251,7 +255,7 @@
     #define  DEFAULT_bedKp 124.55
     #define  DEFAULT_bedKi 23.46
     #define  DEFAULT_bedKd 165.29
-
+    
 // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
 #endif // PIDTEMPBED
 

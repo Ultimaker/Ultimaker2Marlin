@@ -51,7 +51,7 @@
 #include <SPI.h>
 #endif
 
-#define VERSION_STRING  "1.0.0"
+#define VERSION_STRING  "2.0.0"
 
 // look here for descriptions of gcodes: http://linuxcnc.org/handbook/gcode/g-code.html
 // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
@@ -69,6 +69,7 @@
 // G90 - Use Absolute Coordinates
 // G91 - Use Relative Coordinates
 // G92 - Set current position to coordinates given
+// G99 - Ignore following G-Codes (by IDEL)
 
 //RepRap M Codes
 // M0   - Unconditional stop - Wait for user to press a button on the LCD (Only if ULTRA_LCD is enabled)
@@ -269,6 +270,9 @@ static uint8_t tmp_extruder;
 
 
 uint8_t Stopped = false;
+
+unsigned long idel_GCodeCountToWait = 0;    //for G99 by IDEL
+unsigned long idel_GCodeCountToIgnore = 0;  //for G99 by IDEL
 
 #if NUM_SERVOS > 0
   Servo servos[NUM_SERVOS];
@@ -895,7 +899,21 @@ void process_commands()
   printing_state = PRINT_STATE_NORMAL;
   if(code_seen('G'))
   {
-    switch((int)code_value())
+    int _codeValue = (int)code_value();
+
+    //G99 - Ignore G-Commands by IDEL
+    //G99 geht immer, damit man es auch wieder abschalten kann!
+    if((_codeValue) != 99){
+      if(idel_GCodeCountToIgnore > 0){
+        if(idel_GCodeCountToWait-- == 0){
+          idel_GCodeCountToWait = 0;
+          idel_GCodeCountToIgnore--;
+          return;
+        }
+      }
+    }
+
+    switch(_codeValue)
     {
     case 0: // G0 -> G1
     case 1: // G1
@@ -1157,6 +1175,19 @@ void process_commands()
         }
       }
       break;
+    case 99: // G99  - Ignore following G-Codes (by IDEL)
+             // P: Anzahl der G-Befehle, die noch abgearbeitet werden (P = Pause)
+             // S: Anzahl der Befehle, die ignoriert werden (S = Skip)
+             // z.B. G99 P5 S3
+             // Nach dem G99 werden 5 Befehle normal abgearbeitet. Danach werden 3 Befehle ignoriert
+             // Ein Aufruf ohne Parameter, setzt die Funktion zurück. Danach werden wieder alle Befehle abgearbeitet
+             
+      idel_GCodeCountToWait = 0;
+      idel_GCodeCountToIgnore = 0;
+      if(code_seen('P')) idel_GCodeCountToWait = code_value();
+      if(code_seen('S')) idel_GCodeCountToIgnore = code_value();
+
+      break;
     }
   }
 
@@ -1168,6 +1199,10 @@ void process_commands()
     case 0: // M0 - Unconditional stop - Wait for user button press on LCD
     case 1: // M1 - Conditional stop - Wait for user button press on LCD
     {
+      //Reset G99 - Ignore Following G-Codes
+      idel_GCodeCountToWait = 0;    //for G99 by IDEL
+      idel_GCodeCountToIgnore = 0;  //for G99 by IDEL
+
       printing_state = PRINT_STATE_WAIT_USER;
       LCD_MESSAGEPGM(MSG_USERWAIT);
       codenum = 0;
@@ -1367,19 +1402,34 @@ void process_commands()
           SERIAL_PROTOCOL_F(degBed(),1);
           SERIAL_PROTOCOLPGM(" /");
           SERIAL_PROTOCOL_F(degTargetBed(),1);
+          SERIAL_PROTOCOLPGM(" B@:");
+          SERIAL_PROTOCOL(getHeaterPower(-1));          
         #endif //TEMP_BED_PIN
+        
+        SERIAL_PROTOCOLPGM(" @:");
+        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
+          
+        #if (EXTRUDERS > 1)
+          for (int8_t e = 0; e < EXTRUDERS; ++e) {
+            SERIAL_PROTOCOLPGM(" T");
+            SERIAL_PROTOCOL(e);
+            SERIAL_PROTOCOLPGM(":");
+            SERIAL_PROTOCOL_F(degHotend(e), 1);
+            SERIAL_PROTOCOLPGM(" /");
+            SERIAL_PROTOCOL_F(degTargetHotend(e), 1);
+            SERIAL_PROTOCOLPGM(" @");
+            SERIAL_PROTOCOL(e);
+            SERIAL_PROTOCOLPGM(":");
+            SERIAL_PROTOCOL(getHeaterPower(e));
+          }
+        #endif
       #else
         SERIAL_ERROR_START;
         SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
       #endif
-
-        SERIAL_PROTOCOLPGM(" @:");
-        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
-
-        SERIAL_PROTOCOLPGM(" B@:");
-        SERIAL_PROTOCOL(getHeaterPower(-1));
-
-        SERIAL_PROTOCOLLN("");
+      
+      SERIAL_PROTOCOLLN("");
+      
       return;
       break;
     case 109:
@@ -2326,6 +2376,10 @@ void process_commands()
     }
     break;
     case 999: // M999: Restart after being stopped
+      //Reset G99 - Ignore Following G-Codes
+      idel_GCodeCountToWait = 0;    //for G99 by IDEL
+      idel_GCodeCountToIgnore = 0;  //for G99 by IDEL
+
       Stopped = false;
       lcd_reset_alert_level();
       gcode_LastN = Stopped_gcode_LastN;
