@@ -32,7 +32,7 @@ char lcd_status_message[LCD_WIDTH+1] = WELCOME_MSG;
 #include "ultralcd_implementation_hitachi_HD44780.h"
 #endif
 
-/** forward declerations **/
+/** forward declarations **/
 
 void copy_and_scalePID_i();
 void copy_and_scalePID_d();
@@ -52,9 +52,9 @@ static void lcd_control_motion_menu();
 static void lcd_control_retract_menu();
 static void lcd_sdcard_menu();
 
-static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audiable feedback that something has happend
+static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audible feedback that something has happened
 
-/* Different types of actions that can be used in menuitems. */
+/* Different types of actions that can be used in menu items. */
 static void menu_action_back(menuFunc_t data);
 static void menu_action_submenu(menuFunc_t data);
 static void menu_action_gcode(const char* pgcode);
@@ -144,7 +144,7 @@ bool lcd_oldcardstatus;
 menuFunc_t currentMenu = lcd_status_screen; /* function pointer to the currently active menu */
 uint32_t lcd_next_update_millis;
 uint8_t lcd_status_update_delay;
-uint8_t lcdDrawUpdate = 2;                  /* Set to none-zero when the LCD needs to draw, decreased after every draw. Set to 2 in LCD routines so the LCD gets atleast 1 full redraw (first redraw is partial) */
+uint8_t lcdDrawUpdate = 2;                  /* Set to none-zero when the LCD needs to draw, decreased after every draw. Set to 2 in LCD routines so the LCD gets at least 1 full redraw (first redraw is partial) */
 
 //prevMenu and prevEncoderPosition are used to store the previous menu location when editing settings.
 menuFunc_t prevMenu = NULL;
@@ -155,10 +155,10 @@ void* editValue;
 int32_t minEditValue, maxEditValue;
 menuFunc_t callbackFunc;
 
-// placeholders for Ki and Kd edits
+// place-holders for Ki and Kd edits
 float raw_Ki, raw_Kd;
 
-/* Main status screen. It's up to the implementation specific part to show what is needed. As this is very display dependend */
+/* Main status screen. It's up to the implementation specific part to show what is needed. As this is very display dependent */
 static void lcd_status_screen()
 {
     if (lcd_status_update_delay)
@@ -880,7 +880,7 @@ void lcd_update()
     {
         lcdDrawUpdate = 2;
         lcd_oldcardstatus = IS_SD_INSERTED;
-        lcd_implementation_init(); // to maybe revive the lcd if static electricty killed it.
+        lcd_implementation_init(); // to maybe revive the LCD if static electricty killed it.
 
         if(lcd_oldcardstatus)
         {
@@ -1272,7 +1272,7 @@ char *ftostr52(const float &x)
 }
 
 // Callback for after editing PID i value
-// grab the pid i value out of the temp variable; scale it; then update the PID driver
+// grab the PID i value out of the temp variable; scale it; then update the PID driver
 void copy_and_scalePID_i()
 {
 #ifdef PIDTEMP
@@ -1282,7 +1282,7 @@ void copy_and_scalePID_i()
 }
 
 // Callback for after editing PID d value
-// grab the pid d value out of the temp variable; scale it; then update the PID driver
+// grab the PID d value out of the temp variable; scale it; then update the PID driver
 void copy_and_scalePID_d()
 {
 #ifdef PIDTEMP

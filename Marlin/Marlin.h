@@ -30,7 +30,7 @@
 # include "Arduino.h"
 #else
 # include "WProgram.h"
-  //Arduino < 1.0.0 does not define this, so we need to do it ourselfs
+  //Arduino < 1.0.0 does not define this, so we need to do it ourselves
 # define analogInputToDigitalPin(p) ((p) + A0)
 #endif
 
@@ -79,7 +79,7 @@ void serial_echopair_P(const char *s_P, double v);
 void serial_echopair_P(const char *s_P, unsigned long v);
 
 
-//things to write to serial from Programmemory. saves 400 to 2k of RAM.
+//Things to write to serial from Program memory. Saves 400 to 2k of RAM.
 FORCE_INLINE void serialprintPGM(const char *str)
 {
   char ch=pgm_read_byte(str);
@@ -177,8 +177,8 @@ bool IsStopped();
 uint8_t StoppedReason();
 
 void clear_command_queue();
-void enquecommand(const char *cmd); //put an ascii command at the end of the current buffer.
-void enquecommand_P(const char *cmd); //put an ascii command at the end of the current buffer, read from flash
+void enquecommand(const char *cmd); //put an ASCII command at the end of the current buffer.
+void enquecommand_P(const char *cmd); //put an ASCII command at the end of the current buffer, read from flash
 bool is_command_queued();
 uint8_t commands_queued();
 void prepare_arc_move(char isclockwise);
