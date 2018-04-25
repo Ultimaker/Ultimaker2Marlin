@@ -127,13 +127,12 @@ class MarlinSerial //: public Stream
     }
 
 
-    private:
+  private:
     void printNumber(unsigned long, uint8_t);
     void printFloat(double, uint8_t);
 
 
   public:
-
     FORCE_INLINE void write(const char *str)
     {
       while (*str)
