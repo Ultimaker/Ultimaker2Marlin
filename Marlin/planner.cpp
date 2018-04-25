@@ -847,7 +847,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
     vmax_junction = block->nominal_speed;
     //    }
     if (xy_jerk > max_xy_jerk) {
-      vmax_junction_factor = (max_xy_jerk/xy_jerk);
+      vmax_junction_factor = (max_xy_jerk / xy_jerk);
     }
     if(fabs(current_speed[Z_AXIS] - previous_speed[Z_AXIS]) > max_z_jerk) {
       vmax_junction_factor= min(vmax_junction_factor, (max_z_jerk/fabs(current_speed[Z_AXIS] - previous_speed[Z_AXIS])));

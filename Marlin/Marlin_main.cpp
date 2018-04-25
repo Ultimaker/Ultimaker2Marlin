@@ -53,7 +53,7 @@
 
 #define VERSION_STRING  "1.0.0"
 
-// look here for descriptions of gcodes: http://linuxcnc.org/handbook/gcode/g-code.html
+// look here for descriptions of G-codes: http://linuxcnc.org/handbook/gcode/g-code.html
 // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
 
 //Implemented Codes
@@ -120,7 +120,7 @@
 // M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
 // M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) im mm/sec^2  also sets minimum segment time in ms (B20000) to prevent buffer underruns and M20 minimum feedrate
 // M205 -  advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk
-// M206 - set additional homeing offset
+// M206 - set additional homing offset
 // M207 - set retract length S[positive mm] F[feedrate mm/sec] Z[additional zlift/hop]
 // M208 - set recover=unretract length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
 // M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
@@ -136,10 +136,10 @@
 // M304 - Set bed PID parameters P I and D
 // M400 - Finish all moves
 // M401 - Cancel as many moves as possible
-// M500 - stores paramters in EEPROM
+// M500 - stores parameters in EEPROM
 // M501 - reads parameters from EEPROM (if you need reset them after you changed them temporarily).
 // M502 - reverts to the default "factory settings".  You still need to store them in EEPROM afterwards if you want to.
-// M503 - print the current settings (from memory not from eeprom)
+// M503 - print the current settings (from memory not from EEPROM)
 // M540 - Use S[0|1] to enable or disable the stop SD card print on endstop hit (requires ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED)
 // M600 - Pause for filament change X[pos] Y[pos] Z[relative lift] E[initial retract] L[later retract distance for removal]
 // M907 - Set digital trimpot motor current using axis codes.
@@ -248,7 +248,7 @@ static int bufindw = 0;
 static uint8_t buflen = 0;
 static int serial_count = 0;
 static bool comment_mode = false;
-static char *strchr_pointer; // just a pointer to find chars in the cmd string like X, Y, Z, E, etc
+static char *strchr_pointer; // just a pointer to find chars in the command string like X, Y, Z, E, etc
 
 const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 
@@ -1464,7 +1464,7 @@ void process_commands()
         LCD_MESSAGEPGM(MSG_BED_HEATING);
         if (code_seen('S')) setTargetBed(code_value());
         codenum = millis();
-        while(current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
+        while (current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
         {
           if(( millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
           {
@@ -1564,7 +1564,7 @@ void process_commands()
       }
       else
       {
-        bool all_axis = !((code_seen(axis_codes[0])) || (code_seen(axis_codes[1])) || (code_seen(axis_codes[2]))|| (code_seen(axis_codes[3])));
+        bool all_axis = !((code_seen(axis_codes[X_AXIS])) || (code_seen(axis_codes[Y_AXIS])) || (code_seen(axis_codes[Z_AXIS]))|| (code_seen(axis_codes[E_AXIS])));
         if(all_axis)
         {
           st_synchronize();
@@ -1698,7 +1698,7 @@ void process_commands()
         if(code_seen(axis_codes[i])) max_feedrate[i] = code_value();
       }
       break;
-    case 204: // M204 acceleration: S - normal moves;  T - filament only moves
+    case 204: // M204 acceleration: S - normal moves; T - filament only moves
       {
         if(code_seen('S')) acceleration = code_value() ;
         if(code_seen('T')) retract_acceleration = code_value() ;
@@ -1804,7 +1804,7 @@ void process_commands()
     {
       if(code_seen('S'))
       {
-        extrudemultiply[active_extruder] = code_value() ;
+        extrudemultiply[active_extruder] = code_value();
       }
     }
     break;

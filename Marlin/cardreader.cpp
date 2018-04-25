@@ -23,7 +23,7 @@ CardReader::CardReader()
    workDirDepth = 0;
    memset(workDirParents, 0, sizeof(workDirParents));
 
-   autostart_stilltocheck=true; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
+   autostart_stilltocheck=true; //the SD start is delayed, because otherwise the serial cannot answer fast enough to make contact with the host software.
    lastnr=0;
   //power to SD reader
   #if SDPOWER > -1
@@ -88,8 +88,6 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
       }
       lsDive(path,dir);
       //close done automatically by destructor of SdFile
-
-
     }
     else
     {
@@ -105,7 +103,6 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
 
       if (!DIR_IS_FILE_OR_SUBDIR(&p)) continue;
       filenameIsDir=DIR_IS_SUBDIR(&p);
-
 
       if(!filenameIsDir)
       {
@@ -128,7 +125,6 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
         if(cnt==nrFiles)
           return;
         cnt++;
-
       }
     }
   }
@@ -184,7 +180,6 @@ void CardReader::initsd()
     SERIAL_ECHOLNPGM(MSG_SD_WORKDIR_FAIL);
   }
   */
-
 }
 
 void CardReader::setroot()
@@ -236,7 +231,6 @@ void CardReader::openFile(const char* name,bool read)
   sdprinting = false;
   pause = false;
 
-
   SdFile myDir;
   curDir=&root;
   const char *fname=name;
@@ -278,7 +272,6 @@ void CardReader::openFile(const char* name,bool read)
         //SERIAL_ECHOLN(fname);
         break;
       }
-
     }
   }
   else //relative path
@@ -322,7 +315,6 @@ void CardReader::openFile(const char* name,bool read)
       lcd_setstatus(fname);
     }
   }
-
 }
 
 void CardReader::removeFile(const char* name)
@@ -332,7 +324,6 @@ void CardReader::removeFile(const char* name)
   file.close();
   sdprinting = false;
   pause = false;
-
 
   SdFile myDir;
   curDir=&root;
@@ -375,7 +366,6 @@ void CardReader::removeFile(const char* name)
         //SERIAL_ECHOLN(fname);
         break;
       }
-
     }
   }
   else //relative path
@@ -394,7 +384,6 @@ void CardReader::removeFile(const char* name)
       SERIAL_PROTOCOL(fname);
       SERIAL_PROTOCOLLNPGM(".");
     }
-
 }
 
 void CardReader::getStatus()
@@ -414,6 +403,7 @@ void CardReader::getStatus()
     SERIAL_PROTOCOLLN(card.errorCode());
   }
 }
+
 void CardReader::write_command(char *buf)
 {
   char* begin = buf;
@@ -510,7 +500,6 @@ void CardReader::getfilename(const uint8_t nr)
   nrFiles=nr;
   curDir->rewind();
   lsDive("",*curDir);
-
 }
 
 uint16_t CardReader::getnrfilenames()
