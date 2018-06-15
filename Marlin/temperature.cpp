@@ -811,6 +811,7 @@ void tp_init()
 
   // Set analog inputs
   ADCSRA = 1<<ADEN | 1<<ADSC | 1<<ADIF | 0x07;
+  // Disable the digital inputs that are shared with the ADC. This will reduce current consumption.
   DIDR0 = 0;
   #ifdef DIDR2
     DIDR2 = 0;
