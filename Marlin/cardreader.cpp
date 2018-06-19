@@ -265,10 +265,10 @@ void CardReader::openFile(const char* name,bool read)
         curDir=&myDir;
         dirname_start=dirname_end+1;
       }
-      else // the reminder after all /fsa/fdsa/ is the filename
+      else // the remainder after all /fsa/fdsa/ is the filename
       {
         fname=dirname_start;
-        //SERIAL_ECHOLN("remaider");
+        //SERIAL_ECHOLN("remainder");
         //SERIAL_ECHOLN(fname);
         break;
       }

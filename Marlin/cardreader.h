@@ -12,7 +12,7 @@
 #  define IS_SD_INSERTED (READ(SDCARDDETECT)==0)
 # endif //SDCARDTETECTINVERTED
 #else
-//If we don't have a card detect line, aways asume the card is inserted
+//If we don't have a card detect line, aways assume the card is inserted.
 # define IS_SD_INSERTED true
 #endif
 
@@ -27,7 +27,7 @@ public:
   void write_command(char *buf);
   bool write_string(char* buffer);
   //files auto[0-9].g on the sd card are performed in a row
-  //this is to delay autostart and hence the initialisaiton of the sd card to some seconds after the normal init, so the device is available quick after a reset
+  //this is to delay autostart and hence the initialisation of the SD card to some seconds after the normal init, so the device is available quick after a reset.
 
   void checkautostart(bool x);
   void openFile(const char* name,bool read);
@@ -96,11 +96,10 @@ private:
   SdVolume volume;
   SdFile file;
   uint32_t filesize;
-  //int16_t n;
   unsigned long autostart_atmillis;
   uint32_t sdpos ;
 
-  bool autostart_stilltocheck; //the sd start is delayed, because otherwise the serial cannot answer fast enought to make contact with the hostsoftware.
+  bool autostart_stilltocheck; //the sd start is delayed, because otherwise the serial cannot answer fast enough to make contact with the host software.
 
   LsAction lsAction; //stored for recursion.
   int16_t nrFiles; //counter for the files in the current directory and recycled as position counter for getting the nrFiles'th name in the directory.
