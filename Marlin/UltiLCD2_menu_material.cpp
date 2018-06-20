@@ -128,7 +128,9 @@ static void lcd_menu_change_material_preheat()
     if (temp < 0) temp = 0;
     if (temp > target - 5 && temp < target + 5)
     {
-        if ((signed long)(millis() - preheat_end_time) > 0)
+        // Besides the nozzle heating up, we want a minimum time for the material to get hot as well (not only on the outside).
+        if (((signed long)(millis() - preheat_end_time) > 0)
+            || card.pause)      // Optimization: No need to wait when we are paused as the material is molten already.
         {
             set_extrude_min_temp(0);
 
