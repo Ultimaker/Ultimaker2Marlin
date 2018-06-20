@@ -191,7 +191,7 @@ Custom M Codes
 *  M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
 *  M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) im mm/sec^2  also sets minimum segment time in ms (B20000) to prevent buffer underruns and M20 minimum feedrate
 *  M205 -  advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk
-*  M206 - set additional homeing offset
+*  M206 - set additional homing offset
 *  M207 - set retract length S[positive mm] F[feedrate mm/sec] Z[additional zlift/hop]
 *  M208 - set recover=unretract length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
 *  M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.

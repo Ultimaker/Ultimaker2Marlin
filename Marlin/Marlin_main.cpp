@@ -165,7 +165,7 @@ int feedmultiply = 100; //100->1 200->2
 int saved_feedmultiply;
 int extrudemultiply[EXTRUDERS] = ARRAY_BY_EXTRUDERS(100, 100, 100); //100->1 200->2
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
-float add_homeing[3]={0,0,0};
+float add_homing[3]={0,0,0};
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 // Extruder offset, only in XY plane
@@ -768,9 +768,9 @@ XYZ_CONSTS_FROM_CONFIG(float, home_retract_mm, HOME_RETRACT_MM);
 XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
 
 static void axis_is_at_home(int axis) {
-  current_position[axis] = base_home_pos(axis) + add_homeing[axis];
-  min_pos[axis] =          base_min_pos(axis);// + add_homeing[axis];
-  max_pos[axis] =          base_max_pos(axis);// + add_homeing[axis];
+  current_position[axis] = base_home_pos(axis) + add_homing[axis];
+  min_pos[axis] =          base_min_pos(axis);// + add_homing[axis];
+  max_pos[axis] =          base_max_pos(axis);// + add_homing[axis];
 }
 
 // Move the given axis to the home position.
@@ -1111,19 +1111,19 @@ static void process_command()
       if(code_seen(axis_codes[X_AXIS]))
       {
         if(code_value_long() != 0) {
-          current_position[X_AXIS]=code_value()+add_homeing[0];
+          current_position[X_AXIS]=code_value()+add_homing[0];
         }
       }
 
       if(code_seen(axis_codes[Y_AXIS])) {
         if(code_value_long() != 0) {
-          current_position[Y_AXIS]=code_value()+add_homeing[1];
+          current_position[Y_AXIS]=code_value()+add_homing[1];
         }
       }
 
       if(code_seen(axis_codes[Z_AXIS])) {
         if(code_value_long() != 0) {
-          current_position[Z_AXIS]=code_value()+add_homeing[2];
+          current_position[Z_AXIS]=code_value()+add_homing[2];
         }
       }
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
@@ -1722,7 +1722,7 @@ static void process_command()
     case 206: // M206 - Set additional homing offset
       for(int8_t i=0; i < 3; i++)
       {
-        if(code_seen(axis_codes[i])) add_homeing[i] = code_value();
+        if(code_seen(axis_codes[i])) add_homing[i] = code_value();
       }
       break;
     #ifdef FWRETRACT
