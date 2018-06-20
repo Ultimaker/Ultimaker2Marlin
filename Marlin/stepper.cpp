@@ -641,7 +641,11 @@ ISR(TIMER1_COMPA_vect)
     // Hack to address stuttering caused by ISR not finishing in time.
     // When the ISR does not finish in time, the timer will wrap in the computation of the next interrupt time.
     // This hack replaces the correct (past) time with a time not far in the future.
-    OCR1A = max(OCR1A, TCNT1 + 16);
+    // (Note that OCR1A and TCNT1 are registers, so using the max() macro or std::max() can cause problems, especially when compiling the simulator)
+    if (OCR1A < TCNT1 + 16)
+	{
+        OCR1A = TCNT1 + 16;
+	}
 
     // If current block is finished, reset pointer
     if (step_events_completed >= current_block->step_event_count) {
