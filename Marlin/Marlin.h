@@ -90,10 +90,6 @@ FORCE_INLINE void serialprintPGM(const char *str)
   }
 }
 
-
-void get_command();
-void process_commands();
-
 void manage_inactivity();
 
 #if defined(X_ENABLE_PIN) && X_ENABLE_PIN > -1
@@ -152,11 +148,6 @@ void manage_inactivity();
 
 enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
 
-
-void FlushSerialRequestResend();
-void ClearToSend();
-
-void get_coordinates();
 #ifdef DELTA
 void calculate_delta(float cartesian[3]);
 #endif
@@ -181,7 +172,6 @@ void enquecommand(const char *cmd); //put an ASCII command at the end of the cur
 void enquecommand_P(const char *cmd); //put an ASCII command at the end of the current buffer, read from flash
 bool is_command_queued();
 uint8_t commands_queued();
-void prepare_arc_move(char isclockwise);
 void clamp_to_software_endstops(float target[3]);
 
 #ifdef FAST_PWM_FAN

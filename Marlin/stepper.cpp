@@ -289,7 +289,7 @@ FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
   step_rate -= (F_CPU/500000); // Correct for minimal speed
   if(step_rate >= (8*256)){ // higher step rate
     const uint8_t* table_address = (const uint8_t*)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
-    unsigned char tmp_step_rate = (step_rate & 0x00ff);
+    uint8_t tmp_step_rate = (step_rate & 0x00ff);
     unsigned short gain = (unsigned short)pgm_read_word_near(table_address+2);
     MultiU16X8toH16(timer, tmp_step_rate, gain);
     timer = (unsigned short)pgm_read_word_near(table_address) - timer;
@@ -337,6 +337,8 @@ FORCE_INLINE void trapezoid_generator_reset() {
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
 // It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
+// This function is timing critical, adding too much code/time/instructions in here will cause broken behaviour at high movement speeds.
+// Do not touch this function unless you really know what you are doing.
 ISR(TIMER1_COMPA_vect)
 {
   // If there is no current block, attempt to pop one from the buffer
