@@ -260,7 +260,7 @@ void lcd_menu_main()
 
 
 #define BREAKOUT_PADDLE_WIDTH 21
-//Use the lcd_cache memory to store breakout data, so we do not waste memory. (i.e. 23 bytes of RAM saved, wow.)
+// Overlap the breakout data on the lcd_cache memory, so this fun element doesn't waste memory. (total of 23 bytes RAM saved)
 #define breakout_buf    ((char*)&lcd_cache)
 #define ball_x          (*(int16_t*)&breakout_buf[3*5])
 #define ball_y          (*(int16_t*)&breakout_buf[3*5+2])
