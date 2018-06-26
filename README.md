@@ -223,8 +223,8 @@ Custom M Codes
 Configuring and compilation:
 ============================
 
-Install the arduino software IDE/toolset v23 (Some configurations also work with 1.x.x)
-   http://www.arduino.cc/en/Main/Software
+Install the Classic Arduino software IDE/toolset v1.0.5
+   https://www.arduino.cc/en/Main/OldSoftwareReleases#1.0.x
 
 Copy the Marlin firmware
    https://github.com/Ultimaker/Ultimaker2Marlin
