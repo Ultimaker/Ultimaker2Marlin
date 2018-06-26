@@ -1,4 +1,3 @@
-==========================
 Marlin 3D Printer Firmware
 ==========================
 
@@ -9,8 +8,8 @@ Quick Information
 This RepRap firmware is a mashup between <a href="https://github.com/kliment/Sprinter">Sprinter</a>, <a href="https://github.com/simen/grbl/tree">grbl</a> and many original parts.
 
 Derived from Sprinter and Grbl by Erik van der Zalm.
-Sprinters lead developers are Kliment and caru.
-Grbls lead developer is Simen Svale Skogsrud. Sonney Jeon (Chamnit) improved some parts of grbl
+Sprinter's lead developers are Kliment and Caru.
+Grbls lead developer is Simen Svale Skogsrud. Sonney Jeon (Chamnit) improved some parts of grbl.
 A fork by bkubicek for the Ultimaker was merged, and further development was aided by him.
 Some features have been added by:
 Lampmaker, Bradley Feldman, and others...
@@ -61,7 +60,8 @@ It leads to less over-deposition at corners, especially at flat angles.
 
 *Arc support:*
 
-Slic3r can find curves that, although broken into segments, were meant to describe an arc.
+Arc support: Old versions of Slic3r (before v2.0) can find curves that, although broken into segments, 
+were meant to describe an arc.
 Marlin is able to print those arcs. The advantage is the firmware can choose the resolution,
 and can perform the arc with nearly constant velocity, resulting in a nice finish.
 Also, less serial communication is needed.
