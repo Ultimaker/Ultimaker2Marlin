@@ -709,6 +709,7 @@ static void lcd_menu_print_ready_cooled_down()
         analogWrite(LED_PIN, 0);
     else if (led_mode == LED_MODE_BLINK_ON_DONE)
         analogWrite(LED_PIN, (led_glow << 1) * int(led_brightness_level) / 100);
+    SELECT_MAIN_MENU_ITEM(0);
     lcd_info_screen(lcd_menu_main, postPrintReady, PSTR("BACK TO MENU"));
 
     LED_GLOW();
