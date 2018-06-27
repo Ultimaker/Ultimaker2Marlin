@@ -1644,7 +1644,7 @@ static void process_command()
     case 117: // M117 display message
       starpos = (strchr(strchr_pointer + 5,'*'));
       if(starpos!=NULL)
-        *(starpos-1)='\0';
+        *starpos = '\0';
       lcd_setstatus(strchr_pointer + 5);
       break;
     case 120: // M120
