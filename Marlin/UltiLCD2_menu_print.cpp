@@ -71,7 +71,7 @@ static void abortPrint()
     if (primed)
     {
         // set up the end of print retraction
-        sprintf_P(buffer, PSTR("G92 E%i"), int( ((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]) - (retracted ? retract_length : 0) );
+        sprintf_P(buffer, PSTR("G92 E%i"), int(( ((float)END_OF_PRINT_RETRACTION) / volume_to_filament_length[active_extruder]) - (retracted ? retract_length : 0)) );
         enquecommand(buffer);
         // since we have just parked the filament accounting for the retracted length, forget about any G10/G11 retractions that happened at end of this print.
         retracted = false;
