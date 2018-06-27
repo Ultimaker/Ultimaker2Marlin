@@ -24,7 +24,6 @@ lcd_cache_t lcd_cache;
 #define LCD_DETAIL_CACHE_TIME()         lcd_cache.detail.time
 #define LCD_DETAIL_CACHE_MATERIAL(n)    lcd_cache.detail.material[n]
 
-void doCooldown();//TODO
 static void lcd_menu_print_heatup();
 static void lcd_menu_print_printing();
 static void lcd_menu_print_error_sd();
