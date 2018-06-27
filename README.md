@@ -1,4 +1,3 @@
-==========================
 Marlin 3D Printer Firmware
 ==========================
 
@@ -9,8 +8,8 @@ Quick Information
 This RepRap firmware is a mashup between <a href="https://github.com/kliment/Sprinter">Sprinter</a>, <a href="https://github.com/simen/grbl/tree">grbl</a> and many original parts.
 
 Derived from Sprinter and Grbl by Erik van der Zalm.
-Sprinters lead developers are Kliment and caru.
-Grbls lead developer is Simen Svale Skogsrud. Sonney Jeon (Chamnit) improved some parts of grbl
+Sprinter's lead developers are Kliment and Caru.
+Grbls lead developer is Simen Svale Skogsrud. Sonney Jeon (Chamnit) improved some parts of grbl.
 A fork by bkubicek for the Ultimaker was merged, and further development was aided by him.
 Some features have been added by:
 Lampmaker, Bradley Feldman, and others...
@@ -61,7 +60,8 @@ It leads to less over-deposition at corners, especially at flat angles.
 
 *Arc support:*
 
-Slic3r can find curves that, although broken into segments, were meant to describe an arc.
+Arc support: Old versions of Slic3r (before v2.0) can find curves that, although broken into segments, 
+were meant to describe an arc.
 Marlin is able to print those arcs. The advantage is the firmware can choose the resolution,
 and can perform the arc with nearly constant velocity, resulting in a nice finish.
 Also, less serial communication is needed.
@@ -191,7 +191,7 @@ Custom M Codes
 *  M203 - Set maximum feedrate that your machine can sustain (M203 X200 Y200 Z300 E10000) in mm/sec
 *  M204 - Set default acceleration: S normal moves T filament only moves (M204 S3000 T7000) im mm/sec^2  also sets minimum segment time in ms (B20000) to prevent buffer underruns and M20 minimum feedrate
 *  M205 -  advanced settings:  minimum travel speed S=while printing T=travel only,  B=minimum segment time X= maximum xy jerk, Z=maximum Z jerk, E=maximum E jerk
-*  M206 - set additional homeing offset
+*  M206 - set additional homing offset
 *  M207 - set retract length S[positive mm] F[feedrate mm/sec] Z[additional zlift/hop]
 *  M208 - set recover=unretract length S[positive mm surplus to the M207 S*] F[feedrate mm/sec]
 *  M209 - S<1=true/0=false> enable automatic retract detect if the slicer did not support G10/11: every normal extrude-only move will be classified as retract depending on the direction.
@@ -223,8 +223,8 @@ Custom M Codes
 Configuring and compilation:
 ============================
 
-Install the arduino software IDE/toolset v23 (Some configurations also work with 1.x.x)
-   http://www.arduino.cc/en/Main/Software
+Install the Classic Arduino software IDE/toolset v1.0.5
+   https://www.arduino.cc/en/Main/OldSoftwareReleases#1.0.x
 
 Copy the Marlin firmware
    https://github.com/Ultimaker/Ultimaker2Marlin

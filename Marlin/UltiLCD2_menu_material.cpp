@@ -133,6 +133,7 @@ static void lcd_menu_change_material_preheat()
         {
             set_extrude_min_temp(0);
 
+            // Do a forward push before pulling back the material, reducing blobs at the end of the filament.
             plan_set_e_position(0);
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], 20.0 / volume_to_filament_length[active_extruder], retract_feedrate/60.0, active_extruder);
 
@@ -346,7 +347,7 @@ static void lcd_menu_change_material_insert_forward()
         lcd_lib_beep();
         led_glow_dir = led_glow = 0;
 
-        digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower to we skip instead of grind.
+        digipot_current(2, motor_current_setting[2]*2/3);//Set the E motor power lower so we skip instead of grind.
         currentMenu = lcd_menu_change_material_insert;
         SELECT_MAIN_MENU_ITEM(0);
     }

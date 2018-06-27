@@ -71,7 +71,7 @@ typedef struct {
 void plan_init();
 
 // Add a new linear movement to the buffer. x, y and z is the signed, absolute target position in
-// millimaters. Feed rate specifies the speed of the motion.
+// millimeters. Feed rate specifies the speed of the motion.
 void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t &extruder);
 
 // Set position. Used for G92 instructions.
@@ -84,14 +84,14 @@ void check_axes_activity();
 uint8_t movesplanned(); //return the nr of buffered moves
 
 extern unsigned long minsegmenttime;
-extern float max_feedrate[4]; // set the max speeds
-extern float axis_steps_per_unit[4];
+extern float max_feedrate[NUM_AXIS]; // set the max speeds
+extern float axis_steps_per_unit[NUM_AXIS];
 extern float volume_to_filament_length[EXTRUDERS];
 extern unsigned long max_acceleration_units_per_sq_second[4]; // Use M201 to override by software
 extern float minimumfeedrate;
 extern float acceleration;         // Normal acceleration mm/s^2  THIS IS THE DEFAULT ACCELERATION for all moves. M204 SXXXX
 extern float retract_acceleration; //  mm/s^2   filament pull-pack and push-forward  while standing still in the other axis M204 TXXXX
-extern float max_xy_jerk; //speed than can be stopped at once, if i understand correctly.
+extern float max_xy_jerk;          //speed that can be stopped at once, if I understand correctly.
 extern float max_z_jerk;
 extern float max_e_jerk;
 extern float mintravelfeedrate;
@@ -107,11 +107,11 @@ extern unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 
 
-extern block_t block_buffer[BLOCK_BUFFER_SIZE];            // A ring buffer for motion instfructions
+extern block_t block_buffer[BLOCK_BUFFER_SIZE];            // A ring buffer for motion instructions
 extern volatile unsigned char block_buffer_head;           // Index of the next block to be pushed
 extern volatile unsigned char block_buffer_tail;
 // Called when the current block is no longer needed. Discards the block and makes the memory
-// availible for new blocks.
+// available for new blocks.
 FORCE_INLINE void plan_discard_current_block()
 {
   if (block_buffer_head != block_buffer_tail) {
@@ -130,7 +130,7 @@ FORCE_INLINE block_t *plan_get_current_block()
   return(block);
 }
 
-// Gets the current block. Returns NULL if buffer empty
+// Returns true when blocks are queued, false otherwise.
 FORCE_INLINE bool blocks_queued()
 {
   if (block_buffer_head == block_buffer_tail) {

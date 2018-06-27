@@ -62,7 +62,7 @@ void lcd_menu_first_run_init()
 
 static void homeAndParkHeadForCenterAdjustment2()
 {
-    add_homeing[Z_AXIS] = 0;
+    add_homing[Z_AXIS] = 0;
     enquecommand_P(PSTR("G28 Z0 X0 Y0"));
     char buffer[32];
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, int(BED_CENTER_ADJUST_X), int(BED_CENTER_ADJUST_Y));
@@ -121,7 +121,7 @@ static void lcd_menu_first_run_init_3()
 
 static void parkHeadForLeftAdjustment()
 {
-    add_homeing[Z_AXIS] -= current_position[Z_AXIS];
+    add_homing[Z_AXIS] -= current_position[Z_AXIS];
     current_position[Z_AXIS] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 
@@ -263,7 +263,7 @@ static void lcd_menu_first_run_bed_level_paper_left()
 
 static void homeBed()
 {
-    add_homeing[Z_AXIS] += LEVELING_OFFSET;  //Adjust the Z homing position to account for the thickness of the paper.
+    add_homing[Z_AXIS] += LEVELING_OFFSET;  //Adjust the Z homing position to account for the thickness of the paper.
     // now that we are finished, save the settings to EEPROM
     Config_StoreSettings();
     enquecommand_P(PSTR("G28 Z0"));
