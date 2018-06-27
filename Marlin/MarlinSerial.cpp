@@ -89,7 +89,7 @@ void MarlinSerial::begin(long baud)
     baud_setting = (F_CPU / 8 / baud - 1) / 2;
   }
 
-  // assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
+  // assign the baud_setting, a.k.a. ubrr (USART Baud Rate Register)
   M_UBRRxH = baud_setting >> 8;
   M_UBRRxL = baud_setting;
 

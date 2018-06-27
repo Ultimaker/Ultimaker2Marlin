@@ -268,7 +268,7 @@ class SdBaseFile {
   }
   void ls( uint8_t flags = 0, uint8_t indent = 0);
   bool mkdir(SdBaseFile* dir, const char* path, bool pFlag = true);
-  // alias for backward compactability
+  // alias for backward compatibility
   bool makeDir(SdBaseFile* dir, const char* path) {
     return mkdir(dir, path, false);
   }

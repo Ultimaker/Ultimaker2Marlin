@@ -57,7 +57,7 @@ void Config_StoreSettings()
   EEPROM_WRITE_VAR(i,max_xy_jerk);
   EEPROM_WRITE_VAR(i,max_z_jerk);
   EEPROM_WRITE_VAR(i,max_e_jerk);
-  EEPROM_WRITE_VAR(i,add_homeing);
+  EEPROM_WRITE_VAR(i,add_homing);
   #ifndef ULTIPANEL
   int plaPreheatHotendTemp = PLA_PREHEAT_HOTEND_TEMP, plaPreheatHPBTemp = PLA_PREHEAT_HPB_TEMP, plaPreheatFanSpeed = PLA_PREHEAT_FAN_SPEED;
   int absPreheatHotendTemp = ABS_PREHEAT_HOTEND_TEMP, absPreheatHPBTemp = ABS_PREHEAT_HPB_TEMP, absPreheatFanSpeed = ABS_PREHEAT_FAN_SPEED;
@@ -149,9 +149,9 @@ void Config_PrintSettings()
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Home offset (mm):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M206 X",add_homeing[0] );
-    SERIAL_ECHOPAIR(" Y" ,add_homeing[1] );
-    SERIAL_ECHOPAIR(" Z" ,add_homeing[2] );
+    SERIAL_ECHOPAIR("  M206 X",add_homing[0] );
+    SERIAL_ECHOPAIR(" Y" ,add_homing[1] );
+    SERIAL_ECHOPAIR(" Z" ,add_homing[2] );
     SERIAL_ECHOLN("");
 #ifdef PIDTEMP
     SERIAL_ECHO_START;
@@ -192,7 +192,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_xy_jerk);
         EEPROM_READ_VAR(i,max_z_jerk);
         EEPROM_READ_VAR(i,max_e_jerk);
-        EEPROM_READ_VAR(i,add_homeing);
+        EEPROM_READ_VAR(i,add_homing);
         #ifndef ULTIPANEL
         int plaPreheatHotendTemp, plaPreheatHPBTemp, plaPreheatFanSpeed;
         int absPreheatHotendTemp, absPreheatHPBTemp, absPreheatFanSpeed;
@@ -234,7 +234,7 @@ void Config_RetrieveSettings()
     if (strncmp_P(ver, PSTR("V010"), 3) == 0)
     {
         i = EEPROM_OFFSET + 84;
-        EEPROM_READ_VAR(i,add_homeing);
+        EEPROM_READ_VAR(i,add_homing);
     }
     Config_PrintSettings();
 }
@@ -263,7 +263,7 @@ void Config_ResetDefault()
     max_xy_jerk=DEFAULT_XYJERK;
     max_z_jerk=DEFAULT_ZJERK;
     max_e_jerk=DEFAULT_EJERK;
-    add_homeing[0] = add_homeing[1] = add_homeing[2] = 0;
+    add_homing[0] = add_homing[1] = add_homing[2] = 0;
 #ifdef ULTIPANEL
     plaPreheatHotendTemp = PLA_PREHEAT_HOTEND_TEMP;
     plaPreheatHPBTemp = PLA_PREHEAT_HPB_TEMP;
