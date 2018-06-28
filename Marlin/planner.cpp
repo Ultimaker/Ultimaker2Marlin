@@ -700,7 +700,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
 #endif
 
 #ifdef SLOWDOWN
-  //  segment time im micro seconds
+  //  segment time in micro seconds
   unsigned long segment_time = lround(1000000.0/inverse_second);
   if ((moves_queued > 1) && (moves_queued < (BLOCK_BUFFER_SIZE * 0.5)))
   {
@@ -728,7 +728,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
       speed_factor = min(speed_factor, max_feedrate[i] / fabs(current_speed[i]));
   }
 
-  // Max segement time in us.
+  // Max segment time in us.
 #ifdef XY_FREQUENCY_LIMIT
 #define MAX_FREQ_TIME (1000000.0/XY_FREQUENCY_LIMIT)
   // Check and limit the xy direction change frequency

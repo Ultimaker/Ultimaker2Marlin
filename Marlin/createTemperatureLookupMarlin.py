@@ -55,7 +55,7 @@ class Thermistor:
         self.c3 = c3
 
     def temp(self,adc):
-        "Convert ADC reading into a temperature in Celcius"
+        "Convert ADC reading into a temperature in Celsius"
         v = adc * self.vadc / (1024 * 16)   # convert the 10 bit ADC value to a voltage
         r = self.rp * v / (self.vcc - v)    # resistance of thermistor
         lnr = log(r)
