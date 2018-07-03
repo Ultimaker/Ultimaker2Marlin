@@ -374,7 +374,7 @@ ISR(TIMER1_COMPA_vect)
   }
 
   if (current_block != NULL) {
-    // Set directions TO DO This should be done once during init of trapezoid. Endstops -> interrupt
+    // Set directions. This should be done once during init of trapezoid. Endstops -> interrupt
     out_bits = current_block->direction_bits;
 
 

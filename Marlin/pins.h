@@ -1220,7 +1220,7 @@
 //Motor current PWM conversion, PWM value = MotorCurrentSetting * 255 / range
 #define MOTOR_CURRENT_PWM_RANGE 2000
 
-//arduino pin witch triggers an piezzo beeper
+//arduino pin which triggers a piezzo beeper
 #define BEEPER 18
 
 #define LCD_PINS_RS 20

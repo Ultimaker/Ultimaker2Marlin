@@ -73,9 +73,9 @@ void Config_StoreSettings()
     EEPROM_WRITE_VAR(i,Ki);
     EEPROM_WRITE_VAR(i,Kd);
   #else
-		float dummy = 3000.0f;
+    float dummy = 3000.0f;
     EEPROM_WRITE_VAR(i,dummy);
-		dummy = 0.0f;
+    dummy = 0.0f;
     EEPROM_WRITE_VAR(i,dummy);
     EEPROM_WRITE_VAR(i,dummy);
   #endif
@@ -182,7 +182,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,max_acceleration_units_per_sq_second);
 
         // steps per sq second need to be updated to agree with the units per sq second (as they are what is used in the planner)
-		reset_acceleration_rates();
+        reset_acceleration_rates();
 
         EEPROM_READ_VAR(i,acceleration);
         EEPROM_READ_VAR(i,retract_acceleration);
@@ -222,8 +222,8 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,retract_length);
         EEPROM_READ_VAR(i,retract_feedrate);
 
-		// Call updatePID (similar to when we have processed M301)
-		updatePID();
+        // Call updatePID (similar to when we have processed M301)
+        updatePID();
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM("Stored settings retrieved");
     }
@@ -245,7 +245,7 @@ void Config_ResetDefault()
     float tmp1[]=DEFAULT_AXIS_STEPS_PER_UNIT;
     float tmp2[]=DEFAULT_MAX_FEEDRATE;
     long tmp3[]=DEFAULT_MAX_ACCELERATION;
-    for (short i=0;i<4;i++)
+    for (uint8_t i=0; i<4; i++)
     {
         axis_steps_per_unit[i]=tmp1[i];
         max_feedrate[i]=tmp2[i];
@@ -296,7 +296,6 @@ void Config_ResetDefault()
     retract_length = 4.5;
     retract_feedrate = 25 * 60;
 
-SERIAL_ECHO_START;
-SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
-
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
 }

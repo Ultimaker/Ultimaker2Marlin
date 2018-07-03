@@ -277,7 +277,7 @@
 #define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
 
 #ifndef ENDSTOPPULLUPS
-  // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined.
+  // Define endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined.
   #define ENDSTOPPULLUP_XMAX
   #define ENDSTOPPULLUP_YMAX
   #define ENDSTOPPULLUP_ZMAX

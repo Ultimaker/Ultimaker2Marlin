@@ -79,7 +79,7 @@ float mintravelfeedrate;
 unsigned long axis_steps_per_sqr_second[NUM_AXIS];
 
 // The current position of the tool in absolute steps
-long position[NUM_AXIS];                // Rescaled from extern when axis_steps_per_unit are changed by gcode
+static long position[NUM_AXIS];         // Rescaled from extern when axis_steps_per_unit are changed by gcode
 static float previous_speed[NUM_AXIS];  // Speed of previous path line segment
 static float previous_nominal_speed;    // Nominal speed of previous path line segment
 
@@ -115,7 +115,7 @@ static long y_segment_time[3]={MAX_FREQ_TIME + 1,0,0};
 
 // Returns the index of the next block in the ring buffer
 // NOTE: Removed modulo (%) operator, which uses an expensive divide and multiplication.
-static int8_t next_block_index(int8_t block_index) {
+static uint8_t next_block_index(uint8_t block_index) {
   block_index++;
   if (block_index == BLOCK_BUFFER_SIZE) {
     block_index = 0;
@@ -125,7 +125,7 @@ static int8_t next_block_index(int8_t block_index) {
 
 
 // Returns the index of the previous block in the ring buffer
-static int8_t prev_block_index(int8_t block_index) {
+static uint8_t prev_block_index(uint8_t block_index) {
   if (block_index == 0) {
     block_index = BLOCK_BUFFER_SIZE;
   }
@@ -168,7 +168,7 @@ FORCE_INLINE float intersection_distance(float initial_rate, float final_rate, f
 
 // Calculates trapezoid parameters so that the entry- and exit-speed is compensated by the provided factors.
 
-void calculate_trapezoid_for_block(block_t* const block, const float entry_factor, const float exit_factor) {
+static void calculate_trapezoid_for_block(block_t* const block, const float entry_factor, const float exit_factor) {
   uint32_t initial_rate = ceil(block->nominal_rate * entry_factor); // (step/min)
   uint32_t final_rate = ceil(block->nominal_rate * exit_factor); // (step/min)
 
@@ -239,7 +239,7 @@ FORCE_INLINE float max_allowable_speed(float acceleration, float target_velocity
 
 
 // The kernel called by planner_recalculate() when scanning the plan from last to first entry.
-void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *next) {
+static void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *next) {
   if(!current) {
     return;
   }
@@ -268,11 +268,11 @@ void planner_reverse_pass_kernel(block_t *previous, block_t *current, block_t *n
 // planner_recalculate() needs to go over the current plan twice. Once in reverse and once forward. This
 // implements the reverse pass.
 // The reverse pass adjusts the entry speeds when deceleration does not fit within one move.
-void planner_reverse_pass() {
+static void planner_reverse_pass() {
   uint8_t block_index = block_buffer_head;
 
   //Make a local copy of block_buffer_tail, because the interrupt can alter it
-  CRITICAL_SECTION_START;
+  CRITICAL_SECTION_START
   unsigned char tail = block_buffer_tail;
   CRITICAL_SECTION_END
 
@@ -292,7 +292,7 @@ void planner_reverse_pass() {
 }
 
 // The kernel called by planner_recalculate() when scanning the plan from first to last entry.
-void planner_forward_pass_kernel(block_t *previous, block_t *current, block_t *next) {
+static void planner_forward_pass_kernel(block_t *previous, block_t *current, block_t *next) {
   if(!previous) {
     return;
   }
@@ -386,7 +386,8 @@ void planner_recalculate()
     planner_recalculate_trapezoids();
 }
 
-void plan_init() {
+void plan_init()
+{
   block_buffer_head = 0;
   block_buffer_tail = 0;
   memset(position, 0, sizeof(position)); // clear position
@@ -398,9 +399,6 @@ void plan_init() {
   for(uint8_t e=0; e<EXTRUDERS; e++)
     volume_to_filament_length[e] = 1.0;
 }
-
-
-
 
 #ifdef AUTOTEMP
 void getHighESpeed()
@@ -523,12 +521,13 @@ void check_axes_activity()
 
 
 float junction_deviation = 0.1;
+
 // Add a new linear movement to the buffer.
 // x, y, z and e are the absolute positions in mm.
 void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t &extruder)
 {
   // Calculate the buffer head after we push this byte
-  int8_t next_buffer_head = next_block_index(block_buffer_head);
+  uint8_t next_buffer_head = next_block_index(block_buffer_head);
 
   // If the buffer is full: good! That means we are well ahead of the robot.
   // Rest here until there is room in the buffer.
@@ -876,7 +875,7 @@ block->steps_y = labs((target[X_AXIS]-position[X_AXIS]) - (target[Y_AXIS]-positi
   // the current block and next block junction speeds are guaranteed to always be at their maximum
   // junction speeds in deceleration and acceleration, respectively. This is due to how the current
   // block nominal speed limits both the current and next maximum junction speeds. Hence, in both
-  // the reverse and forward planners, the corresponding block junction speed will always be at the
+  // the reverse and forward planners, the corresponding block junction speed will always be at
   // the maximum junction speed and may always be ignored for any speed reduction checks.
   if (block->nominal_speed <= v_allowable) {
     block->nominal_length_flag = true;
@@ -945,6 +944,7 @@ void plan_set_position(const float &x, const float &y, const float &z, const flo
   previous_speed[3] = 0.0;
 }
 
+// e is passed in as VOLUME
 void plan_set_e_position(const float &e)
 {
   position[E_AXIS] = lround(e*axis_steps_per_unit[E_AXIS]*volume_to_filament_length[active_extruder]);

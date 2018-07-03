@@ -258,7 +258,6 @@ unsigned long stoptime=0;
 
 static uint8_t tmp_extruder;
 
-
 uint8_t Stopped = false;
 
 #if NUM_SERVOS > 0

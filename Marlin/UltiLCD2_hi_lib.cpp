@@ -158,7 +158,7 @@ void lcd_progressbar(uint8_t progress)
 {
     lcd_lib_draw_box(3, 38, 124, 46);
 
-    for(uint8_t n=0; n<progress;n++)
+    for(uint8_t n=0; n<progress; n++)
     {
         if (n>120) break;
         uint8_t m = (progress-n-1) % 12;
