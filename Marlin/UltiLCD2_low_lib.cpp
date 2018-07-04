@@ -85,7 +85,7 @@ void lcd_lib_init()
 
     SET_OUTPUT(I2C_SDA_PIN);
     SET_OUTPUT(I2C_SCL_PIN);
-    
+
     //Set unused pins in the 10 pin connector to GND to improve shielding of the cable.
     SET_OUTPUT(LCD_PINS_D4); WRITE(LCD_PINS_D4, 0); //RXD3/PJ1
     SET_OUTPUT(LCD_PINS_ENABLE); WRITE(LCD_PINS_ENABLE, 0); //TXD3/PJ0
@@ -539,6 +539,7 @@ void lcd_lib_draw_vline(uint8_t x, uint8_t y0, uint8_t y1)
     }
 }
 
+// Draws a box with slightly rounded corners.
 void lcd_lib_draw_box(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
     lcd_lib_draw_vline(x0, y0+1, y1-1);
