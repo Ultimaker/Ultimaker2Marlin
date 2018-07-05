@@ -247,7 +247,7 @@ static void lcd_menu_maintenance_advanced_heatup()
     lcd_lib_update_screen();
 }
 
-void lcd_menu_maintenance_extrude()
+static void lcd_menu_maintenance_extrude()
 {
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
@@ -302,7 +302,7 @@ void lcd_menu_maintenance_advanced_bed_heatup()
 }
 #endif
 
-void lcd_menu_advanced_version()
+static void lcd_menu_advanced_version()
 {
     lcd_info_screen(previousMenu, NULL, PSTR("Return"));
     lcd_lib_draw_string_centerP(30, PSTR(STRING_VERSION_CONFIG_H));
@@ -310,7 +310,7 @@ void lcd_menu_advanced_version()
     lcd_lib_update_screen();
 }
 
-void lcd_menu_advanced_stats()
+static void lcd_menu_advanced_stats()
 {
     lcd_info_screen(previousMenu, NULL, PSTR("Return"));
     lcd_lib_draw_string_centerP(10, PSTR("Machine on for:"));
