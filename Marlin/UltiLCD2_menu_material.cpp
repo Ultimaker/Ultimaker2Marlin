@@ -510,9 +510,10 @@ static void lcd_menu_material_import()
     card.openFile("MATERIAL.TXT", true);
     if (!card.isFileOpen())
     {
+        lcd_lib_encoder_pos = MAIN_MENU_ITEM_POS(0);
         lcd_info_screen(lcd_menu_material_select);
-        lcd_lib_draw_string_centerP(15, PSTR("No export file"));
-        lcd_lib_draw_string_centerP(25, PSTR("Found on card."));
+        lcd_lib_draw_string_centerP(15, PSTR("No material file"));
+        lcd_lib_draw_string_centerP(25, PSTR("found on card."));
         lcd_lib_update_screen();
         return;
     }
