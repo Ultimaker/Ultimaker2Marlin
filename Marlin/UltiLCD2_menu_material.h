@@ -32,7 +32,7 @@ struct materialSettings
     float diameter; //Filament diameter in mm
     char name[MATERIAL_NAME_SIZE+1];
     int16_t change_temperature;      //Temperature for the hotend during the change material procedure.
-    int8_t change_preheat_wait_time; //when reaching the change material temperature, wait for this amount of seconds for the temperature to stabalize and the material to heatup.
+    int8_t change_preheat_wait_time; //when reaching the change material temperature, wait for this amount of seconds for the temperature to stabilize and the material to heatup.
 };
 
 extern struct materialSettings material[EXTRUDERS];
@@ -40,8 +40,8 @@ extern struct materialSettings material[EXTRUDERS];
 #define FILAMENT_FAST_STEPS  26500
 #define FILAMENT_LONG_ACCELERATION_STEPS    7200
 
-#define FILAMENT_REVERSAL_LENGTH      (FILAMANT_BOWDEN_LENGTH + 50)
-#define FILAMENT_FORWARD_LENGTH       (FILAMANT_BOWDEN_LENGTH - 50)
+#define FILAMENT_REVERSAL_LENGTH      (FILAMENT_BOWDEN_LENGTH + 50)
+#define FILAMENT_FORWARD_LENGTH       (FILAMENT_BOWDEN_LENGTH - 50)
 #define FILAMENT_INSERT_SPEED         2     //Initial insert speed to grab the filament.
 #define FILAMENT_INSERT_EXTRUDE_SPEED 1     //Final speed when extruding
 #define FILAMENT_LONG_MOVE_JERK       1

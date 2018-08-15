@@ -223,7 +223,7 @@ static float delta[3] = {0.0, 0.0, 0.0};
 #endif
 static float offset[3] = {0.0, 0.0, 0.0};
 static bool home_all_axis = true;
-static float feedrate = 1500.0, next_feedrate, saved_feedrate;
+static float feedrate = 1500.0;
 static long gcode_LastN, Stopped_gcode_LastN = 0;
 
 // static bool relative_mode = false;  //Determines Absolute or Relative Coordinates
@@ -241,7 +241,7 @@ static uint8_t bufindr = 0;
 static uint8_t bufindw = 0;
 static uint8_t buflen = 0;
 static int serial_count = 0;
-static boolean comment_mode = false;
+static bool comment_mode = false;
 static char *strchr_pointer = 0; // just a pointer to find chars in the cmd string like X, Y, Z, E, etc
 
 const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
@@ -1245,7 +1245,7 @@ void process_command(const char *strCmd, bool sendAck)
         printing_state = PRINT_STATE_HOMING;
 
       st_synchronize();
-      saved_feedrate = feedrate;
+      static float saved_feedrate = feedrate;
       saved_feedmultiply = feedmultiply;
       feedmultiply = 100;
       previous_millis_cmd = millis();
@@ -1875,7 +1875,7 @@ void process_command(const char *strCmd, bool sendAck)
       }
       else
       {
-        bool all_axis = !((code_seen(strCmd, axis_codes[0])) || (code_seen(strCmd, axis_codes[1])) || (code_seen(strCmd, axis_codes[2]))|| (code_seen(strCmd, axis_codes[3])));
+        bool all_axis = !((code_seen(strCmd, axis_codes[X_AXIS])) || (code_seen(strCmd, axis_codes[Y_AXIS])) || (code_seen(strCmd, axis_codes[Z_AXIS]))|| (code_seen(strCmd, axis_codes[E_AXIS])));
         if(all_axis)
         {
           finishAndDisableSteppers();
@@ -1907,7 +1907,8 @@ void process_command(const char *strCmd, bool sendAck)
       {
         if(code_seen(strCmd, axis_codes[i]))
         {
-          if(i == 3) { // E
+          if(i == E_AXIS)
+          {
             float value = code_value();
             if(value < 20.0) {
               float factor = e_steps_per_unit(active_extruder) / value; // increase e constants if M92 E14 is given for netfab.
@@ -1936,20 +1937,6 @@ void process_command(const char *strCmd, bool sendAck)
       }
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
       break;
-    case 115: // M115
-      SERIAL_PROTOCOLPGM(MSG_M115_REPORT);
-      break;
-    case 117: // M117 display message
-      truncate_checksum(strchr_pointer);
-      if (strlen(strchr_pointer) > 5)
-      {
-        lcd_setstatus(strchr_pointer+5);
-      }
-      else
-      {
-        lcd_clearstatus();
-      }
-      break;
     case 114: // M114
       SERIAL_PROTOCOLPGM("X:");
       SERIAL_PROTOCOL(current_position[X_AXIS]);
@@ -1970,6 +1957,20 @@ void process_command(const char *strCmd, bool sendAck)
       SERIAL_PROTOCOL(float(st_get_position(E_AXIS))/e_steps_per_unit(active_extruder));
 
       SERIAL_EOL;
+      break;
+    case 115: // M115
+      SERIAL_PROTOCOLPGM(MSG_M115_REPORT);
+      break;
+    case 117: // M117 display message
+      truncate_checksum(strchr_pointer);
+      if (strlen(strchr_pointer) > 5)
+      {
+        lcd_setstatus(strchr_pointer+5);
+      }
+      else
+      {
+        lcd_clearstatus();
+      }
       break;
     case 120: // M120
       enable_endstops(false) ;
@@ -2613,8 +2614,10 @@ void process_command(const char *strCmd, bool sendAck)
             memcpy(current_position, lastpos, sizeof(current_position));
             memcpy(destination, current_position, sizeof(destination));
 
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder); //move xy back
-            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder); //move z back
+            //move xy back
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], target[Z_AXIS], target[E_AXIS], homing_feedrate[X_AXIS]/60, active_extruder);
+            //move z back
+            plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], target[E_AXIS], homing_feedrate[Z_AXIS]/60, active_extruder);
 
             //final unretract
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, active_extruder);
@@ -2850,7 +2853,7 @@ void process_command(const char *strCmd, bool sendAck)
 #if EXTRUDERS > 1
         make_move = true;
 #endif
-        next_feedrate = code_value();
+        static float next_feedrate = code_value();
         if(next_feedrate > 0.0) {
           feedrate = next_feedrate;
         }
@@ -2949,8 +2952,11 @@ static void get_coordinates(const char *cmd)
     }
     if(code_seen(cmd, 'F'))
     {
-        next_feedrate = code_value();
-        if(next_feedrate > 0.0) feedrate = next_feedrate;
+        static float next_feedrate = code_value();
+        if(next_feedrate > 0.0)
+        {
+            feedrate = next_feedrate;
+        }
     }
     #ifdef FWRETRACT
     if(autoretract_enabled)
@@ -3272,7 +3278,7 @@ static void manage_inactivity()
 void kill()
 {
   cli(); // Stop interrupts
-  disable_heater();
+  disable_all_heaters();
 
   disable_x();
   disable_y();
@@ -3296,7 +3302,7 @@ void kill()
 
 void Stop(uint8_t reasonNr)
 {
-  disable_heater();
+  disable_all_heaters();
   if(!Stopped) {
     Stopped = reasonNr;
     Stopped_gcode_LastN = gcode_LastN; // Save last g_code for restart

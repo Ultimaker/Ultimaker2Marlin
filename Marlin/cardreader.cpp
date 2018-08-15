@@ -342,7 +342,7 @@ void CardReader::removeFile(const char* name)
         curDir=&myDir;
         dirname_start=dirname_end+1;
       }
-      else // the reminder after all /fsa/fdsa/ is the filename
+      else // the remainder after all /fsa/fdsa/ is the filename
       {
         fname=dirname_start;
         break;

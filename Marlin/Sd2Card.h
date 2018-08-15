@@ -53,58 +53,35 @@ uint16_t const SD_READ_TIMEOUT = 300;
 uint16_t const SD_WRITE_TIMEOUT = 600;
 //------------------------------------------------------------------------------
 // SD card errors
-/** timeout error for command CMD0 (initialize card in SPI mode) */
-uint8_t const SD_CARD_ERROR_CMD0 = 0X1;
-/** CMD8 was not accepted - not a valid SD card*/
-uint8_t const SD_CARD_ERROR_CMD8 = 0X2;
-/** card returned an error response for CMD12 (write stop) */
-uint8_t const SD_CARD_ERROR_CMD12 = 0X3;
-/** card returned an error response for CMD17 (read block) */
-uint8_t const SD_CARD_ERROR_CMD17 = 0X4;
-/** card returned an error response for CMD18 (read multiple block) */
-uint8_t const SD_CARD_ERROR_CMD18 = 0X5;
-/** card returned an error response for CMD24 (write block) */
-uint8_t const SD_CARD_ERROR_CMD24 = 0X6;
-/**  WRITE_MULTIPLE_BLOCKS command failed */
-uint8_t const SD_CARD_ERROR_CMD25 = 0X7;
-/** card returned an error response for CMD58 (read OCR) */
-uint8_t const SD_CARD_ERROR_CMD58 = 0X8;
-/** SET_WR_BLK_ERASE_COUNT failed */
-uint8_t const SD_CARD_ERROR_ACMD23 = 0X9;
-/** ACMD41 initialization process timeout */
-uint8_t const SD_CARD_ERROR_ACMD41 = 0XA;
-/** card returned a bad CSR version field */
-uint8_t const SD_CARD_ERROR_BAD_CSD = 0XB;
-/** erase block group command failed */
-uint8_t const SD_CARD_ERROR_ERASE = 0XC;
-/** card not capable of single block erase */
-uint8_t const SD_CARD_ERROR_ERASE_SINGLE_BLOCK = 0XD;
-/** Erase sequence timed out */
-uint8_t const SD_CARD_ERROR_ERASE_TIMEOUT = 0XE;
-/** card returned an error token instead of read data */
-uint8_t const SD_CARD_ERROR_READ = 0XF;
-/** read CID or CSD failed */
-uint8_t const SD_CARD_ERROR_READ_REG = 0X10;
-/** timeout while waiting for start of read data */
-uint8_t const SD_CARD_ERROR_READ_TIMEOUT = 0X11;
-/** card did not accept STOP_TRAN_TOKEN */
-uint8_t const SD_CARD_ERROR_STOP_TRAN = 0X12;
-/** card returned an error token as a response to a write operation */
-uint8_t const SD_CARD_ERROR_WRITE = 0X13;
-/** attempt to write protected block zero */
-uint8_t const SD_CARD_ERROR_WRITE_BLOCK_ZERO = 0X14;  // REMOVE - not used
-/** card did not go ready for a multiple block write */
-uint8_t const SD_CARD_ERROR_WRITE_MULTIPLE = 0X15;
-/** card returned an error to a CMD13 status check after a write */
-uint8_t const SD_CARD_ERROR_WRITE_PROGRAMMING = 0X16;
-/** timeout occurred during write programming */
-uint8_t const SD_CARD_ERROR_WRITE_TIMEOUT = 0X17;
-/** incorrect rate selected */
-uint8_t const SD_CARD_ERROR_SCK_RATE = 0X18;
-/** init() not called */
-uint8_t const SD_CARD_ERROR_INIT_NOT_CALLED = 0X19;
-/** crc check error */
-uint8_t const SD_CARD_ERROR_CRC = 0X20;
+enum SD_CARD_ERRORS
+{
+    SD_CARD_ERROR_OK = 0,               // No error, everything OK
+    SD_CARD_ERROR_CMD0,                 // timeout error for command CMD0 (initialize card in SPI mode)
+    SD_CARD_ERROR_CMD8,                 // CMD8 was not accepted - not a valid SD card
+    SD_CARD_ERROR_CMD12,                // card returned an error response for CMD12 (write stop)
+    SD_CARD_ERROR_CMD17,                // card returned an error response for CMD17 (read block)
+    SD_CARD_ERROR_CMD18,                // card returned an error response for CMD18 (read multiple block)
+    SD_CARD_ERROR_CMD24,                // card returned an error response for CMD24 (write block)
+    SD_CARD_ERROR_CMD25,                //  WRITE_MULTIPLE_BLOCKS command failed
+    SD_CARD_ERROR_CMD58,                // card returned an error response for CMD58 (read OCR)
+    SD_CARD_ERROR_ACMD23,               // SET_WR_BLK_ERASE_COUNT failed
+    SD_CARD_ERROR_ACMD41,               // ACMD41 initialization process timeout
+    SD_CARD_ERROR_BAD_CSD,              // card returned a bad CSR version field
+    SD_CARD_ERROR_CRC,                  // CRC check error
+    SD_CARD_ERROR_ERASE,                // erase block group command failed
+    SD_CARD_ERROR_ERASE_SINGLE_BLOCK,   // card not capable of single block erase
+    SD_CARD_ERROR_ERASE_TIMEOUT,        // Erase sequence timed out
+    SD_CARD_ERROR_INIT_NOT_CALLED,      // init() not called
+    SD_CARD_ERROR_READ,                 // card returned an error token instead of read data
+    SD_CARD_ERROR_READ_REG,             // read CID or CSD failed
+    SD_CARD_ERROR_READ_TIMEOUT,         // timeout while waiting for start of read data
+    SD_CARD_ERROR_SCK_RATE,             // incorrect rate selected
+    SD_CARD_ERROR_STOP_TRAN,            // card did not accept STOP_TRAN_TOKEN
+    SD_CARD_ERROR_WRITE,                // card returned an error token as a response to a write operation
+    SD_CARD_ERROR_WRITE_MULTIPLE,       // card did not go ready for a multiple block write
+    SD_CARD_ERROR_WRITE_PROGRAMMING,    // card returned an error to a CMD13 status check after a write
+    SD_CARD_ERROR_WRITE_TIMEOUT,        // timeout occurred during write programming
+};
 //------------------------------------------------------------------------------
 // card types
 /** Standard capacity V1 SD card */

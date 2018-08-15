@@ -206,7 +206,7 @@ struct fat_boot {
            * FAT volume. This field is generally only relevant for media
            * visible on interrupt 0x13.
            */
-  uint32_t hidddenSectors;
+  uint32_t hiddenSectors;
           /**
            * This field is the new 32-bit total count of sectors on the volume.
            * This count includes the count of all sectors in all four regions
@@ -322,7 +322,7 @@ struct fat32_boot {
            * FAT volume. This field is generally only relevant for media
            * visible on interrupt 0x13.
            */
-  uint32_t hidddenSectors;
+  uint32_t hiddenSectors;
           /**
            * Contains the total number of sectors in the FAT32 volume.
            */

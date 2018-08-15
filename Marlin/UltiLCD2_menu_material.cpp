@@ -355,7 +355,7 @@ static void lcd_menu_change_material_insert_forward()
         lcd_lib_keyclick();
         // led_glow_dir = led_glow = 0;
 
-        //Set the E motor power lower to we skip instead of grind.
+        //Set the E motor power lower so we skip instead of grind.
 #if EXTRUDERS > 1 && defined(MOTOR_CURRENT_PWM_E_PIN) && MOTOR_CURRENT_PWM_E_PIN > -1
         digipot_current(2, active_extruder ? (motor_current_e2*2/3) : (motor_current_setting[2]*2/3));
 #else
