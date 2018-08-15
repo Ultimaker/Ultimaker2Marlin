@@ -1183,7 +1183,7 @@ void lcd_menu_print_tune()
         else if (IS_SELECTED_SCROLL(index++))
             LCD_EDIT_SETTING(led_brightness_level, "Brightness", "%", 0, 100);
         else if ((ui_mode & UI_MODE_EXPERT) && card.sdprinting() && card.pause() && IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_expert_extrude, 0)); // Move material
+            menu.add_menu(menu_t(lcd_init_extrude, lcd_menu_expert_extrude, NULL)); // Move material
         else if ((ui_mode & UI_MODE_EXPERT) && IS_SELECTED_SCROLL(index++))
             menu.add_menu(menu_t(lcd_menu_sleeptimer));
     }

@@ -23,13 +23,13 @@ void lcd_menu_printing_tg();
 void lcd_menu_move_axes();
 void manage_led_timeout();
 void manage_encoder_position(int8_t encoder_pos_interrupt);
+void lcd_init_extrude();
 void lcd_menu_expert_extrude();
 void recover_start_print(const char *cmd);
 void lcd_menu_recover_init();
 void lcd_menu_expert_recover();
 void reset_printing_state();
 void endofprint_retract_store();
-
 
 FORCE_INLINE void lcd_print_tune_nozzle0() { lcd_tune_value(target_temperature[0], 0, get_maxtemp(0) - 15); }
 #if EXTRUDERS > 1
