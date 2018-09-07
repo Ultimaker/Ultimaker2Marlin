@@ -1997,8 +1997,8 @@ static void process_command()
     #ifdef FILAMENTCHANGEENABLE
     case 600: //Pause for filament change X[pos] Y[pos] Z[relative lift] E[initial retract] L[later retract distance for removal]
     {
-        float target[4];
-        float lastpos[4];
+        float target[NUM_AXIS];
+        float lastpos[NUM_AXIS];
         target[X_AXIS]=current_position[X_AXIS];
         target[Y_AXIS]=current_position[Y_AXIS];
         target[Z_AXIS]=current_position[Z_AXIS];
@@ -2124,8 +2124,8 @@ static void process_command()
     case 601: //M601 Pause in UltiLCD2, X[pos] Y[pos] Z[relative lift] L[later retract distance]
     {
         st_synchronize();
-        float target[4];
-        float lastpos[4];
+        float target[NUM_AXIS];
+        float lastpos[NUM_AXIS];
         target[X_AXIS]=current_position[X_AXIS];
         target[Y_AXIS]=current_position[Y_AXIS];
         target[Z_AXIS]=current_position[Z_AXIS];
@@ -2488,7 +2488,7 @@ static void ClearToSend()
 
 static void get_coordinates()
 {
-    bool seen[4]={false,false,false,false};
+    bool seen[NUM_AXIS]={false,false,false,false};
     for(int8_t i=0; i < NUM_AXIS; i++)
     {
         if(code_seen(axis_codes[i]))
@@ -2516,7 +2516,7 @@ static void get_coordinates()
             {
                 if(!retracted)
                 {
-                    destination[Z_AXIS]+=retract_zlift; //not sure why chaninging current_position negatively does not work.
+                    destination[Z_AXIS]+=retract_zlift; //not sure why changing current_position negatively does not work.
                     //if slicer retracted by echange=-1mm and you want to retract 3mm, corrrectede=-2mm additionally
                     float correctede=-echange-retract_length;
                     //to generate the additional steps, not the destination is changed, but inversely the current position

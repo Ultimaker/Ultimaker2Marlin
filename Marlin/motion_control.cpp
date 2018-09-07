@@ -88,7 +88,7 @@ void mc_arc(float *position, float *target, float *offset, uint8_t axis_0, uint8
   float cos_T = 1-0.5*theta_per_segment*theta_per_segment; // Small angle approximation
   float sin_T = theta_per_segment;
 
-  float arc_target[4];
+  float arc_target[NUM_AXIS];
   float sin_Ti;
   float cos_Ti;
   float r_axisi;

@@ -329,7 +329,7 @@ static void lcd_menu_change_material_insert_wait_user_ready()
     plan_set_e_position(0);
     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], FILAMENT_FORWARD_LENGTH / volume_to_filament_length[active_extruder], FILAMENT_INSERT_FAST_SPEED, active_extruder);
 
-    //Put back origonal values.
+    // Put back original values.
     max_feedrate[E_AXIS] = old_max_feedrate_e;
     retract_acceleration = old_retract_acceleration;
 
