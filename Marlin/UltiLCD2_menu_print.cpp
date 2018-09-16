@@ -250,7 +250,9 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                     LCD_DETAIL_CACHE_ID() = nr;
                     LCD_DETAIL_CACHE_TIME() = 0;
                     for(uint8_t e=0; e<EXTRUDERS; e++)
+                    {
                         LCD_DETAIL_CACHE_MATERIAL(e) = 0;
+                    }
                     card.openFile(card.filename, true);
                     if (card.isFileOpen())
                     {
@@ -413,7 +415,7 @@ void lcd_menu_print_select()
                         {
                             if (LCD_DETAIL_CACHE_MATERIAL(e) < 1)
                                 continue;
-                            target_temperature[e] = 0;//material[e].temperature;
+                            target_temperature[e] = 0;
 #if TEMP_SENSOR_BED != 0
                             target_temperature_bed = max(target_temperature_bed, material[e].bed_temperature);
 #endif
