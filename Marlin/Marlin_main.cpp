@@ -43,6 +43,10 @@
 #include "language.h"
 #include "pins_arduino.h"
 
+#ifdef ENABLE_ULTILCD2
+#include "UltiLCD2_hi_lib.h"
+#endif
+
 #if NUM_SERVOS > 0
 #include "Servo.h"
 #endif
@@ -149,6 +153,15 @@
 // M923 - Select file and start printing directly (can be used from other SD file)
 // M928 - Start SD logging (M928 filename.g) - ended by M29
 // M999 - Restart after being stopped by error
+// M10001 - Draw text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
+// M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
+// M10003 - Draw rectangle on LCD, M10003 X1 Y1 W10 H10
+// M10004 - Draw filled rectangle on LCD, M10004 X1 Y1 W10 H10
+// M10005 - Draw shaded rectangle on LCD, M10005 X1 Y1 W10 H10
+// M10008 - Display string at X,Y based on hex encoded chars (S), use I instead of S for inverted text, 
+//          e.g. M10008 X10 Y10 S48656c6c6f2c20776f726c6421 displays "Hello, world!"
+// M10009 - Draw progress bar, e.g. 90% is M10009 P90
+// M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
 
 //Stepper Movement Variables
 
@@ -285,6 +298,15 @@ void serial_echopair_P(const char *s_P, double v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
 void serial_echopair_P(const char *s_P, unsigned long v)
     { serialprintPGM(s_P); SERIAL_ECHO(v); }
+
+/**
+ * @brief Fills binary array from hex string.
+ * @param[out] bin pointer to buffer to write resulting binary data to.
+ * @param[in] hex pointer to string to be converted.
+ * @param[in] buf_size Maximum number of bytes the bin array is going to have.
+ * @returns Nr of bytes converted, resulting binary array is half as large.
+ */
+int hex2bin(uint8_t* bin, const char* hex, const int buf_size);
 
 extern "C"{
   extern unsigned int __bss_end;
@@ -2336,33 +2358,34 @@ static void process_command()
     case 10000://M10000 - Clear the whole LCD
         lcd_lib_clear();
         break;
-    case 10001://M10001 - Draw text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
+    case 10001://M10001 - Display string S[text] or inverted string I[text] on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
         {
+          char* ptr = strrchr(cmdbuffer[bufindr], '*');
+          if (ptr) *ptr = '\0';
           uint8_t x = 0, y = 0;
           if (code_seen('X')) {
             x = code_value_long();
             if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_draw_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+             if (code_seen('S')) lcd_lib_draw_string(x, y, strchr_pointer + 1);
+             if (code_seen('I')) lcd_lib_clear_string(x, y, strchr_pointer + 1);
           } else {
             if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_draw_string_center(y,&cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
+             if (code_seen('S')) lcd_lib_draw_string_center(y,strchr_pointer + 1);
+             if (code_seen('I')) lcd_lib_clear_string_center(y,strchr_pointer + 1);
           }
         }
         break;
-    case 10002://M10002 - Draw inverted text on LCD, M10002 X0 Y0 SText (when X is left out, it will draw centered)
+    case 10003://M10003 - Draw rectangle on LCD, M10003 X1 Y1 W10 H10
         {
-          uint8_t x = 0, y = 0;
-          if (code_seen('X')) {
-            x = code_value_long();
-            if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_clear_string(x, y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
-          } else {
-            if (code_seen('Y')) y = code_value_long();
-             if (code_seen('S')) lcd_lib_clear_string_center(y, &cmdbuffer[bufindr][strchr_pointer - cmdbuffer[bufindr] + 1]);
-          }
+        uint8_t x = 0, y = 0, w = 1, h = 1;
+        if (code_seen('X')) x = code_value_long();
+        if (code_seen('Y')) y = code_value_long();
+        if (code_seen('W')) w = code_value_long();
+        if (code_seen('H')) h = code_value_long();
+        lcd_lib_draw_box(x, y, x + w, y + h);
         }
         break;
-    case 10003://M10003 - Draw square on LCD, M10003 X1 Y1 W10 H10
+    case 10004://M10004 - Draw filled rectangle on LCD, M10004 X1 Y1 W10 H10
         {
         uint8_t x = 0, y = 0, w = 1, h = 1;
         if (code_seen('X')) x = code_value_long();
@@ -2372,7 +2395,7 @@ static void process_command()
         lcd_lib_set(x, y, x + w, y + h);
         }
         break;
-    case 10004://M10004 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
+    case 10005://M10005 - Draw shaded rectangle on LCD, M10005 X1 Y1 W10 H10
         {
         uint8_t x = 0, y = 0, w = 1, h = 1;
         if (code_seen('X')) x = code_value_long();
@@ -2382,14 +2405,37 @@ static void process_command()
         lcd_lib_draw_shade(x, y, x + w, y + h);
         }
         break;
-    case 10005://M10005 - Draw shaded square on LCD, M10004 X1 Y1 W10 H10
+    case 10008://M10008 - Display string at X,Y based on hex encoded chars (S), use I instead of S for inverted text, 
+               //         e.g. M10008 X10 Y10 S48656c6c6f2c20776f726c6421 displays "Hello, world!"
         {
-        uint8_t x = 0, y = 0, w = 1, h = 1;
-        if (code_seen('X')) x = code_value_long();
-        if (code_seen('Y')) y = code_value_long();
-        if (code_seen('W')) w = code_value_long();
-        if (code_seen('H')) h = code_value_long();
-        lcd_lib_draw_shade(x, y, x + w, y + h);
+          uint8_t x = 0, y = 0;
+          char* hex_data = NULL;
+          char bin_string[22];//21 chars plus null char
+          char* ptr = strrchr(cmdbuffer[bufindr], '*');
+          if (ptr) *ptr = '\0';
+          if (code_seen('X')) x = code_value_long();
+          if (code_seen('Y')) y = code_value_long();
+          if (code_seen('S')) hex_data = strchr_pointer + 1;
+          if (code_seen('I')) hex_data = strchr_pointer + 1;
+          uint8_t len = strlen(hex_data);
+          if (len > 44 || len % 2 != 0)
+          {
+            SERIAL_PROTOCOLLNPGM("Error: Hex string too long or length not even");
+            break;
+          }
+          int end = hex2bin(bin_string, hex_data, len / 2);
+          if (end) {
+            bin_string[len / 2] = '\0';
+            if (code_seen('S')) lcd_lib_draw_string(x, y, bin_string);
+            else lcd_lib_clear_string(x, y, bin_string);
+          }
+        }
+        break;
+    case 10009://M10009 - Draw progress bar, e.g. 90% is M10009 P90
+        {
+        uint16_t progress = 0;
+        if (code_seen('P')) progress = code_value_long();
+        lcd_progressbar(progress * 125 / 100);
         }
         break;
     case 10010://M10010 - Request LCD screen button info (R:[rotation difference compared to previous request] B:[button down])
@@ -2901,3 +2947,42 @@ bool setTargetedHotend(int code){
   return false;
 }
 
+int8_t hexNibble2Bin(const char nibble)
+{
+    if (nibble >= 'a' && nibble <= 'f')
+        return nibble - ('a' - 10);
+    if (nibble >= 'A' && nibble <= 'F')
+        return nibble - ('A' - 10);
+    if (nibble >= '0' && nibble <= '9')
+        return nibble - '0';
+    return 0;
+}
+
+int hex2bin(uint8_t* bin, const char* hex, const int buf_size)
+{
+    int count;
+    for (count = 0; count < buf_size * 2; count++)
+    {
+        int bin_nibble = hexNibble2Bin(*hex++);
+        if (bin_nibble >= 0)
+        {
+            // If first nibble.
+            if (count % 2 == 0)
+            {
+                *bin = bin_nibble << 4;
+            }
+            else    // Second nibble.
+            {
+                *bin += bin_nibble;
+                bin++;
+            }
+        }
+        else
+        {
+            // End of hex string reached.
+            break;
+        }
+    }
+
+    return count;
+}
