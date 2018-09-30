@@ -1,6 +1,12 @@
 #ifndef ULTI_LCD2_MENU_PRINT_H
 #define ULTI_LCD2_MENU_PRINT_H
 
+#include "Configuration.h"
+#include "SdFatConfig.h"
+#include "UltiLCD2_low_lib.h"
+#include "UltiLCD2_menu_material.h"
+
+/*
 #include "cardreader.h"
 
 #define LCD_CACHE_COUNT 6
@@ -30,6 +36,47 @@
 //
 #define LCD_CACHE_SIZE (LCD_CACHE_FILE_SIZE + LCD_DETAIL_CACHE_SIZE + LCD_CACHE_REMAIN_SIZE)
 extern uint8_t lcd_cache[LCD_CACHE_SIZE];
+*/
+
+#define LCD_CACHE_COUNT 6
+#define LCD_CACHE_TEXT_SIZE_REMAIN (LONG_FILENAME_LENGTH - LINE_ENTRY_TEXT_LENGTH)
+
+typedef struct
+{
+    uint8_t     id;
+    uint8_t     type;
+    char        name[LINE_ENTRY_TEXT_LENGTH+1];
+} file_info_t;
+
+typedef struct
+{
+    uint8_t     id;
+    uint32_t    time;
+    uint32_t    material[EXTRUDERS];
+    float       nozzle_diameter[EXTRUDERS];
+    char        material_type[EXTRUDERS][MATERIAL_NAME_SIZE + 1];
+    char        remain_filename[LCD_CACHE_TEXT_SIZE_REMAIN+1];
+} cache_detail_t;
+
+typedef struct
+{
+    file_info_t     file[LCD_CACHE_COUNT];
+    uint8_t         nr_of_files;
+    cache_detail_t  detail;
+} lcd_cache_t;
+
+typedef union
+{
+    lcd_cache_t  lcd;
+    uint16_t     _uint16[32];
+    int16_t      _int16[32];
+    float        _float[16];
+    uint8_t      _byte[64];
+    bool         _bool[64];
+} lcd_cache_union;
+
+extern lcd_cache_union cache;
+
 
 extern unsigned long predictedTime;
 
@@ -54,5 +101,16 @@ void lcd_change_to_menu_change_material_return();
 void lcd_menu_print_pause();
 void lcd_menu_print_resume();
 void lcd_menu_print_heatup();
+
+#define LCD_CACHE_NR_OF_FILES               (cache.lcd.nr_of_files)
+#define LCD_CACHE_ID(n)                     (cache.lcd.file[n].id)
+#define LCD_CACHE_TYPE(n)                   (cache.lcd.file[n].type)
+#define LCD_CACHE_FILENAME(n)               (cache.lcd.file[n].name)
+#define LCD_DETAIL_CACHE_ID                 (cache.lcd.detail.id)
+#define LCD_DETAIL_CACHE_TIME               (cache.lcd.detail.time)
+#define LCD_DETAIL_CACHE_MATERIAL(n)        (cache.lcd.detail.material[n])
+#define LCD_DETAIL_CACHE_NOZZLE_DIAMETER(n) (cache.lcd.detail.nozzle_diameter[n])
+#define LCD_DETAIL_CACHE_MATERIAL_TYPE(n)   (cache.lcd.detail.material_type[n])
+#define LCD_DETAIL_CACHE_REMAIN_FILENAME    (cache.lcd.detail.remain_filename)
 
 #endif//ULTI_LCD2_MENU_PRINT_H

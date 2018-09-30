@@ -12,18 +12,19 @@
 #include "UltiLCD2_menu_utils.h"
 #include "tinkergnome.h"
 #include "machinesettings.h"
+#include "cardreader.h"
 #include "preferences.h"
 
-#define PREHEAT_FLAG(n) (lcd_cache[2*LCD_CACHE_COUNT+n])
+#define PREHEAT_FLAG(n) (cache._bool[2*LCD_CACHE_COUNT+n])
 
 static void lcd_main_preheat();
 
 #define BREAKOUT_PADDLE_WIDTH 21
 //Use the lcd_cache memory to store breakout data, so we do not waste memory.
-#define ball_x (*(int16_t*)&lcd_cache[3*5])
-#define ball_y (*(int16_t*)&lcd_cache[3*5+2])
-#define ball_dx (*(int16_t*)&lcd_cache[3*5+4])
-#define ball_dy (*(int16_t*)&lcd_cache[3*5+6])
+#define ball_x (cache._int16[8])
+#define ball_y (cache._int16[9])
+#define ball_dx (cache._int16[10])
+#define ball_dy (cache._int16[11])
 static void lcd_menu_breakout()
 {
     if (lcd_lib_encoder_pos == ENCODER_NO_SELECTION)
@@ -31,7 +32,7 @@ static void lcd_menu_breakout()
         lcd_lib_encoder_pos = (128 - BREAKOUT_PADDLE_WIDTH) / 2 / 2;
         for(uint8_t y=0; y<3;y++)
             for(uint8_t x=0; x<5;x++)
-                lcd_cache[x+y*5] = 3;
+                cache._byte[x+y*5] = 3;
         ball_x = 0;
         ball_y = 57 << 8;
         ball_dx = 0;
@@ -49,14 +50,14 @@ static void lcd_menu_breakout()
     {
         uint8_t x = (ball_x >> 8) / 25;
         uint8_t y = (ball_y >> 8) / 10;
-        if (lcd_cache[x+y*5])
+        if (cache._byte[x+y*5])
         {
-            lcd_cache[x+y*5]--;
+            cache._byte[x+y*5]--;
             ball_dy = abs(ball_dy);
             for(y=0; y<3;y++)
             {
                 for(x=0; x<5;x++)
-                    if (lcd_cache[x+y*5])
+                    if (cache._byte[x+y*5])
                         break;
                 if (x != 5)
                     break;
@@ -65,7 +66,7 @@ static void lcd_menu_breakout()
             {
                 for(y=0; y<3;y++)
                     for(x=0; x<5;x++)
-                        lcd_cache[x+y*5] = 3;
+                        cache._byte[x+y*5] = 3;
             }
         }
     }
@@ -92,11 +93,11 @@ static void lcd_menu_breakout()
     for(uint8_t y=0; y<3;y++)
         for(uint8_t x=0; x<5;x++)
         {
-            if (lcd_cache[x+y*5])
+            if (cache._byte[x+y*5])
                 lcd_lib_draw_box(3 + x*25, 2 + y * 10, 23 + x*25, 10 + y * 10);
-            if (lcd_cache[x+y*5] == 2)
+            if (cache._byte[x+y*5] == 2)
                 lcd_lib_draw_shade(4 + x*25, 3 + y * 10, 22 + x*25, 9 + y * 10);
-            if (lcd_cache[x+y*5] == 3)
+            if (cache._byte[x+y*5] == 3)
                 lcd_lib_set(4 + x*25, 3 + y * 10, 22 + x*25, 9 + y * 10);
         }
 

@@ -28,12 +28,12 @@
 #define MOVE_DELAY 500  // 500ms
 
 // Use the lcd_cache memory to store manual moving positions
-#define TARGET_POS(n)   (*(float*)&lcd_cache[(n) * sizeof(float)])
-#define TARGET_MIN(n)   (*(float*)&lcd_cache[(n) * sizeof(float)])
-#define TARGET_MAX(n)   (*(float*)&lcd_cache[sizeof(min_pos) + (n) * sizeof(float)])
-#define OLD_FEEDRATE    (*(float*)&lcd_cache[NUM_AXIS * sizeof(float)])
-#define OLD_ACCEL       (*(float*)&lcd_cache[(NUM_AXIS+1) * sizeof(float)])
-#define OLD_JERK        (*(float*)&lcd_cache[(NUM_AXIS+2) * sizeof(float)])
+#define TARGET_POS(n)   (cache._float[n])
+#define TARGET_MIN(n)   (cache._float[n])
+#define TARGET_MAX(n)   (cache._float[3+n])
+#define OLD_FEEDRATE    (cache._float[NUM_AXIS])
+#define OLD_ACCEL       (cache._float[NUM_AXIS+1])
+#define OLD_JERK        (cache._float[NUM_AXIS+2])
 
 uint8_t sleep_state = 0x0;
 
@@ -470,9 +470,9 @@ static void lcd_print_tune_xyjerk()
 
 static void init_babystepping()
 {
-    FLOAT_SETTING(X_AXIS) = 0.0f;
-    FLOAT_SETTING(Y_AXIS) = 0.0f;
-    FLOAT_SETTING(Z_AXIS) = 0.0f;
+    cache._float[X_AXIS] = 0.0f;
+    cache._float[Y_AXIS] = 0.0f;
+    cache._float[Z_AXIS] = 0.0f;
 }
 
 static void _lcd_babystep(const uint8_t axis)
@@ -480,7 +480,7 @@ static void _lcd_babystep(const uint8_t axis)
     int diff = lcd_lib_encoder_pos*axis_steps_per_unit[axis]/200;
     if (diff)
     {
-        FLOAT_SETTING(axis) += (float)diff/axis_steps_per_unit[axis];
+        cache._float[axis] += (float)diff/axis_steps_per_unit[axis];
         babystepsTodo[axis] += diff;
         lcd_lib_encoder_pos = 0;
     }
@@ -493,11 +493,11 @@ static void lcd_babystep_z() { _lcd_babystep(Z_AXIS); }
 static void lcd_store_babystep_z()
 {
     lcd_lib_keyclick();
-    if (fabs(FLOAT_SETTING(Z_AXIS)) > 0.001)
+    if (fabs(cache._float[Z_AXIS]) > 0.001)
     {
-        add_homeing[Z_AXIS] -= FLOAT_SETTING(Z_AXIS);
+        add_homing[Z_AXIS] -= cache._float[Z_AXIS];
         Config_StoreSettings();
-        FLOAT_SETTING(Z_AXIS) = 0;
+        cache._float[Z_AXIS] = 0;
     }
 }
 
@@ -572,7 +572,7 @@ static void drawBabystepSubmenu(uint8_t nr, uint8_t &flags)
         }
 
         lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT, 17, PSTR("X"));
-        float_to_string2(FLOAT_SETTING(X_AXIS), buffer, PSTR("mm"), true);
+        float_to_string2(cache._float[X_AXIS], buffer, PSTR("mm"), true);
         LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+3*LCD_CHAR_SPACING
                               , 17
                               , 9*LCD_CHAR_SPACING
@@ -595,7 +595,7 @@ static void drawBabystepSubmenu(uint8_t nr, uint8_t &flags)
             lcd_lib_draw_gfx(LCD_GFX_WIDTH-32-LCD_CHAR_MARGIN_RIGHT, 17, dangerGfx);
         }
         lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT, 28, PSTR("Y"));
-        float_to_string2(FLOAT_SETTING(Y_AXIS), buffer, PSTR("mm"), true);
+        float_to_string2(cache._float[Y_AXIS], buffer, PSTR("mm"), true);
         LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+3*LCD_CHAR_SPACING
                               , 28
                               , 9*LCD_CHAR_SPACING
@@ -617,7 +617,7 @@ static void drawBabystepSubmenu(uint8_t nr, uint8_t &flags)
             lcd_lib_draw_gfx(LCD_GFX_WIDTH-32-LCD_CHAR_MARGIN_RIGHT, 17, dangerGfx);
         }
         lcd_lib_draw_stringP(2*LCD_CHAR_MARGIN_LEFT, 39, PSTR("Z"));
-        float_to_string2(FLOAT_SETTING(Z_AXIS), buffer, PSTR("mm"), true);
+        float_to_string2(cache._float[Z_AXIS], buffer, PSTR("mm"), true);
         LCDMenu::drawMenuString(LCD_CHAR_MARGIN_LEFT+3*LCD_CHAR_SPACING
                               , 39
                               , 9*LCD_CHAR_SPACING
@@ -656,7 +656,7 @@ static void lcd_menu_babystepping()
 
     uint8_t iCount(4);
     // show z store option only if no other submenu is active
-    if ((fabs(FLOAT_SETTING(Z_AXIS)) > 0.001) && (!menu.isSubmenuActive() || menu.isSelected(4)))
+    if ((fabs(cache._float[Z_AXIS]) > 0.001) && (!menu.isSubmenuActive() || menu.isSelected(4)))
     {
         ++iCount;
     }
@@ -1371,9 +1371,9 @@ static unsigned long predictTimeLeft()
 
     if ((printTime < 60) || (progress < 0.01f))
     {
-        return LCD_DETAIL_CACHE_TIME();
+        return LCD_DETAIL_CACHE_TIME;
     }
-    else if ((LCD_DETAIL_CACHE_TIME() == 0) && (printTime < 600) && (progress < 0.5f))
+    else if ((LCD_DETAIL_CACHE_TIME == 0) && (printTime < 600) && (progress < 0.5f))
     {
         return 0;
     }
@@ -1389,12 +1389,12 @@ static unsigned long predictTimeLeft()
         predictedTime = totalTime;
     }
 
-    if (LCD_DETAIL_CACHE_TIME() && (printTime < LCD_DETAIL_CACHE_TIME() / 2))
+    if (LCD_DETAIL_CACHE_TIME && (printTime < LCD_DETAIL_CACHE_TIME / 2))
     {
-        float f = float(printTime) / float(LCD_DETAIL_CACHE_TIME() / 2);
+        float f = float(printTime) / float(LCD_DETAIL_CACHE_TIME / 2);
         if (f > 1.0)
             f = 1.0;
-        totalTime = float(predictedTime) * f + float(LCD_DETAIL_CACHE_TIME()) * (1 - f);
+        totalTime = float(predictedTime) * f + float(LCD_DETAIL_CACHE_TIME) * (1 - f);
     }
     else
     {
@@ -1572,7 +1572,7 @@ void lcd_menu_printing_tg()
 
 static void lcd_expert_item(uint8_t nr, uint8_t offsetY, uint8_t flags)
 {
-    char buffer[20] = {' '};
+    char buffer[LINE_ENTRY_TEXT_LENGTH] = {' '};
     if (nr == 0)
     {
         strcpy_P(buffer, PSTR("< RETURN"));
@@ -1621,7 +1621,7 @@ void lcd_simple_buildplate_cancel()
 
 void lcd_simple_buildplate_store()
 {
-    add_homeing[Z_AXIS] -= current_position[Z_AXIS];
+    add_homing[Z_AXIS] -= current_position[Z_AXIS];
     current_position[Z_AXIS] = 0;
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
     Config_StoreSettings();
@@ -1722,7 +1722,7 @@ void lcd_menu_simple_buildplate()
 void lcd_prepare_buildplate_adjust()
 {
     Config_RetrieveSettings();
-    add_homeing[Z_AXIS] = 0;
+    add_homing[Z_AXIS] = 0;
     enquecommand_P(PSTR("G28 Z0 X0 Y0"));
     char buffer[32] = {0};
     sprintf_P(buffer, PSTR("G1 F%i Z%i X%i Y%i"), int(homing_feedrate[0]), 35, AXIS_CENTER_POS(X_AXIS), AXIS_CENTER_POS(Y_AXIS));
@@ -3117,7 +3117,7 @@ void recover_start_print(const char *cmd)
     // move to heatup position
     homeAll();
     char buffer[32] = {0};
-    sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), int(min_pos[X_AXIS])+5, int(min_pos[Y_AXIS])+5);
+    sprintf_P(buffer, PSTR("G1 F12000 X%i Y%i"), max(int(min_pos[X_AXIS]),0)+5, max(int(min_pos[Y_AXIS]),0)+5);
     enquecommand(buffer);
 
     menu.return_to_main();

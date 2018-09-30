@@ -390,10 +390,10 @@ const int8_t dropsegments=5; //everything with less than this number of steps wi
   #undef HEATER_2_MINTEMP
   #undef HEATER_2_MAXTEMP
 #endif
-#if TEMP_SENSOR_BED == 0
-  #undef BED_MINTEMP
-  #undef BED_MAXTEMP
-#endif
+//#if TEMP_SENSOR_BED == 0
+//  #undef BED_MINTEMP
+//  #undef BED_MAXTEMP
+//#endif
 
 
 #endif //__CONFIGURATION_ADV_H

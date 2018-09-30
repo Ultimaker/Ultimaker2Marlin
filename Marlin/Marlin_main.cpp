@@ -172,7 +172,7 @@ float homing_feedrate[] = HOMING_FEEDRATE;
 int feedmultiply=100; //100->1 200->2
 int extrudemultiply[EXTRUDERS]=ARRAY_BY_EXTRUDERS(100, 100, 100); //100->1 200->2
 float current_position[NUM_AXIS] = { 0.0, 0.0, 0.0, 0.0 };
-float add_homeing[3]={0,0,0};
+float add_homing[3]={0,0,0};
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 // Extruder offset, only in XY plane
@@ -906,15 +906,15 @@ static void axis_is_at_home(int axis)
         }
     }
 
-    current_position[axis] = baseHomePos + add_homeing[axis];
+    current_position[axis] = baseHomePos + add_homing[axis];
 #if (EXTRUDERS > 1)
     if (axis <= Y_AXIS)
     {
         current_position[axis] += extruder_offset[axis][active_extruder];
     }
 #endif
-    // min_pos[axis] =          base_min_pos(axis);// + add_homeing[axis];
-    // max_pos[axis] =          base_max_pos(axis);// + add_homeing[axis];
+    // min_pos[axis] =          base_min_pos(axis);// + add_homing[axis];
+    // max_pos[axis] =          base_max_pos(axis);// + add_homing[axis];
 }
 
 // Move the given axis to the home position.
@@ -1380,19 +1380,19 @@ void process_command(const char *strCmd, bool sendAck)
           if(code_seen(strCmd, axis_codes[X_AXIS]))
           {
             if(code_value_long() != 0) {
-              current_position[X_AXIS]=code_value()+add_homeing[X_AXIS];
+              current_position[X_AXIS]=code_value()+add_homing[X_AXIS];
             }
           }
 
           if(code_seen(strCmd, axis_codes[Y_AXIS])) {
             if(code_value_long() != 0) {
-              current_position[Y_AXIS]=code_value()+add_homeing[Y_AXIS];
+              current_position[Y_AXIS]=code_value()+add_homing[Y_AXIS];
             }
           }
 
           if(code_seen(strCmd, axis_codes[Z_AXIS])) {
             if(code_value_long() != 0) {
-              current_position[Z_AXIS]=code_value()+add_homeing[Z_AXIS];
+              current_position[Z_AXIS]=code_value()+add_homing[Z_AXIS];
             }
           }
           plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], active_extruder, true);
@@ -2111,9 +2111,12 @@ void process_command(const char *strCmd, bool sendAck)
     }
     break;
     case 206: // M206 additional homing offset
-      for(int8_t i=0; i < 3; i++)
+      for(uint8_t i=0; i < 3; ++i)
       {
-        if(code_seen(strCmd, axis_codes[i])) add_homeing[i] = code_value();
+        if(code_seen(strCmd, axis_codes[i]))
+        {
+          add_homing[i] = code_value();
+        }
       }
       break;
     #ifdef FWRETRACT
@@ -3096,7 +3099,7 @@ static void prepare_move(const char *cmd)
     calculate_delta(destination);
     if (card.sdprinting && (printing_state == PRINT_STATE_RECOVER) && (destination[Z_AXIS] >= recover_height-0.01f))
     {
-      recover_start_print();
+      recover_start_print(cmd);
     }
     else if (printing_state != PRINT_STATE_RECOVER)
     {

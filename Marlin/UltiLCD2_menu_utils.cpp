@@ -5,6 +5,7 @@
 #include "UltiLCD2_menu_utils.h"
 #include "UltiLCD2_hi_lib.h"
 #include "UltiLCD2.h"
+#include "cardreader.h"
 
 #define LCD_TIMEOUT_TO_STATUS (MILLISECONDS_PER_SECOND*30UL)		// 30 Sec.
 

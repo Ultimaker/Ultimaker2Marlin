@@ -201,7 +201,7 @@ extern uint8_t axis_relative_state;
 extern int feedmultiply;
 extern int extrudemultiply[EXTRUDERS]; // Sets extrude multiply factor (in percent)
 extern float current_position[NUM_AXIS] ;
-extern float add_homeing[3];
+extern float add_homing[3];
 extern float min_pos[3];
 extern float max_pos[3];
 extern uint8_t fanSpeed;

@@ -87,14 +87,14 @@ FORCE_INLINE bool isCoolingBed() {
   return target_temperature_bed < current_temperature_bed;
 }
 
-#ifdef BED_MAXTEMP
+#if defined(BED_MAXTEMP)
 void setTargetBed(const uint16_t &celsius);
 #else
 FORCE_INLINE void setTargetBed(const float &celsius)
 {
   target_temperature_bed = celsius;
 }
-#endif
+#endif // BED_MAXTEMP
 
 #endif // TEMP_SENSOR_BED
 

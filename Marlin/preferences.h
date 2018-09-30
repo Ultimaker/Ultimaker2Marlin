@@ -117,9 +117,6 @@ FORCE_INLINE bool pidTempBed() { return (control_flags & FLAG_PID_BED); }
 FORCE_INLINE bool swapExtruders() { return (control_flags & FLAG_SWAP_EXTRUDERS); }
 #endif
 
-#define WORD_SETTING(n) (*(uint16_t*)&lcd_cache[(n) * sizeof(uint16_t)])
-#define FLOAT_SETTING(n) (*(float*)&lcd_cache[(n) * sizeof(float)])
-
 #define HAS_SERIAL_CMD (sleep_state & SLEEP_SERIAL_CMD)
 
 #endif //PREFERENCES_H
