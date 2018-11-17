@@ -12,7 +12,7 @@
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
 #ifndef STRING_CONFIG_H_AUTHOR
-#define STRING_CONFIG_H_AUTHOR "Tinker_18.08-DEV" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "Tinker_18.11-DEV" // Who made the changes.
 #endif
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
@@ -275,9 +275,9 @@
 //    #define  DEFAULT_bedKd 1675.16
 
 //Ultimaker2
-    #define  DEFAULT_bedKp 124.55
-    #define  DEFAULT_bedKi 23.46
-    #define  DEFAULT_bedKd 165.29
+    #define  DEFAULT_bedKp 120.0
+    #define  DEFAULT_bedKi 23.5
+    #define  DEFAULT_bedKd 165.0
 #endif // PIDTEMPBED
 
 

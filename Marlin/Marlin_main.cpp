@@ -1767,7 +1767,7 @@ void process_command(const char *strCmd, bool sendAck)
         }
         #endif // EXTRUDERS
 
-        while(current_temperature_bed < target_temperature_bed - TEMP_WINDOW)
+        while(current_temperature_bed < degTargetBed() - TEMP_WINDOW)
         {
           m = millis();
           if((m - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.

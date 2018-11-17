@@ -660,7 +660,7 @@ void lcd_menu_print_heatup()
     lcd_question_screen(lcd_menu_print_tune, NULL, PSTR("TUNE"), lcd_menu_print_abort, NULL, PSTR("ABORT"));
 
 #if TEMP_SENSOR_BED != 0
-    if (current_temperature_bed > target_temperature_bed - TEMP_WINDOW*2)
+    if (current_temperature_bed > degTargetBed() - TEMP_WINDOW*2)
     {
 #endif
         for(uint8_t e=0; e<EXTRUDERS; ++e)
@@ -678,14 +678,14 @@ void lcd_menu_print_heatup()
         }
 
 #if TEMP_SENSOR_BED != 0
-        if (current_temperature_bed >= target_temperature_bed - TEMP_WINDOW * 2 && !commands_queued() && !blocks_queued())
+        if (current_temperature_bed >= degTargetBed() - TEMP_WINDOW * 2 && !commands_queued() && !blocks_queued())
 #else
         if (!commands_queued() && !blocks_queued())
 #endif // TEMP_SENSOR_BED
         {
             bool ready = true;
             for(uint8_t e=0; e<EXTRUDERS; e++)
-                if (current_temperature[e] < target_temperature[e] - TEMP_WINDOW)
+                if (current_temperature[e] < degTargetHotend(e) - TEMP_WINDOW)
                     ready = false;
 
             if (ready)
@@ -704,7 +704,7 @@ void lcd_menu_print_heatup()
 #endif // TEMP_SENSOR_BED
 
     uint8_t progress = 125;
-    for(uint8_t e=0; e<EXTRUDERS; e++)
+    for(uint8_t e=0; e<EXTRUDERS; ++e)
     {
 #if EXTRUDERS == 2
         uint8_t index = (swapExtruders() ? e ^ 0x01 : e);
@@ -715,14 +715,14 @@ void lcd_menu_print_heatup()
             continue;
 #endif
         if (current_temperature[e] > 20)
-            progress = min(progress, (current_temperature[e] - 20) * 125 / (target_temperature[e] - 20 - TEMP_WINDOW));
+            progress = min(progress, (current_temperature[e] - 20) * 125 / (degTargetHotend(e) - 20 - TEMP_WINDOW));
         else
             progress = 0;
     }
 #if TEMP_SENSOR_BED != 0
     if (current_temperature_bed > 20)
-        progress = min(progress, (current_temperature_bed - 20) * 125 / (target_temperature_bed - 20 - TEMP_WINDOW));
-    else if (target_temperature_bed > current_temperature_bed - 20)
+        progress = min(progress, (current_temperature_bed - 20) * 125 / (degTargetBed() - 20 - TEMP_WINDOW));
+    else if (degTargetBed() > current_temperature_bed - 20)
         progress = 0;
 #endif
 
