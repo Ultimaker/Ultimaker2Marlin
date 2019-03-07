@@ -669,7 +669,10 @@ void manage_heater()
   if (!pidTempBed())
   {
     if(millis() - previous_millis_bed_heater < BED_CHECK_INTERVAL)
+    {
+      soft_pwm_bed = soft_pwm_bed ? limit_power(power_buildplate, MAX_BED_POWER>>1, budget) : 0;
       return;
+    }
     previous_millis_bed_heater = millis();
   }
 
