@@ -31,6 +31,7 @@ extern const uint8_t fan1Gfx[] PROGMEM;
 extern const uint8_t retractSpeedGfx[] PROGMEM;
 extern const uint8_t retractLenGfx[] PROGMEM;
 extern const uint8_t revSpeedGfx[] PROGMEM;
+extern const uint8_t fwdSpeedGfx[] PROGMEM;
 extern const uint8_t homeGfx[] PROGMEM;
 extern const uint8_t contrastGfx[] PROGMEM;
 extern const uint8_t brightnessGfx[] PROGMEM;

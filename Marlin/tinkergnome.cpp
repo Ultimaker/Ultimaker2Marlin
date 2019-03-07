@@ -2815,7 +2815,7 @@ static void lcd_extrude_quit_move()
     process_command_P(PSTR("M84 E0"));
 }
 
-static void lcd_extrude_init_pull()
+static void lcd_fastmove_init()
 {
     st_synchronize();
     plan_set_e_position(st_get_position(E_AXIS) / e_steps_per_unit(active_extruder) / volume_to_filament_length[active_extruder], active_extruder, true);
@@ -2835,7 +2835,7 @@ static void lcd_extrude_init_pull()
     max_e_jerk = FILAMENT_LONG_MOVE_JERK;
 }
 
-static void lcd_extrude_quit_pull()
+static void lcd_fastmove_quit()
 {
     // reset feeedrate and acceleration to default
     max_feedrate[E_AXIS] = OLD_FEEDRATE;
@@ -2851,19 +2851,37 @@ static void lcd_extrude_quit_pull()
     lcd_extrude_quit_move();
 }
 
-static void lcd_extrude_pull()
+static void lcd_extrude_fastmove(const float distance)
 {
     if (lcd_lib_button_down)
     {
         if (printing_state == PRINT_STATE_NORMAL && !blocks_queued())
         {
-            TARGET_POS(E_AXIS) -= FILAMENT_REVERSAL_LENGTH / volume_to_filament_length[active_extruder];
+            TARGET_POS(E_AXIS) += distance / volume_to_filament_length[active_extruder];
             plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], TARGET_POS(E_AXIS), max_feedrate[E_AXIS]*0.7f, active_extruder);
         }
     } else {
         quickStop();
         menu.reset_submenu();
     }
+}
+
+static void lcd_extrude_pull()
+{
+  #ifdef PREVENT_LENGTHY_EXTRUDE
+    lcd_extrude_fastmove(-EXTRUDE_MAXLENGTH*9/10);
+  #else
+    lcd_extrude_fastmove(-FILAMENT_REVERSAL_LENGTH*2);
+  #endif
+}
+
+static void lcd_extrude_load()
+{
+  #ifdef PREVENT_LENGTHY_EXTRUDE
+    lcd_extrude_fastmove(EXTRUDE_MAXLENGTH*9/10);
+  #else
+    lcd_extrude_fastmove(FILAMENT_REVERSAL_LENGTH*2);
+  #endif
 }
 
 static void lcd_extrude_tune()
@@ -2894,7 +2912,11 @@ static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
     }
     else if (nr == menu_index++)
     {
-        opt.setData(MENU_INPLACE_EDIT, lcd_extrude_init_pull, lcd_extrude_pull, lcd_extrude_quit_pull);
+        opt.setData(MENU_INPLACE_EDIT, lcd_fastmove_init, lcd_extrude_pull, lcd_fastmove_quit);
+    }
+    else if (nr == menu_index++)
+    {
+        opt.setData(MENU_INPLACE_EDIT, lcd_fastmove_init, lcd_extrude_load, lcd_fastmove_quit);
     }
     else if (nr == menu_index++)
     {
@@ -3012,16 +3034,38 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
         }
         LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT+2
                            , 35
-                           , 3*LCD_CHAR_SPACING
+                           , 2*LCD_CHAR_SPACING
                            , LCD_CHAR_HEIGHT
                            , flags);
         if (flags & MENU_SELECTED)
         {
-            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING+2, 35, revSpeedGfx);
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+5, 35, revSpeedGfx);
         }
         else
         {
-            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+LCD_CHAR_SPACING+2, 35, revSpeedGfx);
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+5, 35, revSpeedGfx);
+        }
+    }
+    else if (nr == index++)
+    {
+        // load material
+        if (flags & (MENU_SELECTED | MENU_ACTIVE))
+        {
+            lcd_lib_draw_string_leftP(5, PSTR("Click & hold to load"));
+            flags |= MENU_STATUSLINE;
+        }
+        LCDMenu::drawMenuBox(LCD_CHAR_MARGIN_LEFT+(3*LCD_CHAR_SPACING)+2
+                           , 35
+                           , 2*LCD_CHAR_SPACING
+                           , LCD_CHAR_HEIGHT
+                           , flags);
+        if (flags & MENU_SELECTED)
+        {
+            lcd_lib_clear_gfx(LCD_CHAR_MARGIN_LEFT+(3*LCD_CHAR_SPACING)+5, 35, fwdSpeedGfx);
+        }
+        else
+        {
+            lcd_lib_draw_gfx(LCD_CHAR_MARGIN_LEFT+(3*LCD_CHAR_SPACING)+5, 35, fwdSpeedGfx);
         }
     }
     else if (nr == index++)
@@ -3081,7 +3125,7 @@ void lcd_menu_expert_extrude()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    uint8_t len = card.sdprinting() ? 6 : 7;
+    uint8_t len = card.sdprinting() ? 7 : 8;
 
     menu.process_submenu(get_extrude_menuoption, len);
 
