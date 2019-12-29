@@ -300,16 +300,7 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         }
         else if (nr == menu_index++)
         {
-//            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-            if (IS_SD_PRINTING)
-            {
-                opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-            }
-            else
-            {
-                opt.setData(MENU_NORMAL, lcd_print_tune);
-
-            }
+            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
         }
         else if (nr == menu_index++)
         {
@@ -346,15 +337,7 @@ static const menu_t & get_print_menuoption(uint8_t nr, menu_t &opt)
         }
         else if (nr == menu_index++)
         {
-//            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-            if (IS_SD_PRINTING)
-            {
-                opt.setData(MENU_NORMAL, lcd_print_ask_pause);
-            }
-            else
-            {
-                opt.setData(MENU_NORMAL, lcd_print_tune);
-            }
+            opt.setData(MENU_NORMAL, lcd_print_ask_pause);
         }
         else if (nr == menu_index++)
         {
@@ -2892,7 +2875,7 @@ static void lcd_extrude_tune()
 static const menu_t & get_extrude_menuoption(uint8_t nr, menu_t &opt)
 {
     uint8_t menu_index = 0;
-    if (card.sdprinting()) ++nr;
+    if (card.pause()) ++nr;
 
     if (nr == menu_index++)
     {
@@ -2933,7 +2916,7 @@ static void drawExtrudeSubmenu (uint8_t nr, uint8_t &flags)
 {
     uint8_t index(0);
     char buffer[32] = {0};
-    if (card.sdprinting()) ++nr;
+    if (card.pause()) ++nr;
 
     if (nr == index++)
     {
@@ -3125,7 +3108,7 @@ void lcd_menu_expert_extrude()
     lcd_basic_screen();
     lcd_lib_draw_hline(3, 124, 13);
 
-    uint8_t len = card.sdprinting() ? 7 : 8;
+    uint8_t len = card.pause() ? 7 : 8;
 
     menu.process_submenu(get_extrude_menuoption, len);
 

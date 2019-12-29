@@ -107,8 +107,10 @@ public:
     void add_menu(menu_t nextMenu, bool beep = true);
     void replace_menu(menu_t nextMenu, bool beep = true);
     bool return_to_previous(bool beep = true);
-    void return_to_main(bool beep = true);
+    void return_to_menu(menuFunc_t func, bool beep = true);
     void removeMenu(menuFunc_t func);
+
+    void return_to_main(bool beep = true) { return_to_menu(NULL, beep); }
 
     const menu_t & currentMenu() const { return menuStack[currentIndex]; }
     menu_t & currentMenu() { return menuStack[currentIndex]; }
@@ -136,7 +138,8 @@ public:
 //    static void reset_selection();
 
 private:
-    static void init_menu_switch(bool beep);
+    void enterMenu();
+    void exitMenu();
 
     // menu stack
     menu_t menuStack[MAX_MENU_DEPTH];
