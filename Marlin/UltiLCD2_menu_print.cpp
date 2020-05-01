@@ -72,7 +72,7 @@ void abortPrint(bool bQuickstop)
     if (primed)
     {
         // perform the end-of-print retraction at the standard retract speed
-        plan_set_e_position((end_of_print_retraction / volume_to_filament_length[active_extruder]) - (retracted ? retract_length : 0), active_extruder, true);
+        plan_set_e_position(((end_of_print_retraction - (retracted ? retract_length : 0)) / volume_to_filament_length[active_extruder]) , active_extruder, true);
         current_position[E_AXIS] = 0.0f;
         plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], retract_feedrate/60, active_extruder);
 
@@ -104,7 +104,7 @@ void abortPrint(bool bQuickstop)
 
     stoptime=millis();
     lifetime_stats_print_end();
-    //If we where paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
+    //If we were paused, make sure we abort that pause. Else strange things happen: https://github.com/Ultimaker/Ultimaker2Marlin/issues/32
     card.stopPrinting();
     printing_state = PRINT_STATE_NORMAL;
     if (led_mode == LED_MODE_WHILE_PRINTING)
@@ -373,8 +373,8 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                                 LCD_DETAIL_CACHE_NOZZLE_DIAMETER(0) = strtod(buffer + 17, NULL);
                             else if (strncmp_P(buffer, PSTR(";MTYPE:"), 7) == 0)
                             {
-                                strncpy(LCD_DETAIL_CACHE_MATERIAL_TYPE(0), buffer + 7, 8);
-                                LCD_DETAIL_CACHE_MATERIAL_TYPE(0)[7] = '\0';
+                                strncpy(LCD_DETAIL_CACHE_MATERIAL_TYPE(0), buffer + 7, MATERIAL_NAME_SIZE);
+                                LCD_DETAIL_CACHE_MATERIAL_TYPE(0)[MATERIAL_NAME_SIZE] = '\0';
                             }
 #if EXTRUDERS > 1
                             else if (strncmp_P(buffer, PSTR(";MATERIAL2:"), 11) == 0)
@@ -385,8 +385,8 @@ void lcd_sd_menu_details_callback(uint8_t nr)
                                 LCD_DETAIL_CACHE_NOZZLE_DIAMETER(1) = strtod(buffer + 18, NULL);
                             else if (strncmp_P(buffer, PSTR(";MTYPE2:"), 8) == 0)
                             {
-                                strncpy(LCD_DETAIL_CACHE_MATERIAL_TYPE(1), buffer + 8, 8);
-                                LCD_DETAIL_CACHE_MATERIAL_TYPE(1)[7] = '\0';
+                                strncpy(LCD_DETAIL_CACHE_MATERIAL_TYPE(1), buffer + 8, MATERIAL_NAME_SIZE);
+                                LCD_DETAIL_CACHE_MATERIAL_TYPE(1)[MATERIAL_NAME_SIZE] = '\0';
                             }
 #endif
                         }
@@ -1185,7 +1185,7 @@ void lcd_menu_print_tune()
 #endif
 #if TEMP_SENSOR_BED != 0
         else if (IS_SELECTED_SCROLL(index++))
-            menu.add_menu(menu_t(lcd_menu_maintenance_advanced_bed_heatup, 0));//Use the maintainace heatup menu, which shows the current temperature.
+            menu.add_menu(menu_t(lcd_menu_maintenance_advanced_bed_heatup, 0)); //Use the maintenance heatup menu, which shows the current temperature.
 #endif
         else if (IS_SELECTED_SCROLL(index++))
             LCD_EDIT_SETTING_BYTE_PERCENT(fanSpeed, "Fan speed", "%", 0, 100);
