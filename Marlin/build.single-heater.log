@@ -1,0 +1,390 @@
+  RM    _Ultimaker2SingleHeater/*
+  RMDIR _Ultimaker2SingleHeater/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Ultimaker2SingleHeater/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Ultimaker2SingleHeater/Marlin.elf > _Ultimaker2SingleHeater/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Ultimaker2SingleHeater/Marlin.elf > _Ultimaker2SingleHeater/Marlin.sym
+  COPY  _Ultimaker2SingleHeater/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  207532 bytes (79.2% Full)
+(.text + .data + .bootloader)
+
+Data:       5850 bytes (71.4% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 207152	    380	   5470	 213002	  3400a	_Ultimaker2SingleHeater/Marlin.elf
+
+  RM    _Ultimaker2plusSingleHeater/*
+  RMDIR _Ultimaker2plusSingleHeater/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Ultimaker2plusSingleHeater/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Ultimaker2plusSingleHeater/Marlin.elf > _Ultimaker2plusSingleHeater/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Ultimaker2plusSingleHeater/Marlin.elf > _Ultimaker2plusSingleHeater/Marlin.sym
+  COPY  _Ultimaker2plusSingleHeater/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  207538 bytes (79.2% Full)
+(.text + .data + .bootloader)
+
+Data:       5850 bytes (71.4% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 207158	    380	   5470	 213008	  34010	_Ultimaker2plusSingleHeater/Marlin.elf
+
+  RM    _Ultimaker2goSingleHeater/*
+  RMDIR _Ultimaker2goSingleHeater/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Ultimaker2goSingleHeater/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Ultimaker2goSingleHeater/Marlin.elf > _Ultimaker2goSingleHeater/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Ultimaker2goSingleHeater/Marlin.elf > _Ultimaker2goSingleHeater/Marlin.sym
+  COPY  _Ultimaker2goSingleHeater/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  198996 bytes (75.9% Full)
+(.text + .data + .bootloader)
+
+Data:       5784 bytes (70.6% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 198622	    374	   5410	 204406	  31e76	_Ultimaker2goSingleHeater/Marlin.elf
+
+  RM    _Ultimaker2goHBKSingleHeater/*
+  RMDIR _Ultimaker2goHBKSingleHeater/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Ultimaker2goHBKSingleHeater/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Ultimaker2goHBKSingleHeater/Marlin.elf > _Ultimaker2goHBKSingleHeater/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Ultimaker2goHBKSingleHeater/Marlin.elf > _Ultimaker2goHBKSingleHeater/Marlin.sym
+  COPY  _Ultimaker2goHBKSingleHeater/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  207554 bytes (79.2% Full)
+(.text + .data + .bootloader)
+
+Data:       5850 bytes (71.4% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 207162	    392	   5458	 213012	  34014	_Ultimaker2goHBKSingleHeater/Marlin.elf
+
+  RM    _Ultimaker2extendedSingleHeater/*
+  RMDIR _Ultimaker2extendedSingleHeater/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Ultimaker2extendedSingleHeater/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Ultimaker2extendedSingleHeater/Marlin.elf > _Ultimaker2extendedSingleHeater/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Ultimaker2extendedSingleHeater/Marlin.elf > _Ultimaker2extendedSingleHeater/Marlin.sym
+  COPY  _Ultimaker2extendedSingleHeater/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  207538 bytes (79.2% Full)
+(.text + .data + .bootloader)
+
+Data:       5850 bytes (71.4% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 207158	    380	   5470	 213008	  34010	_Ultimaker2extendedSingleHeater/Marlin.elf
+
+  RM    _Ultimaker2extendedPlusSingleHeater/*
+  RMDIR _Ultimaker2extendedPlusSingleHeater/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Ultimaker2extendedPlusSingleHeater/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Ultimaker2extendedPlusSingleHeater/Marlin.elf > _Ultimaker2extendedPlusSingleHeater/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Ultimaker2extendedPlusSingleHeater/Marlin.elf > _Ultimaker2extendedPlusSingleHeater/Marlin.sym
+  COPY  _Ultimaker2extendedPlusSingleHeater/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  207542 bytes (79.2% Full)
+(.text + .data + .bootloader)
+
+Data:       5850 bytes (71.4% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 207162	    380	   5470	 213012	  34014	_Ultimaker2extendedPlusSingleHeater/Marlin.elf
+

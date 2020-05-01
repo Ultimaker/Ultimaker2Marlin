@@ -1,0 +1,340 @@
+  RM    _Mark2Dual/*
+  RMDIR _Mark2Dual/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   UltiLCD2_menu_dual.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationDual.cpp
+  CXX   commandbuffer.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Mark2Dual/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Mark2Dual/Marlin.elf > _Mark2Dual/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Mark2Dual/Marlin.elf > _Mark2Dual/Marlin.sym
+  COPY  _Mark2Dual/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  224826 bytes (85.8% Full)
+(.text + .data + .bootloader)
+
+Data:       5892 bytes (71.9% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 224440	    386	   5506	 230332	  383bc	_Mark2Dual/Marlin.elf
+
+  RM    _Mark2DualFan/*
+  RMDIR _Mark2DualFan/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   UltiLCD2_menu_dual.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationDual.cpp
+  CXX   commandbuffer.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Mark2DualFan/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Mark2DualFan/Marlin.elf > _Mark2DualFan/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Mark2DualFan/Marlin.elf > _Mark2DualFan/Marlin.sym
+  COPY  _Mark2DualFan/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  222836 bytes (85.0% Full)
+(.text + .data + .bootloader)
+
+Data:       5887 bytes (71.9% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 222450	    386	   5501	 228337	  37bf1	_Mark2DualFan/Marlin.elf
+
+  RM    _Mark2DualExpansionBoard/*
+  RMDIR _Mark2DualExpansionBoard/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   UltiLCD2_menu_dual.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationDual.cpp
+  CXX   commandbuffer.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Mark2DualExpansionBoard/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Mark2DualExpansionBoard/Marlin.elf > _Mark2DualExpansionBoard/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Mark2DualExpansionBoard/Marlin.elf > _Mark2DualExpansionBoard/Marlin.sym
+  COPY  _Mark2DualExpansionBoard/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  225938 bytes (86.2% Full)
+(.text + .data + .bootloader)
+
+Data:       5892 bytes (71.9% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 225552	    386	   5506	 231444	  38814	_Mark2DualExpansionBoard/Marlin.elf
+
+  RM    _Mark2DualExtended/*
+  RMDIR _Mark2DualExtended/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   UltiLCD2_menu_dual.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationDual.cpp
+  CXX   commandbuffer.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Mark2DualExtended/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Mark2DualExtended/Marlin.elf > _Mark2DualExtended/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Mark2DualExtended/Marlin.elf > _Mark2DualExtended/Marlin.sym
+  COPY  _Mark2DualExtended/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  224826 bytes (85.8% Full)
+(.text + .data + .bootloader)
+
+Data:       5892 bytes (71.9% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 224440	    386	   5506	 230332	  383bc	_Mark2DualExtended/Marlin.elf
+
+  RM    _Mark2DualExtExpansionBoard/*
+  RMDIR _Mark2DualExtExpansionBoard/
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/hooks.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_analog.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_digital.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_pulse.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/wiring_shift.c
+  CC    D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WInterrupts.c
+  CXX   UltiLCD2.cpp
+  CXX   UltiLCD2_gfx.cpp
+  CXX   UltiLCD2_hi_lib.cpp
+  CXX   UltiLCD2_low_lib.cpp
+  CXX   UltiLCD2_menu_first_run.cpp
+  CXX   UltiLCD2_menu_maintenance.cpp
+  CXX   UltiLCD2_menu_material.cpp
+  CXX   UltiLCD2_menu_print.cpp
+  CXX   lifetime_stats.cpp
+  CXX   UltiLCD2_menu_main.cpp
+  CXX   UltiLCD2_menu_dual.cpp
+  CXX   powerbudget.cpp
+  CXX   UltiLCD2_menu_utils.cpp
+  CXX   UltiLCD2_menu_prefs.cpp
+  CXX   tinkergnome.cpp
+  CXX   Sd2Card.cpp
+  CXX   SdBaseFile.cpp
+  CXX   SdFile.cpp
+  CXX   SdVolume.cpp
+  CXX   cardreader.cpp
+  CXX   ConfigurationDual.cpp
+  CXX   commandbuffer.cpp
+  CXX   machinesettings.cpp
+  CXX   filament_sensor.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/new.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WMath.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/WString.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/Print.cpp
+  CXX   Marlin_main.cpp
+  CXX   MarlinSerial.cpp
+  CXX   motion_control.cpp
+  CXX   planner.cpp
+  CXX   stepper.cpp
+  CXX   temperature.cpp
+  CXX   ConfigurationStore.cpp
+  CXX   watchdog.cpp
+  CXX   electronics_test.cpp
+  CXX   D:/arduino-1.8.1/hardware/arduino/avr/cores/arduino/main.cpp
+  CXX   _Mark2DualExtExpansionBoard/Marlin.elf
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-objdump -h -S _Mark2DualExtExpansionBoard/Marlin.elf > _Mark2DualExtExpansionBoard/Marlin.lss
+D:/arduino-1.8.1/hardware/tools/avr/bin/avr-nm -n _Mark2DualExtExpansionBoard/Marlin.elf > _Mark2DualExtExpansionBoard/Marlin.sym
+  COPY  _Mark2DualExtExpansionBoard/Marlin.hex
+# Link: create ELF output file from library.
+
+
+AVR Memory Usage
+----------------
+Device: atmega2560
+
+Program:  225938 bytes (86.2% Full)
+(.text + .data + .bootloader)
+
+Data:       5892 bytes (71.9% Full)
+(.data + .bss + .noinit)
+
+
+   text	   data	    bss	    dec	    hex	filename
+ 225552	    386	   5506	 231444	  38814	_Mark2DualExtExpansionBoard/Marlin.elf
+

@@ -245,9 +245,6 @@ static char *strchr_pointer = 0; // just a pointer to find chars in the cmd stri
 
 const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 
-//static float tt = 0;
-//static float bt = 0;
-
 //Inactivity shutdown variables
 static unsigned long previous_millis_cmd = 0;
 static unsigned long max_inactive_time = 0;
@@ -2207,7 +2204,7 @@ void process_command(const char *strCmd, bool sendAck)
     {
       if(code_seen(strCmd, 'S'))
       {
-        extrudemultiply[active_extruder] = code_value() ;
+        extrudemultiply[active_extruder] = code_value();
       }
     }
     break;
@@ -2413,8 +2410,8 @@ void process_command(const char *strCmd, bool sendAck)
         if (printing_state == PRINT_STATE_RECOVER)
           break;
 
-        float target[4];
-        float lastpos[4];
+        float target[NUM_AXIS];
+        float lastpos[NUM_AXIS];
         target[X_AXIS]=current_position[X_AXIS];
         target[Y_AXIS]=current_position[Y_AXIS];
         target[Z_AXIS]=current_position[Z_AXIS];
@@ -2982,7 +2979,7 @@ static void get_coordinates(const char *cmd)
             {
                 if(!retracted)
                 {
-                    destination[Z_AXIS]+=retract_zlift; //not sure why chaninging current_position negatively does not work.
+                    destination[Z_AXIS]+=retract_zlift; //not sure why changing current_position negatively does not work.
                     //if slicer retracted by echange=-1mm and you want to retract 3mm, corrrectede=-2mm additionally
                     float correctede=-echange-retract_length;
                     //to generate the additional steps, not the destination is changed, but inversely the current position

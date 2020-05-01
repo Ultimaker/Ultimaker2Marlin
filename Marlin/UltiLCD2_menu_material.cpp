@@ -479,6 +479,7 @@ static void lcd_menu_change_material_select_material_details_callback(uint8_t nr
     char buffer[32] = {0};
     char* c = buffer;
 
+    // Update meta data; a timer based toggle between two sets of text to show.
     if (led_glow_dir)
     {
         c = float_to_string2(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
@@ -486,7 +487,9 @@ static void lcd_menu_change_material_select_material_details_callback(uint8_t nr
         strcpy_P(c, PSTR("Flow:"));
         c += 5;
         c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
-    }else{
+    }
+    else
+    {
         c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
 #if TEMP_SENSOR_BED != 0
         *c++ = ' ';
@@ -821,7 +824,8 @@ static void lcd_material_select_callback(uint8_t nr, uint8_t offsetY, uint8_t fl
         strcpy_P(buffer, PSTR("Export to SD"));
     else if (nr == count + 3)
         strcpy_P(buffer, PSTR("Import from SD"));
-    else{
+    else
+    {
         eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), MATERIAL_NAME_SIZE);
         buffer[MATERIAL_NAME_SIZE] = '\0';
     }
@@ -841,6 +845,7 @@ static void lcd_material_select_details_callback(uint8_t nr)
         char* c = buffer;
         nr -= 1;
 
+        // Update meta data; a timer based toggle between two sets of text to show.
         if (led_glow_dir)
         {
             c = float_to_string2(eeprom_read_float(EEPROM_MATERIAL_DIAMETER_OFFSET(nr)), c, PSTR("mm"));
@@ -848,7 +853,9 @@ static void lcd_material_select_details_callback(uint8_t nr)
             strcpy_P(c, PSTR("Flow:"));
             c += 5;
             c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_FLOW_OFFSET(nr)), c, PSTR("%"));
-        }else{
+        }
+        else
+        {
             c = int_to_string(eeprom_read_word(EEPROM_MATERIAL_TEMPERATURE_OFFSET(nr)), c, PSTR("C"));
 #if TEMP_SENSOR_BED != 0
             *c++ = ' ';
@@ -860,13 +867,16 @@ static void lcd_material_select_details_callback(uint8_t nr)
             c = int_to_string(eeprom_read_byte(EEPROM_MATERIAL_FAN_SPEED_OFFSET(nr)), c, PSTR("%"));
         }
         lcd_lib_draw_string_left(BOTTOM_MENU_YPOS, buffer);
-    }else if (nr == count + 1)
+    }
+    else if (nr == count + 1)
     {
         lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Modify the settings"));
-    }else if (nr == count + 2)
+    }
+    else if (nr == count + 2)
     {
         lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Saves all materials"));
-    }else if (nr == count + 3)
+    }
+    else if (nr == count + 3)
     {
         lcd_lib_draw_string_centerP(BOTTOM_MENU_YPOS, PSTR("Loads all materials"));
     }
@@ -1071,10 +1081,15 @@ static void lcd_menu_material_settings_store_callback(uint8_t nr, uint8_t offset
     uint8_t count = eeprom_read_byte(EEPROM_MATERIAL_COUNT_OFFSET());
     char buffer[32] = {0};
     if (nr == 0)
+    {
         strcpy_P(buffer, PSTR("< RETURN"));
+    }
     else if (nr > count)
+    {
         strcpy_P(buffer, PSTR("New preset"));
-    else{
+    }
+    else
+    {
         eeprom_read_block(buffer, EEPROM_MATERIAL_NAME_OFFSET(nr - 1), MATERIAL_NAME_SIZE);
         buffer[MATERIAL_NAME_SIZE] = '\0';
     }

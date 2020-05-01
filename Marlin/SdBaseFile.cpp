@@ -1011,7 +1011,8 @@ void SdBaseFile::printFatTime( uint16_t fatTime) {
  * \return The value one, true, is returned for success and
  * the value zero, false, is returned for failure.
  */
-bool SdBaseFile::printName() {
+bool SdBaseFile::printName()
+{
   char name[FILENAME_LENGTH];
   if (!getFilename(name)) return false;
   MYSERIAL.print(name);
@@ -1108,7 +1109,8 @@ int16_t SdBaseFile::read(void* buf, uint16_t nbyte) {
  * readDir() called before a directory has been opened, this is not
  * a directory file or an I/O error occurred.
  */
-int8_t SdBaseFile::readDir(dir_t* dir, char* longFilename) {
+int8_t SdBaseFile::readDir(dir_t* dir, char* longFilename)
+{
   int16_t n;
   // if not a directory file or miss-positioned return an error
   if (!isDir() || (0X1F & curPosition_)) return -1;

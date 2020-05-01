@@ -251,7 +251,7 @@ void Config_ResetDefault()
     float tmp1[]=DEFAULT_AXIS_STEPS_PER_UNIT;
     float tmp2[]=DEFAULT_MAX_FEEDRATE;
     long tmp3[]=DEFAULT_MAX_ACCELERATION;
-    for (short i=0;i<4;i++)
+    for (uint8_t i=0; i<4; ++i)
     {
         axis_steps_per_unit[i]=tmp1[i];
         max_feedrate[i]=tmp2[i];
@@ -302,7 +302,7 @@ void Config_ResetDefault()
     retract_length = 4.5;
     retract_feedrate = 25 * 60;
 
-SERIAL_ECHO_START;
-SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
 
 }

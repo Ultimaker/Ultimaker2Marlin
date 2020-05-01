@@ -506,7 +506,7 @@ void lcd_menu_maintenance_advanced_bed_heatup()
 
 static void lcd_menu_advanced_version()
 {
-    lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("Return"));
+    lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("RETURN"));
     lcd_lib_draw_string_centerP(30, PSTR(STRING_VERSION_CONFIG_H));
     lcd_lib_draw_string_centerP(40, PSTR(STRING_CONFIG_H_AUTHOR));
     lcd_lib_update_screen();
@@ -514,7 +514,7 @@ static void lcd_menu_advanced_version()
 
 static void lcd_menu_advanced_stats()
 {
-    lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("Return"));
+    lcd_info_screen(NULL, lcd_change_to_previous_menu, PSTR("RETURN"));
     lcd_lib_draw_string_centerP(10, PSTR("Machine on for:"));
     char buffer[24] = {0};
     char* c = int_to_string(lifetime_minutes / 60, buffer, PSTR(":"));

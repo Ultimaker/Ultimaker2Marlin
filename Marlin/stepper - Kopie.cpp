@@ -285,53 +285,40 @@ FORCE_INLINE uint16_t calc_timer(uint16_t step_rate) {
   uint16_t timer;
   if(step_rate > MAX_STEP_FREQUENCY) step_rate = MAX_STEP_FREQUENCY;
 
-  if(step_rate > 20000)
-  {
-    // If steprate > 20kHz >> step 4 times
+  if(step_rate > 20000) { // If steprate > 20kHz >> step 4 times
     step_rate = (step_rate >> 2)&0x3fff;
     step_loops = 4;
   }
-  else if(step_rate > 10000)
-  {
-    // If steprate > 10kHz >> step 2 times
+  else if(step_rate > 10000) { // If steprate > 10kHz >> step 2 times
     step_rate = (step_rate >> 1)&0x7fff;
     step_loops = 2;
   }
-  else
-  {
+  else {
     step_loops = 1;
   }
 
   if(step_rate < (F_CPU/500000)) step_rate = (F_CPU/500000);
   step_rate -= (F_CPU/500000); // Correct for minimal speed
-  if(step_rate >= (8*256))
-  {
-    // higher step rate
+  if(step_rate >= (8*256)){ // higher step rate
     const uint8_t* table_address = (const uint8_t*)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
-    const uint8_t tmp_step_rate = (step_rate & 0x00ff);
+    unsigned char tmp_step_rate = (step_rate & 0x00ff);
     uint16_t gain = (uint16_t)pgm_read_word_near(table_address+2);
     MultiU16X8toH16(timer, tmp_step_rate, gain);
     timer = (uint16_t)pgm_read_word_near(table_address) - timer;
   }
-  else
-  {
-    // lower step rates
+  else { // lower step rates
     const uint8_t* table_address = (const uint8_t*)&speed_lookuptable_slow[0][0];
     table_address += ((step_rate)>>1) & 0xfffc;
     timer = (uint16_t)pgm_read_word_near(table_address);
     timer -= (((uint16_t)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
   }
-  if(timer < 100)
-  {
-      timer = 100; MYSERIAL.print(MSG_STEPPER_TOO_HIGH); MYSERIAL.println(step_rate);
-  }//(20kHz this should never happen)
+  if(timer < 100) { timer = 100; MYSERIAL.print(MSG_STEPPER_TOO_HIGH); MYSERIAL.println(step_rate); }//(20kHz this should never happen)
   return timer;
 }
 
 // Initializes the trapezoid generator from the current block. Called whenever a new
 // block begins.
-FORCE_INLINE void trapezoid_generator_reset()
-{
+FORCE_INLINE void trapezoid_generator_reset() {
   #ifdef ADVANCE
     advance = current_block->initial_advance;
     final_advance = current_block->final_advance;
@@ -471,7 +458,6 @@ ISR(TIMER1_COMPA_vect)
       }
       else
       {
-#ifdef __AVR
         uint8_t wait = 0;
         // enable current stepper
         if ((last_extruder == 0) && (READ(E0_ENABLE_PIN) != E_ENABLE_ON))
@@ -500,11 +486,6 @@ ISR(TIMER1_COMPA_vect)
           return;
         #endif // Z_LATE_ENABLE
         }
-#else  // simulator
-    enable_e0();
-    enable_e1();
-    enable_e2();
-#endif
       }
 
     #ifdef Z_LATE_ENABLE
@@ -711,8 +692,7 @@ ISR(TIMER1_COMPA_vect)
       OCR1A = timer;
       acceleration_time += timer;
       #ifdef ADVANCE
-        for(int8_t i=0; i < step_loops; i++)
-        {
+        for(int8_t i=0; i < step_loops; i++) {
           advance += advance_rate;
         }
         //if(advance > current_block->advance) advance = current_block->advance;
@@ -722,18 +702,14 @@ ISR(TIMER1_COMPA_vect)
 
       #endif
     }
-    else if (step_events_completed > (uint32_t)current_block->decelerate_after)
-    {
+    else if (step_events_completed > (uint32_t)current_block->decelerate_after) {
       uint16_t step_rate;
       MultiU24X32toH16(step_rate, deceleration_time, current_block->acceleration_rate);
 
-      if (step_rate < acc_step_rate)
-      {
-        // Still decelerating?
+      if (step_rate < acc_step_rate) { // Still decelerating?
         step_rate = max(uint16_t(acc_step_rate - step_rate), current_block->final_rate);
       }
-      else
-      {
+      else {
         step_rate = current_block->final_rate;  // lower limit
       }
 
@@ -742,38 +718,30 @@ ISR(TIMER1_COMPA_vect)
       OCR1A = timer;
       deceleration_time += timer;
       #ifdef ADVANCE
-        for(uint8_t i=0; i < step_loops; ++i)
-        {
+        for(int8_t i=0; i < step_loops; i++) {
           advance -= advance_rate;
         }
-        if(advance < final_advance)
-        {
-          advance = final_advance;
-        }
+        if(advance < final_advance) advance = final_advance;
         // Do E steps + advance steps
         e_steps[current_block->active_extruder] += ((advance >>8) - old_advance);
         old_advance = advance >>8;
       #endif //ADVANCE
     }
-    else
-    {
+    else {
       OCR1A = OCR1A_nominal;
       // ensure we're running at the correct step rate, even if we just came off an acceleration
       step_loops = step_loops_nominal;
     }
 
+#ifdef __AVR
     // Hack to address stuttering caused by ISR not finishing in time.
     // When the ISR does not finish in time, the timer will wrap in the computation of the next interrupt time.
     // This hack replaces the correct (past) time with a time not far in the future.
-    // (Note that OCR1A and TCNT1 are registers, so using the max() macro or std::max() can cause problems, especially when compiling the simulator)
-    if (OCR1A < (TCNT1 + 16))
-	{
-        OCR1A = TCNT1 + 16;
-	}
+    OCR1A = max(OCR1A, TCNT1 + 16);
+#endif
 
     // If current block is finished, reset pointer
-    if (step_events_completed >= current_block->step_event_count)
-    {
+    if (step_events_completed >= current_block->step_event_count) {
       current_block = NULL;
       plan_discard_current_block();
     }
@@ -789,8 +757,7 @@ ISR(TIMER1_COMPA_vect)
     old_OCR0A += 52; // ~10kHz interrupt (250000 / 26 = 9615kHz)
     OCR0A = old_OCR0A;
     // Set E direction (Depends on E direction + advance)
-    for(unsigned char i=0; i<4; ++i)
-    {
+    for(unsigned char i=0; i<4;i++) {
       if (e_steps[0] != 0) {
         WRITE(E0_STEP_PIN, INVERT_E_STEP_PIN);
         if (e_steps[0] < 0) {
