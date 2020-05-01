@@ -22,3 +22,6 @@ Marlin/_Ultimaker2
 resources
 _*
 Marlin/resources
+/MarlinSimulator/*.depend
+/MarlinSimulator/*.layout
+/Marlin/*.log
