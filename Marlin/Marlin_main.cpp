@@ -421,6 +421,12 @@ void servo_init()
   #endif
 }
 
+void setup_bioprinter() {
+#ifdef DUKE_BIOPRINTER
+  SET_OUTPUT(UV_LED_0_PIN);
+#endif
+}
+
 void setup()
 {
   setup_killpin();
@@ -470,6 +476,7 @@ void setup()
   st_init();    // Initialize stepper, this enables interrupts!
   setup_photpin();
   servo_init();
+  setup_bioprinter();
 
   lcd_init();
 
@@ -2405,6 +2412,27 @@ static void process_command()
         }
         break;
 #endif//ENABLE_ULTILCD2
+#ifdef DUKE_BIOPRINTER
+    case 801:  // M801 - Turn on UV LED for some amount of time
+    {
+      uint8_t pin = 0;  // Useful if more than one LED, but ignore for now
+      uint16_t value = 255;  // Value ranges from 0 to 255
+      uint32_t time = 1000;  // Time in milliseconds
+      if (code_seen('P')) pin = code_value_long();
+      if (code_seen('S')) value = code_value_long();
+      if (code_seen('T')) time = code_value() * 1000;
+      st_synchronize();
+      analogWrite(UV_LED_0_PIN, value > 255 ? 255 : value);
+      uint32_t t0 = millis();
+      while (millis() - t0 < time) {
+        manage_heater();
+        manage_inactivity();
+        lcd_update();
+        lifetime_stats_tick();
+      }
+      analogWrite(UV_LED_0_PIN, 0);
+    } break;
+#endif
     }
   }
 

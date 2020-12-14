@@ -1241,6 +1241,10 @@
 
 #define SDCARDDETECT 39
 
+#ifdef DUKE_BIOPRINTER
+#define UV_LED_0_PIN 65  // ADC 11
+#endif
+
 //encoder rotation values
 #define encrot0 0
 #define encrot1 1
