@@ -259,6 +259,7 @@ static void lcd_implementation_status_screen()
  u8g.print("---");
  #endif
 
+#ifndef DUKE_BIOPRINTER
  // Heatbed
  u8g.setFont(FONT_STATUSMENU);
  u8g.setPrintPos(81,6);
@@ -274,6 +275,7 @@ static void lcd_implementation_status_screen()
 		 u8g.drawBox(88,18,2,2);
 		 u8g.setColorIndex(1);	// black on white
 		}
+#endif
 
  // Fan
  u8g.setFont(FONT_STATUSMENU);

@@ -229,7 +229,9 @@ void doCooldown()
 {
     for(uint8_t n=0; n<EXTRUDERS; n++)
         setTargetHotend(0, n);
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
     setTargetBed(0);
+#endif
     fanSpeed = 0;
 
     //quickStop();         //Abort all moves already in the planner

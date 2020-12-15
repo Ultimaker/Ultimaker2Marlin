@@ -1361,7 +1361,11 @@ static void process_command()
       setWatch();
       break;
     case 140: // M140 set bed temp
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
       if (code_seen('S')) setTargetBed(code_value());
+#else
+      if (code_seen('S')) code_value();
+#endif
       break;
     case 105 : // M105 - Read current temp
       if(setTargetedHotend(105)){

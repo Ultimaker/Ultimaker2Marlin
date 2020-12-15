@@ -61,17 +61,21 @@ FORCE_INLINE float degHotend(uint8_t extruder) {
   return current_temperature[extruder];
 };
 
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
 FORCE_INLINE float degBed() {
   return current_temperature_bed;
 };
+#endif
 
 FORCE_INLINE float degTargetHotend(uint8_t extruder) {
   return target_temperature[extruder];
 };
 
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
 FORCE_INLINE float degTargetBed() {
   return target_temperature_bed;
 };
+#endif
 
 FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
   target_temperature[extruder] = celsius;
@@ -79,6 +83,7 @@ FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
     target_temperature[extruder] = HEATER_0_MAXTEMP - 15;
 };
 
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
 FORCE_INLINE void setTargetBed(const float &celsius) {
   target_temperature_bed = celsius;
 #ifdef BED_MAXTEMP
@@ -86,22 +91,27 @@ FORCE_INLINE void setTargetBed(const float &celsius) {
     target_temperature_bed = BED_MAXTEMP - 15;
 #endif
 };
+#endif
 
 FORCE_INLINE bool isHeatingHotend(uint8_t extruder){
   return target_temperature[extruder] > current_temperature[extruder];
 };
 
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
 FORCE_INLINE bool isHeatingBed() {
   return target_temperature_bed > current_temperature_bed;
 };
+#endif
 
 FORCE_INLINE bool isCoolingHotend(uint8_t extruder) {
   return target_temperature[extruder] < current_temperature[extruder];
 };
 
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
 FORCE_INLINE bool isCoolingBed() {
   return target_temperature_bed < current_temperature_bed;
 };
+#endif
 
 #define degHotend0() degHotend(0)
 #define degTargetHotend0() degTargetHotend(0)

@@ -955,7 +955,9 @@ void disable_all_heaters()
 {
   for(uint8_t i = 0; i < EXTRUDERS; i++)
     setTargetHotend(0,i);
+#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
   setTargetBed(0);
+#endif
   #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
   target_temperature[0]=0;
   soft_pwm[0]=0;
