@@ -424,6 +424,7 @@ void servo_init()
 void setup_bioprinter() {
 #ifdef DUKE_BIOPRINTER
   SET_OUTPUT(UV_LED_0_PIN);
+  analogWrite(UV_LED_0_PIN, 0);
 #endif
 }
 

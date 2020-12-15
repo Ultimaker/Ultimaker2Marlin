@@ -187,12 +187,16 @@ void lcd_menu_startup()
 #ifdef SPECIAL_STARTUP
         currentMenu = lcd_menu_special_startup;
 #else
+#ifdef DUKE_BIOPRINTER
+        currentMenu = lcd_menu_main;
+#else
         if (!IS_FIRST_RUN_DONE())
         {
             currentMenu = lcd_menu_first_run_init;
         }else{
             currentMenu = lcd_menu_main;
         }
+#endif
 #endif//SPECIAL_STARTUP
     }
 }
