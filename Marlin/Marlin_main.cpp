@@ -1356,7 +1356,7 @@ static void process_command()
       if(setTargetedHotend(104)){
         break;
       }
-      if (code_seen('S')) setTargetHotend(code_value(), tmp_extruder);
+      if (code_seen('S')) setTargetHotend(code_value(), getTempId(tmp_extruder, TEMP_SYRINGE));
       break;
     case 140: // M140 set bed temp
 #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
@@ -1373,7 +1373,7 @@ static void process_command()
         SERIAL_PROTOCOLPGM("ok T:");
         SERIAL_PROTOCOL_F(degHotend(getTempId(tmp_extruder, TEMP_SYRINGE)), 1);
         SERIAL_PROTOCOLPGM(" /");
-        SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder),1);
+        SERIAL_PROTOCOL_F(degTargetHotend(getTempId(tmp_extruder, TEMP_SYRINGE)),1);
         #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
           SERIAL_PROTOCOLPGM(" B:");
           SERIAL_PROTOCOL_F(degBed(),1);
@@ -1399,7 +1399,7 @@ static void process_command()
       #ifdef AUTOTEMP
         autotemp_enabled=false;
       #endif
-      if (code_seen('S')) setTargetHotend(code_value(), tmp_extruder);
+      if (code_seen('S')) setTargetHotend(code_value(), getTempId(tmp_extruder, TEMP_SYRINGE));
       #ifdef AUTOTEMP
         if (code_seen('S')) autotemp_min=code_value();
         if (code_seen('B')) autotemp_max=code_value();

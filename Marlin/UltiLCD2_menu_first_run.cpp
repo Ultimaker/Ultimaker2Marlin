@@ -383,9 +383,9 @@ static void lcd_menu_first_run_material_select_2()
 
 static void lcd_menu_first_run_material_load_heatup()
 {
-    setTargetHotend(material[0].temperature, 0);
+    setTargetHotend(material[0].temperature, getTempId(0, TEMP_SYRINGE));
     int16_t temp = degHotend(getTempId(0, TEMP_SYRINGE)) - 20;
-    int16_t target = degTargetHotend(0) - 10 - 20;
+    int16_t target = degTargetHotend(getTempId(0, TEMP_SYRINGE)) - 10 - 20;
     if (temp < 0) temp = 0;
     if (temp > target)
     {

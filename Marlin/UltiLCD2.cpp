@@ -228,7 +228,7 @@ static void lcd_menu_special_startup()
 void doCooldown()
 {
     for(uint8_t n=0; n<EXTRUDERS; n++)
-        setTargetHotend(0, n);
+        setTargetHotend(0, getTempId(n, TEMP_SYRINGE));
 #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
     setTargetBed(0);
 #endif

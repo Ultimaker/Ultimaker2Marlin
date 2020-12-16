@@ -121,10 +121,10 @@ static void lcd_menu_change_material_preheat()
 #ifdef USE_CHANGE_TEMPERATURE
     setTargetHotend(material[active_extruder].change_temperature, active_extruder);
 #else
-    setTargetHotend(material[active_extruder].temperature, active_extruder);
+    setTargetHotend(material[active_extruder].temperature, getTempId(active_extruder, TEMP_SYRINGE));
 #endif
     int16_t temp = degHotend(getTempId(active_extruder, TEMP_SYRINGE)) - 20;
-    int16_t target = degTargetHotend(active_extruder) - 20;
+    int16_t target = degTargetHotend(getTempId(active_extruder, TEMP_SYRINGE)) - 20;
     if (temp < 0) temp = 0;
     if (temp > target - 5 && temp < target + 5)
     {
@@ -212,7 +212,7 @@ static void lcd_menu_change_material_remove_wait_user_ready()
 static void lcd_menu_change_material_remove_wait_user()
 {
     LED_GLOW();
-    setTargetHotend(material[active_extruder].temperature, active_extruder);
+    setTargetHotend(material[active_extruder].temperature, getTempId(active_extruder, TEMP_SYRINGE));
 
     lcd_question_screen(NULL, lcd_menu_change_material_remove_wait_user_ready, PSTR("READY"), post_change_material_menu, cancelMaterialInsert, PSTR("CANCEL"));
     lcd_lib_draw_string_centerP(20, PSTR("Remove material"));
@@ -274,9 +274,9 @@ void lcd_change_to_menu_insert_material(menuFunc_t return_menu)
 
 static void lcd_menu_insert_material_preheat()
 {
-    setTargetHotend(material[active_extruder].temperature, active_extruder);
+    setTargetHotend(material[active_extruder].temperature, getTempId(active_extruder, TEMP_SYRINGE));
     int16_t temp = degHotend(getTempId(active_extruder, TEMP_SYRINGE)) - 20;
-    int16_t target = degTargetHotend(active_extruder) - 20 - 10;
+    int16_t target = degTargetHotend(getTempId(active_extruder, TEMP_SYRINGE)) - 20 - 10;
     if (temp < 0) temp = 0;
     if (temp > target && temp < target + 20 && (card.pause || !is_command_queued()))
     {

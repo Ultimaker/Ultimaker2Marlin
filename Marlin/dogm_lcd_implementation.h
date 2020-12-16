@@ -204,7 +204,7 @@ static void lcd_implementation_status_screen()
  // Extruder 1
  u8g.setFont(FONT_STATUSMENU);
  u8g.setPrintPos(6,6);
- u8g.print(itostr3(int(degTargetHotend(0) + 0.5)));
+ u8g.print(itostr3(int(degTargetHotend(getTempId(0, TEMP_SYRINGE)) + 0.5)));
  lcd_printPGM(PSTR(LCD_STR_DEGREE " "));
  u8g.setPrintPos(6,27);
  u8g.print(itostr3(int(degHotend(getTempId(0, TEMP_SYRINGE)) + 0.5)));
@@ -215,7 +215,7 @@ static void lcd_implementation_status_screen()
  u8g.setFont(FONT_STATUSMENU);
  #if EXTRUDERS > 1
  u8g.setPrintPos(31,6);
- u8g.print(itostr3(int(degTargetHotend(1) + 0.5)));
+ u8g.print(itostr3(int(degTargetHotend(getTempId(1, TEMP_SYRINGE)) + 0.5)));
  lcd_printPGM(PSTR(LCD_STR_DEGREE " "));
  u8g.setPrintPos(31,27);
  u8g.print(itostr3(int(degHotend(getTempId(1, TEMP_SYRINGE)) + 0.5)));
@@ -230,7 +230,7 @@ static void lcd_implementation_status_screen()
  u8g.setFont(FONT_STATUSMENU);
  # if EXTRUDERS > 2
  u8g.setPrintPos(55,6);
- u8g.print(itostr3(int(degTargetHotend(2) + 0.5)));
+ u8g.print(itostr3(int(degTargetHotend(getTempId(2, TEMP_SYRINGE)) + 0.5)));
  lcd_printPGM(PSTR(LCD_STR_DEGREE " "));
  u8g.setPrintPos(55,27);
  u8g.print(itostr3(int(degHotend(getTempId(2, TEMP_SYRINGE)) + 0.5)));
