@@ -2215,11 +2215,11 @@ static void process_command()
       else
         tmp_select = 0;
       machinesettings_tempsave[tmp_select].feedmultiply = feedmultiply;
-      machinesettings_tempsave[tmp_select].BedTemperature = target_temperature_bed;
+      machinesettings_tempsave[tmp_select].BedTemperature = 0;
       machinesettings_tempsave[tmp_select].fanSpeed = fanSpeed;
       for (int i=0; i<EXTRUDERS; i++)
       {
-        machinesettings_tempsave[tmp_select].HotendTemperature[i] = target_temperature[i];
+        machinesettings_tempsave[tmp_select].HotendTemperature[i] = 0;
         machinesettings_tempsave[tmp_select].extrudemultiply[i] = extrudemultiply[i];
       }
       for (int i=0; i<NUM_AXIS; i++)
@@ -2251,11 +2251,11 @@ static void process_command()
       if (machinesettings_tempsave[tmp_select].has_saved_settings > 0)
       {
         feedmultiply = machinesettings_tempsave[tmp_select].feedmultiply;
-        target_temperature_bed = machinesettings_tempsave[tmp_select].BedTemperature;
+        //target_temperature_bed = machinesettings_tempsave[tmp_select].BedTemperature;
         fanSpeed = machinesettings_tempsave[tmp_select].fanSpeed;
         for (int i=0; i<EXTRUDERS; i++)
         {
-          target_temperature[i] = machinesettings_tempsave[tmp_select].HotendTemperature[i];
+          //target_temperature[i] = machinesettings_tempsave[tmp_select].HotendTemperature[i];
           extrudemultiply[i] = machinesettings_tempsave[tmp_select].extrudemultiply[i];
         }
         for (int i=0; i<NUM_AXIS; i++)

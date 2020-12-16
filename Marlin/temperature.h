@@ -33,6 +33,7 @@ void manage_heater(); //it is critical that this is called periodically.
 
 // low level conversion routines
 // do not use these routines and variables outside of temperature.cpp
+// THESE ARE NO LONGER CHANGED, LEFT PURELY FOR BACKWARDS COMPATIBILITY
 extern int target_temperature[EXTRUDERS];
 extern float current_temperature[EXTRUDERS];
 extern int target_temperature_bed;
@@ -56,6 +57,9 @@ extern float current_temperature_bed;
 //high level conversion routines, for use outside of temperature.cpp
 //inline so that there is no performance decrease.
 //deg=degreeCelsius
+
+extern float _temp_target[EXTRUDERS * 2];
+extern float _temp_current[EXTRUDERS * 2];
 
 #define TEMP_SYRINGE 0
 #define TEMP_NEEDLE 1

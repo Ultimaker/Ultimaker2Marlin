@@ -101,7 +101,7 @@ static void lcd_advanced_details(uint8_t nr)
     }else if (nr == 2)
     {
         int_to_string(int(dsp_temperature[0]), buffer, PSTR("C/"));
-        int_to_string(int(target_temperature[0]), buffer+strlen(buffer), PSTR("C"));
+        int_to_string(int(degTargetHotend(0)), buffer+strlen(buffer), PSTR("C"));
 #if EXTRUDERS > 1
     }else if (nr == 3)
     {
@@ -196,7 +196,7 @@ static void lcd_menu_maintenance_advanced()
         {
             set_extrude_min_temp(0);
             active_extruder = 0;
-            target_temperature[active_extruder] = material[active_extruder].temperature;
+            setTargetHotend(material[active_extruder].temperature, getTempId(active_extruder, TEMP_SYRINGE));
             lcd_change_to_menu(lcd_menu_maintenance_extrude, 0);
         }
 #if EXTRUDERS > 1
@@ -225,25 +225,30 @@ static void lcd_menu_maintenance_advanced()
 
 static void lcd_menu_maintenance_advanced_heatup()
 {
+    uint8_t temp_id = getTempId(active_extruder, TEMP_SYRINGE);
     if (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM != 0)
     {
-        target_temperature[active_extruder] = int(target_temperature[active_extruder]) + (lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
-        if (target_temperature[active_extruder] < 0)
-            target_temperature[active_extruder] = 0;
-        if (target_temperature[active_extruder] > HEATER_0_MAXTEMP - 15)
-            target_temperature[active_extruder] = HEATER_0_MAXTEMP - 15;
+        int prev_temp = degTargetHotend(temp_id);
+        int new_temp = prev_temp + lcd_lib_encoder_pos / ENCODER_TICKS_PER_SCROLL_MENU_ITEM;
+        new_temp = new_temp > SYRINGE_MAXTEMP ? SYRINGE_MAXTEMP : new_temp;
+        new_temp = new_temp < 0 ? 0 : new_temp;
+        setTargetHotend(new_temp, temp_id);
         lcd_lib_encoder_pos = 0;
     }
     if (lcd_lib_button_pressed)
         lcd_change_to_menu(previousMenu, previousEncoderPos);
 
     lcd_lib_clear();
-    lcd_lib_draw_string_centerP(20, PSTR("Nozzle temperature:"));
+    lcd_lib_draw_string_centerP(5, PSTR("Syringe Temp:"));
+    lcd_lib_draw_string_centerP(28, PSTR("Needle Temp:"));
     lcd_lib_draw_string_centerP(53, PSTR("Click to return"));
     char buffer[16];
     int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/"));
-    int_to_string(int(target_temperature[active_extruder]), buffer+strlen(buffer), PSTR("C"));
-    lcd_lib_draw_string_center(30, buffer);
+    int_to_string(int(degTargetHotend(temp_id)), buffer+strlen(buffer), PSTR("C"));
+    lcd_lib_draw_string_center(15, buffer);
+    int_to_string(int(dsp_temperature[active_extruder]), buffer, PSTR("C/"));
+    int_to_string(int(degTargetHotend(temp_id)), buffer+strlen(buffer), PSTR("C"));
+    lcd_lib_draw_string_center(38, buffer);
     lcd_lib_update_screen();
 }
 
