@@ -956,12 +956,12 @@ uint8_t movesplanned()
   return (block_buffer_head - block_buffer_tail + BLOCK_BUFFER_SIZE) & (BLOCK_BUFFER_SIZE - 1);
 }
 
-#ifdef PREVENT_DANGEROUS_EXTRUDE
 void set_extrude_min_temp(float temp)
 {
+#ifdef PREVENT_DANGEROUS_EXTRUDE
   extrude_min_temp=temp;
-}
 #endif
+}
 
 // Calculate the steps/s^2 acceleration rates, based on the mm/s^s
 void reset_acceleration_rates()

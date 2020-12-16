@@ -1371,7 +1371,7 @@ static void process_command()
         }
       #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
         SERIAL_PROTOCOLPGM("ok T:");
-        SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
+        SERIAL_PROTOCOL_F(degHotend(getTempId(tmp_extruder, TEMP_SYRINGE)), 1);
         SERIAL_PROTOCOLPGM(" /");
         SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder),1);
         #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1

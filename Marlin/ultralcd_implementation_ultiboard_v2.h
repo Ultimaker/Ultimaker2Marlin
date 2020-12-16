@@ -645,7 +645,7 @@ static void lcd_implementation_status_screen()
     i2c_send_raw(LCD_COMMAND_CONTRAST);
     i2c_send_raw(lcd_contrast);
 
-    int tHotend = int(degHotend(0) + 0.5);
+    int tHotend = int(degHotend(getTempId(0, TEMP_SYRINGE)) + 0.5);
     int tTarget = int(degTargetHotend(0) + 0.5);
 
     lcd_draw_large_number16( 0, 0, tHotend / 100);

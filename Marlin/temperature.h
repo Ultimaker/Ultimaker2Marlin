@@ -57,6 +57,13 @@ extern float current_temperature_bed;
 //inline so that there is no performance decrease.
 //deg=degreeCelsius
 
+#define TEMP_SYRINGE 0
+#define TEMP_NEEDLE 1
+
+FORCE_INLINE uint8_t getTempId(uint8_t extruder, uint8_t heater) {
+  return extruder * 2 + heater;
+}
+
 FORCE_INLINE float degHotend(uint8_t extruder) {
   return current_temperature[extruder];
 };
