@@ -61,21 +61,9 @@ FORCE_INLINE float degHotend(uint8_t extruder) {
   return current_temperature[extruder];
 };
 
-#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-FORCE_INLINE float degBed() {
-  return current_temperature_bed;
-};
-#endif
-
 FORCE_INLINE float degTargetHotend(uint8_t extruder) {
   return target_temperature[extruder];
 };
-
-#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-FORCE_INLINE float degTargetBed() {
-  return target_temperature_bed;
-};
-#endif
 
 FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
   target_temperature[extruder] = celsius;
@@ -83,80 +71,8 @@ FORCE_INLINE void setTargetHotend(const float &celsius, uint8_t extruder) {
     target_temperature[extruder] = HEATER_0_MAXTEMP - 15;
 };
 
-#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-FORCE_INLINE void setTargetBed(const float &celsius) {
-  target_temperature_bed = celsius;
-#ifdef BED_MAXTEMP
-  if (target_temperature_bed >= BED_MAXTEMP - 15)
-    target_temperature_bed = BED_MAXTEMP - 15;
-#endif
-};
-#endif
-
-FORCE_INLINE bool isHeatingHotend(uint8_t extruder){
-  return target_temperature[extruder] > current_temperature[extruder];
-};
-
-#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-FORCE_INLINE bool isHeatingBed() {
-  return target_temperature_bed > current_temperature_bed;
-};
-#endif
-
-FORCE_INLINE bool isCoolingHotend(uint8_t extruder) {
-  return target_temperature[extruder] < current_temperature[extruder];
-};
-
-#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-FORCE_INLINE bool isCoolingBed() {
-  return target_temperature_bed < current_temperature_bed;
-};
-#endif
-
-#define degHotend0() degHotend(0)
-#define degTargetHotend0() degTargetHotend(0)
-#define setTargetHotend0(_celsius) setTargetHotend((_celsius), 0)
-#define isHeatingHotend0() isHeatingHotend(0)
-#define isCoolingHotend0() isCoolingHotend(0)
-#if EXTRUDERS > 1
-#define degHotend1() degHotend(1)
-#define degTargetHotend1() degTargetHotend(1)
-#define setTargetHotend1(_celsius) setTargetHotend((_celsius), 1)
-#define isHeatingHotend1() isHeatingHotend(1)
-#define isCoolingHotend1() isCoolingHotend(1)
-#else
-#define setTargetHotend1(_celsius) do{}while(0)
-#endif
-#if EXTRUDERS > 2
-#define degHotend2() degHotend(2)
-#define degTargetHotend2() degTargetHotend(2)
-#define setTargetHotend2(_celsius) setTargetHotend((_celsius), 2)
-#define isHeatingHotend2() isHeatingHotend(2)
-#define isCoolingHotend2() isCoolingHotend(2)
-#else
-#define setTargetHotend2(_celsius) do{}while(0)
-#endif
-#if EXTRUDERS > 3
-#error Invalid number of extruders
-#endif
-
-
-
-int getHeaterPower(int heater);
 void disable_all_heaters();
-void setWatch();
 void updatePID();
-
-FORCE_INLINE void autotempShutdown(){
- #ifdef AUTOTEMP
- if(autotemp_enabled)
- {
-  autotemp_enabled=false;
-  if(degTargetHotend(active_extruder)>autotemp_min)
-    setTargetHotend(0,active_extruder);
- }
- #endif
-}
 
 void PID_autotune(float temp, int extruder, int ncycles);
 

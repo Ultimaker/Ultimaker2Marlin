@@ -1325,7 +1325,6 @@ static void process_command()
       SERIAL_ECHO_START;
       SERIAL_ECHOLN(time);
       lcd_setstatus(time);
-      autotempShutdown();
       }
       break;
     case 42: // M42 - Change pin status via gcode
@@ -1358,7 +1357,6 @@ static void process_command()
         break;
       }
       if (code_seen('S')) setTargetHotend(code_value(), tmp_extruder);
-      setWatch();
       break;
     case 140: // M140 set bed temp
 #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
@@ -1387,17 +1385,12 @@ static void process_command()
         SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
       #endif
 
-        SERIAL_PROTOCOLPGM(" @:");
-        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
-
-        SERIAL_PROTOCOLPGM(" B@:");
-        SERIAL_PROTOCOL(getHeaterPower(-1));
-
         SERIAL_PROTOCOLLN("");
       return;
       break;
     case 109:
     {// M109 - Wait for extruder heater to reach target.
+      #if 0  // TODO: Write new implementation
       if(setTargetedHotend(109)){
         break;
       }
@@ -1417,7 +1410,6 @@ static void process_command()
         }
       #endif
 
-      setWatch();
       codenum = millis();
 
       /* See if we are heating up or cooling down */
@@ -1474,7 +1466,8 @@ static void process_command()
         starttime=millis();
         previous_millis_cmd = millis();
       }
-      break;
+      #endif
+    } break;
     case 190: // M190 - Wait for bed heater to reach target.
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
         printing_state = PRINT_STATE_HEATING_BED;

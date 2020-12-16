@@ -325,12 +325,6 @@ void updatePID()
 #endif
 }
 
-int getHeaterPower(int heater) {
-	if (heater<0)
-		return soft_pwm_bed;
-  return soft_pwm[heater];
-}
-
 #if (defined(EXTRUDER_0_AUTO_FAN_PIN) && EXTRUDER_0_AUTO_FAN_PIN > -1) || \
     (defined(EXTRUDER_1_AUTO_FAN_PIN) && EXTRUDER_1_AUTO_FAN_PIN > -1) || \
     (defined(EXTRUDER_2_AUTO_FAN_PIN) && EXTRUDER_2_AUTO_FAN_PIN > -1)
@@ -936,28 +930,11 @@ void tp_init()
 #endif //BED_MAXTEMP
 }
 
-void setWatch()
-{
-#ifdef WATCH_TEMP_PERIOD
-  for (int e = 0; e < EXTRUDERS; e++)
-  {
-    if(degHotend(e) < degTargetHotend(e) - (WATCH_TEMP_INCREASE * 2))
-    {
-      watch_start_temp[e] = degHotend(e);
-      watchmillis[e] = millis();
-    }
-  }
-#endif
-}
-
 
 void disable_all_heaters()
 {
   for(uint8_t i = 0; i < EXTRUDERS; i++)
     setTargetHotend(0,i);
-#if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-  setTargetBed(0);
-#endif
   #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
   target_temperature[0]=0;
   soft_pwm[0]=0;

@@ -234,7 +234,6 @@ static void lcd_sdcard_stop()
     {
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
-    autotempShutdown();
 }
 
 /* Menu implementation */
@@ -293,7 +292,6 @@ void lcd_preheat_pla()
     setTargetBed(plaPreheatHPBTemp);
     fanSpeed = plaPreheatFanSpeed;
     lcd_return_to_status();
-    setWatch(); // heater sanity check timer
 }
 
 void lcd_preheat_abs()
@@ -304,7 +302,6 @@ void lcd_preheat_abs()
     setTargetBed(absPreheatHPBTemp);
     fanSpeed = absPreheatFanSpeed;
     lcd_return_to_status();
-    setWatch(); // heater sanity check timer
 }
 
 static void lcd_cooldown()

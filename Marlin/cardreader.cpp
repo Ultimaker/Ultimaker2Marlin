@@ -562,6 +562,5 @@ void CardReader::printingHasFinished()
         //finishAndDisableSteppers();
         enquecommand_P(PSTR(SD_FINISHED_RELEASECOMMAND));
     }
-    autotempShutdown();
 }
 #endif //SDSUPPORT
