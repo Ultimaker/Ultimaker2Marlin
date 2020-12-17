@@ -15,7 +15,7 @@ if __name__ == '__main__':
         c = 2.5158166e-6
         d = 1.0503069e-7
 
-        Vbits = [i / 1024 for i in range(1024)]         # Possible normalized voltages
+        Vbits = [i / 8192 for i in range(8192)]         # Possible normalized voltages
         Rt = [V * RS / (1 - V) / Rt0 for V in Vbits]    # Normalized resistance as function of voltage
         TK = [1 / (a + b*math.log(R) + c*math.log(R)**2 + d*math.log(R)**3) if R != 0 else 999 for R in Rt]
         
@@ -26,11 +26,13 @@ if __name__ == '__main__':
             "#include \"Marlin.h\"\n",
             "\n",
             "/* Maps analog input value to temperature in Celsius\n",
-            "   Current setting: {:.1e} thermistor, {:.1e} series resistor */\n".format(Rt0, RS),
+            "   Current setting: {:.1e} thermistor, {:.1e} series resistor\n".format(Rt0, RS),
+            "   Range of [0x0400, 0x1c00) */\n",
             "const static float bioprinter_thermistor_table[] PROGMEM = {\n",
         ])
         output_file.writelines([
             "    {:f},  // {:d}\n".format(T - 273.15, i) for i, T in enumerate(TK)
+            if i >= 0x0400 and i < 0x1c00  # Cut off implausible range to save memory
         ])
         output_file.writelines([
             "};\n",

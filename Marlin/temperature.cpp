@@ -36,6 +36,7 @@
 #include "temperature.h"
 #include "watchdog.h"
 #include "Sd2Card.h"
+#include "bioprinter_thermistors.h"
 
 
 //===========================================================================
@@ -638,83 +639,23 @@ void manage_heater()
   #endif
 }
 
-#define PGM_RD_W(x)   (short)pgm_read_word(&x)
-// Derived from RepRap FiveD extruder::getTemperature()
-// For hot end temperature measurement.
 static float analog2temp(int raw, uint8_t e) {
-#ifdef TEMP_SENSOR_1_AS_REDUNDANT
-  if(e > EXTRUDERS)
-#else
-  if(e >= EXTRUDERS)
-#endif
-  {
-      SERIAL_ERROR_START;
-      SERIAL_ERROR((int)e);
-      SERIAL_ERRORLNPGM(" - Invalid extruder number !");
-      kill();
+  // Valid temperatures are in range [0x0400, 0x1c00)
+  // These map to [0x0000, 0x1800) in the lookup table
+  uint16_t offset = raw & 0x1fff;
+  if (offset < 0x0400) {
+    offset = 0x0000;
   }
-  #ifdef HEATER_0_USES_MAX6675
-    if (e == 0)
-    {
-      return 0.25 * raw;
-    }
-  #endif
-
-  if(heater_ttbl_map[e] != NULL)
-  {
-    float celsius = 0;
-    uint8_t i;
-    short (*tt)[][2] = (short (*)[][2])(heater_ttbl_map[e]);
-
-    for (i = 1; i < heater_ttbllen_map[e]; i++)
-    {
-      if (PGM_RD_W((*tt)[i][0]) > raw)
-      {
-        celsius = PGM_RD_W((*tt)[i-1][1]) +
-          (raw - PGM_RD_W((*tt)[i-1][0])) *
-          (float)(PGM_RD_W((*tt)[i][1]) - PGM_RD_W((*tt)[i-1][1])) /
-          (float)(PGM_RD_W((*tt)[i][0]) - PGM_RD_W((*tt)[i-1][0]));
-        break;
-      }
-    }
-
-    // Overflow: Set to last value in the table
-    if (i == heater_ttbllen_map[e]) celsius = PGM_RD_W((*tt)[i-1][1]);
-
-    return celsius;
+  else if (offset >= 0x1c00) {
+    offset = 0x17ff;
   }
-  return ((raw * ((5.0 * 100.0) / 1024.0) / OVERSAMPLENR) * TEMP_SENSOR_AD595_GAIN) + TEMP_SENSOR_AD595_OFFSET;
+  else {
+    offset -= 0x0400;
+  }
+  return pgm_read_float(bioprinter_thermistor_table + offset);
 }
 
-// Derived from RepRap FiveD extruder::getTemperature()
-// For bed temperature measurement.
-static float analog2tempBed(int raw) {
-  #ifdef BED_USES_THERMISTOR
-    float celsius = 0;
-    byte i;
-
-    for (i=1; i<BEDTEMPTABLE_LEN; i++)
-    {
-      if (PGM_RD_W(BEDTEMPTABLE[i][0]) > raw)
-      {
-        celsius  = PGM_RD_W(BEDTEMPTABLE[i-1][1]) +
-          (raw - PGM_RD_W(BEDTEMPTABLE[i-1][0])) *
-          (float)(PGM_RD_W(BEDTEMPTABLE[i][1]) - PGM_RD_W(BEDTEMPTABLE[i-1][1])) /
-          (float)(PGM_RD_W(BEDTEMPTABLE[i][0]) - PGM_RD_W(BEDTEMPTABLE[i-1][0]));
-        break;
-      }
-    }
-
-    // Overflow: Set to last value in the table
-    if (i == BEDTEMPTABLE_LEN) celsius = PGM_RD_W(BEDTEMPTABLE[i-1][1]);
-
-    return celsius;
-  #elif defined BED_USES_AD595
-    return ((raw * ((5.0 * 100.0) / 1024.0) / OVERSAMPLENR) * TEMP_SENSOR_AD595_GAIN) + TEMP_SENSOR_AD595_OFFSET;
-  #else
-    return 0;
-  #endif
-}
+static float analog2tempBed(int raw) {}
 
 /* Called to get the raw values into the the actual temperatures. The raw values are created in interrupt context,
     and this function is called from normal context as it is too slow to run in interrupts and will block the stepper routine otherwise */
@@ -811,6 +752,7 @@ void tp_init()
   #ifdef DIDR2
     DIDR2 = 0;
   #endif
+  #if 1
   #if defined(TEMP_0_PIN) && (TEMP_0_PIN > -1)
     #if TEMP_0_PIN < 8
        DIDR0 |= 1 << TEMP_0_PIN;
@@ -838,6 +780,7 @@ void tp_init()
     #else
        DIDR2 |= 1<<(TEMP_BED_PIN - 8);
     #endif
+  #endif
   #endif
 
   // Use timer0 for temperature measurement
@@ -1241,7 +1184,7 @@ ISR(TIMER0_COMPB_vect)
     if(current_temperature_raw[0] >= maxttemp_raw[0]) {
 #endif
 #ifndef HEATER_0_USES_MAX6675
-       max_temp_error(0);
+       //max_temp_error(0);
 #endif
     }
 #if HEATER_0_RAW_LO_TEMP > HEATER_0_RAW_HI_TEMP
@@ -1250,7 +1193,7 @@ ISR(TIMER0_COMPB_vect)
     if(current_temperature_raw[0] <= minttemp_raw[0]) {
 #endif
 #ifndef HEATER_0_USES_MAX6675
-       min_temp_error(0);
+       //min_temp_error(0);
 #endif
     }
 #if EXTRUDERS > 1

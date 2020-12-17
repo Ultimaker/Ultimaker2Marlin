@@ -1189,13 +1189,16 @@
 #endif
 
 #define HEATER_0_PIN  2
-#define TEMP_0_PIN 8
+#define TEMP_0_PIN 1
 
 #define HEATER_1_PIN 3
 #define TEMP_1_PIN 9
 
 #define HEATER_2_PIN -1
 #define TEMP_2_PIN -1
+
+#define E0_SYRINGE_HEATER_PIN -1
+#define E0_SYRINGE_TEMP_PIN 56  // ADC 2
 
 #define E0_STEP_PIN         42
 #define E0_DIR_PIN          43
