@@ -767,14 +767,32 @@ inline void get_sdcard_commands()
                 return;
             }
 
+            SERIAL_ECHO("SD Card error: ");
+            SERIAL_ECHOLN((int)card.errorCode());
+
             //On an error, reset the error, reset the file position and try again.
             card.clearError();
             //Screw it, if we are near the end of a file with an error, act if the file is finished. Hopefully preventing the hang at the end.
-            if (endOfLineFilePosition > card.getFileSize() - 512)
+            if (endOfLineFilePosition > card.getFileSize() - 512) {
                 card.stopPrinting();
-            else
-                card.setIndex(endOfLineFilePosition);
+                return;
+            }
 
+            // Try to seek for several times and stop printing if we could not do seek to start point of previous command.
+            // This happens when fatGet inside SdBaseFile::seekSet can not be done and curPosition_
+            // will never be set to actual position.
+            uint8_t retryCnt = 10;
+            while (retryCnt --) {
+                if(card.setIndex(endOfLineFilePosition)) {
+                    SERIAL_ECHO("Restart reading last command from position: ");
+                    SERIAL_ECHOLN((int)endOfLineFilePosition);
+                    return; // seek done, try to restart command reading without stopping the entire process.
+                }
+            }
+
+            // we can not seek to end of previous command due to SD card error.
+            SERIAL_ECHO("Number of SD Card reading tries exceeded. Stopping...");
+            card.stopPrinting();
             return;
         }
 
