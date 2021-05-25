@@ -768,7 +768,7 @@ inline void get_sdcard_commands()
             }
 
             SERIAL_ECHO("SD Card error: ");
-            SERIAL_ECHOLN((int)card.errorCode());
+            SERIAL_ECHOLN((unsigned int)card.errorCode());
 
             //On an error, reset the error, reset the file position and try again.
             card.clearError();
