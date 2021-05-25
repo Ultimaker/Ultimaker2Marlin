@@ -768,7 +768,7 @@ inline void get_sdcard_commands()
             }
 
             SERIAL_ECHO("SD Card error: ");
-            SERIAL_ECHOLN((unsigned int)card.errorCode());
+            SERIAL_ECHOLN((int)card.errorCode());
 
             //On an error, reset the error, reset the file position and try again.
             card.clearError();
@@ -785,7 +785,7 @@ inline void get_sdcard_commands()
             while (retryCnt --) {
                 if(card.setIndex(endOfLineFilePosition)) {
                     SERIAL_ECHO("Restart reading last command from position: ");
-                    SERIAL_ECHOLN((int)endOfLineFilePosition);
+                    SERIAL_ECHOLN((unsigned int)endOfLineFilePosition);
                     return; // seek done, try to restart command reading without stopping the entire process.
                 }
             }
