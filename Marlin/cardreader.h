@@ -65,7 +65,7 @@ public:
   FORCE_INLINE bool eof() { return sdpos>=filesize ;}
   FORCE_INLINE int16_t get() {  sdpos = file.curPosition();return (int16_t)file.read();}
   FORCE_INLINE int16_t fgets(char* str, int16_t num) { return file.fgets(str, num, NULL); }
-  FORCE_INLINE void setIndex(long index) {sdpos = index;file.seekSet(index);}
+  FORCE_INLINE bool setIndex(long index) { bool seekResult = file.seekSet(index); if (seekResult){ sdpos = index; }; return seekResult; }
   FORCE_INLINE uint8_t percentDone(){if(!isFileOpen()) return 0; if(filesize) return sdpos/((filesize+99)/100); else return 0;}
   FORCE_INLINE char* getWorkDirName(){workDir.getFilename(filename);return filename;}
   FORCE_INLINE bool atRoot() { return workDirDepth==0; }

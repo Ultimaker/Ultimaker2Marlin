@@ -1047,6 +1047,7 @@ int16_t SdBaseFile::read(void* buf, uint16_t nbyte) {
   uint16_t offset;
   uint16_t toRead;
   uint32_t block;  // raw device block number
+  uint32_t revertClusterOnError = -1;
 
   // error if not open or write only
   if (!isOpen() || !(flags_ & O_READ)) goto fail;
@@ -1070,6 +1071,7 @@ int16_t SdBaseFile::read(void* buf, uint16_t nbyte) {
           curCluster_ = firstCluster_;
         } else {
           // get next cluster from FAT
+          revertClusterOnError = curCluster_;
           if (!vol_->fatGet(curCluster_, &curCluster_)) goto fail;
         }
       }
@@ -1096,6 +1098,12 @@ int16_t SdBaseFile::read(void* buf, uint16_t nbyte) {
   return nbyte;
 
  fail:
+  // Restore last cluster index when error occurred and curPosition_ did not changed.
+  // This situation happens when received SD Card error on new page reading.
+  // "seekSet" works wrong if cluster index stay new but curPosition_ point to old block.
+  if (revertClusterOnError != -1) {
+    curCluster_ = revertClusterOnError;
+  }
   return -1;
 }
 //------------------------------------------------------------------------------
