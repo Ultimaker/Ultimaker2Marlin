@@ -256,6 +256,12 @@ void lcd_scroll_menu(const char* menuNameP, int8_t entryCount, scrollDrawCallbac
 
     uint8_t selIndex = uint16_t(lcd_lib_encoder_pos/ENCODER_TICKS_PER_SCROLL_MENU_ITEM);
 
+    static uint8_t lastSelIndex = selIndex;
+    if (selIndex != lastSelIndex) {
+        lcd_lib_scroll_beep();
+        lastSelIndex = selIndex;
+    }
+
     lcd_lib_clear();
 
     int16_t targetViewPos = selIndex * 8 - 15;
