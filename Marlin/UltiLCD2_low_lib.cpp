@@ -838,6 +838,14 @@ void lcd_lib_clear_gfx(uint8_t x, uint8_t y, const uint8_t* gfx)
 }
 
 #define _BEEP(c, n) for(uint8_t _i=0;_i<c;_i++) { WRITE(BEEPER, HIGH); _delay_us(n); WRITE(BEEPER, LOW); _delay_us(n); }
+void lcd_lib_scroll_beep()
+{
+    if (ui_mode & UI_BEEP_OFF)
+    {
+        return;
+    }
+    _BEEP(5, 10);
+}
 void lcd_lib_keyclick()
 {
     if (ui_mode & UI_BEEP_OFF)
@@ -878,14 +886,34 @@ void lcd_lib_tick()
 
 
 int8_t lcd_lib_encoder_pos_interrupt = 0;
+int8_t half_steps = 0;
 int16_t lcd_lib_encoder_pos = 0;
 bool lcd_lib_button_pressed = false;
 bool lcd_lib_button_down;
 
 #define ENCODER_ROTARY_BIT_0 _BV(0)
 #define ENCODER_ROTARY_BIT_1 _BV(1)
-#define INC_ENCODER_POS(n) do { if (n<+127) { ++n; } } while(0)
-#define DEC_ENCODER_POS(n) do { if (n>-127) { --n; } } while(0)
+
+FORCE_INLINE void inc_encoder() {
+    if (half_steps >= 1) {
+        half_steps = 0;
+        if (lcd_lib_encoder_pos_interrupt < +127)
+            lcd_lib_encoder_pos_interrupt++;
+    } else {
+        half_steps++;
+    }
+}
+
+FORCE_INLINE void dec_encoder() {
+    if (half_steps <= -1) {
+        half_steps = 0;
+        if (lcd_lib_encoder_pos_interrupt > -127)
+            lcd_lib_encoder_pos_interrupt--;
+    } else {
+        half_steps--;
+    }
+}
+
 /* Warning: This function is called from interrupt context */
 void lcd_lib_buttons_update_interrupt()
 {
@@ -901,42 +929,59 @@ void lcd_lib_buttons_update_interrupt()
         {
         case encrot0:
             if(lastEncBits==encrot3)
-                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
-            else if(lastEncBits==encrot1)
-                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
+                    inc_encoder();
+            else if (lastEncBits == encrot1)
+                    dec_encoder();
             break;
         case encrot1:
-            if(lastEncBits==encrot0)
-                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
-            else if(lastEncBits==encrot2)
-                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
+            if (lastEncBits == encrot0)
+                    inc_encoder();
+            else if (lastEncBits == encrot2)
+                    dec_encoder();
             break;
         case encrot2:
-            if(lastEncBits==encrot1)
-                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
-            else if(lastEncBits==encrot3)
-                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
+            if (lastEncBits == encrot1)
+                    inc_encoder();
+            else if (lastEncBits == encrot3)
+                    dec_encoder();
             break;
         case encrot3:
-            if(lastEncBits==encrot2)
-                INC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
-            else if(lastEncBits==encrot0)
-                DEC_ENCODER_POS(lcd_lib_encoder_pos_interrupt);
+            if (lastEncBits == encrot2)
+                    inc_encoder();
+            else if (lastEncBits == encrot0)
+                    dec_encoder();
             break;
         }
         lastEncBits = encBits;
     }
 }
 
+#define BLOCK_UI_MS 200
 void lcd_lib_buttons_update()
 {
+    uint8_t buttonState = !READ(BTN_ENC);
+
+    uint32_t now = millis();
+
+    static uint32_t block_button = 0;
+    if (lcd_lib_encoder_pos_interrupt != 0) block_button = now + BLOCK_UI_MS;
+    if (now < block_button) {
+        if (buttonState) block_button = now + BLOCK_UI_MS;
+        buttonState = false;
+    };
+
+    static uint32_t block_scroll = 0;
+    if (buttonState) block_scroll = now + BLOCK_UI_MS;
+    if (now < block_scroll) {
+        lcd_lib_encoder_pos_interrupt = 0;
+    }
+
     manage_encoder_position(lcd_lib_encoder_pos_interrupt);
 
-    uint8_t buttonState = !READ(BTN_ENC);
     lcd_lib_button_pressed = (buttonState && !lcd_lib_button_down);
     lcd_lib_button_down = buttonState;
 
-	if (lcd_lib_button_down || lcd_lib_encoder_pos_interrupt!=0 ) last_user_interaction=millis();
+    if (lcd_lib_button_down || lcd_lib_encoder_pos_interrupt != 0) last_user_interaction = now;
 
     lcd_lib_encoder_pos_interrupt = 0;
 }

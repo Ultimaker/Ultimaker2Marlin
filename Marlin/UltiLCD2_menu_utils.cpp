@@ -300,6 +300,11 @@ void LCDMenu::process_submenu(menuItemCallback_t getMenuItem, uint8_t len)
 
             // determine new selection
             int16_t index = (lcd_lib_encoder_pos / ENCODER_TICKS_PER_MAIN_MENU_ITEM);
+            static uint8_t lastIndex = index;
+            if (index != lastIndex) {
+                lcd_lib_scroll_beep();
+                lastIndex = index;
+            }
 
             if ((index >= 0) && (index < len))
             {

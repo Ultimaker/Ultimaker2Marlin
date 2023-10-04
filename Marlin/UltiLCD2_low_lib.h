@@ -33,6 +33,7 @@ void lcd_lib_clear_gfx(uint8_t x, uint8_t y, const uint8_t* gfx);
 
 void lcd_lib_beep();
 void lcd_lib_tick();
+void lcd_lib_scroll_beep();
 void lcd_lib_keyclick();
 void lcd_lib_buttons_update();
 void lcd_lib_buttons_update_interrupt();
